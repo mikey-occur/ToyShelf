@@ -1,0 +1,107 @@
+# Built files   
+
+bin/   
+
+obj/   
+
+  
+
+# Visual Studio files   
+
+.vscode/   
+
+*.suo   
+
+*.user   
+
+*.userprefs   
+
+*.vs/   
+
+  
+
+# Rider files   
+
+.idea/   
+
+  
+
+# NuGet Packages   
+
+*.nupkg   
+
+*.snupkg   
+
+packages/*   
+
+!.nuget/packages/*   
+
+  
+
+# Visual Studio Code   
+
+.vscode/   
+
+.history/   
+
+  
+
+# Backup & cache   
+
+*~    
+
+*.swp   
+
+*.tmp   
+
+*.bak   
+
+  
+
+# Logs   
+
+*.log   
+
+  
+
+# Configuration files   
+
+appsettings*.json   
+
+  
+
+# DotNet Core   
+
+project.lock.json   
+
+project.fragment.lock.json   
+
+  
+
+# Build directory   
+
+build/   
+
+out/   
+
+  
+
+# Test results   
+
+TestResults/   
+
+  
+
+# Publish output   
+
+publish/   
+
+  
+
+# User-specific files   
+
+*.db   
+
+*.sln.docstates 
+
+ 
