@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ToyCabin.API.Configuration;
 using ToyCabin.API.Middleware;
+using ToyCabin.Infrastructure.Common.Time;
 using ToyCabin.Infrastructure.Context;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +11,14 @@ builder.Services.AddDbContexts(builder.Configuration.GetConnectionString("Postgr
 builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
 builder.Services.AddAppServices();
-builder.Services.AddControllers();
+builder.Services
+	.AddControllers()
+	.AddJsonOptions(opt =>
+	{
+		opt.JsonSerializerOptions.Converters
+			.Add(new VietnamDateTimeJsonConverter());
+	});
+
 
 var app = builder.Build();
 
