@@ -11,9 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="IServices\" />
     <Folder Include="Models\Account\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>
