@@ -40,6 +40,10 @@ namespace ToyCabin.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(255);
 
+				entity.Property(e => e.Salt)
+					  .IsRequired()
+					  .HasMaxLength(255);
+
 				entity.Property(e => e.AvatarUrl)
 					  .HasMaxLength(500);
 

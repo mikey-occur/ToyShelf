@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
@@ -21,24 +22,25 @@ namespace ToyCabin.API.Controllers
 		// ===== GET =====
 
 		[HttpGet]
+		//[Authorize(Roles = "Admin")]	
 		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetAll()
 		{
 			var result = await _roleService.GetAllAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result);
+			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Roles retrieved successfully");
 		}
 
 		[HttpGet("active")]
 		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetActive()
 		{
 			var result = await _roleService.GetActiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result);
+			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Active roles retrieved successfully");
 		}
 
 		[HttpGet("inactive")]
 		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetInactive()
 		{
 			var result = await _roleService.GetInactiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result);
+			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Inactive roles retrieved successfully");
 		}
 
 		[HttpGet("{id:guid}")]
@@ -49,7 +51,7 @@ namespace ToyCabin.API.Controllers
 			if (role == null)
 				throw new AppException("Role not found", 404);
 
-			return BaseResponse<RoleResponse>.Ok(role);
+			return BaseResponse<RoleResponse>.Ok(role, "Role retrieved successfully");
 		}
 
 		// ===== CREATE =====
