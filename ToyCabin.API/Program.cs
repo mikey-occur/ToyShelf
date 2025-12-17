@@ -11,6 +11,7 @@ builder.Services.AddDbContexts(builder.Configuration.GetConnectionString("Postgr
 builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
 builder.Services.AddAppServices();
+builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services
 	.AddControllers()
 	.AddJsonOptions(opt =>
