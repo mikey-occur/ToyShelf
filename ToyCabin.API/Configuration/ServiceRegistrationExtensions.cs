@@ -20,6 +20,7 @@ namespace ToyCabin.API.Configuration
 			services.AddSingleton<IDateTimeProvider, VietnamDateTimeProvider>();
 
 			// ===== Repositories =====
+			services.AddScoped<IRoleRepository, RoleRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
