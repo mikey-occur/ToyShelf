@@ -16,43 +16,39 @@ namespace ToyCabin.Application.Services
 	{
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
+		private readonly IRoleRepository _roleRepository;
 
-		public RoleService(IUnitOfWork unitOfWork, IDateTimeProvider dateTime)
+		public RoleService(IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IRoleRepository roleRepository)
 		{
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+			_roleRepository = roleRepository;
 		}
 
 		// ===== GET =====
 
 		public async Task<IEnumerable<RoleResponse>> GetAllAsync()
 		{
-			var roles = await _unitOfWork.Repository<Role>().GetAllAsync();
+			var roles = await _roleRepository.GetAllAsync();
 			return roles.Select(MapToResponse);
 		}
 
 		public async Task<IEnumerable<RoleResponse>> GetActiveAsync()
 		{
-			var roles = await _unitOfWork
-				.Repository<Role>()
-				.FindAsync(r => r.IsActive);
-
+			var roles = await _roleRepository.FindAsync(r => r.IsActive);
 			return roles.Select(MapToResponse);
 		}
 
 		public async Task<IEnumerable<RoleResponse>> GetInactiveAsync()
 		{
-			var roles = await _unitOfWork
-				.Repository<Role>()
-				.FindAsync(r => !r.IsActive);
-
+			var roles = await _roleRepository.FindAsync(r => !r.IsActive);
 			return roles.Select(MapToResponse);
 		}
 
 
 		public async Task<RoleResponse?> GetByIdAsync(Guid id)
 		{
-			var role = await _unitOfWork.Repository<Role>().GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id);
 			return role == null ? null : MapToResponse(role);
 		}
 
@@ -68,10 +64,8 @@ namespace ToyCabin.Application.Services
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
 			};
-
-			await _unitOfWork.Repository<Role>().AddAsync(role);
+			await _roleRepository.AddAsync(role);
 			await _unitOfWork.SaveChangesAsync();
-
 			return MapToResponse(role);
 		}
 
@@ -79,7 +73,7 @@ namespace ToyCabin.Application.Services
 
 		public async Task<RoleResponse?> UpdateAsync(Guid id, UpdateRoleRequest request)
 		{
-			var role = await _unitOfWork.Repository<Role>().GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id);
 			if (role == null)
 				return null;
 
@@ -87,9 +81,8 @@ namespace ToyCabin.Application.Services
 			role.Description = request.Description;
 			role.UpdatedAt = _dateTime.UtcNow;
 
-			_unitOfWork.Repository<Role>().Update(role);
+			_roleRepository.Update(role);
 			await _unitOfWork.SaveChangesAsync();
-
 			return MapToResponse(role);
 		}
 
@@ -97,7 +90,7 @@ namespace ToyCabin.Application.Services
 
 		public async Task<bool> DeleteAsync(Guid id)
 		{
-			var role = await _unitOfWork.Repository<Role>().GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id);
 
 			if (role == null || !role.IsActive)
 				return false;
@@ -105,9 +98,8 @@ namespace ToyCabin.Application.Services
 			role.IsActive = false;
 			role.UpdatedAt = _dateTime.UtcNow;
 
-			_unitOfWork.Repository<Role>().Update(role);
+			_roleRepository.Update(role);
 			await _unitOfWork.SaveChangesAsync();
-
 			return true;
 		}
 
@@ -115,7 +107,7 @@ namespace ToyCabin.Application.Services
 
 		public async Task<bool> RestoreAsync(Guid id)
 		{
-			var role = await _unitOfWork.Repository<Role>().GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id);
 
 			if (role == null || role.IsActive)
 				return false;
@@ -123,9 +115,8 @@ namespace ToyCabin.Application.Services
 			role.IsActive = true;
 			role.UpdatedAt = _dateTime.UtcNow;
 
-			_unitOfWork.Repository<Role>().Update(role);
+			_roleRepository.Update(role);
 			await _unitOfWork.SaveChangesAsync();
-
 			return true;
 		}
 

@@ -10,9 +10,7 @@ namespace ToyCabin.Infrastructure.Context
 {
 	public class ToyCabinDbContext : DbContext
 	{
-		public ToyCabinDbContext(DbContextOptions<ToyCabinDbContext> options) : base(options)
-		{
-		}
+		public ToyCabinDbContext(DbContextOptions<ToyCabinDbContext> options) : base(options) {}
 		public DbSet<Account> Accounts { get; set; }
 		public DbSet<Role> Roles { get; set; }
 		public DbSet<AccountRole> AccountRoles { get; set; }
