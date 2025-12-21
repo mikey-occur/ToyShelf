@@ -6,17 +6,23 @@ using System.Threading.Tasks;
 
 namespace ToyCabin.Domain.Entities
 {
+	public enum AuthProvider
+	{
+		LOCAL,
+		GOOGLE
+	}
 	public class Account
 	{
 		public Guid Id { get; set; }
-		public string Username { get; set; } = string.Empty;
-		public string Email { get; set; } = string.Empty;
-		public string PasswordHash { get; set; } = string.Empty;
-		public string Salt { get; set; } = string.Empty;
-		public string? AvatarUrl { get; set; }
+		public Guid UserId { get; set; }
+		public AuthProvider Provider { get; set; } = AuthProvider.LOCAL;
+		public string? PasswordHash { get; set; }
+		public string? Salt { get; set; }
 		public bool IsActive { get; set; } = true;
+		public bool IsFirstLogin { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
-		public DateTime? UpdatedAt { get; set; }
+		public DateTime? LastLoginAt { get; set; }
+		public virtual User User { get; set; } = null!;
 		public virtual ICollection<AccountRole> AccountRoles { get; set; } = new List<AccountRole>();
 		public virtual ICollection<PasswordResetOtp> PasswordResetOtps { get; set; } = new List<PasswordResetOtp>();
 	}
