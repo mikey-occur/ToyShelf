@@ -23,16 +23,24 @@ namespace ToyCabin.Infrastructure.Auth
 
 		public string GenerateAccessToken(Account account)
 		{
-			var claims = new List<Claim>
+			var user = account.User
+				?? throw new InvalidOperationException("Account.User must be loaded");
+
+					var claims = new List<Claim>
 			{
+				// Identity
 				new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-				new(JwtRegisteredClaimNames.Email, account.Email),
 				new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 				new(JwtRegisteredClaimNames.Iat,
 					DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
 					ClaimValueTypes.Integer64),
 
-				new Claim(ClaimTypes.Name, account.Username)
+				// User info
+				new(JwtRegisteredClaimNames.Email, user.Email),
+				new(ClaimTypes.Name, user.FullName),
+
+				// Provider (optional nhưng rất hay)
+				new("provider", account.Provider.ToString())
 			};
 
 			foreach (var accountRole in account.AccountRoles)
