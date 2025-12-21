@@ -4,26 +4,26 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Security;
 
 namespace ToyCabin.Infrastructure.Security
 {
-	public static class PasswordHasher
+	public class PasswordHasher : IPasswordHasher
 	{
-		public static string GenerateSalt()
+		public string GenerateSalt()
 		{
 			var bytes = RandomNumberGenerator.GetBytes(16);
 			return Convert.ToBase64String(bytes);
 		}
 
-		public static string Hash(string password, string salt)
+		public string Hash(string password, string salt)
 		{
 			return BCrypt.Net.BCrypt.HashPassword(password + salt);
 		}
 
-		public static bool Verify(string password, string salt, string hash)
+		public bool Verify(string password, string salt, string hash)
 		{
 			return BCrypt.Net.BCrypt.Verify(password + salt, hash);
 		}
 	}
-
 }

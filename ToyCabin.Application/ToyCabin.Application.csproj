@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\Account\" />
+    <Folder Include="Models\Account\Response\" />
   </ItemGroup>
 
 </Project>

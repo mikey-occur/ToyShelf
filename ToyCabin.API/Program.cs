@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContexts(builder.Configuration.GetConnectionString("PostgreSql"));
 builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
-builder.Services.AddAppServices();
+builder.Services.AddAppServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 builder.Services
 	.AddControllers()

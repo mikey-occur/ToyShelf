@@ -197,7 +197,7 @@ namespace ToyCabin.Infrastructure.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("User");
+                    b.ToTable("Users");
                 });
 
             modelBuilder.Entity("ToyCabin.Domain.Entities.Account", b =>
