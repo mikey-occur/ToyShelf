@@ -9,7 +9,6 @@ namespace ToyCabin.Application.Auth
 {
 	public interface ITokenService
 	{
-		string GenerateAccessToken(Account account);
+		Task<string> GenerateAccessTokenAsync(Account account);
 	}
-
 }

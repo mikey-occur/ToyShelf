@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Google.Apis.Auth;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using ToyCabin.Application.Auth;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Account.Request;
+using ToyCabin.Application.Models.Account.Response;
 using ToyCabin.Application.Notifications;
 using ToyCabin.Application.Security;
 using ToyCabin.Domain.Entities;
@@ -22,13 +24,15 @@ namespace ToyCabin.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IPasswordResetOtpRepository _otpRepo;
 		private readonly IEmailService _emailService;
+		private readonly IRoleRepository _roleRepository;
 		public AccountService(IAccountRepository accountRepository, 
 							  IUserRepository userRepository, 
 							  IPasswordHasher passwordHasher, 
 							  ITokenService tokenService,
 							  IUnitOfWork unitOfWork,
 							  IPasswordResetOtpRepository otpRepo,
-							  IEmailService emailService)
+							  IEmailService emailService,
+							  IRoleRepository roleRepository)
 		{ 
 			_accountRepository = accountRepository;
 			_userRepository = userRepository;
@@ -37,10 +41,11 @@ namespace ToyCabin.Application.Services
 			_unitOfWork = unitOfWork;
 			_otpRepo = otpRepo;
 			_emailService = emailService;
+			_roleRepository = roleRepository;
 		}
 
 		// ===== ADMIN =====
-		public async Task CreateAccountAsync(CreateAccountRequest request)
+		public async Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request)
 		{
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
 				throw new Exception("Email already exists");
@@ -76,10 +81,16 @@ namespace ToyCabin.Application.Services
 			}
 
 			await _unitOfWork.SaveChangesAsync();
+
+			return new CreateAccountResponse
+			{
+				Email = user.Email,
+				FullName = user.FullName
+			};
 		}
 
-		// Activate account flow
-		public async Task RequestActivateAccountAsync(string email)
+		// ===== Activate account flow =====
+		public async Task<ActivationOtpResponse> RequestActivateAccountAsync(string email)
 		{
 			var account = await _accountRepository
 				.GetLocalAccountByEmailAsync(email);
@@ -121,10 +132,15 @@ namespace ToyCabin.Application.Services
 				expiredAt: expiredAt,
 				fullName: account.User.FullName
 			);
+
+			return new ActivationOtpResponse
+			{
+				Email = account.User.Email,
+				ExpiredAt = expiredAt
+			};
 		}
 
-
-		public async Task ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request)
+		public async Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request)
 		{
 			var otp = await _otpRepo.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT);
 
@@ -143,56 +159,163 @@ namespace ToyCabin.Application.Services
 
 			_accountRepository.Update(account);
 			await _unitOfWork.SaveChangesAsync();
+
+			return new ActivateAccountResponse
+			{
+				Email = account.User.Email,
+				LastLoginAt = account.LastLoginAt.Value
+			};
 		}
 
 
 		// ===== USER =====
 
-		public async Task RegisterLocalAsync(	string email, string fullName, string password)
+		public async Task<RegisterResponse> RegisterLocalAsync(RegisterRequest request)
 		{
-			if (await _accountRepository.ExistsLocalAccountByEmailAsync(email))
+			if (request.Password != request.ConfirmPassword)
+				throw new Exception("Password and ConfirmPassword do not match");
+
+			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
 				throw new Exception("Email already registered");
 
 			var salt = _passwordHasher.GenerateSalt();
 
 			var user = new User
 			{
-				Email = email,
-				FullName = fullName,
+				Id = Guid.NewGuid(),
+				Email = request.Email,
+				FullName = request.FullName,
 				CreatedAt = DateTime.UtcNow
 			};
 
+			await _userRepository.AddAsync(user);
+
 			var account = new Account
 			{
-				User = user,
+				UserId = user.Id,
 				Provider = AuthProvider.LOCAL,
 				Salt = salt,
-				PasswordHash = _passwordHasher.Hash(password, salt),
+				PasswordHash = _passwordHasher.Hash(request.Password, salt),
 				IsFirstLogin = false,
 				CreatedAt = DateTime.UtcNow
 			};
 
 			await _accountRepository.AddAsync(account);
+			await _unitOfWork.SaveChangesAsync();
+
+			return new RegisterResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				CreatedAt = user.CreatedAt
+			};
 		}
 
-		public async Task<string> LoginLocalAsync(string email, string password)
+		// ===== Login =====
+		public async Task<LoginResponse> LoginLocalAsync(LoginRequest request)
 		{
-			var account = await _accountRepository
-				.GetLocalAccountByEmailAsync(email);
+			var account = await _accountRepository.GetLocalAccountByEmailAsync(request.Email);
 
 			if (account == null || account.PasswordHash == null)
 				throw new Exception("Invalid credentials");
 
-			if (!_passwordHasher.Verify(
-				password,
-				account.Salt!,
-				account.PasswordHash))
+			if (!_passwordHasher.Verify(request.Password, account.Salt!, account.PasswordHash))
 				throw new Exception("Invalid credentials");
 
 			account.LastLoginAt = DateTime.UtcNow;
 			_accountRepository.Update(account);
+			await _unitOfWork.SaveChangesAsync();
 
-			return _tokenService.GenerateAccessToken(account);
+			var accessToken = await _tokenService.GenerateAccessTokenAsync(account);
+
+			return new LoginResponse
+			{
+				AccessToken = accessToken,
+				LastLoginAt = account.LastLoginAt.Value
+			};
 		}
+
+		public async Task<LoginResponse> LoginGoogleAsync(string idToken)
+		{
+			// 1. Verify Google token
+			var payload = await GoogleJsonWebSignature.ValidateAsync(idToken);
+			var email = payload.Email;
+
+			// 2. Tìm Google account
+			var account = await _accountRepository
+				.GetAccountByEmailAndProviderAsync(email, AuthProvider.GOOGLE);
+
+			if (account == null)
+			{
+				// 3. Tìm Local account
+				var localAccount = await _accountRepository
+					.GetAccountByEmailAndProviderAsync(email, AuthProvider.LOCAL);
+
+				if (localAccount != null)
+				{
+					// User đã tồn tại -> chỉ thêm Google account
+					account = new Account
+					{
+						Id = Guid.NewGuid(),
+						UserId = localAccount.UserId,
+						Provider = AuthProvider.GOOGLE,
+						IsFirstLogin = false,
+						CreatedAt = DateTime.UtcNow
+					};
+
+					await _accountRepository.AddAsync(account);
+				}
+				else
+				{
+					//  User mới hoàn toàn (Google first)
+					var user = new User
+					{
+						Id = Guid.NewGuid(),
+						Email = email,
+						FullName = payload.Name,
+						CreatedAt = DateTime.UtcNow
+					};
+					await _userRepository.AddAsync(user);
+
+					account = new Account
+					{
+						Id = Guid.NewGuid(),
+						UserId = user.Id,
+						Provider = AuthProvider.GOOGLE,
+						IsFirstLogin = true,
+						CreatedAt = DateTime.UtcNow
+					};
+					await _accountRepository.AddAsync(account);
+
+					var customerRole = await _roleRepository.GetByNameAsync("CUSTOMER")
+						?? throw new Exception("Default role CUSTOMER not found");
+
+					await _unitOfWork.Repository<AccountRole>()
+						.AddAsync(new AccountRole
+						{
+							AccountId = account.Id,
+							RoleId = customerRole.Id
+						});
+				}
+
+				await _unitOfWork.SaveChangesAsync();
+			}
+
+			// 4. Update login time
+			account.LastLoginAt = DateTime.UtcNow;
+			_accountRepository.Update(account);
+			await _unitOfWork.SaveChangesAsync();
+
+			// 5. Generate token (role lấy theo USER)
+			var token = await _tokenService.GenerateAccessTokenAsync(account);
+
+			return new LoginResponse
+			{
+				AccessToken = token,
+				LastLoginAt = account.LastLoginAt.Value
+			};
+		}
+
 	}
 }

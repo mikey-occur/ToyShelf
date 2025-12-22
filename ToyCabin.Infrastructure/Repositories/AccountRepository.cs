@@ -31,5 +31,14 @@ namespace ToyCabin.Infrastructure.Repositories
 					a.Provider == AuthProvider.LOCAL &&
 					a.User.Email == email);
 		}
+
+		public async Task<Account?> GetAccountByEmailAndProviderAsync(string email, AuthProvider provider)
+		{
+			return await _context.Accounts
+				.Include(a => a.User)
+				.Include(a => a.AccountRoles)
+					.ThenInclude(ar => ar.Role)
+				.FirstOrDefaultAsync(a => a.User.Email == email && a.Provider == provider);
+		}
 	}
 }

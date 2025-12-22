@@ -11,5 +11,6 @@ namespace ToyCabin.Domain.IRepositories
 	{
 		Task<Account?> GetLocalAccountByEmailAsync(string email);
 		Task<bool> ExistsLocalAccountByEmailAsync(string email);
+		Task<Account?> GetAccountByEmailAndProviderAsync(string email, AuthProvider provider);
 	}
 }

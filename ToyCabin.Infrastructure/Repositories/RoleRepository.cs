@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,5 +13,25 @@ namespace ToyCabin.Infrastructure.Repositories
 	public class RoleRepository : GenericRepository<Role>, IRoleRepository
 	{
 		public RoleRepository(ToyCabinDbContext context) : base(context) {}
+
+		public async Task<List<Role>> GetRolesByUserIdAsync(Guid userId)
+		{
+			return await _context.AccountRoles
+				.Where(ar =>
+					ar.Account.UserId == userId &&
+					ar.Role.IsActive)
+				.Select(ar => ar.Role)
+				.Distinct()
+				.ToListAsync();
+		}
+
+		public async Task<Role?> GetByNameAsync(string name)
+		{
+			return await _context.Roles
+				.AsNoTracking()
+				.FirstOrDefaultAsync(r =>
+					r.Name == name &&
+					r.IsActive);
+		}
 	}
 }

@@ -31,7 +31,6 @@ namespace ToyCabin.Infrastructure.Email
 			{
 				OtpPurpose.ACTIVATE_ACCOUNT => "Activate your ToyCabin account",
 				OtpPurpose.RESET_PASSWORD => "Reset your ToyCabin password",
-				OtpPurpose.SET_LOCAL_PASSWORD => "Set your ToyCabin password",
 				_ => "ToyCabin verification code"
 			};
 
