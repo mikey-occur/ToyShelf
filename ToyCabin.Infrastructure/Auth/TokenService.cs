@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -9,49 +10,49 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyCabin.Application.Auth;
 using ToyCabin.Domain.Entities;
+using ToyCabin.Domain.IRepositories;
 
 namespace ToyCabin.Infrastructure.Auth
 {
 	public class TokenService : ITokenService
 	{
 		private readonly JwtOptions _jwt;
+		private readonly IRoleRepository _roleRepository;
 
-		public TokenService(IOptions<JwtOptions> options)
+		public TokenService(IOptions<JwtOptions> options, IRoleRepository roleRepository)
 		{
 			_jwt = options.Value;
+			_roleRepository = roleRepository;
 		}
 
-		public string GenerateAccessToken(Account account)
+		public async Task<string> GenerateAccessTokenAsync(Account account)
 		{
 			var user = account.User
 				?? throw new InvalidOperationException("Account.User must be loaded");
 
-					var claims = new List<Claim>
+			var claims = new List<Claim>
 			{
 				// Identity
-				new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
+				new(JwtRegisteredClaimNames.Sub, account.UserId.ToString()),
 				new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
 				new(JwtRegisteredClaimNames.Iat,
 					DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
 					ClaimValueTypes.Integer64),
-
-				// User info
 				new(JwtRegisteredClaimNames.Email, user.Email),
-				new(ClaimTypes.Name, user.FullName),
 
-				// Provider (optional nhưng rất hay)
-				new("provider", account.Provider.ToString())
+				// account info
+				new(ClaimTypes.Name, user.FullName),
+				new("aid", account.Id.ToString()),
+				new("prov", account.Provider.ToString())
 			};
 
-			foreach (var accountRole in account.AccountRoles)
+			var roles = await _roleRepository.GetRolesByUserIdAsync(account.UserId);
+
+			foreach (var role in roles)
 			{
-				if (accountRole.Role != null && accountRole.Role.IsActive)
-				{
-					claims.Add(
-						new Claim(ClaimTypes.Role, accountRole.Role.Name)
-					);
-				}
+				claims.Add(new Claim(ClaimTypes.Role, role.Name));
 			}
+
 
 			var key = new SymmetricSecurityKey(
 				Encoding.UTF8.GetBytes(_jwt.SecretKey));

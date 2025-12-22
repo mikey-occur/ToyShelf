@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Account.Request;
+using ToyCabin.Application.Models.Account.Response;
 
 namespace ToyCabin.API.Controllers
 {
@@ -19,41 +20,48 @@ namespace ToyCabin.API.Controllers
 
 		// ================= ADMIN =================
 		[HttpPost("admin")]
-		public async Task<ActionResult<BaseResponse<object>>> CreateAccount(
-			[FromBody] CreateAccountRequest request)
+		public async Task<ActionResult<BaseResponse<CreateAccountResponse>>> CreateAccount([FromBody] CreateAccountRequest request)
 		{
-			await _accountService.CreateAccountAsync(request);
-
-			return Ok(BaseResponse<object>.Ok(
-				data: null,
-				message: "Account created successfully"
-			));
+			var rs = await _accountService.CreateAccountAsync(request);
+			return BaseResponse<CreateAccountResponse>.Ok(rs, "Account created successfully");
 		}
 
 		// ================= ACTIVATE =================
 		[HttpPost("activate/request")]
-		public async Task<ActionResult<BaseResponse<object>>> RequestActivateAccount(
-			[FromQuery] string email)
+		public async Task<ActionResult<BaseResponse<ActivationOtpResponse>>> RequestActivateAccount([FromQuery] string email)
 		{
-			await _accountService.RequestActivateAccountAsync(email);
-
-			return Ok(BaseResponse<object>.Ok(
-				data: null,
-				message: "Activation OTP sent to email"
-			));
+			var rs = await _accountService.RequestActivateAccountAsync(email);
+			return BaseResponse<ActivationOtpResponse>.Ok(rs, "Activation OTP sent to email");
 		}
 
-		// ================= ACTIVATE =================
 		[HttpPost("activate")]
-		public async Task<ActionResult<BaseResponse<object>>> ActivateAccount(
-			[FromBody] ActivateAccountRequest request)
+		public async Task<ActionResult<BaseResponse<ActivateAccountResponse>>> ActivateAccount([FromBody] ActivateAccountRequest request)
 		{
-			await _accountService.ActivateAccountAndSetPasswordAsync(request);
-
-			return Ok(BaseResponse<object>.Ok(
-				data: null,
-				message: "Account activated successfully"
-			));
+			var rs = await _accountService.ActivateAccountAndSetPasswordAsync(request);
+			return BaseResponse<ActivateAccountResponse>.Ok(rs, "Account activated successfully");
 		}
+
+		// ================= USER =================
+		[HttpPost("register")]
+		public async Task<ActionResult<BaseResponse<RegisterResponse>>> Register([FromBody] RegisterRequest request)
+		{
+			var rs = await _accountService.RegisterLocalAsync(request);
+			return BaseResponse<RegisterResponse>.Ok(rs, "User registered successfully");
+		}
+
+		[HttpPost("login")]
+		public async Task<ActionResult<BaseResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
+		{
+			var rs = await _accountService.LoginLocalAsync(request);
+			return BaseResponse<LoginResponse>.Ok(rs, "User logged in successfully");
+		}
+
+		[HttpPost("login-google")]
+		public async Task<ActionResult<BaseResponse<LoginResponse>>> LoginGoogle([FromBody] GoogleLoginRequest request)
+		{
+			var rs = await _accountService.LoginGoogleAsync(request.IdToken);
+			return BaseResponse<LoginResponse>.Ok(rs, "User logged in with Google successfully");
+		}
+
 	}
 }

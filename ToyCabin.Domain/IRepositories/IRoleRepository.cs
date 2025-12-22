@@ -7,5 +7,9 @@ using ToyCabin.Domain.Entities;
 
 namespace ToyCabin.Domain.IRepositories
 {
-	public interface IRoleRepository : IGenericRepository<Role> {}
+	public interface IRoleRepository : IGenericRepository<Role> 
+	{
+		Task<List<Role>> GetRolesByUserIdAsync(Guid userId);
+		Task<Role?> GetByNameAsync(string name);
+	}
 }
