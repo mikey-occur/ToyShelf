@@ -40,5 +40,14 @@ namespace ToyCabin.Infrastructure.Repositories
 					.ThenInclude(ar => ar.Role)
 				.FirstOrDefaultAsync(a => a.User.Email == email && a.Provider == provider);
 		}
+
+		public async Task<Account?> GetByIdWithUserAsync(Guid id)
+		{
+			return await _context.Accounts
+				.Include(a => a.User)
+				.Include(a => a.AccountRoles)
+					.ThenInclude(ar => ar.Role)
+				.FirstOrDefaultAsync(a => a.Id == id);
+		}
 	}
 }
