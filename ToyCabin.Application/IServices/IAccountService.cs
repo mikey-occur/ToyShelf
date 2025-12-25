@@ -10,14 +10,21 @@ namespace ToyCabin.Application.IServices
 {
 	public interface IAccountService
 	{
-		// ===== ADMIN =====
+		// ===== FLOW ACTIVATE =====
 		Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request);
 		Task<ActivationOtpResponse> RequestActivateAccountAsync(string email);
 		Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request);
 
-		// ===== USER =====
+		// ===== FLOW LOCAL =====
 		Task<RegisterResponse> RegisterLocalAsync(RegisterRequest request);
 		Task<LoginResponse> LoginLocalAsync(LoginRequest request);
+
+		// ===== FLOW LOGIN GG =====
 		Task<LoginResponse> LoginGoogleAsync(string idToken);
+		Task<SetLocalPasswordResponse> SetLocalPasswordAsync(Guid accountId, SetLocalPasswordRequest request);
+
+		// ===== FLOW FORGOT PASSWORD =====
+		Task<ForgotPasswordOtpResponse> RequestForgotPasswordAsync(string email);
+		Task<ResetPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request);
 	}
 }

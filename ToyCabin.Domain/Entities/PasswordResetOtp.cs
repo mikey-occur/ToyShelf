@@ -9,7 +9,8 @@ namespace ToyCabin.Domain.Entities
 	public enum OtpPurpose
 	{
 		ACTIVATE_ACCOUNT,
-		RESET_PASSWORD
+		RESET_PASSWORD,
+		SET_LOCAL_PASSWORD
 	}
 	public class PasswordResetOtp
 	{

@@ -44,7 +44,7 @@ namespace ToyCabin.Application.Services
 			_roleRepository = roleRepository;
 		}
 
-		// ===== ADMIN =====
+		// ================= FLOW ACTIVATE =================
 		public async Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request)
 		{
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
@@ -88,8 +88,6 @@ namespace ToyCabin.Application.Services
 				FullName = user.FullName
 			};
 		}
-
-		// ===== Activate account flow =====
 		public async Task<ActivationOtpResponse> RequestActivateAccountAsync(string email)
 		{
 			var account = await _accountRepository
@@ -139,15 +137,18 @@ namespace ToyCabin.Application.Services
 				ExpiredAt = expiredAt
 			};
 		}
-
 		public async Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request)
 		{
-			var otp = await _otpRepo.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT);
+			if (request.NewPassword != request.ConfirmPassword)
+				throw new Exception("Password and ConfirmPassword do not match");
+
+			var otp = await _otpRepo
+				.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT);
 
 			if (otp == null)
 				throw new Exception("Invalid or expired OTP");
 
-			var account = otp.Account!; 
+			var account = otp.Account!;
 
 			var salt = _passwordHasher.GenerateSalt();
 			account.Salt = salt;
@@ -167,9 +168,7 @@ namespace ToyCabin.Application.Services
 			};
 		}
 
-
-		// ===== USER =====
-
+		// ================= FLOW LOCAL =================
 		public async Task<RegisterResponse> RegisterLocalAsync(RegisterRequest request)
 		{
 			if (request.Password != request.ConfirmPassword)
@@ -201,6 +200,17 @@ namespace ToyCabin.Application.Services
 			};
 
 			await _accountRepository.AddAsync(account);
+
+			var customerRole = await _roleRepository.GetByNameAsync("Customer")
+						?? throw new Exception("Default role Customer not found");
+
+			await _unitOfWork.Repository<AccountRole>()
+				.AddAsync(new AccountRole
+				{
+					AccountId = account.Id,
+					RoleId = customerRole.Id
+				});
+
 			await _unitOfWork.SaveChangesAsync();
 
 			return new RegisterResponse
@@ -211,8 +221,6 @@ namespace ToyCabin.Application.Services
 				CreatedAt = user.CreatedAt
 			};
 		}
-
-		// ===== Login =====
 		public async Task<LoginResponse> LoginLocalAsync(LoginRequest request)
 		{
 			var account = await _accountRepository.GetLocalAccountByEmailAsync(request.Email);
@@ -236,6 +244,7 @@ namespace ToyCabin.Application.Services
 			};
 		}
 
+		// ================= FLOW LOGIN GG =================
 		public async Task<LoginResponse> LoginGoogleAsync(string idToken)
 		{
 			// 1. Verify Google token
@@ -288,8 +297,8 @@ namespace ToyCabin.Application.Services
 					};
 					await _accountRepository.AddAsync(account);
 
-					var customerRole = await _roleRepository.GetByNameAsync("CUSTOMER")
-						?? throw new Exception("Default role CUSTOMER not found");
+					var customerRole = await _roleRepository.GetByNameAsync("Customer")
+						?? throw new Exception("Default role Customer not found");
 
 					await _unitOfWork.Repository<AccountRole>()
 						.AddAsync(new AccountRole
@@ -316,6 +325,128 @@ namespace ToyCabin.Application.Services
 				LastLoginAt = account.LastLoginAt.Value
 			};
 		}
+		public async Task<SetLocalPasswordResponse> SetLocalPasswordAsync(Guid accountId, SetLocalPasswordRequest request)
+		{
+			if (request.NewPassword != request.ConfirmPassword)
+				throw new Exception("Password and ConfirmPassword do not match");
 
+			var googleAccount = await _accountRepository.GetByIdWithUserAsync(accountId)
+				?? throw new Exception("Account not found");
+
+			if (googleAccount.Provider != AuthProvider.GOOGLE)
+				throw new Exception("Only Google account can set local password");
+
+			// kiểm tra đã có local chưa
+			var existedLocal = await _accountRepository
+				.GetAccountByEmailAndProviderAsync(
+					googleAccount.User.Email,
+					AuthProvider.LOCAL);
+
+			if (existedLocal != null)
+				throw new Exception("Local account already exists");
+
+			var salt = _passwordHasher.GenerateSalt();
+
+			var localAccount = new Account
+			{
+				Id = Guid.NewGuid(),
+				UserId = googleAccount.UserId,
+				Provider = AuthProvider.LOCAL,
+				Salt = salt,
+				PasswordHash = _passwordHasher.Hash(request.NewPassword, salt),
+				IsFirstLogin = false,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _accountRepository.AddAsync(localAccount);
+
+			googleAccount.IsFirstLogin = false;
+			_accountRepository.Update(googleAccount);
+
+			await _unitOfWork.SaveChangesAsync();
+
+			return new SetLocalPasswordResponse
+			{
+				Email = googleAccount.User.Email,
+				SetAt = DateTime.UtcNow
+			};
+		}
+
+		// ================= FLOW FORGETPASSWORD =================
+		public async Task<ForgotPasswordOtpResponse> RequestForgotPasswordAsync(string email)
+		{
+			var account = await _accountRepository
+				.GetLocalAccountByEmailAsync(email);
+
+			if (account == null)
+				throw new Exception("Account not found");
+
+			// invalidate OTP cũ
+			var oldOtps = await _otpRepo.FindAsync(o =>
+				o.AccountId == account.Id &&
+				!o.IsUsed &&
+				o.Purpose == OtpPurpose.RESET_PASSWORD);
+
+			foreach (var o in oldOtps)
+				o.IsUsed = true;
+
+			var otpCode = Random.Shared.Next(100000, 999999).ToString();
+			var expiredAt = DateTime.UtcNow.AddMinutes(10);
+
+			var otp = new PasswordResetOtp
+			{
+				Account = account,
+				OtpCode = otpCode,
+				Purpose = OtpPurpose.RESET_PASSWORD,
+				ExpiredAt = expiredAt,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _otpRepo.AddAsync(otp);
+			await _unitOfWork.SaveChangesAsync();
+
+			await _emailService.SendOtpAsync(
+				toEmail: account.User.Email,
+				otpCode: otpCode,
+				purpose: OtpPurpose.RESET_PASSWORD,
+				expiredAt: expiredAt,
+				fullName: account.User.FullName
+			);
+
+			return new ForgotPasswordOtpResponse
+			{
+				Email = account.User.Email,
+				ExpiredAt = expiredAt
+			};
+		}
+		public async Task<ResetPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request)
+		{
+			if (request.NewPassword != request.ConfirmPassword)
+				throw new Exception("Password and ConfirmPassword do not match");
+
+			var otp = await _otpRepo
+				.GetWithAccountAsync(request.OtpCode, OtpPurpose.RESET_PASSWORD);
+
+			if (otp == null)
+				throw new Exception("Invalid or expired OTP");
+
+			var account = otp.Account!;
+
+			var salt = _passwordHasher.GenerateSalt();
+			account.Salt = salt;
+			account.PasswordHash = _passwordHasher.Hash(request.NewPassword, salt);
+			account.LastLoginAt = DateTime.UtcNow;
+
+			otp.IsUsed = true;
+
+			_accountRepository.Update(account);
+			await _unitOfWork.SaveChangesAsync();
+
+			return new ResetPasswordResponse
+			{
+				Email = account.User.Email,
+				ResetAt = DateTime.UtcNow
+			};
+		}
 	}
 }
