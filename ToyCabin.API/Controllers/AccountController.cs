@@ -65,6 +65,7 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<LoginResponse>.Ok(rs, "User logged in with Google successfully");
 		}
 
+		[Authorize]
 		[HttpPost("set-password")]
 		public async Task<ActionResult<BaseResponse<SetLocalPasswordResponse>>> SetPassword([FromBody] SetLocalPasswordRequest request)
 		{

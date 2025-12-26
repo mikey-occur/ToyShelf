@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,19 @@ namespace ToyCabin.Infrastructure.Repositories
 {
 	public class UserRepository : GenericRepository<User>, IUserRepository
 	{
-		public UserRepository(ToyCabinDbContext context) : base(context)
+		public UserRepository(ToyCabinDbContext context) : base(context){}
+		public async Task<List<User>> GetActiveUsersAsync()
 		{
+			return await _context.Users
+				.Where(u => u.IsActive)
+				.ToListAsync();
+		}
+
+		public async Task<List<User>> GetInactiveUsersAsync()
+		{
+			return await _context.Users
+				.Where(u => !u.IsActive)
+				.ToListAsync();
 		}
 	}
 }

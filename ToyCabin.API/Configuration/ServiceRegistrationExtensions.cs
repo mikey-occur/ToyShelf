@@ -41,6 +41,7 @@ namespace ToyCabin.API.Configuration
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
+			services.AddScoped<IUserService, UserService>();
 
 		}
 	}
