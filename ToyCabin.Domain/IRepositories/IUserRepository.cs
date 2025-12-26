@@ -9,5 +9,7 @@ namespace ToyCabin.Domain.IRepositories
 {
 	public interface IUserRepository : IGenericRepository<User>
 	{
+		Task<List<User>> GetActiveUsersAsync();
+		Task<List<User>> GetInactiveUsersAsync();
 	}
 }

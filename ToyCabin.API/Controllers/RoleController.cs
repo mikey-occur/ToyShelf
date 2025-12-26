@@ -94,7 +94,7 @@ namespace ToyCabin.API.Controllers
 
 		// ===== RESTORE =====
 
-		[HttpPut("{id:guid}/restore")]
+		[HttpPatch("{id:guid}/restore")]
 		public async Task<BaseResponse<bool>> Restore(Guid id)
 		{
 			var success = await _roleService.RestoreAsync(id);
