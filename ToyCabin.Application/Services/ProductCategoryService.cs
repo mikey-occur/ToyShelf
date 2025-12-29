@@ -1,0 +1,153 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ToyCabin.Application.IServices;
+using ToyCabin.Application.Models.ProductCategory.Request;
+using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Domain.Entities;
+using ToyCabin.Domain.IRepositories;
+
+namespace ToyCabin.Application.Services
+{
+	public class ProductCategoryService : IProductCategoryService
+	{
+		private readonly IProductCategoryRepository _productCategoryRepository;
+		private readonly IUnitOfWork _unitOfWork;
+		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork)
+		{
+			_productCategoryRepository = productCategoryRepository;
+			_unitOfWork = unitOfWork;
+		}
+		// ===== CREATE =====
+		public async Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request)
+		{
+			var code = ToCategoryCode(request.Code);
+			var category = new ProductCategory
+			{
+				Id = Guid.NewGuid(),
+				Name = request.Name.Trim(),
+				Code = code,
+				Description = request.Description,
+				IsActive = true,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _productCategoryRepository.AddAsync(category);
+			await _unitOfWork.SaveChangesAsync();
+			return MapToResponse(category);
+		}
+		// ===== Delete/Diasable =====
+		public async Task<bool> DeleteCategoryAsync(Guid id)
+		{
+			var category =  _productCategoryRepository.GetByIdAsync(id);
+			if (category == null)
+				return false;
+
+			_productCategoryRepository.Remove(category.Result);
+			await _unitOfWork.SaveChangesAsync();
+
+			return true;
+		}
+
+		public async Task<bool> DisableCategoryAsync(Guid id)
+		{
+			var category = await _productCategoryRepository.GetByIdAsync(id);
+
+			if (category == null)
+				return false;
+
+			if (!category.IsActive)
+				return true; 
+
+			category.IsActive = false;
+			category.UpdatedAt = DateTime.UtcNow;
+
+			_productCategoryRepository.Update(category);
+			await _unitOfWork.SaveChangesAsync();
+			return true;
+		}
+
+		// ===== GET =====
+
+		public async Task<IEnumerable<ProductCategoryResponse>> GetAllCategoriesAsync()
+		{
+			var productCategories = await _productCategoryRepository.GetAllAsync();
+			return productCategories.Select(MapToResponse);
+
+		}
+
+		public async Task<IEnumerable<ProductCategoryResponse>> GetinactiveCategoriesAsync()
+		{
+			var productCategories = await _productCategoryRepository
+				.FindAsync(c => !c.IsActive);
+			return productCategories.Select(MapToResponse);
+		}
+
+		public async Task<IEnumerable<ProductCategoryResponse>> GetActiveCategoriesAsync()
+		{
+			var productCategories = await _productCategoryRepository
+				.FindAsync(c => c.IsActive);
+			return productCategories.Select(MapToResponse);
+		}
+
+		// ===== RESTORE/ENABLE =====
+		public async Task<bool> RestoreCategoryAsync(Guid id)
+		{
+			var category = await _productCategoryRepository.GetByIdAsync(id);
+
+			if (category == null)
+				return false;
+
+			if (category.IsActive)
+				return true; // đã active rồi
+
+			category.IsActive = true;
+			category.UpdatedAt = DateTime.UtcNow;
+
+			_productCategoryRepository.Update(category);
+			await _unitOfWork.SaveChangesAsync();
+			return true;
+		}
+		// ===== UPDATE =====
+		public async Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, ProductCategoryRequest request)
+		{
+			var category = await _productCategoryRepository.GetByIdAsync(id);
+			if (category == null)
+				return null;
+
+			category.Name = request.Name.Trim();
+			category.Description = request.Description;
+			category.UpdatedAt = DateTime.UtcNow;
+			_productCategoryRepository.Update(category);
+			await _unitOfWork.SaveChangesAsync();
+			return MapToResponse(category); 
+		}
+
+		// ===== MAPPER =====
+		private ProductCategoryResponse MapToResponse(ProductCategory category)
+		{
+			return new ProductCategoryResponse
+			{
+				Id = category.Id,
+				Name = category.Name,
+				Code = category.Code,
+				Description = category.Description,
+				IsActive = category.IsActive,
+				CreatedAt = category.CreatedAt,
+				UpdatedAt = category.UpdatedAt
+			};
+		}
+		//===== ConvertCode =====
+		private string ToCategoryCode(string name)
+		{
+			return name
+				.Trim()
+				.Replace(" ", "-")
+				.Replace("_", "-")
+				.ToUpper();
+		}
+	}
+}
