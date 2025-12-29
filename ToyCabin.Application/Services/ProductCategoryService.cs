@@ -64,7 +64,7 @@ namespace ToyCabin.Application.Services
 		{
 			var category =  _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
-				return false;
+				throw new Exception("Category not found");
 
 			_productCategoryRepository.Remove(category.Result);
 			await _unitOfWork.SaveChangesAsync();
@@ -77,10 +77,10 @@ namespace ToyCabin.Application.Services
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 
 			if (category == null)
-				return false;
+				throw new KeyNotFoundException($"Category not found. Id = {id}");
 
 			if (!category.IsActive)
-				return true; 
+				throw new InvalidOperationException($"Category {id} is already disabled");
 
 			category.IsActive = false;
 			category.UpdatedAt = DateTime.UtcNow;
@@ -119,10 +119,10 @@ namespace ToyCabin.Application.Services
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 
 			if (category == null)
-				return false;
+				throw new KeyNotFoundException($"Category not found. Id = {id}");
 
 			if (category.IsActive)
-				return true; // đã active rồi
+				throw new InvalidOperationException($"Category {id} is already active");
 
 			category.IsActive = true;
 			category.UpdatedAt = DateTime.UtcNow;
@@ -136,7 +136,7 @@ namespace ToyCabin.Application.Services
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
-				return null;
+				throw new KeyNotFoundException($"Category not found. Id = {id}");
 
 			category.Name = request.Name.Trim();
 			category.Description = request.Description;
