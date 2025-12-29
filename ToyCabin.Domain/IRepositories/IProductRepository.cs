@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Domain.Entities;
 
 namespace ToyCabin.Domain.IRepositories
 {
-	internal interface IProductRepository
+	public interface IProductRepository : IGenericRepository<Product>
 	{
+		Task<int> GetNextSequenceAsync(string categoryCode);
 	}
 }

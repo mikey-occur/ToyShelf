@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.ProductCategory.Request;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
 
@@ -17,11 +18,12 @@ namespace ToyCabin.Application.Services
 	{
 		private readonly IProductCategoryRepository _productCategoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
-		private static readonly Regex CodeRegex = new(@"^[A-Z0-9]+(-[A-Z0-9]+)*$");
-		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork)
+		private readonly IDateTimeProvider _dateTime;
+		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
 		{
 			_productCategoryRepository = productCategoryRepository;
 			_unitOfWork = unitOfWork;
+			_dateTime = dateTimeProvider;
 		}
 		// ===== CREATE =====
 		public async Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request)
@@ -51,7 +53,7 @@ namespace ToyCabin.Application.Services
 				ParentId = request.ParentId,
 				Description = request.Description,
 				IsActive = true,
-				CreatedAt = DateTime.UtcNow
+				CreatedAt = _dateTime.UtcNow
 			};
 
 			await _productCategoryRepository.AddAsync(category);
@@ -83,7 +85,7 @@ namespace ToyCabin.Application.Services
 				throw new InvalidOperationException($"Category {id} is already disabled");
 
 			category.IsActive = false;
-			category.UpdatedAt = DateTime.UtcNow;
+			category.UpdatedAt = _dateTime.UtcNow;
 
 			_productCategoryRepository.Update(category);
 			await _unitOfWork.SaveChangesAsync();
@@ -125,14 +127,14 @@ namespace ToyCabin.Application.Services
 				throw new InvalidOperationException($"Category {id} is already active");
 
 			category.IsActive = true;
-			category.UpdatedAt = DateTime.UtcNow;
+			category.UpdatedAt = _dateTime.UtcNow;
 
 			_productCategoryRepository.Update(category);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}
 		// ===== UPDATE =====
-		public async Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, ProductCategoryRequest request)
+		public async Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, UpdateProductCategoryRequest request)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
@@ -140,7 +142,7 @@ namespace ToyCabin.Application.Services
 
 			category.Name = request.Name.Trim();
 			category.Description = request.Description;
-			category.UpdatedAt = DateTime.UtcNow;
+			category.UpdatedAt = _dateTime.UtcNow;
 			_productCategoryRepository.Update(category);
 			await _unitOfWork.SaveChangesAsync();
 			return MapToResponse(category); 

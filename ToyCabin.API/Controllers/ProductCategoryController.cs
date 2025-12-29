@@ -66,7 +66,7 @@ namespace ToyCabin.API.Controllers
 		[HttpPut("{id}")]
 		public async Task<BaseResponse<ProductCategoryResponse?>> Update(
 			Guid id,
-			[FromBody] ProductCategoryRequest request)
+			[FromBody] UpdateProductCategoryRequest request)
 		{
 			var result = await _productCategoryService
 				.UpdateCategoryAsync(id, request);

@@ -14,7 +14,7 @@ namespace ToyCabin.Application.IServices
 		Task<IEnumerable<ProductCategoryResponse>> GetAllCategoriesAsync();
 		Task<IEnumerable<ProductCategoryResponse>> GetActiveCategoriesAsync();
 		Task<IEnumerable<ProductCategoryResponse>> GetinactiveCategoriesAsync();
-		Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, ProductCategoryRequest request);
+		Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, UpdateProductCategoryRequest request);
 		Task<bool> DeleteCategoryAsync(Guid id);
 		Task<bool> RestoreCategoryAsync(Guid id);
 		Task<bool> DisableCategoryAsync(Guid id);
