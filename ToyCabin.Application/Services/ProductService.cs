@@ -31,7 +31,7 @@ namespace ToyCabin.Application.Services
 		{
 			var category = await _categoryRepository.GetByIdAsync(request.ProductCategoryId);
 			if (category == null)
-				throw new Exception("Category not found");
+				throw new KeyNotFoundException($"Category not found. Id = {request.ProductCategoryId}");
 
 			// Map category code
 			string categoryCode = MapCategoryToCode(category.Code); // robo-dog -> RD
@@ -69,7 +69,7 @@ namespace ToyCabin.Application.Services
 		{
 			var product =  _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception("Product not found");
+				throw new Exception($"Product Id = {id} not found");
 			_productRepository.Remove(product.Result);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
@@ -79,8 +79,8 @@ namespace ToyCabin.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception("Product not found");
-			if(!product.IsActive)
+				throw new Exception($"Product Id = {id} not found");
+			if (!product.IsActive)
 				throw new Exception("Product already inactive");
 			product.IsActive = false;
 			_productRepository.Update(product);
@@ -113,7 +113,7 @@ namespace ToyCabin.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception("Product not found");
+				throw new Exception($"Product Id = {id} not found");
 			if (product.IsActive)
 				throw new Exception("Product already active");
 			product.IsActive = true;
@@ -127,7 +127,7 @@ namespace ToyCabin.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception("Product not found");
+				throw new Exception($"Product Id = {id} not found");
 			// Update fields
 			product.Name = request.Name;
 			product.Price = request.Price;
