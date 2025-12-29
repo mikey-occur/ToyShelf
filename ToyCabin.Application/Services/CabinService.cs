@@ -41,8 +41,12 @@ namespace ToyCabin.Application.Services
         public async Task<bool> DeleteCabinAsync(Guid cabinId)
         {
             var cabin = await _cabinRepository.GetByIdAsync(cabinId);
+            if (cabin == null)
+            {
+                throw new Exception($"Cabin with ID {cabinId} not found.");
+            }
             cabin.IsActive = false;
-             _cabinRepository.Update(cabin);
+            _cabinRepository.Update(cabin);
             await _unitOfWork.SaveChangesAsync();
             return true;
         }
@@ -86,7 +90,11 @@ namespace ToyCabin.Application.Services
         public async Task<CabinResponse> UpdateCabinAsync(Guid cabinId, UpdateCabinRequest request)
         {
             var cabin = await _cabinRepository.GetByIdAsync(cabinId);
-           
+            if (cabin == null)
+            {
+                throw new Exception($"Cabin with ID {cabinId} not found.");
+            }
+
             cabin.Name = request.Name;
             cabin.Code = request.Code;
             cabin.LocationDescription = request.LocationDescription;
