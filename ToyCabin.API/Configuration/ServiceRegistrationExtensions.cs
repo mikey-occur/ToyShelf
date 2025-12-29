@@ -37,12 +37,14 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IAccountRepository, AccountRepository>();
 			services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IPasswordResetOtpRepository, PasswordResetOtpRepository>();
+			services.AddScoped<ICabinRepository, CabinRepository>();
 			services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
 			services.AddScoped<IUserService, UserService>();
+			services.AddScoped<ICabinService, CabinService>();
 			services.AddScoped<IProductCategoryService, ProductCategoryService>();
 
 		}
