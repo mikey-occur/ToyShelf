@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Models.ProductCategory.Response;
 
 namespace ToyCabin.Application.Common
 {
@@ -21,5 +22,6 @@ namespace ToyCabin.Application.Common
 				Data = data
 			};
 		}
+
 	}
 }

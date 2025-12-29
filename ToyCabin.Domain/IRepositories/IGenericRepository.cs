@@ -18,5 +18,6 @@ namespace ToyCabin.Domain.IRepositories
 		void Remove(T entity);
 		IQueryable<T> GetQueryable();
 		void DeleteRange(IEnumerable<T> entities);
+		Task<bool> AnyAsync(Expression<Func<T, bool>> predicate);
 	}
 }
