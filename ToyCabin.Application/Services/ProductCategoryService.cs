@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.ProductCategory.Request;
@@ -16,6 +17,7 @@ namespace ToyCabin.Application.Services
 	{
 		private readonly IProductCategoryRepository _productCategoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
+		private static readonly Regex CodeRegex = new(@"^[A-Z0-9]+(-[A-Z0-9]+)*$");
 		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork)
 		{
 			_productCategoryRepository = productCategoryRepository;
@@ -24,12 +26,29 @@ namespace ToyCabin.Application.Services
 		// ===== CREATE =====
 		public async Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request)
 		{
-			var code = ToCategoryCode(request.Code);
+			string code;
+
+			if (request.ParentId == null)
+			{
+				code = ToCategoryCode(request.Name); 
+			}
+			else
+			{
+				var parent = await _productCategoryRepository
+					.GetByIdAsync(request.ParentId.Value);
+
+				if (parent == null)
+					throw new Exception("Parent category not found");
+
+				code = $"{parent.Code}-{ToCategoryCode(request.Code)}";
+			}
+
 			var category = new ProductCategory
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name.Trim(),
 				Code = code,
+				ParentId = request.ParentId,
 				Description = request.Description,
 				IsActive = true,
 				CreatedAt = DateTime.UtcNow
@@ -37,6 +56,7 @@ namespace ToyCabin.Application.Services
 
 			await _productCategoryRepository.AddAsync(category);
 			await _unitOfWork.SaveChangesAsync();
+
 			return MapToResponse(category);
 		}
 		// ===== Delete/Diasable =====
@@ -149,5 +169,6 @@ namespace ToyCabin.Application.Services
 				.Replace("_", "-")
 				.ToUpper();
 		}
+
 	}
 }
