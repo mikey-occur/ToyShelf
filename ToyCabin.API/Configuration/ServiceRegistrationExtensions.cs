@@ -37,6 +37,7 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IAccountRepository, AccountRepository>();
 			services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IPasswordResetOtpRepository, PasswordResetOtpRepository>();
+			services.AddScoped<IStoreRepository, StoreRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
