@@ -343,6 +343,11 @@ namespace ToyCabin.Infrastructure.Context
 				entity.Property(e => e.CreatedAt)
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+				// ===== Parent - Child (Self reference) =====
+				entity.HasOne(e => e.Parent)
+					  .WithMany(e => e.Children)
+					  .HasForeignKey(e => e.ParentId)
+					  .OnDelete(DeleteBehavior.Restrict);
 
 				entity.Property(e => e.UpdatedAt);
 

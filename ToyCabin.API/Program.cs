@@ -3,6 +3,8 @@ using ToyCabin.API.Configuration;
 using ToyCabin.API.Middleware;
 using ToyCabin.Infrastructure.Common.Time;
 using ToyCabin.Infrastructure.Context;
+using System.Reflection;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,12 @@ builder.Services
 		opt.JsonSerializerOptions.Converters
 			.Add(new VietnamDateTimeJsonConverter());
 	});
-
+builder.Services.AddSwaggerGen(options =>
+{
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    options.IncludeXmlComments(xmlPath);
+});
 
 var app = builder.Build();
 
