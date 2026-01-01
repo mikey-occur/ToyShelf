@@ -40,6 +40,7 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<ICabinRepository, CabinRepository>();
 			services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
 			services.AddScoped<IProductRepository, ProductRepository>();
+			services.AddScoped<IStoreRepository, StoreRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();

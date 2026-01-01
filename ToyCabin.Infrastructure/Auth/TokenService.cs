@@ -40,7 +40,7 @@ namespace ToyCabin.Infrastructure.Auth
 					ClaimValueTypes.Integer64),
 				new(JwtRegisteredClaimNames.Email, user.Email),
 
-				// account info
+				// Account Info
 				new(ClaimTypes.Name, user.FullName),
 				new("aid", account.Id.ToString()),
 				new("prov", account.Provider.ToString())

@@ -16,4 +16,9 @@
     <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="8.15.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Models\Store\Response\" />
+    <Folder Include="Models\Store\Request\" />
+  </ItemGroup>
+
 </Project>
