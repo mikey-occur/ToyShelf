@@ -20,6 +20,8 @@ namespace ToyCabin.Infrastructure.Context
 		public DbSet<Cabin> Cabins { get; set; }
 		public DbSet<Product> Products { get; set; }
 		public DbSet<ProductCategory> ProductCategories { get; set; }
+		public DbSet<Partner> Partners { get; set; }
+		public DbSet<UserStore> UserStores { get; set; }
 
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -109,6 +111,11 @@ namespace ToyCabin.Infrastructure.Context
 				entity.HasMany(e => e.Accounts)
 					  .WithOne(a => a.User)
 					  .HasForeignKey(a => a.UserId);
+
+				entity.HasOne(e => e.Partner)
+					  .WithMany(a => a.Users)
+					  .HasForeignKey(e => e.PartnerId)
+					  .HasConstraintName("FK_User_Partner");
 			});
 
 
@@ -191,7 +198,7 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasConstraintName("FK_PasswordResetOtp_Account");
 			});
 
-			// ================== STORE ==================
+			// ================== Store ==================
 			modelBuilder.Entity<Store>(entity =>
 			{
 				entity.HasKey(e => e.Id);
@@ -202,6 +209,9 @@ namespace ToyCabin.Infrastructure.Context
 				entity.Property(e => e.Code)
 					  .IsRequired()
 					  .HasMaxLength(20);
+
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
 
 				entity.Property(e => e.Name)
 					  .IsRequired()
@@ -223,10 +233,16 @@ namespace ToyCabin.Infrastructure.Context
 
 				entity.Property(e => e.UpdatedAt);
 
-				// FK -> Cabin
+				// FK 
 				entity.HasMany(e => e.Cabins)
 					  .WithOne(a => a.Store)
 					  .HasForeignKey(a => a.StoreId);
+
+				entity.HasOne(e => e.Partner)
+					  .WithMany(a => a.Stores)
+					  .HasForeignKey(e => e.PartnerId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Store_Partner");
 			});
 
 			// ================== Cabin ==================
@@ -264,6 +280,7 @@ namespace ToyCabin.Infrastructure.Context
 				entity.HasOne(e => e.Store)
 					  .WithMany(s => s.Cabins)
 					  .HasForeignKey(e => e.StoreId)
+					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Cabin_Store");
 			});
 
@@ -356,6 +373,76 @@ namespace ToyCabin.Infrastructure.Context
 					  .WithOne(a => a.ProductCategory)
 					  .HasForeignKey(a => a.ProductCategoryId);
 			});
+
+			// ================== Partner ==================
+			modelBuilder.Entity<Partner>(entity =>
+			{
+
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.CompanyName)
+					  .IsRequired()
+					  .HasMaxLength(200);
+
+				entity.Property(e => e.Tier)
+					  .IsRequired()
+					  .HasMaxLength(50)
+					  .HasDefaultValue("STANDARD");
+
+				entity.Property(e => e.RevenueSharePercent)
+					  .HasPrecision(5, 2) // ví dụ: 30.00 (%)
+					  .HasComment("Revenue share percentage from 0 to 100");
+
+				entity.Property(e => e.IsActive)
+					  .HasDefaultValue(true);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.UpdatedAt);
+
+				// FK
+				entity.HasMany(e => e.Stores)
+					  .WithOne(s => s.Partner)
+					  .HasForeignKey(s => s.PartnerId);
+
+				entity.HasMany(e => e.Users)
+					  .WithOne(s => s.Partner)
+					  .HasForeignKey(s => s.PartnerId);
+			});
+
+			// ================== UserStore ==================
+			modelBuilder.Entity<UserStore>(entity =>
+			{
+				entity.HasKey(e => new { e.UserId, e.StoreId });
+
+				entity.Property(e => e.StoreRole)
+					  .IsRequired()
+					  .HasConversion<string>() // lưu Owner / Manager / Staff
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.IsActive)
+					  .HasDefaultValue(true);
+
+				// ===== FK -> User =====
+				entity.HasOne(e => e.User)
+					  .WithMany(u => u.UserStores)
+					  .HasForeignKey(e => e.UserId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_UserStore_User");
+
+				// ===== FK -> Store ===== -> Không cho xoá Store nếu có User liên kết
+				entity.HasOne(e => e.Store)
+					  .WithMany(s => s.UserStores)
+					  .HasForeignKey(e => e.StoreId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_UserStore_Store");
+			});
+
 		}
 	}
 }
