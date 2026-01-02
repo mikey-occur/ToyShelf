@@ -14,8 +14,7 @@ namespace ToyCabin.Domain.Entities
 		public string? Description { get; set; }
 		public Guid? ParentId { get; set; }         
 		public ProductCategory? Parent { get; set; } 
-		public ICollection<ProductCategory> Children { get; set; }
-			= new List<ProductCategory>();
+		public ICollection<ProductCategory> Children { get; set; } = new List<ProductCategory>();
 		public bool IsActive { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
