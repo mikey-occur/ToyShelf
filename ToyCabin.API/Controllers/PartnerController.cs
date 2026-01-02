@@ -1,0 +1,101 @@
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using ToyCabin.Application.Common;
+using ToyCabin.Application.IServices;
+using ToyCabin.Application.Models.Partner.Request;
+using ToyCabin.Application.Models.Partner.Response;
+
+namespace ToyCabin.API.Controllers
+{
+	[Route("api/[controller]")]
+	[ApiController]
+	public class PartnerController : ControllerBase
+	{
+		private readonly IPartnerService _partnerService;
+
+		public PartnerController(IPartnerService partnerService)
+		{
+			_partnerService = partnerService;
+		}
+
+		// ================== CREATE ==================
+		[HttpPost]
+		public async Task<ActionResult<BaseResponse<PartnerResponse>>> Create(
+			[FromBody] CreatePartnerRequest request)
+		{
+			var result = await _partnerService.CreateAsync(request);
+			return BaseResponse<PartnerResponse>
+				.Ok(result, "Partner created successfully");
+		}
+
+		// ================== GET ==================
+		[HttpGet]
+		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetAll()
+		{
+			var result = await _partnerService.GetAllAsync();
+			return BaseResponse<IEnumerable<PartnerResponse>>
+				.Ok(result, "Partners retrieved successfully");
+		}
+
+		[HttpGet("active")]
+		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetActive()
+		{
+			var result = await _partnerService.GetActiveAsync();
+			return BaseResponse<IEnumerable<PartnerResponse>>
+				.Ok(result, "Active partners retrieved successfully");
+		}
+
+		[HttpGet("inactive")]
+		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetInactive()
+		{
+			var result = await _partnerService.GetInactiveAsync();
+			return BaseResponse<IEnumerable<PartnerResponse>>
+				.Ok(result, "Inactive partners retrieved successfully");
+		}
+
+		[HttpGet("{id}")]
+		public async Task<ActionResult<BaseResponse<PartnerResponse>>> GetById(Guid id)
+		{
+			var result = await _partnerService.GetByIdAsync(id);
+			return BaseResponse<PartnerResponse>
+				.Ok(result, "Partner retrieved successfully");
+		}
+
+		// ================== UPDATE ==================
+		[HttpPut("{id}")]
+		public async Task<ActionResult<BaseResponse<PartnerResponse>>> Update(
+			Guid id,
+			[FromBody] UpdatePartnerRequest request)
+		{
+			var result = await _partnerService.UpdateAsync(id, request);
+			return BaseResponse<PartnerResponse>
+				.Ok(result, "Partner updated successfully");
+		}
+
+		// ================== DISABLE / RESTORE ==================
+		[HttpPatch("{id}/disable")]
+		public async Task<ActionResult<BaseResponse<bool>>> Disable(Guid id)
+		{
+			var success = await _partnerService.DisableAsync(id);
+			return BaseResponse<bool>
+				.Ok(success, "Partner disabled successfully");
+		}
+
+		[HttpPatch("{id}/restore")]
+		public async Task<ActionResult<BaseResponse<bool>>> Restore(Guid id)
+		{
+			var success = await _partnerService.RestoreAsync(id);
+			return BaseResponse<bool>
+				.Ok(success, "Partner restored successfully");
+		}
+
+		// ================== DELETE (HARD) ==================
+		[HttpDelete("{id}")]
+		public async Task<ActionResult<BaseResponse<bool>>> Delete(Guid id)
+		{
+			var success = await _partnerService.DeleteAsync(id);
+			return BaseResponse<bool>
+				.Ok(success, "Partner deleted successfully");
+		}
+	}
+}

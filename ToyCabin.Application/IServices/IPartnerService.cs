@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ToyCabin.Application.Models.Partner.Request;
+using ToyCabin.Application.Models.Partner.Response;
+
+namespace ToyCabin.Application.IServices
+{
+	public interface IPartnerService
+	{
+		// ===== CREATE =====
+		Task<PartnerResponse> CreateAsync(CreatePartnerRequest request);
+
+		// ===== GET =====
+		Task<IEnumerable<PartnerResponse>> GetAllAsync();
+		Task<IEnumerable<PartnerResponse>> GetActiveAsync();
+		Task<IEnumerable<PartnerResponse>> GetInactiveAsync();
+		Task<PartnerResponse> GetByIdAsync(Guid id);
+
+		// ===== UPDATE =====
+		Task<PartnerResponse> UpdateAsync(Guid id, UpdatePartnerRequest request);
+
+		// ===== DISABLE / RESTORE =====
+		Task<bool> DisableAsync(Guid id);
+		Task<bool> RestoreAsync(Guid id);
+
+		// ===== DELETE (hard) =====
+		Task<bool> DeleteAsync(Guid id);
+	}
+}
