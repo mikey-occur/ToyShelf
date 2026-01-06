@@ -22,7 +22,7 @@ namespace ToyCabin.Infrastructure.Context
 		public DbSet<ProductCategory> ProductCategories { get; set; }
 		public DbSet<Partner> Partners { get; set; }
 		public DbSet<UserStore> UserStores { get; set; }
-
+		public DbSet<StoreInvitation> StoreInvitations { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
@@ -111,6 +111,10 @@ namespace ToyCabin.Infrastructure.Context
 				entity.HasMany(e => e.Accounts)
 					  .WithOne(a => a.User)
 					  .HasForeignKey(a => a.UserId);
+
+				entity.HasMany(e => e.StoreInvitations)
+					  .WithOne(s => s.User)
+					  .HasForeignKey(s => s.UserId);
 
 				entity.HasOne(e => e.Partner)
 					  .WithMany(a => a.Users)
@@ -237,6 +241,10 @@ namespace ToyCabin.Infrastructure.Context
 				entity.HasMany(e => e.Cabins)
 					  .WithOne(a => a.Store)
 					  .HasForeignKey(a => a.StoreId);
+
+				entity.HasMany(e => e.StoreInvitations)
+				      .WithOne(s => s.Store)
+				      .HasForeignKey(s => s.StoreId);
 
 				entity.HasOne(e => e.Partner)
 					  .WithMany(a => a.Stores)
@@ -443,6 +451,46 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasConstraintName("FK_UserStore_Store");
 			});
 
+			// ================== StoreInvitation ==================
+			modelBuilder.Entity<StoreInvitation>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.StoreRole)
+					  .IsRequired();
+
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasDefaultValue(InvitationStatus.Pending);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.ExpiredAt)
+					  .IsRequired();
+
+				// ===== Relationships =====
+
+				entity.HasOne(e => e.Store)
+					  .WithMany(s => s.StoreInvitations)
+					  .HasForeignKey(e => e.StoreId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreInvitation_Store");
+
+				entity.HasOne(e => e.User)
+					  .WithMany(u => u.StoreInvitations)
+					  .HasForeignKey(e => e.UserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreInvitation_User");
+
+				// 1 user chỉ có 1 invite pending cho 1 store
+				entity.HasIndex(e => new { e.StoreId, e.UserId, e.Status })
+					  .HasDatabaseName("IX_StoreInvitation_Store_User_Status");
+			});
 		}
 	}
 }
