@@ -12,7 +12,7 @@ namespace ToyCabin.Application.IServices
 	{
 		// ===== FLOW ACTIVATE =====
 		Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request);
-	    Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request);
+	    Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request, Guid partnerId, bool isPartnerAdmin);
 		Task<ActivationOtpResponse> RequestActivateAccountAsync(string email);
 		Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request);
 
@@ -23,9 +23,5 @@ namespace ToyCabin.Application.IServices
 		// ===== FLOW LOGIN GG =====
 		Task<LoginResponse> LoginGoogleAsync(string idToken);
 		Task<SetLocalPasswordResponse> SetLocalPasswordAsync(Guid accountId, SetLocalPasswordRequest request);
-
-		// ===== FLOW FORGOT PASSWORD =====
-		Task<ForgotPasswordOtpResponse> RequestForgotPasswordAsync(string email);
-		Task<ResetPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request);
 	}
 }
