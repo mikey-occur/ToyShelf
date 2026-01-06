@@ -43,6 +43,7 @@ namespace ToyCabin.Infrastructure.Auth
 				// Account Info
 				new(ClaimTypes.Name, user.FullName),
 				new("aid", account.Id.ToString()),
+				new("partnerid", user.PartnerId?.ToString() ?? string.Empty),
 				new("prov", account.Provider.ToString())
 			};
 

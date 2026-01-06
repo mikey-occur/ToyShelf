@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ToyCabin.Application.Auth;
 using ToyCabin.Application.Common;
 using ToyCabin.Application.Common.Extensions;
 using ToyCabin.Application.IServices;
@@ -28,6 +29,23 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<CreateAccountResponse>.Ok(rs, "Account created successfully");
 		}
 
+		[HttpPost("activate/internal/partner")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<BaseResponse<CreateAccountResponse>>>CreateAccountPartner(
+		[FromBody] CreatePartnerUserRequest request,
+		[FromServices] ICurrentUser currentUser)
+		{
+			var rs = await _accountService.CreatePartnerUserAsync(
+				request,
+				currentUser.PartnerId!.Value,
+				currentUser.IsPartnerAdmin()
+			);
+
+			return BaseResponse<CreateAccountResponse>
+				.Ok(rs, "Account created successfully");
+		}
+
+
 		[HttpPost("activate/request")]
 		public async Task<ActionResult<BaseResponse<ActivationOtpResponse>>> RequestActivateAccount([FromQuery] string email)
 		{
@@ -51,6 +69,7 @@ namespace ToyCabin.API.Controllers
 		}
 
 		[HttpPost("login")]
+		[AllowAnonymous]
 		public async Task<ActionResult<BaseResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
 		{
 			var rs = await _accountService.LoginLocalAsync(request);
@@ -75,23 +94,5 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<SetLocalPasswordResponse>
 				.Ok(rs, "Local password created successfully");
 		}
-
-		// ================= FLOW FORGETPASSWORD =================
-		[HttpPost("forgot-password/request")]
-		public async Task<ActionResult<BaseResponse<ForgotPasswordOtpResponse>>> RequestForgotPassword(	[FromQuery] string email)
-		{
-			var rs = await _accountService.RequestForgotPasswordAsync(email);
-			return BaseResponse<ForgotPasswordOtpResponse>
-				.Ok(rs, "Reset password OTP sent to email");
-		}
-
-		[HttpPost("forgot-password/reset")]
-		public async Task<ActionResult<BaseResponse<ResetPasswordResponse>>> ResetPassword(	[FromBody] ResetPasswordRequest request)
-		{
-			var rs = await _accountService.ResetPasswordAsync(request);
-			return BaseResponse<ResetPasswordResponse>
-				.Ok(rs, "Password reset successfully");
-		}
-
 	}
 }

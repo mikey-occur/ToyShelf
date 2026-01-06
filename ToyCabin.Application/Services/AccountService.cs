@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyCabin.Application.Auth;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Account.Request;
 using ToyCabin.Application.Models.Account.Response;
@@ -53,6 +54,7 @@ namespace ToyCabin.Application.Services
 			var user = new User
 			{
 				Id = Guid.NewGuid(),
+				PartnerId = request.PartnerId,
 				Email = request.Email,
 				FullName = request.FullName,
 				CreatedAt = DateTime.UtcNow
@@ -79,6 +81,56 @@ namespace ToyCabin.Application.Services
 						RoleId = roleId
 					});
 			}
+
+			await _unitOfWork.SaveChangesAsync();
+
+			return new CreateAccountResponse
+			{
+				Email = user.Email,
+				FullName = user.FullName
+			};
+		}
+		public async Task<CreateAccountResponse> CreatePartnerUserAsync(
+			CreatePartnerUserRequest request,
+			Guid partnerId,
+			bool isPartnerAdmin)
+		{
+			if (!isPartnerAdmin)
+				throw new ForbiddenException();
+
+			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
+				throw new Exception("Email already exists");
+
+			var user = new User
+			{
+				Id = Guid.NewGuid(),
+				PartnerId = partnerId,
+				Email = request.Email,
+				FullName = request.FullName,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _userRepository.AddAsync(user);
+
+			var account = new Account
+			{
+				UserId = user.Id,
+				Provider = AuthProvider.LOCAL,
+				IsFirstLogin = true,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _accountRepository.AddAsync(account);
+
+			var partnerRoleId = await _roleRepository.GetByNameAsync("Partner")
+				?? throw new Exception("Default role Partner not found");
+
+			await _unitOfWork.Repository<AccountRole>()
+				.AddAsync(new AccountRole
+				{
+					AccountId = account.Id,
+					RoleId = partnerRoleId.Id,
+				});
 
 			await _unitOfWork.SaveChangesAsync();
 
@@ -369,83 +421,6 @@ namespace ToyCabin.Application.Services
 			{
 				Email = googleAccount.User.Email,
 				SetAt = DateTime.UtcNow
-			};
-		}
-
-		// ================= FLOW FORGETPASSWORD =================
-		public async Task<ForgotPasswordOtpResponse> RequestForgotPasswordAsync(string email)
-		{
-			var account = await _accountRepository
-				.GetLocalAccountByEmailAsync(email);
-
-			if (account == null)
-				throw new Exception("Account not found");
-
-			// invalidate OTP cũ
-			var oldOtps = await _otpRepo.FindAsync(o =>
-				o.AccountId == account.Id &&
-				!o.IsUsed &&
-				o.Purpose == OtpPurpose.RESET_PASSWORD);
-
-			foreach (var o in oldOtps)
-				o.IsUsed = true;
-
-			var otpCode = Random.Shared.Next(100000, 999999).ToString();
-			var expiredAt = DateTime.UtcNow.AddMinutes(10);
-
-			var otp = new PasswordResetOtp
-			{
-				Account = account,
-				OtpCode = otpCode,
-				Purpose = OtpPurpose.RESET_PASSWORD,
-				ExpiredAt = expiredAt,
-				CreatedAt = DateTime.UtcNow
-			};
-
-			await _otpRepo.AddAsync(otp);
-			await _unitOfWork.SaveChangesAsync();
-
-			await _emailService.SendOtpAsync(
-				toEmail: account.User.Email,
-				otpCode: otpCode,
-				purpose: OtpPurpose.RESET_PASSWORD,
-				expiredAt: expiredAt,
-				fullName: account.User.FullName
-			);
-
-			return new ForgotPasswordOtpResponse
-			{
-				Email = account.User.Email,
-				ExpiredAt = expiredAt
-			};
-		}
-		public async Task<ResetPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request)
-		{
-			if (request.NewPassword != request.ConfirmPassword)
-				throw new Exception("Password and ConfirmPassword do not match");
-
-			var otp = await _otpRepo
-				.GetWithAccountAsync(request.OtpCode, OtpPurpose.RESET_PASSWORD);
-
-			if (otp == null)
-				throw new Exception("Invalid or expired OTP");
-
-			var account = otp.Account!;
-
-			var salt = _passwordHasher.GenerateSalt();
-			account.Salt = salt;
-			account.PasswordHash = _passwordHasher.Hash(request.NewPassword, salt);
-			account.LastLoginAt = DateTime.UtcNow;
-
-			otp.IsUsed = true;
-
-			_accountRepository.Update(account);
-			await _unitOfWork.SaveChangesAsync();
-
-			return new ResetPasswordResponse
-			{
-				Email = account.User.Email,
-				ResetAt = DateTime.UtcNow
 			};
 		}
 	}
