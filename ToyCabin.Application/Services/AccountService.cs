@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyCabin.Application.Auth;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Account.Request;
 using ToyCabin.Application.Models.Account.Response;
@@ -25,6 +26,7 @@ namespace ToyCabin.Application.Services
 		private readonly IPasswordResetOtpRepository _otpRepo;
 		private readonly IEmailService _emailService;
 		private readonly IRoleRepository _roleRepository;
+		private readonly ICurrentUser _currentUser;
 		public AccountService(IAccountRepository accountRepository, 
 							  IUserRepository userRepository, 
 							  IPasswordHasher passwordHasher, 
@@ -32,7 +34,8 @@ namespace ToyCabin.Application.Services
 							  IUnitOfWork unitOfWork,
 							  IPasswordResetOtpRepository otpRepo,
 							  IEmailService emailService,
-							  IRoleRepository roleRepository)
+							  IRoleRepository roleRepository,
+							  ICurrentUser currentUser)
 		{ 
 			_accountRepository = accountRepository;
 			_userRepository = userRepository;
@@ -42,6 +45,7 @@ namespace ToyCabin.Application.Services
 			_otpRepo = otpRepo;
 			_emailService = emailService;
 			_roleRepository = roleRepository;
+			_currentUser = currentUser;
 		}
 
 		// ================= FLOW ACTIVATE =================
@@ -53,6 +57,7 @@ namespace ToyCabin.Application.Services
 			var user = new User
 			{
 				Id = Guid.NewGuid(),
+				PartnerId = request.PartnerId,
 				Email = request.Email,
 				FullName = request.FullName,
 				CreatedAt = DateTime.UtcNow
@@ -88,6 +93,55 @@ namespace ToyCabin.Application.Services
 				FullName = user.FullName
 			};
 		}
+
+		public async Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request)
+		{
+			if (!_currentUser.IsPartnerAdmin())
+				throw new ForbiddenException();
+
+			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
+				throw new Exception("Email already exists");
+
+			var user = new User
+			{
+				Id = Guid.NewGuid(),
+				PartnerId = _currentUser.PartnerId,
+				Email = request.Email,
+				FullName = request.FullName,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _userRepository.AddAsync(user);
+
+			var account = new Account
+			{
+				UserId = user.Id,
+				Provider = AuthProvider.LOCAL,
+				IsFirstLogin = true,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _accountRepository.AddAsync(account);
+
+			var partnerRoleId = await _roleRepository.GetByNameAsync("Partner")
+						?? throw new Exception("Default role Partner not found");
+
+			await _unitOfWork.Repository<AccountRole>()
+				.AddAsync(new AccountRole
+				{
+					AccountId = account.Id,
+					RoleId = partnerRoleId.Id,
+				});
+
+			await _unitOfWork.SaveChangesAsync();
+
+			return new CreateAccountResponse
+			{
+				Email = user.Email,
+				FullName = user.FullName
+			};
+		}
+
 		public async Task<ActivationOtpResponse> RequestActivateAccountAsync(string email)
 		{
 			var account = await _accountRepository

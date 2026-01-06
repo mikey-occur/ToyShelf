@@ -12,6 +12,7 @@ namespace ToyCabin.Application.IServices
 	{
 		// ===== FLOW ACTIVATE =====
 		Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request);
+	    Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request);
 		Task<ActivationOtpResponse> RequestActivateAccountAsync(string email);
 		Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request);
 

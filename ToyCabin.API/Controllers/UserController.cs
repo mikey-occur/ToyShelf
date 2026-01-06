@@ -68,7 +68,7 @@ namespace ToyCabin.API.Controllers
 
 		// ===== DELETE / RESTORE =====
 
-		[HttpDelete("{userId}")]
+		[HttpPatch("{userId}/disable")]
 		public async Task<ActionResult<BaseResponse<object>>> Disable(Guid userId)
 		{
 			await _userService.DisableUserAsync(userId);

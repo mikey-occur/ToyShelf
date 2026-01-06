@@ -28,6 +28,14 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<CreateAccountResponse>.Ok(rs, "Account created successfully");
 		}
 
+		[HttpPost("activate/internal/partner")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<BaseResponse<CreateAccountResponse>>> CreateAccountPartner([FromBody] CreatePartnerUserRequest request)
+		{
+			var rs = await _accountService.CreatePartnerUserAsync(request);
+			return BaseResponse<CreateAccountResponse>.Ok(rs, "Account created successfully");
+		}
+
 		[HttpPost("activate/request")]
 		public async Task<ActionResult<BaseResponse<ActivationOtpResponse>>> RequestActivateAccount([FromQuery] string email)
 		{

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyCabin.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyCabin.Infrastructure.Context;
 namespace ToyCabin.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyCabinDbContext))]
-    partial class ToyCabinDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260106012908_AddStoreInvitation")]
+    partial class AddStoreInvitation
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

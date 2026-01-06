@@ -52,6 +52,7 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IProductService, ProductService>();
 			services.AddScoped<IPartnerService, PartnerService>();
 			services.AddScoped<IStoreService, StoreService>();
+			services.AddScoped<ICurrentUser, CurrentUser>();
 		}
 	}
 }

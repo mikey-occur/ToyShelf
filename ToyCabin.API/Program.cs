@@ -28,6 +28,9 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(xmlPath);
 });
 
+// ===== HttpContext =====
+builder.Services.AddHttpContextAccessor();
+
 var app = builder.Build();
 
 // Migration tự động

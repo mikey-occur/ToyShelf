@@ -19,5 +19,6 @@ namespace ToyCabin.Domain.Entities
 		public virtual Partner? Partner { get; set; }
 		public virtual ICollection<UserStore> UserStores { get; set; } = new List<UserStore>();
 		public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
+		public virtual ICollection<StoreInvitation> StoreInvitations { get; set; } = new List<StoreInvitation>();
 	}
 }

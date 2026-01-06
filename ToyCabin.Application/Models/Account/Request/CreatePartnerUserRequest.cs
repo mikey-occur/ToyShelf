@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace ToyCabin.Application.Models.Account.Request
 {
-	public class CreateAccountRequest
+	public class CreatePartnerUserRequest
 	{
-		public Guid? PartnerId { get; set; }
 		public string Email { get; set; } = null!;
 		public string FullName { get; set; } = null!;
-		public List<Guid> RoleIds { get; set; } = new();
 	}
 }

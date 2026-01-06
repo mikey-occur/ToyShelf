@@ -8,7 +8,6 @@ namespace ToyCabin.Domain.Entities
 {
 	public enum StoreRole
 	{
-		Owner, // -> 1 -> partner_admin
 		Manager, // -> partner_manager
 		Staff // -> partner_staff
 	}
