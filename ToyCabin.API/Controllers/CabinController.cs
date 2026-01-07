@@ -21,7 +21,6 @@ namespace ToyCabin.API.Controllers
         /// Gets all cabins.
         /// </summary>
         [HttpGet("all")]
-        [Authorize]
         public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetAllCabins()
         {
             var cabins = await _cabinService.GetAllCabinsAsync();
@@ -32,7 +31,6 @@ namespace ToyCabin.API.Controllers
         /// Gets all active cabins.
         /// </summary>
         [HttpGet("active")]
-        [Authorize]
         public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetActiveCabins()
         {
             var cabins = await _cabinService.GetActiveCabinsAsync();
@@ -43,7 +41,6 @@ namespace ToyCabin.API.Controllers
         /// Gets all inactive cabins.
         /// </summary>
         [HttpGet("inactive")]
-        [Authorize]
         public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetInactiveCabins()
         {
             var cabins = await _cabinService.GetInactiveCabinsAsync();
@@ -54,7 +51,6 @@ namespace ToyCabin.API.Controllers
         /// Gets all online cabins.
         /// </summary>
         [HttpGet("online")]
-        [Authorize]
         public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetOnlineCabins()
         {
             var cabins = await _cabinService.GetAllOnlineCabinsAsync();
@@ -65,7 +61,6 @@ namespace ToyCabin.API.Controllers
         /// Gets all offline cabins.
         /// </summary>
         [HttpGet("offline")]
-        [Authorize]
         public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetOfflineCabins()
         {
             var cabins = await _cabinService.GetAllOfflineCabinsAsync();
@@ -76,7 +71,6 @@ namespace ToyCabin.API.Controllers
         /// Gets cabin by ID.
         /// </summary>
         [HttpGet("{cabinId}")]
-        [Authorize]
         public async Task<BaseResponse<CabinResponse>> GetCabinById(Guid cabinId)
         {
             var cabin = await _cabinService.GetCabinByIdAsync(cabinId);
@@ -87,7 +81,6 @@ namespace ToyCabin.API.Controllers
         /// Create a new cabin.
         /// </summary>
         [HttpPost("create")]
-        [Authorize]
         public async Task<BaseResponse<CabinResponse>> CreateCabin([FromBody] CreateCabinRequest request)
         {
             var cabin = await _cabinService.CreateCabinAsync(request);
@@ -98,7 +91,6 @@ namespace ToyCabin.API.Controllers
         /// Update an existing cabin.
         /// </summary>
         [HttpPut("{cabinId}")]
-        [Authorize]
         public async Task<BaseResponse<CabinResponse>> UpdateCabin(Guid cabinId, [FromBody] UpdateCabinRequest request)
         {
             var cabin = await _cabinService.UpdateCabinAsync(cabinId, request);
@@ -109,7 +101,6 @@ namespace ToyCabin.API.Controllers
         /// Delete a cabin by ID.
         /// </summary>
         [HttpDelete("{cabinId}")]
-        [Authorize]
         public async Task<BaseResponse<bool>> DeleteCabin(Guid cabinId)
         {
             var result = await _cabinService.DeleteCabinAsync(cabinId);
