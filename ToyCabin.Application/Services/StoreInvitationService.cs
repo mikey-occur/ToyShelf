@@ -125,6 +125,7 @@ namespace ToyCabin.Application.Services
 				throw new Exception("Invitation expired");
 
 			invitation.Status = InvitationStatus.Accepted;
+			invitation.ExpiredAt = null;
 
 			await _userStoreRepo.AddAsync(new UserStore
 			{
@@ -152,6 +153,7 @@ namespace ToyCabin.Application.Services
 				throw new Exception("Invitation is not valid");
 
 			invitation.Status = InvitationStatus.Rejected;
+			invitation.ExpiredAt = null;
 
 			await _unitOfWork.SaveChangesAsync();
 
