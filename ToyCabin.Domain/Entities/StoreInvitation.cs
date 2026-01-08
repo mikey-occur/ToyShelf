@@ -22,8 +22,8 @@ namespace ToyCabin.Domain.Entities
 		public Guid InvitedByUserId { get; set; }
 		public StoreRole StoreRole { get; set; }
 		public InvitationStatus Status { get; set; } // Pending, Accepted, Rejected, Expired
-		public DateTime ExpiredAt { get; set; }
 		public DateTime CreatedAt { get; set; }
+		public DateTime? ExpiredAt { get; set; }
 		public Store Store { get; set; } = null!;
 		public User User { get; set; } = null!;
 	}

@@ -430,7 +430,7 @@ namespace ToyCabin.Infrastructure.Context
 
 				entity.Property(e => e.StoreRole)
 					  .IsRequired()
-					  .HasConversion<string>() // lưu Owner / Manager / Staff
+					  .HasConversion<string>() // Manager / Staff
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.IsActive)
@@ -460,18 +460,21 @@ namespace ToyCabin.Infrastructure.Context
 					  .ValueGeneratedOnAdd();
 
 				entity.Property(e => e.StoreRole)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasConversion<string>() // Manager / Staff
+					  .HasMaxLength(20);
 
 				entity.Property(e => e.Status)
 					  .IsRequired()
+					  .HasConversion<string>() // Manager / Staff
+					  .HasMaxLength(20)
 					  .HasDefaultValue(InvitationStatus.Pending);
 
 				entity.Property(e => e.CreatedAt)
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-				entity.Property(e => e.ExpiredAt)
-					  .IsRequired();
+				entity.Property(e => e.ExpiredAt);
 
 				// ===== Relationships =====
 
