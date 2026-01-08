@@ -16,15 +16,15 @@ namespace ToyCabin.Infrastructure.Auth
 		public CurrentUser(IHttpContextAccessor accessor)
 		{
 			var user = accessor.HttpContext?.User
-				?? throw new UnauthorizedAccessException();
+				?? throw new UnauthorizedAccessException("Unauthenticated");
 
 			AccountId = Guid.Parse(
 				user.FindFirst("aid")?.Value
 				?? throw new UnauthorizedAccessException("Missing aid claim"));
 
 			UserId = Guid.Parse(
-				user.FindFirst(JwtRegisteredClaimNames.Sub)?.Value
-				?? throw new UnauthorizedAccessException("Missing sub claim"));
+				user.FindFirst(ClaimTypes.NameIdentifier)?.Value
+				?? throw new UnauthorizedAccessException("Missing user id claim"));
 
 			var partnerId = user.FindFirst("partnerid")?.Value;
 			PartnerId = string.IsNullOrWhiteSpace(partnerId)
@@ -38,5 +38,11 @@ namespace ToyCabin.Infrastructure.Auth
 
 		public bool IsPartnerAdmin()
 			=> Roles.Contains("PartnerAdmin");
+			
+		public bool IsPartner()
+			=> Roles.Contains("Partner");
+
+		public bool IsAdmin()
+			=> Roles.Contains("Admin");
 	}
 }

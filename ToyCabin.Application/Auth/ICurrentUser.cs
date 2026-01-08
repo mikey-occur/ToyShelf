@@ -14,5 +14,7 @@ namespace ToyCabin.Application.Auth
 		IReadOnlyList<string> Roles { get; }
 
 		bool IsPartnerAdmin();
+		bool IsPartner();
+		bool IsAdmin();
 	}
 }

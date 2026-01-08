@@ -86,7 +86,7 @@ namespace ToyCabin.Application.Services
 				throw new Exception("Password and ConfirmPassword do not match");
 
 			var otp = await _otpRepo
-				.GetWithAccountAsync(request.OtpCode, OtpPurpose.RESET_PASSWORD);
+				.GetWithAccountAsync(request.OtpCode, OtpPurpose.RESET_PASSWORD, request.Email);
 
 			if (otp == null)
 				throw new Exception("Invalid or expired OTP");
