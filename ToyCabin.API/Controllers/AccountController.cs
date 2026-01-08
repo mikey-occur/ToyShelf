@@ -45,7 +45,6 @@ namespace ToyCabin.API.Controllers
 				.Ok(rs, "Account created successfully");
 		}
 
-
 		[HttpPost("activate/request")]
 		public async Task<ActionResult<BaseResponse<ActivationOtpResponse>>> RequestActivateAccount([FromQuery] string email)
 		{

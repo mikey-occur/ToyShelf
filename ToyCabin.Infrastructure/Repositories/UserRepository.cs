@@ -26,5 +26,12 @@ namespace ToyCabin.Infrastructure.Repositories
 				.Where(u => !u.IsActive)
 				.ToListAsync();
 		}
+		public async Task<User?> GetByEmailAsync(string email)
+		{
+			return await _context.Users
+				.FirstOrDefaultAsync(x =>
+					x.Email == email &&
+					x.IsActive);
+		}
 	}
 }

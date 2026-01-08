@@ -10,6 +10,6 @@ namespace ToyCabin.Domain.IRepositories
 {
 	public interface IPasswordResetOtpRepository : IGenericRepository<PasswordResetOtp>
 	{
-		Task<PasswordResetOtp?> GetWithAccountAsync(string otpCode, OtpPurpose purpose);
+		Task<PasswordResetOtp?> GetWithAccountAsync(string otpCode, OtpPurpose purpose, string email);
 	}
 }

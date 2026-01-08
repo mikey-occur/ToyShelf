@@ -7,10 +7,7 @@ using ToyCabin.Domain.Entities;
 
 namespace ToyCabin.Domain.IRepositories
 {
-	public interface IUserRepository : IGenericRepository<User>
+	public interface IUserStoreRepository : IGenericRepository<UserStore>
 	{
-		Task<List<User>> GetActiveUsersAsync();
-		Task<List<User>> GetInactiveUsersAsync();
-		Task<User?> GetByEmailAsync(string email);
 	}
 }

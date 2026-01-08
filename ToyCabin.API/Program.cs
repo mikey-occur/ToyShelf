@@ -1,9 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Reflection;
+using System.Text.Json.Serialization;
 using ToyCabin.API.Configuration;
 using ToyCabin.API.Middleware;
 using ToyCabin.Infrastructure.Common.Time;
 using ToyCabin.Infrastructure.Context;
-using System.Reflection;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -18,8 +19,12 @@ builder.Services
 	.AddControllers()
 	.AddJsonOptions(opt =>
 	{
+		opt.JsonSerializerOptions.Converters.Add(
+			new JsonStringEnumConverter()
+		);
 		opt.JsonSerializerOptions.Converters
-			.Add(new VietnamDateTimeJsonConverter());
+			.Add(new VietnamDateTimeJsonConverter()
+		);
 	});
 builder.Services.AddSwaggerGen(options =>
 {

@@ -28,6 +28,7 @@ namespace ToyCabin.API.Configuration
 			// ===== Security =====
 			services.AddScoped<IPasswordHasher, PasswordHasher>();
 			services.AddScoped<ITokenService, TokenService>();
+			services.AddScoped<ICurrentUser, CurrentUser>();
 
 			// ===== Common =====
 			services.AddSingleton<IDateTimeProvider, VietnamDateTimeProvider>();
@@ -42,19 +43,21 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IProductRepository, ProductRepository>();
 			services.AddScoped<IPartnerRepository, PartnerRepository>();
 			services.AddScoped<IStoreRepository, StoreRepository>();
+			services.AddScoped<IUserStoreRepository, UserStoreRepository>();
+			services.AddScoped<IStoreInvitationRepository, StoreInvitationRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
 			services.AddScoped<IUserService, UserService>();
+			services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
 			services.AddScoped<ICabinService, CabinService>();
 			services.AddScoped<IProductCategoryService, ProductCategoryService>();
 			services.AddScoped<IProductService, ProductService>();
 			services.AddScoped<IPartnerService, PartnerService>();
 			services.AddScoped<IStoreService, StoreService>();
-			services.AddScoped<ICurrentUser, CurrentUser>();
-			services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
-
+			services.AddScoped<IUserStoreService, UserStoreService>();
+			services.AddScoped<IStoreInvitationService, StoreInvitationService>();
 		}
 	}
 }

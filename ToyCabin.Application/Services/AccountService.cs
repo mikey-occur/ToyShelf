@@ -195,12 +195,20 @@ namespace ToyCabin.Application.Services
 				throw new Exception("Password and ConfirmPassword do not match");
 
 			var otp = await _otpRepo
-				.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT);
+				.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT, request.Email);
 
 			if (otp == null)
 				throw new Exception("Invalid or expired OTP");
 
+
+			if (otp.ExpiredAt < DateTime.UtcNow || otp.IsUsed)
+				throw new Exception("Invalid or expired OTP");
+
 			var account = otp.Account!;
+
+			// extra safety: chắc chắn đúng account local & chưa activate
+			if (!account.IsFirstLogin)
+				throw new Exception("Account already activated");
 
 			var salt = _passwordHasher.GenerateSalt();
 			account.Salt = salt;

@@ -14,16 +14,17 @@ namespace ToyCabin.Infrastructure.Repositories
 	public class PasswordResetOtpRepository : GenericRepository<PasswordResetOtp>, IPasswordResetOtpRepository
 	{
 		public PasswordResetOtpRepository(ToyCabinDbContext context) : base(context){}
-		public async Task<PasswordResetOtp?> GetWithAccountAsync(string otpCode, OtpPurpose purpose)
+		public async Task<PasswordResetOtp?> GetWithAccountAsync(string otpCode, OtpPurpose purpose, string email)
 		{
 			return await _context.PasswordResetOtps
 				.Include(o => o.Account)      
-				.ThenInclude(a => a.User)    
+					.ThenInclude(a => a.User)    
 				.FirstOrDefaultAsync(o =>
 					o.OtpCode == otpCode &&
 					o.Purpose == purpose &&
 					!o.IsUsed &&
-					o.ExpiredAt > DateTime.UtcNow);
+					o.ExpiredAt > DateTime.UtcNow &&
+					o.Account.User.Email == email);
 		}
 	}
 }
