@@ -18,8 +18,10 @@ namespace ToyCabin.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 		public virtual Partner Partner { get; set; } = null!;
-		public virtual ICollection<UserStore> UserStores { get; set; } = new List<UserStore>();
 		public virtual ICollection<Cabin> Cabins { get; set; } = new List<Cabin>();
+		public virtual ICollection<UserStore> UserStores { get; set; } = new List<UserStore>();
 		public virtual ICollection<StoreInvitation> StoreInvitations { get; set; }= new List<StoreInvitation>();
+		public ICollection<Order> Orders { get; set; } = new List<Order>();
+		public virtual ICollection<InventoryLocation> InventoryLocations { get; set; } = new List<InventoryLocation>();
 	}
 }
