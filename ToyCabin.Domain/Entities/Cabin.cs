@@ -18,7 +18,7 @@ namespace ToyCabin.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? LastHeartbeatAt { get; set; }
 		public virtual Store? Store { get; set; }
-
-		//-> mở rộng Inventory, IoT , Shelf later
+		public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
+		public virtual ICollection<CabinSnapshot> CabinSnapshots { get; set; } = new List<CabinSnapshot>();
 	}
 }

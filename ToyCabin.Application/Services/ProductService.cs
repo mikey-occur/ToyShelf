@@ -47,7 +47,7 @@ namespace ToyCabin.Application.Services
 				Name = request.Name,
 				ProductCategoryId = request.ProductCategoryId,
 				SKU = sku,
-				Price = request.Price,
+				BasePrice = request.Price,
                 Description = request.Description,
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
@@ -130,7 +130,7 @@ namespace ToyCabin.Application.Services
 				throw new Exception($"Product Id = {id} not found");
 			// Update fields
 			product.Name = request.Name;
-			product.Price = request.Price;
+			product.BasePrice = request.Price;
 			product.Description = request.Description;
 			product.QrCode = request.QrCode;
 			product.Model3DUrl = request.Model3DUrl;
@@ -151,7 +151,7 @@ namespace ToyCabin.Application.Services
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,
-				Price = product.Price,
+				Price = product.BasePrice,
 				IsActive = product.IsActive,
 				CreatedAt = product.CreatedAt,
 				UpdatedAt = product.UpdatedAt
