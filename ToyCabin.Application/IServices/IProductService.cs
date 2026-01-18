@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
+using ToyCabin.Application.Models.Store.Response;
 
 namespace ToyCabin.Application.IServices
 {
@@ -13,7 +14,8 @@ namespace ToyCabin.Application.IServices
 		Task<IEnumerable<ProductResponse>> GetAllProductsAsync();
 		Task<IEnumerable<ProductResponse>> GetActiveProductsAsync();
 		Task<IEnumerable<ProductResponse>> GetInactiveProductsAsync();
-        
+		Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive);
+		Task<ProductResponse> GetByIdAsync(Guid id);
 		Task<ProductResponse> CreateProductAsync(ProductRequest request);
 		Task<ProductResponse?> UpdateProductAsync(Guid id, ProductUpdateRequest request);
 		Task<bool> DeleteProductAsync(Guid id);

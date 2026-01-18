@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Application.Models.Store.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
@@ -112,6 +114,20 @@ namespace ToyCabin.Application.Services
 			return products.Select(MapToResponse);
 		}
 
+
+		public async Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive)
+		{
+			var products = await  _productRepository.GetProductsAsync(isActive);
+			return products.Select(MapToResponse);
+		}
+		public async Task<ProductResponse> GetByIdAsync(Guid id)
+		{
+			var product =  await _productRepository.GetByIdAsync(id);
+			if (product == null)
+				throw new Exception($"Product Id = {id} not found");
+			return MapToResponse(product);
+		}
+
 		//===Restore===
 		public async Task<bool> RestoreProductAsync(Guid id)
 		{
@@ -156,24 +172,32 @@ namespace ToyCabin.Application.Services
 			return new ProductResponse
 			{
 				Id = product.Id,
+				ProductCategoryId = product.ProductCategoryId,
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,
 				Price = product.BasePrice,
+				QrCode = product.QrCode,
+				Model3DUrl = product.Model3DUrl				,
+				ImageUrl = product.ImageUrl,
+				Brand = product.Brand,
+				Material = product.Material,
+				OriginCountry = product.OriginCountry,
+				AgeRange = product.AgeRange,
 				IsActive = product.IsActive,
+				IsConsignment = product.IsConsignment,
 				CreatedAt = product.CreatedAt,
 				UpdatedAt = product.UpdatedAt
 			};
 		}
-		//====SKU CODE Conver=====
+		//====SKU CODE Convert=====
 		public string MapCategoryToCode(string categoryName)
 		{
 			// Nếu tên category rỗng hoặc null thì trả về chuỗi rỗng
 			if (string.IsNullOrWhiteSpace(categoryName))
 				return string.Empty;
 
-			// Tách tên category thành các "từ"
-			// Hỗ trợ các separator phổ biến: '-', space, '_'
+			// Tách tên category 
 			// Ví dụ: "robo-dog" -> ["robo", "dog"]
 			var words = categoryName
 				.Split(new[] { '-', ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
@@ -183,12 +207,9 @@ namespace ToyCabin.Application.Services
 			var code = string.Concat(
 				words.Select(w => char.ToUpperInvariant(w[0]))
 			);
-
-			// (Tuỳ chọn) Giới hạn độ dài code, ví dụ tối đa 4 ký tự
-			// return code.Length > 4 ? code.Substring(0, 4) : code;
-
 			return code;
 		}
 
+		
 	}
 }
