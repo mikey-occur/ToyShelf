@@ -42,7 +42,8 @@ namespace ToyCabin.API.Controllers
 		// ===== UPDATE =====
 
 		// Update user by admin
-		[HttpPut("{userId}")]
+		[HttpPut("{userId}/by-admin")]
+		[Authorize(Roles = "PartnerAdmin,Admin")]
 		public async Task<ActionResult<BaseResponse<UserProfileResponse>>> Update(
 			Guid userId,
 			[FromBody] UpdateUserRequest request)
@@ -51,13 +52,14 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<UserProfileResponse>.Ok(rs, "User updated successfully");
 		}
 
-		[Authorize]
-		[HttpPut("me")]
+		[HttpPut]
+		[Authorize(Roles = "PartnerAdmin,Partner,Admin,Customer")]
 		public async Task<ActionResult<BaseResponse<UserProfileResponse>>> UpdateMe(
-		[FromBody] UpdateUserRequest request)
+		[FromBody] UpdateUserRequest request,
+		[FromServices] ICurrentUser currentUser)
 		{
 			var userId = User.GetUserId();
-			var rs = await _userService.UpdateUserAsync(userId, request);
+			var rs = await _userService.UpdateUserAsync(currentUser.UserId, request);
 			return BaseResponse<UserProfileResponse>.Ok(rs, "Profile updated successfully");
 		}
 
