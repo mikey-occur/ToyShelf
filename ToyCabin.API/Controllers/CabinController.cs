@@ -28,46 +28,6 @@ namespace ToyCabin.API.Controllers
         }
 
         /// <summary>
-        /// Gets all active cabins.
-        /// </summary>
-        [HttpGet("active")]
-        public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetActiveCabins()
-        {
-            var cabins = await _cabinService.GetActiveCabinsAsync();
-            return BaseResponse<IEnumerable<CabinResponse>>.Ok(cabins, "Active cabins retrieved successfully");
-        }
-
-        /// <summary>
-        /// Gets all inactive cabins.
-        /// </summary>
-        [HttpGet("inactive")]
-        public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetInactiveCabins()
-        {
-            var cabins = await _cabinService.GetInactiveCabinsAsync();
-            return BaseResponse<IEnumerable<CabinResponse>>.Ok(cabins, "Inactive cabins retrieved successfully");
-        }
-
-        /// <summary>
-        /// Gets all online cabins.
-        /// </summary>
-        [HttpGet("online")]
-        public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetOnlineCabins()
-        {
-            var cabins = await _cabinService.GetAllOnlineCabinsAsync();
-            return BaseResponse<IEnumerable<CabinResponse>>.Ok(cabins, "Online cabins retrieved successfully");
-        }
-
-        /// <summary>
-        /// Gets all offline cabins.
-        /// </summary>
-        [HttpGet("offline")]
-        public async Task<BaseResponse<IEnumerable<CabinResponse>>> GetOfflineCabins()
-        {
-            var cabins = await _cabinService.GetAllOfflineCabinsAsync();
-            return BaseResponse<IEnumerable<CabinResponse>>.Ok(cabins, "Offline cabins retrieved successfully");
-        }
-
-        /// <summary>
         /// Gets cabin by ID.
         /// </summary>
         [HttpGet("{cabinId}")]
@@ -91,20 +51,20 @@ namespace ToyCabin.API.Controllers
         /// Update an existing cabin.
         /// </summary>
         [HttpPut("{cabinId}")]
-        public async Task<BaseResponse<CabinResponse>> UpdateCabin(Guid cabinId, [FromBody] UpdateCabinRequest request)
+        public async Task<ActionResponse> UpdateCabin(Guid cabinId, [FromBody] UpdateCabinRequest request)
         {
             var cabin = await _cabinService.UpdateCabinAsync(cabinId, request);
-            return BaseResponse<CabinResponse>.Ok(cabin, "Cabin updated successfully");
+            return ActionResponse.Ok("Cabin updated successfully");
         }
 
         /// <summary>
         /// Delete a cabin by ID.
         /// </summary>
         [HttpDelete("{cabinId}")]
-        public async Task<BaseResponse<bool>> DeleteCabin(Guid cabinId)
+        public async Task<ActionResponse> DeleteCabin(Guid cabinId)
         {
             var result = await _cabinService.DeleteCabinAsync(cabinId);
-            return BaseResponse<bool>.Ok(result, "Cabin deleted successfully");
+            return ActionResponse.Ok("Cabin deleted successfully");
         }
     }
 }
