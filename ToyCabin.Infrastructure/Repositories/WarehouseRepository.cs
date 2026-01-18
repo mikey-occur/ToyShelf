@@ -12,7 +12,7 @@ namespace ToyCabin.Infrastructure.Repositories
 {
 	public class WarehouseRepository : GenericRepository<Warehouse>, IWarehouseRepository
 	{
-		public WarehouseRepository(ToyCabinDbContext context) : base(context) { }
+		public WarehouseRepository(ToyCabinDbContext context) : base(context) { }	
 		public async Task<IEnumerable<Warehouse>> GetWarehousesAsync(bool? isActive)
 		{
 			var query = _context.Warehouses.AsQueryable();
@@ -20,7 +20,9 @@ namespace ToyCabin.Infrastructure.Repositories
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);
 
-			return await query.ToListAsync();
+			return await query
+					.OrderByDescending(w => w.CreatedAt)
+					.ToListAsync();
 		}
 	}
 }

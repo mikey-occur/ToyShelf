@@ -20,7 +20,9 @@ namespace ToyCabin.Infrastructure.Repositories
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);
 
-			return await query.ToListAsync();
+			return await query
+					.OrderByDescending(w => w.CreatedAt)
+					.ToListAsync();
 		}
 	}
 }
