@@ -27,24 +27,11 @@ namespace ToyCabin.Application.Services
 
 		// ===== GET =====
 
-		public async Task<IEnumerable<RoleResponse>> GetAllAsync()
+		public async Task<IEnumerable<RoleResponse>> GetRolesAsync(bool? isActive)
 		{
-			var roles = await _roleRepository.GetAllAsync();
+			var roles = await _roleRepository.GetRolesAsync(isActive);
 			return roles.Select(MapToResponse);
 		}
-
-		public async Task<IEnumerable<RoleResponse>> GetActiveAsync()
-		{
-			var roles = await _roleRepository.FindAsync(r => r.IsActive);
-			return roles.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<RoleResponse>> GetInactiveAsync()
-		{
-			var roles = await _roleRepository.FindAsync(r => !r.IsActive);
-			return roles.Select(MapToResponse);
-		}
-
 
 		public async Task<RoleResponse?> GetByIdAsync(Guid id)
 		{

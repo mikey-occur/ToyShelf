@@ -23,24 +23,10 @@ namespace ToyCabin.API.Controllers
 
 		[HttpGet]
 		//[Authorize(Roles = "Admin")]	
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<RoleResponse>>>> GetRoles([FromQuery] bool? isActive)
 		{
-			var result = await _roleService.GetAllAsync();
+			var result = await _roleService.GetRolesAsync(isActive);
 			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Roles retrieved successfully");
-		}
-
-		[HttpGet("active")]
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetActive()
-		{
-			var result = await _roleService.GetActiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Active roles retrieved successfully");
-		}
-
-		[HttpGet("inactive")]
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetInactive()
-		{
-			var result = await _roleService.GetInactiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Inactive roles retrieved successfully");
 		}
 
 		[HttpGet("{id:guid}")]

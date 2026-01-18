@@ -22,6 +22,5 @@ namespace ToyCabin.Infrastructure.Repositories
 
 			return await query.ToListAsync();
 		}
-
 	}
 }
