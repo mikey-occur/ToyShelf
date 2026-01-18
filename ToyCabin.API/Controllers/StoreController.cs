@@ -73,29 +73,26 @@ namespace ToyCabin.API.Controllers
 		}
 
 		// ================= DISABLE / RESTORE =================
-		//[HttpPatch("{id}/disable")]
-		//public async Task<ActionResult<BaseResponse<bool>>> Disable(Guid id)
-		//{
-		//	var result = await _storeService.DisableAsync(id);
-		//	return BaseResponse<bool>
-		//		.Ok(result, "Store disabled successfully");
-		//}
+		[HttpPatch("{id}/disable")]
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
+		{
+			await _storeService.DisableAsync(id);
+			return ActionResponse.Ok("Store disabled successfully");
+		}
 
-		//[HttpPatch("{id}/restore")]
-		//public async Task<ActionResult<BaseResponse<bool>>> Restore(Guid id)
-		//{
-		//	var result = await _storeService.RestoreAsync(id);
-		//	return BaseResponse<bool>
-		//		.Ok(result, "Store restored successfully");
-		//}
+		[HttpPatch("{id}/restore")]
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
+		{
+			await _storeService.RestoreAsync(id);
+			return ActionResponse.Ok("Store restored successfully");
+		}
 
-		//// ================= DELETE =================
-		//[HttpDelete("{id}")]
-		//public async Task<ActionResult<BaseResponse<bool>>> Delete(Guid id)
-		//{
-		//	var result = await _storeService.DeleteAsync(id);
-		//	return BaseResponse<bool>
-		//		.Ok(result, "Store deleted successfully");
-		//}
+		// ================= DELETE =================
+		[HttpDelete("{id}")]
+		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
+		{
+			await _storeService.DeleteAsync(id);
+			return ActionResponse.Ok("Store deleted successfully");
+		}
 	}
 }
