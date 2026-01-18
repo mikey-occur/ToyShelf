@@ -23,10 +23,10 @@ namespace ToyCabin.Application.IServices
 		Task<StoreResponse> UpdateAsync(Guid id, UpdateStoreRequest request);
 
 		// STATUS MANAGEMENT
-		Task<bool> DisableAsync(Guid id);
-		Task<bool> RestoreAsync(Guid id);
+		Task DisableAsync(Guid id);
+		Task RestoreAsync(Guid id);
 
 		// DELETE
-		Task<bool> DeleteAsync(Guid id);
+		Task DeleteAsync(Guid id);
 	}
 }
