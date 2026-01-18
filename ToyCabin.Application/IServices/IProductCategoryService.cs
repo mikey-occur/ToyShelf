@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyCabin.Application.Models.ProductCategory.Request;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Application.Models.Store.Response;
 
 namespace ToyCabin.Application.IServices
 {
@@ -15,6 +16,7 @@ namespace ToyCabin.Application.IServices
 		Task<IEnumerable<ProductCategoryResponse>> GetActiveCategoriesAsync();
 		Task<IEnumerable<ProductCategoryResponse>> GetinactiveCategoriesAsync();
 		Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, UpdateProductCategoryRequest request);
+		Task<IEnumerable<ProductCategoryResponse>> GetCategoriesAsync(bool? isActive);
 		Task<bool> DeleteCategoryAsync(Guid id);
 		Task<bool> RestoreCategoryAsync(Guid id);
 		Task<bool> DisableCategoryAsync(Guid id);

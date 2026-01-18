@@ -20,6 +20,9 @@ namespace ToyCabin.API.Controllers
 		}
 
 		//==== CREATE =====
+		/// <summary>
+		/// Create Category.
+		/// </summary>
 		[HttpPost]
 		public async Task<ActionResult<BaseResponse<ProductCategoryResponse>>> CreateCategory(
 		[FromBody] ProductCategoryRequest request)
@@ -29,40 +32,23 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<ProductCategoryResponse>.Ok(result, "Productcategory Created successfully");
 		}
 
-		// ===== GET ALL =====
+		// ===== GET Category PRODUCTS =====
+		/// <summary>
+		/// Gets Category.
+		/// </summary>
+
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<ProductCategoryResponse>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<ProductCategoryResponse>>>> GetCategorys([FromQuery] bool? isActive)
 		{
-			var result = await _productCategoryService
-				.GetAllCategoriesAsync();
-
+			var result = await _productCategoryService.GetCategoriesAsync(isActive);
 			return BaseResponse<IEnumerable<ProductCategoryResponse>>
-				.Ok(result , "Productcategory retrieved successfully");
-		}
-
-		// ===== GET ACTIVE =====
-		[HttpGet("active")]
-		public async Task<BaseResponse<IEnumerable<ProductCategoryResponse>>> GetActive()
-		{
-			var result = await _productCategoryService
-				.GetActiveCategoriesAsync();
-
-			return BaseResponse<IEnumerable<ProductCategoryResponse>>
-				.Ok(result, "Productcategory active successfully");
-		}
-
-		// ===== GET INACTIVE =====
-		[HttpGet("inactive")]
-		public async Task<BaseResponse<IEnumerable<ProductCategoryResponse>>> GetInactive()
-		{
-			var result = await _productCategoryService
-				.GetinactiveCategoriesAsync();
-
-			return BaseResponse<IEnumerable<ProductCategoryResponse>>
-				.Ok(result, "Productcategory inactive successfully");
+				.Ok(result, "Productcategory retrieved successfully");
 		}
 
 		// ===== UPDATE =====
+		/// <summary>
+		/// Update Category.
+		/// </summary>
 		[HttpPut("{id}")]
 		public async Task<BaseResponse<ProductCategoryResponse?>> Update(
 			Guid id,
@@ -75,34 +61,38 @@ namespace ToyCabin.API.Controllers
 		}
 
 		// ===== DISABLE =====
+		/// <summary>
+		/// Disable Category.
+		/// </summary>
 		[HttpPatch("{id}/disable")]
-		public async Task<BaseResponse<bool>> Disable(Guid id)
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
-			var success = await _productCategoryService
-				.DisableCategoryAsync(id);
-			return BaseResponse<bool>
-				.Ok(true, "Productcategory disabled successfully");
+			await _productCategoryService.DisableCategoryAsync(id);
+			return ActionResponse.Ok("Productcategory disabled successfully");
 		}
 
 		// ===== RESTORE =====
+		/// <summary>
+		/// Restore Category.
+		/// </summary>
 		[HttpPatch("{id}/restore")]
-		public async Task<BaseResponse<bool>> Restore(Guid id)
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
-			var success = await _productCategoryService
-				.RestoreCategoryAsync(id);
-			return BaseResponse<bool>
-				.Ok(true, "Productcategory restored successfully");
+			await _productCategoryService.RestoreCategoryAsync(id);
+			return ActionResponse.Ok("Productcategory disabled successfully");
 		}
 
 		// ===== DELETE =====
+		/// <summary>
+		/// Delete Category.
+		/// </summary>
 		[HttpDelete("{id}")]
-		public async Task<BaseResponse<bool>> Delete(Guid id)
+		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
 		{
-			var success = await _productCategoryService
-				.DeleteCategoryAsync(id);
-			return BaseResponse<bool>
-				.Ok(true, "Productcategory deleted successfully");
+			await _productCategoryService.DeleteCategoryAsync(id);
+			return ActionResponse.Ok("Productcategory delete successfully");
 		}
 
+		
 	}
 }

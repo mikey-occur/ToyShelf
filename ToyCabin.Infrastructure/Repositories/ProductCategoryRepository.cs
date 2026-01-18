@@ -21,5 +21,15 @@ namespace ToyCabin.Infrastructure.Repositories
 			return await _context.ProductCategories
 				.FirstOrDefaultAsync(pc => pc.Name == name);
 		}
+
+		public async Task<IEnumerable<ProductCategory>> GetProductCategoriesAsync(bool? isActive)
+		{
+			var query = _context.ProductCategories.AsQueryable();
+			if (isActive.HasValue)
+				query = query.Where(pc => pc.IsActive == isActive.Value);
+
+			return await query.ToListAsync();
+		}
+
 	}
 }

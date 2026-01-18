@@ -3,6 +3,8 @@ using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
+using ToyCabin.Application.Models.Store.Response;
+using ToyCabin.Application.Services;
 
 namespace ToyCabin.API.Controllers
 {
@@ -15,6 +17,7 @@ namespace ToyCabin.API.Controllers
 		{
 			   _productService = productService;
 		}
+
 
 		// ===== GET ALL PRODUCTS =====
 		[HttpGet]

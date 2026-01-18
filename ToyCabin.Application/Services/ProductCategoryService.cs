@@ -115,7 +115,12 @@ namespace ToyCabin.Application.Services
 			return productCategories.Select(MapToResponse);
 		}
 
-		// ===== RESTORE/ENABLE =====
+		public async Task<IEnumerable<ProductCategoryResponse>> GetCategoriesAsync(bool? isActive)
+		{
+			var productCategories = await _productCategoryRepository.GetProductCategoriesAsync(isActive);
+			return productCategories.Select(MapToResponse);
+		}
+	
 		public async Task<bool> RestoreCategoryAsync(Guid id)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
@@ -172,5 +177,6 @@ namespace ToyCabin.Application.Services
 				.ToUpper();
 		}
 
+		
 	}
 }

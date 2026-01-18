@@ -10,5 +10,6 @@ namespace ToyCabin.Domain.IRepositories
 	public interface IProductCategoryRepository : IGenericRepository<ProductCategory>
 	{
 		Task<ProductCategory?> GetByNameAsync(string name);
+		Task<IEnumerable<ProductCategory>> GetProductCategoriesAsync(bool? isActive);
 	}
 }
