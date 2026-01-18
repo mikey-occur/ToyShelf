@@ -4,6 +4,8 @@ using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Partner.Request;
 using ToyCabin.Application.Models.Partner.Response;
+using ToyCabin.Application.Models.Store.Response;
+using ToyCabin.Application.Services;
 
 namespace ToyCabin.API.Controllers
 {
@@ -30,27 +32,11 @@ namespace ToyCabin.API.Controllers
 
 		// ================== GET ==================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetPartners([FromQuery] bool? isActive)
 		{
-			var result = await _partnerService.GetAllAsync();
+			var result = await _partnerService.GetPartnersAsync(isActive);
 			return BaseResponse<IEnumerable<PartnerResponse>>
 				.Ok(result, "Partners retrieved successfully");
-		}
-
-		[HttpGet("active")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetActive()
-		{
-			var result = await _partnerService.GetActiveAsync();
-			return BaseResponse<IEnumerable<PartnerResponse>>
-				.Ok(result, "Active partners retrieved successfully");
-		}
-
-		[HttpGet("inactive")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetInactive()
-		{
-			var result = await _partnerService.GetInactiveAsync();
-			return BaseResponse<IEnumerable<PartnerResponse>>
-				.Ok(result, "Inactive partners retrieved successfully");
 		}
 
 		[HttpGet("{id}")]

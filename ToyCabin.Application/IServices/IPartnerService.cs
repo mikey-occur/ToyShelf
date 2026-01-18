@@ -14,9 +14,7 @@ namespace ToyCabin.Application.IServices
 		Task<PartnerResponse> CreateAsync(CreatePartnerRequest request);
 
 		// ===== GET =====
-		Task<IEnumerable<PartnerResponse>> GetAllAsync();
-		Task<IEnumerable<PartnerResponse>> GetActiveAsync();
-		Task<IEnumerable<PartnerResponse>> GetInactiveAsync();
+		Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive);
 		Task<PartnerResponse> GetByIdAsync(Guid id);
 
 		// ===== UPDATE =====
