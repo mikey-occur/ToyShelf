@@ -10,8 +10,7 @@ namespace ToyCabin.Application.IServices
 {
 	public interface IUserService
 	{
-		Task<List<UserProfileResponse>> GetActiveUsersAsync();
-		Task<List<UserProfileResponse>> GetInactiveUsersAsync();
+		Task<List<UserProfileResponse>> GetUsersAsync(bool? isActive);
 		Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId);
 		Task<UserProfileResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request);
 		Task DisableUserAsync(Guid userId);   

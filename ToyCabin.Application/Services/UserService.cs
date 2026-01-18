@@ -24,15 +24,9 @@ namespace ToyCabin.Application.Services
 
 		// ================= GET =================
 
-		public async Task<List<UserProfileResponse>> GetActiveUsersAsync()
+		public async Task<List<UserProfileResponse>> GetUsersAsync(bool? isActive)
 		{
-			var users = await _userRepository.GetActiveUsersAsync();
-			return users.Select(MapToProfile).ToList();
-		}
-
-		public async Task<List<UserProfileResponse>> GetInactiveUsersAsync()
-		{
-			var users = await _userRepository.GetInactiveUsersAsync();
+			var users = await _userRepository.GetUsersAsync(isActive);
 			return users.Select(MapToProfile).ToList();
 		}
 

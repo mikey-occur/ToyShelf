@@ -22,19 +22,13 @@ namespace ToyCabin.API.Controllers
 		}
 
 		// ===== GET =====
-
-		[HttpGet("active")]
-		public async Task<ActionResult<BaseResponse<List<UserProfileResponse>>>> GetActive()
+		[HttpGet]
+		public async Task<ActionResult<BaseResponse<List<UserProfileResponse>>>> GetUsers(
+			[FromQuery] bool? isActive
+		)
 		{
-			var rs = await _userService.GetActiveUsersAsync();
-			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get active users successfully");
-		}
-
-		[HttpGet("inactive")]
-		public async Task<ActionResult<BaseResponse<List<UserProfileResponse>>>> GetInactive()
-		{
-			var rs = await _userService.GetInactiveUsersAsync();
-			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get inactive users successfully");
+			var rs = await _userService.GetUsersAsync(isActive);
+			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get users successfully");
 		}
 
 		[HttpGet("profile")]
