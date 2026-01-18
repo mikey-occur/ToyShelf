@@ -735,7 +735,6 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasPrecision(10, 2);
 
 				entity.Property(e => e.IsActive)
-					  .IsRequired()
 					  .HasDefaultValue(true);
 
 				entity.HasOne(e => e.Shelf)
@@ -770,7 +769,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .IsRequired();
 
 				entity.Property(e => e.CreatedAt)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 				entity.Property(e => e.ReviewedByUserId);
 
@@ -824,7 +824,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP"); 
 
 				// ===== Relationships =====
 
@@ -857,6 +858,12 @@ namespace ToyCabin.Infrastructure.Context
 				entity.Property(e => e.IsActive)
 					  .IsRequired()
 					  .HasDefaultValue(true);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.UpdatedAt);
 
 				// ===== Relationships =====
 
@@ -924,7 +931,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 				// ===== Relationships =====
 
@@ -976,7 +984,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasMaxLength(150);
 
 				entity.Property(e => e.IsActive)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValue(true);
 
 				// ===== Relationships =====
 
@@ -1171,7 +1180,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 				// ===== Relationships =====
 
@@ -1213,7 +1223,8 @@ namespace ToyCabin.Infrastructure.Context
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
-					  .IsRequired();
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 				// ===== Relationships =====
 
