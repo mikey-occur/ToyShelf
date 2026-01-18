@@ -31,6 +31,7 @@ namespace ToyCabin.Domain.Entities
 		public DateTime CreatedAt { get; set; } 
 		public DateTime? UpdatedAt { get; set; }
 
+
 		public virtual ProductCategory ProductCategory { get; set; } = null!;
 		public virtual ICollection<ProductColor> ProductColors { get; set; } = new List<ProductColor>();
 	}

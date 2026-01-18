@@ -52,6 +52,10 @@ namespace ToyCabin.Application.Services
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
+				Brand = request.Brand,
+				Material = request.Material,
+				OriginCountry = request.OriginCountry,
+				AgeRange = request.AgeRange,
 				IsActive = true,
 				IsConsignment = true,
 				CreatedAt = _dateTimeProvider.UtcNow
@@ -135,6 +139,10 @@ namespace ToyCabin.Application.Services
 			product.QrCode = request.QrCode;
 			product.Model3DUrl = request.Model3DUrl;
 			product.ImageUrl = request.ImageUrl;
+			product.Brand = request.Brand;
+			product.Material = request.Material;
+			product.OriginCountry = request.OriginCountry;
+			product.AgeRange = request.AgeRange;
 			product.IsConsignment = request.IsConsignment;
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
 			_productRepository.Update(product);
@@ -160,14 +168,26 @@ namespace ToyCabin.Application.Services
 		//====SKU CODE Conver=====
 		public string MapCategoryToCode(string categoryName)
 		{
-			// Xóa dấu, space, dấu -, giữ chữ cái đầu viết hoa
-			var code = new string(categoryName
-				.Where(c => char.IsLetterOrDigit(c))
-				.ToArray())
-				.ToUpper();
+			// Nếu tên category rỗng hoặc null thì trả về chuỗi rỗng
+			if (string.IsNullOrWhiteSpace(categoryName))
+				return string.Empty;
 
-			// Lấy tối đa 4–5 ký tự
-			return code.Length > 4 ? code.Substring(0, 4) : code;
+			// Tách tên category thành các "từ"
+			// Hỗ trợ các separator phổ biến: '-', space, '_'
+			// Ví dụ: "robo-dog" -> ["robo", "dog"]
+			var words = categoryName
+				.Split(new[] { '-', ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+
+			// Lấy chữ cái đầu của mỗi từ và chuyển sang chữ hoa
+			// Ví dụ: ["robo", "dog"] -> 'R' + 'D' = "RD"
+			var code = string.Concat(
+				words.Select(w => char.ToUpperInvariant(w[0]))
+			);
+
+			// (Tuỳ chọn) Giới hạn độ dài code, ví dụ tối đa 4 ký tự
+			// return code.Length > 4 ? code.Substring(0, 4) : code;
+
+			return code;
 		}
 
 	}

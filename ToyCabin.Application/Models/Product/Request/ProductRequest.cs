@@ -15,9 +15,9 @@ namespace ToyCabin.Application.Models.Product.Request
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; } 
 		public string? ImageUrl { get; set; }
-		//public bool IsActive { get; set; } = true;
-		//public bool IsConsignment { get; set; } = true; 
-		//public DateTime CreatedAt { get; set; }
-		//public DateTime? UpdatedAt { get; set; }
+		public string? Brand { get; set; }
+		public string? Material { get; set; }
+		public string? OriginCountry { get; set; }
+		public string? AgeRange { get; set; }
 	}
 }
