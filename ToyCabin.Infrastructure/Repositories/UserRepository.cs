@@ -13,19 +13,18 @@ namespace ToyCabin.Infrastructure.Repositories
 	public class UserRepository : GenericRepository<User>, IUserRepository
 	{
 		public UserRepository(ToyCabinDbContext context) : base(context){}
-		public async Task<List<User>> GetActiveUsersAsync()
+		public async Task<List<User>> GetUsersAsync(bool? isActive)
 		{
-			return await _context.Users
-				.Where(u => u.IsActive)
-				.ToListAsync();
+			var query = _context.Users.AsQueryable();
+
+			if (isActive.HasValue)
+			{
+				query = query.Where(u => u.IsActive == isActive.Value);
+			}
+
+			return await query.ToListAsync();
 		}
 
-		public async Task<List<User>> GetInactiveUsersAsync()
-		{
-			return await _context.Users
-				.Where(u => !u.IsActive)
-				.ToListAsync();
-		}
 		public async Task<User?> GetByEmailAsync(string email)
 		{
 			return await _context.Users

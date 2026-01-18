@@ -300,6 +300,9 @@ namespace ToyCabin.Application.Services
 			return new LoginResponse
 			{
 				AccessToken = accessToken,
+				Roles = account.AccountRoles
+						.Select(rn => rn.Role.Name)
+						.ToList(),
 				LastLoginAt = account.LastLoginAt.Value
 			};
 		}
@@ -377,11 +380,14 @@ namespace ToyCabin.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 
 			// 5. Generate token (role lấy theo USER)
-			var token = await _tokenService.GenerateAccessTokenAsync(account);
+			var accessToken = await _tokenService.GenerateAccessTokenAsync(account);
 
 			return new LoginResponse
 			{
-				AccessToken = token,
+				AccessToken = accessToken,
+				Roles = account.AccountRoles
+						.Select(nr => nr.Role.Name)
+						.ToList(),
 				LastLoginAt = account.LastLoginAt.Value
 			};
 		}
