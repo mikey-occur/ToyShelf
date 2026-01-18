@@ -10,12 +10,12 @@ using ToyCabin.Infrastructure.Context;
 
 namespace ToyCabin.Infrastructure.Repositories
 {
-	public class StoreRepository: GenericRepository<Store>, IStoreRepository
+	public class WarehouseRepository : GenericRepository<Warehouse>, IWarehouseRepository
 	{
-		public StoreRepository(ToyCabinDbContext context) : base(context) { }
-		public async Task<IEnumerable<Store>> GetStoresAsync(bool? isActive)
+		public WarehouseRepository(ToyCabinDbContext context) : base(context) { }	
+		public async Task<IEnumerable<Warehouse>> GetWarehousesAsync(bool? isActive)
 		{
-			var query = _context.Stores.AsQueryable();
+			var query = _context.Warehouses.AsQueryable();
 
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);

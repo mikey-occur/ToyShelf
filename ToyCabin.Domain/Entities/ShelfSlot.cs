@@ -13,7 +13,7 @@ namespace ToyCabin.Domain.Entities
 		public string Code { get; set; } = null!;
 		public int DisplayCapacity { get; set; }
 		public decimal IdealWeight { get; set; }
-		public bool IsActive { get; set; }
+		public bool IsActive { get; set; } = true;
 		public virtual Shelf Shelf { get; set; } = null!;
 	}
 

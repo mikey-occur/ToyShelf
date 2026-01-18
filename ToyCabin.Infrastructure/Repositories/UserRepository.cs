@@ -22,7 +22,9 @@ namespace ToyCabin.Infrastructure.Repositories
 				query = query.Where(u => u.IsActive == isActive.Value);
 			}
 
-			return await query.ToListAsync();
+			return await query
+					.OrderByDescending(w => w.CreatedAt)
+					.ToListAsync();
 		}
 
 		public async Task<User?> GetByEmailAsync(string email)
