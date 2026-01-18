@@ -73,10 +73,10 @@ namespace ToyCabin.Application.Services
 		//===Delete/Disable===
 		public async Task<bool> DeleteProductAsync(Guid id)
 		{
-			var product =  _productRepository.GetByIdAsync(id);
-			if (product == null)
+			var product =  await _productRepository.GetByIdAsync(id);
+			if (product is null)
 				throw new Exception($"Product Id = {id} not found");
-			_productRepository.Remove(product.Result);
+			_productRepository.Remove(product);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}

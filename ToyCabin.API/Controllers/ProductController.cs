@@ -65,31 +65,31 @@ namespace ToyCabin.API.Controllers
 		/// Delete Product.
 		/// </summary>
 		// ===== DELETE PRODUCT =====
-		[HttpDelete("{id}")]
-		public async Task<BaseResponse<bool>> Delete(Guid id)
+		[HttpDelete("{id}/delete")]
+		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
 		{
-			var result = await _productService.DeleteProductAsync(id);
-			return BaseResponse<bool>.Ok(result, "Product deleted successfully");
+			await _productService.DeleteProductAsync(id);
+			return ActionResponse.Ok("Product delete successfully");
 		}
 		/// <summary>
 		/// Disable Product.
 		/// </summary>
 		// ===== DISABLE PRODUCT =====
 		[HttpPost("{id}/disable")]
-		public async Task<BaseResponse<bool>> Disable(Guid id)
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
-			var result = await _productService.DisableProductAsync(id);
-			return BaseResponse<bool>.Ok(result, "Product disabled successfully");
+			await _productService.DisableProductAsync(id);
+			return ActionResponse.Ok("Product disabled successfully");
 		}
 		/// <summary>
 		/// Restore Product.
 		/// </summary>
 		// ===== RESTORE PRODUCT =====
 		[HttpPost("{id}/restore")]
-		public async Task<BaseResponse<bool>> Restore(Guid id)
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
-			var result = await _productService.RestoreProductAsync(id);
-			return BaseResponse<bool>.Ok(result, "Product restored successfully");
+			await _productService.RestoreProductAsync(id);
+			return ActionResponse.Ok("Product restore successfully");
 		}
 	}
 }
