@@ -28,5 +28,15 @@ namespace ToyCabin.Infrastructure.Repositories
 			var parts = lastSku.Split('-');
 			return parts.Length > 1 && int.TryParse(parts[1], out var n) ? n + 1 : 1;
 		}
+
+		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
+		{
+			var query = _context.Products.AsQueryable();
+			if (isActive.HasValue)
+				query = query.Where(p => p.IsActive == isActive.Value);
+			return await query
+					.OrderByDescending(p => p.CreatedAt)
+					.ToListAsync();
+		}
 	}
 }

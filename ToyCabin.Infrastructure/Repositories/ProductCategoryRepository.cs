@@ -16,10 +16,29 @@ namespace ToyCabin.Infrastructure.Repositories
 		{
 		}
 
+		public async Task<bool> ExistsCodeAsync(string code, Guid? parentId)
+		{
+			return await _context.ProductCategories.AnyAsync(x =>x.Code == code && x.ParentId == parentId);
+		}
+
 		public async Task<ProductCategory?> GetByNameAsync(string name)
 		{
 			return await _context.ProductCategories
 				.FirstOrDefaultAsync(pc => pc.Name == name);
+		}
+
+		public async Task<IEnumerable<ProductCategory>> GetProductCategoriesAsync(bool? isActive)
+		{
+			var query = _context.ProductCategories.AsQueryable();
+			if (isActive.HasValue)
+				query = query.Where(pc => pc.IsActive == isActive.Value);
+
+			return await query.ToListAsync();
+		}
+
+		public async Task<bool> HasChildAsync(Guid parentId)
+		{
+			return await _context.ProductCategories.AnyAsync(x => x.ParentId == parentId);
 		}
 	}
 }

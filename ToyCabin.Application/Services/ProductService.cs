@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Application.Models.Store.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
@@ -52,6 +54,10 @@ namespace ToyCabin.Application.Services
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
+				Brand = request.Brand,
+				Material = request.Material,
+				OriginCountry = request.OriginCountry,
+				AgeRange = request.AgeRange,
 				IsActive = true,
 				IsConsignment = true,
 				CreatedAt = _dateTimeProvider.UtcNow
@@ -67,10 +73,10 @@ namespace ToyCabin.Application.Services
 		//===Delete/Disable===
 		public async Task<bool> DeleteProductAsync(Guid id)
 		{
-			var product =  _productRepository.GetByIdAsync(id);
-			if (product == null)
+			var product =  await _productRepository.GetByIdAsync(id);
+			if (product is null)
 				throw new Exception($"Product Id = {id} not found");
-			_productRepository.Remove(product.Result);
+			_productRepository.Remove(product);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}
@@ -108,6 +114,20 @@ namespace ToyCabin.Application.Services
 			return products.Select(MapToResponse);
 		}
 
+
+		public async Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive)
+		{
+			var products = await  _productRepository.GetProductsAsync(isActive);
+			return products.Select(MapToResponse);
+		}
+		public async Task<ProductResponse> GetByIdAsync(Guid id)
+		{
+			var product =  await _productRepository.GetByIdAsync(id);
+			if (product == null)
+				throw new Exception($"Product Id = {id} not found");
+			return MapToResponse(product);
+		}
+
 		//===Restore===
 		public async Task<bool> RestoreProductAsync(Guid id)
 		{
@@ -135,6 +155,10 @@ namespace ToyCabin.Application.Services
 			product.QrCode = request.QrCode;
 			product.Model3DUrl = request.Model3DUrl;
 			product.ImageUrl = request.ImageUrl;
+			product.Brand = request.Brand;
+			product.Material = request.Material;
+			product.OriginCountry = request.OriginCountry;
+			product.AgeRange = request.AgeRange;
 			product.IsConsignment = request.IsConsignment;
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
 			_productRepository.Update(product);
@@ -148,27 +172,44 @@ namespace ToyCabin.Application.Services
 			return new ProductResponse
 			{
 				Id = product.Id,
+				ProductCategoryId = product.ProductCategoryId,
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,
 				Price = product.BasePrice,
+				QrCode = product.QrCode,
+				Model3DUrl = product.Model3DUrl				,
+				ImageUrl = product.ImageUrl,
+				Brand = product.Brand,
+				Material = product.Material,
+				OriginCountry = product.OriginCountry,
+				AgeRange = product.AgeRange,
 				IsActive = product.IsActive,
+				IsConsignment = product.IsConsignment,
 				CreatedAt = product.CreatedAt,
 				UpdatedAt = product.UpdatedAt
 			};
 		}
-		//====SKU CODE Conver=====
+		//====SKU CODE Convert=====
 		public string MapCategoryToCode(string categoryName)
 		{
-			// Xóa dấu, space, dấu -, giữ chữ cái đầu viết hoa
-			var code = new string(categoryName
-				.Where(c => char.IsLetterOrDigit(c))
-				.ToArray())
-				.ToUpper();
+			// Nếu tên category rỗng hoặc null thì trả về chuỗi rỗng
+			if (string.IsNullOrWhiteSpace(categoryName))
+				return string.Empty;
 
-			// Lấy tối đa 4–5 ký tự
-			return code.Length > 4 ? code.Substring(0, 4) : code;
+			// Tách tên category 
+			// Ví dụ: "robo-dog" -> ["robo", "dog"]
+			var words = categoryName
+				.Split(new[] { '-', ' ', '_' }, StringSplitOptions.RemoveEmptyEntries);
+
+			// Lấy chữ cái đầu của mỗi từ và chuyển sang chữ hoa
+			// Ví dụ: ["robo", "dog"] -> 'R' + 'D' = "RD"
+			var code = string.Concat(
+				words.Select(w => char.ToUpperInvariant(w[0]))
+			);
+			return code;
 		}
 
+		
 	}
 }
