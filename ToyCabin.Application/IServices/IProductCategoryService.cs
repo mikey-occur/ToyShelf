@@ -12,14 +12,11 @@ namespace ToyCabin.Application.IServices
 	public interface IProductCategoryService
 	{
 		Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request);
-		Task<IEnumerable<ProductCategoryResponse>> GetAllCategoriesAsync();
-		Task<IEnumerable<ProductCategoryResponse>> GetActiveCategoriesAsync();
-		Task<IEnumerable<ProductCategoryResponse>> GetinactiveCategoriesAsync();
 		Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, UpdateProductCategoryRequest request);
 		Task<IEnumerable<ProductCategoryResponse>> GetCategoriesAsync(bool? isActive);
-		Task<bool> DeleteCategoryAsync(Guid id);
-		Task<bool> RestoreCategoryAsync(Guid id);
-		Task<bool> DisableCategoryAsync(Guid id);
+		Task DeleteCategoryAsync(Guid id);
+		Task RestoreCategoryAsync(Guid id);
+		Task DisableCategoryAsync(Guid id);
 
 	}
 }

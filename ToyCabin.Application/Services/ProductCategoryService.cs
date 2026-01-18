@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.ProductCategory.Request;
 using ToyCabin.Application.Models.ProductCategory.Response;
@@ -38,12 +39,15 @@ namespace ToyCabin.Application.Services
 			{
 				var parent = await _productCategoryRepository
 					.GetByIdAsync(request.ParentId.Value);
-
 				if (parent == null)
-					throw new Exception("Parent category not found");
+					throw new AppException("Parent category not found", 404);
 
 				code = $"{parent.Code}-{ToCategoryCode(request.Code)}";
 			}
+			var exists = await _productCategoryRepository.ExistsCodeAsync(request.Code, request.ParentId);
+
+			if (exists)
+				throw new InvalidOperationException("Category code already exists");
 
 			var category = new ProductCategory
 			{
@@ -62,24 +66,28 @@ namespace ToyCabin.Application.Services
 			return MapToResponse(category);
 		}
 		// ===== Delete/Diasable =====
-		public async Task<bool> DeleteCategoryAsync(Guid id)
+		public async Task DeleteCategoryAsync(Guid id)
 		{
-			var category =  _productCategoryRepository.GetByIdAsync(id);
+			var category = await _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
-				throw new Exception("Category not found");
+				throw new AppException("Category not found", 404);
 
-			_productCategoryRepository.Remove(category.Result);
+			var hasChild = await _productCategoryRepository.HasChildAsync(id);
+			if (hasChild)
+				throw new AppException(
+					"Cannot delete category because it has child categories", 500);
+
+			_productCategoryRepository.Remove(category);
 			await _unitOfWork.SaveChangesAsync();
 
-			return true;
 		}
 
-		public async Task<bool> DisableCategoryAsync(Guid id)
+		public async Task DisableCategoryAsync(Guid id)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 
 			if (category == null)
-				throw new KeyNotFoundException($"Category not found. Id = {id}");
+				throw new AppException($"Category not found. Id = {id}", 404);
 
 			if (!category.IsActive)
 				throw new InvalidOperationException($"Category {id} is already disabled");
@@ -89,44 +97,21 @@ namespace ToyCabin.Application.Services
 
 			_productCategoryRepository.Update(category);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== GET =====
-
-		public async Task<IEnumerable<ProductCategoryResponse>> GetAllCategoriesAsync()
-		{
-			var productCategories = await _productCategoryRepository.GetAllAsync();
-			return productCategories.Select(MapToResponse);
-
-		}
-
-		public async Task<IEnumerable<ProductCategoryResponse>> GetinactiveCategoriesAsync()
-		{
-			var productCategories = await _productCategoryRepository
-				.FindAsync(c => !c.IsActive);
-			return productCategories.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<ProductCategoryResponse>> GetActiveCategoriesAsync()
-		{
-			var productCategories = await _productCategoryRepository
-				.FindAsync(c => c.IsActive);
-			return productCategories.Select(MapToResponse);
-		}
-
 		public async Task<IEnumerable<ProductCategoryResponse>> GetCategoriesAsync(bool? isActive)
 		{
 			var productCategories = await _productCategoryRepository.GetProductCategoriesAsync(isActive);
 			return productCategories.Select(MapToResponse);
 		}
 	
-		public async Task<bool> RestoreCategoryAsync(Guid id)
+		public async Task RestoreCategoryAsync(Guid id)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 
 			if (category == null)
-				throw new KeyNotFoundException($"Category not found. Id = {id}");
+				throw new AppException($"Category not found. Id = {id}", 404);
 
 			if (category.IsActive)
 				throw new InvalidOperationException($"Category {id} is already active");
@@ -136,14 +121,14 @@ namespace ToyCabin.Application.Services
 
 			_productCategoryRepository.Update(category);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
+			
 		}
 		// ===== UPDATE =====
 		public async Task<ProductCategoryResponse?> UpdateCategoryAsync(Guid id, UpdateProductCategoryRequest request)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
-				throw new KeyNotFoundException($"Category not found. Id = {id}");
+				throw new AppException($"Category not found. Id = {id}", 404);
 
 			category.Name = request.Name.Trim();
 			category.Description = request.Description;

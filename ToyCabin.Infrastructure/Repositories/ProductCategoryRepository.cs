@@ -16,6 +16,11 @@ namespace ToyCabin.Infrastructure.Repositories
 		{
 		}
 
+		public async Task<bool> ExistsCodeAsync(string code, Guid? parentId)
+		{
+			return await _context.ProductCategories.AnyAsync(x =>x.Code == code && x.ParentId == parentId);
+		}
+
 		public async Task<ProductCategory?> GetByNameAsync(string name)
 		{
 			return await _context.ProductCategories
@@ -31,5 +36,9 @@ namespace ToyCabin.Infrastructure.Repositories
 			return await query.ToListAsync();
 		}
 
+		public async Task<bool> HasChildAsync(Guid parentId)
+		{
+			return await _context.ProductCategories.AnyAsync(x => x.ParentId == parentId);
+		}
 	}
 }
