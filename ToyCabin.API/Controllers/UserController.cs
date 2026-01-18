@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ToyCabin.Application.Auth;
 using ToyCabin.Application.Common;
 using ToyCabin.Application.Common.Extensions;
 using ToyCabin.Application.IServices;
@@ -36,10 +37,11 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get inactive users successfully");
 		}
 
-		[HttpGet("{userId}")]
-		public async Task<ActionResult<BaseResponse<UserProfileResponse>>> GetProfile(Guid userId)
+		[HttpGet("profile")]
+		[Authorize(Roles = "PartnerAdmin,Partner,Admin,Customer")]
+		public async Task<ActionResult<BaseResponse<UserProfileResponse>>> GetProfile([FromServices] ICurrentUser currentUser)
 		{
-			var rs = await _userService.GetProfileByUserIdAsync(userId);
+			var rs = await _userService.GetProfileByUserIdAsync(currentUser.UserId);
 			return BaseResponse<UserProfileResponse>.Ok(rs, "Get user profile successfully");
 		}
 
