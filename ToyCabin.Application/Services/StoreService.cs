@@ -7,6 +7,7 @@ using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Store.Request;
 using ToyCabin.Application.Models.Store.Response;
+using ToyCabin.Application.Models.User.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
@@ -58,21 +59,9 @@ namespace ToyCabin.Application.Services
 		}
 
 		// ================= GET =================
-		public async Task<IEnumerable<StoreResponse>> GetAllAsync()
+		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(bool? isActive)
 		{
-			var stores = await _storeRepository.GetAllAsync();
-			return stores.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<StoreResponse>> GetActiveAsync()
-		{
-			var stores = await _storeRepository.FindAsync(s => s.IsActive);
-			return stores.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<StoreResponse>> GetInactiveAsync()
-		{
-			var stores = await _storeRepository.FindAsync(s => !s.IsActive);
+			var stores = await _storeRepository.GetStoresAsync(isActive);
 			return stores.Select(MapToResponse);
 		}
 

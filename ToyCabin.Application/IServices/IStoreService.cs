@@ -14,9 +14,7 @@ namespace ToyCabin.Application.IServices
 		Task<StoreResponse> CreateAsync(CreateStoreRequest request);
 
 		// GET
-		Task<IEnumerable<StoreResponse>> GetAllAsync();
-		Task<IEnumerable<StoreResponse>> GetActiveAsync();
-		Task<IEnumerable<StoreResponse>> GetInactiveAsync();
+		Task<IEnumerable<StoreResponse>> GetStoresAsync(bool? isActive);
 		Task<StoreResponse> GetByIdAsync(Guid id);
 
 		// UPDATE

@@ -30,27 +30,11 @@ namespace ToyCabin.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreResponse>>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<StoreResponse>>>> GetStores([FromQuery] bool? isActive)
 		{
-			var result = await _storeService.GetAllAsync();
+			var result = await _storeService.GetStoresAsync(isActive);
 			return BaseResponse<IEnumerable<StoreResponse>>
 				.Ok(result, "Stores retrieved successfully");
-		}
-
-		[HttpGet("active")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreResponse>>>> GetActive()
-		{
-			var result = await _storeService.GetActiveAsync();
-			return BaseResponse<IEnumerable<StoreResponse>>
-				.Ok(result, "Active stores retrieved successfully");
-		}
-
-		[HttpGet("inactive")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreResponse>>>> GetInactive()
-		{
-			var result = await _storeService.GetInactiveAsync();
-			return BaseResponse<IEnumerable<StoreResponse>>
-				.Ok(result, "Inactive stores retrieved successfully");
 		}
 
 		[HttpGet("{id}")]
