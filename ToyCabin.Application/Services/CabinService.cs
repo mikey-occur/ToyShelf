@@ -1,9 +1,11 @@
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Cabin.Request;
 using ToyCabin.Application.Models.Cabin.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
+using static System.Formats.Asn1.AsnWriter;
 
 namespace ToyCabin.Application.Services
 {
@@ -78,7 +80,9 @@ namespace ToyCabin.Application.Services
         public async Task<CabinResponse?> GetCabinByIdAsync(Guid cabinId)
         {
            var cabin =  await _cabinRepository.GetByIdAsync(cabinId);
-           return cabin == null ? null : MapToResponse(cabin);
+            if (cabin == null)
+                throw new AppException($"Store not found. Id = {cabinId}", 404);
+            return MapToResponse(cabin);
         }
 
         public async Task<IEnumerable<CabinResponse>> GetInactiveCabinsAsync()
