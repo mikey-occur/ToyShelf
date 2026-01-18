@@ -8,6 +8,7 @@ using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Partner.Request;
 using ToyCabin.Application.Models.Partner.Response;
+using ToyCabin.Application.Models.Store.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
 using ToyCabin.Domain.IRepositories;
@@ -49,23 +50,11 @@ namespace ToyCabin.Application.Services
 			return MapToResponse(partner);
 		}
 
-		// ===== GET =====
-		public async Task<IEnumerable<PartnerResponse>> GetAllAsync()
+		// ================= GET =================
+		public async Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive)
 		{
-			var partners = await _partnerRepository.GetAllAsync();
-			return partners.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<PartnerResponse>> GetActiveAsync()
-		{
-			var partners = await _partnerRepository.FindAsync(p => p.IsActive);
-			return partners.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<PartnerResponse>> GetInactiveAsync()
-		{
-			var partners = await _partnerRepository.FindAsync(p => !p.IsActive);
-			return partners.Select(MapToResponse);
+			var stores = await _partnerRepository.GetPartnerAsync(isActive);
+			return stores.Select(MapToResponse);
 		}
 
 		public async Task<PartnerResponse> GetByIdAsync(Guid id)
@@ -97,7 +86,7 @@ namespace ToyCabin.Application.Services
 		}
 
 		// ===== DISABLE =====
-		public async Task<bool> DisableAsync(Guid id)
+		public async Task DisableAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -111,11 +100,10 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Update(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== RESTORE =====
-		public async Task<bool> RestoreAsync(Guid id)
+		public async Task RestoreAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -129,11 +117,10 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Update(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== DELETE (RARE – HARD DELETE) =====
-		public async Task<bool> DeleteAsync(Guid id)
+		public async Task DeleteAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -144,7 +131,6 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Remove(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== MAPPER =====

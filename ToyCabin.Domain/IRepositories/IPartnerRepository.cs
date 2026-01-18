@@ -9,5 +9,6 @@ namespace ToyCabin.Domain.IRepositories
 {
 	public interface IPartnerRepository : IGenericRepository<Partner>
 	{
+		Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive);
 	}
 }

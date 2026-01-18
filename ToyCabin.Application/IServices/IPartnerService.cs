@@ -14,19 +14,17 @@ namespace ToyCabin.Application.IServices
 		Task<PartnerResponse> CreateAsync(CreatePartnerRequest request);
 
 		// ===== GET =====
-		Task<IEnumerable<PartnerResponse>> GetAllAsync();
-		Task<IEnumerable<PartnerResponse>> GetActiveAsync();
-		Task<IEnumerable<PartnerResponse>> GetInactiveAsync();
+		Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive);
 		Task<PartnerResponse> GetByIdAsync(Guid id);
 
 		// ===== UPDATE =====
 		Task<PartnerResponse> UpdateAsync(Guid id, UpdatePartnerRequest request);
 
 		// ===== DISABLE / RESTORE =====
-		Task<bool> DisableAsync(Guid id);
-		Task<bool> RestoreAsync(Guid id);
+		Task DisableAsync(Guid id);
+		Task RestoreAsync(Guid id);
 
 		// ===== DELETE (hard) =====
-		Task<bool> DeleteAsync(Guid id);
+		Task DeleteAsync(Guid id);
 	}
 }
