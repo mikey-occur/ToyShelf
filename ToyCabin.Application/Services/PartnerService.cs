@@ -86,7 +86,7 @@ namespace ToyCabin.Application.Services
 		}
 
 		// ===== DISABLE =====
-		public async Task<bool> DisableAsync(Guid id)
+		public async Task DisableAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -100,11 +100,10 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Update(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== RESTORE =====
-		public async Task<bool> RestoreAsync(Guid id)
+		public async Task RestoreAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -118,11 +117,10 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Update(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== DELETE (RARE – HARD DELETE) =====
-		public async Task<bool> DeleteAsync(Guid id)
+		public async Task DeleteAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdAsync(id);
 			if (partner == null)
@@ -133,7 +131,6 @@ namespace ToyCabin.Application.Services
 
 			_partnerRepository.Remove(partner);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== MAPPER =====

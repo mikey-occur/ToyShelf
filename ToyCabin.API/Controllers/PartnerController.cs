@@ -60,28 +60,25 @@ namespace ToyCabin.API.Controllers
 
 		// ================== DISABLE / RESTORE ==================
 		[HttpPatch("{id}/disable")]
-		public async Task<ActionResult<BaseResponse<bool>>> Disable(Guid id)
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
-			var success = await _partnerService.DisableAsync(id);
-			return BaseResponse<bool>
-				.Ok(success, "Partner disabled successfully");
+			await _partnerService.DisableAsync(id);
+			return ActionResponse.Ok("Partner disabled successfully");
 		}
 
 		[HttpPatch("{id}/restore")]
-		public async Task<ActionResult<BaseResponse<bool>>> Restore(Guid id)
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
-			var success = await _partnerService.RestoreAsync(id);
-			return BaseResponse<bool>
-				.Ok(success, "Partner restored successfully");
+			await _partnerService.RestoreAsync(id);
+			return ActionResponse.Ok("Partner restored successfully");
 		}
 
 		// ================== DELETE (HARD) ==================
 		[HttpDelete("{id}")]
-		public async Task<ActionResult<BaseResponse<bool>>> Delete(Guid id)
+		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
 		{
-			var success = await _partnerService.DeleteAsync(id);
-			return BaseResponse<bool>
-				.Ok(success, "Partner deleted successfully");
+			await _partnerService.DeleteAsync(id);
+			return ActionResponse.Ok("Partner deleted successfully");
 		}
 	}
 }

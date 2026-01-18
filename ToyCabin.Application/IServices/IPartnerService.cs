@@ -21,10 +21,10 @@ namespace ToyCabin.Application.IServices
 		Task<PartnerResponse> UpdateAsync(Guid id, UpdatePartnerRequest request);
 
 		// ===== DISABLE / RESTORE =====
-		Task<bool> DisableAsync(Guid id);
-		Task<bool> RestoreAsync(Guid id);
+		Task DisableAsync(Guid id);
+		Task RestoreAsync(Guid id);
 
 		// ===== DELETE (hard) =====
-		Task<bool> DeleteAsync(Guid id);
+		Task DeleteAsync(Guid id);
 	}
 }
