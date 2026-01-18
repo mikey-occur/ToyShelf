@@ -15,8 +15,9 @@ namespace ToyCabin.Application.IServices
 		Task<RoleResponse?> GetByIdAsync(Guid id);
 		Task<RoleResponse> CreateAsync(CreateRoleRequest request);
 		Task<RoleResponse?> UpdateAsync(Guid id, UpdateRoleRequest request);
-		Task<bool> DeleteAsync(Guid id);  
-		// khôi phục
-		Task<bool> RestoreAsync(Guid id); 
-	}
+
+		//  Disable / Restore
+		Task DisableAsync(Guid id);  
+		Task RestoreAsync(Guid id); 
+	}	
 }

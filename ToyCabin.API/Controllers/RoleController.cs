@@ -65,30 +65,22 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<RoleResponse>.Ok(result, "Role updated successfully");
 		}
 
-		// ===== DELETE (SOFT) =====
+		// ===== DISABLE (SOFT DELETE) =====
 
-		[HttpDelete("{id:guid}")]
-		public async Task<BaseResponse<bool>> Delete(Guid id)
+		[HttpPatch("{id:guid}/disable")]
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
-			var success = await _roleService.DeleteAsync(id);
-
-			if (!success)
-				throw new AppException("Role not found or already inactive", 400);
-
-			return BaseResponse<bool>.Ok(true, "Role deactivated successfully");
+			await _roleService.DisableAsync(id);
+			return ActionResponse.Ok("Role disabled successfully");
 		}
 
 		// ===== RESTORE =====
 
 		[HttpPatch("{id:guid}/restore")]
-		public async Task<BaseResponse<bool>> Restore(Guid id)
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
-			var success = await _roleService.RestoreAsync(id);
-
-			if (!success)
-				throw new AppException("Role not found or already active", 400);
-
-			return BaseResponse<bool>.Ok(true, "Role restored successfully");
+			await _roleService.RestoreAsync(id);
+			return ActionResponse.Ok("Role restored successfully");
 		}
 	}
 }
