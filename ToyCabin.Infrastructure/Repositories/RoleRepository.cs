@@ -24,7 +24,6 @@ namespace ToyCabin.Infrastructure.Repositories
 				.Distinct()
 				.ToListAsync();
 		}
-
 		public async Task<Role?> GetByNameAsync(string name)
 		{
 			return await _context.Roles
@@ -32,6 +31,15 @@ namespace ToyCabin.Infrastructure.Repositories
 				.FirstOrDefaultAsync(r =>
 					r.Name == name &&
 					r.IsActive);
+		}
+		public async Task<IEnumerable<Role>> GetRolesAsync(bool? isActive)
+		{
+			var query = _context.Roles.AsQueryable();
+
+			if (isActive.HasValue)
+				query = query.Where(s => s.IsActive == isActive.Value);
+
+			return await query.ToListAsync();
 		}
 	}
 }

@@ -9,5 +9,6 @@ namespace ToyCabin.Domain.IRepositories
 {
 	public interface IStoreRepository : IGenericRepository<Store>
 	{
+		Task<IEnumerable<Store>> GetStoresAsync(bool? isActive);
 	}
 }

@@ -11,5 +11,6 @@ namespace ToyCabin.Domain.IRepositories
 	{
 		Task<List<Role>> GetRolesByUserIdAsync(Guid userId);
 		Task<Role?> GetByNameAsync(string name);
+		Task<IEnumerable<Role>> GetRolesAsync(bool? isActive);
 	}
 }

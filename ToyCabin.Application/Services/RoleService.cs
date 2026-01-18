@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Role.Request;
 using ToyCabin.Application.Models.Role.Response;
@@ -27,24 +28,11 @@ namespace ToyCabin.Application.Services
 
 		// ===== GET =====
 
-		public async Task<IEnumerable<RoleResponse>> GetAllAsync()
+		public async Task<IEnumerable<RoleResponse>> GetRolesAsync(bool? isActive)
 		{
-			var roles = await _roleRepository.GetAllAsync();
+			var roles = await _roleRepository.GetRolesAsync(isActive);
 			return roles.Select(MapToResponse);
 		}
-
-		public async Task<IEnumerable<RoleResponse>> GetActiveAsync()
-		{
-			var roles = await _roleRepository.FindAsync(r => r.IsActive);
-			return roles.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<RoleResponse>> GetInactiveAsync()
-		{
-			var roles = await _roleRepository.FindAsync(r => !r.IsActive);
-			return roles.Select(MapToResponse);
-		}
-
 
 		public async Task<RoleResponse?> GetByIdAsync(Guid id)
 		{
@@ -86,38 +74,35 @@ namespace ToyCabin.Application.Services
 			return MapToResponse(role);
 		}
 
-		// ===== DELETE (SOFT) =====
-
-		public async Task<bool> DeleteAsync(Guid id)
+		// ===== DISABLE / RESTORE =====
+		public async Task DisableAsync(Guid id)
 		{
-			var role = await _roleRepository.GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id)
+				?? throw new AppException("Role not found", 404);
 
-			if (role == null || !role.IsActive)
-				return false;
+			if (!role.IsActive)
+				throw new AppException("Role already inactive", 400);
 
 			role.IsActive = false;
 			role.UpdatedAt = _dateTime.UtcNow;
 
 			_roleRepository.Update(role);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
-		// ===== RESTORE =====
-
-		public async Task<bool> RestoreAsync(Guid id)
+		public async Task RestoreAsync(Guid id)
 		{
-			var role = await _roleRepository.GetByIdAsync(id);
+			var role = await _roleRepository.GetByIdAsync(id)
+				?? throw new AppException("Role not found", 404);
 
-			if (role == null || role.IsActive)
-				return false;
+			if (role.IsActive)
+				throw new AppException("Role already active", 400);
 
 			role.IsActive = true;
 			role.UpdatedAt = _dateTime.UtcNow;
 
 			_roleRepository.Update(role);
 			await _unitOfWork.SaveChangesAsync();
-			return true;
 		}
 
 		// ===== MAPPER =====

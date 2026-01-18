@@ -23,24 +23,10 @@ namespace ToyCabin.API.Controllers
 
 		[HttpGet]
 		//[Authorize(Roles = "Admin")]	
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<RoleResponse>>>> GetRoles([FromQuery] bool? isActive)
 		{
-			var result = await _roleService.GetAllAsync();
+			var result = await _roleService.GetRolesAsync(isActive);
 			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Roles retrieved successfully");
-		}
-
-		[HttpGet("active")]
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetActive()
-		{
-			var result = await _roleService.GetActiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Active roles retrieved successfully");
-		}
-
-		[HttpGet("inactive")]
-		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetInactive()
-		{
-			var result = await _roleService.GetInactiveAsync();
-			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Inactive roles retrieved successfully");
 		}
 
 		[HttpGet("{id:guid}")]
@@ -79,30 +65,22 @@ namespace ToyCabin.API.Controllers
 			return BaseResponse<RoleResponse>.Ok(result, "Role updated successfully");
 		}
 
-		// ===== DELETE (SOFT) =====
+		// ===== DISABLE (SOFT DELETE) =====
 
-		[HttpDelete("{id:guid}")]
-		public async Task<BaseResponse<bool>> Delete(Guid id)
+		[HttpPatch("{id:guid}/disable")]
+		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
-			var success = await _roleService.DeleteAsync(id);
-
-			if (!success)
-				throw new AppException("Role not found or already inactive", 400);
-
-			return BaseResponse<bool>.Ok(true, "Role deactivated successfully");
+			await _roleService.DisableAsync(id);
+			return ActionResponse.Ok("Role disabled successfully");
 		}
 
 		// ===== RESTORE =====
 
 		[HttpPatch("{id:guid}/restore")]
-		public async Task<BaseResponse<bool>> Restore(Guid id)
+		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
-			var success = await _roleService.RestoreAsync(id);
-
-			if (!success)
-				throw new AppException("Role not found or already active", 400);
-
-			return BaseResponse<bool>.Ok(true, "Role restored successfully");
+			await _roleService.RestoreAsync(id);
+			return ActionResponse.Ok("Role restored successfully");
 		}
 	}
 }
