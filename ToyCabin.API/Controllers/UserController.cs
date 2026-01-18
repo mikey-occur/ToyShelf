@@ -67,17 +67,17 @@ namespace ToyCabin.API.Controllers
 		// ===== DELETE / RESTORE =====
 
 		[HttpPatch("{userId}/disable")]
-		public async Task<ActionResult<BaseResponse<object>>> Disable(Guid userId)
+		public async Task<ActionResult<BaseResponse<object?>>> Disable(Guid userId)
 		{
 			await _userService.DisableUserAsync(userId);
-			return BaseResponse<object>.Ok(null, "User disabled successfully");
+			return BaseResponse<object?>.Ok(null, "User disabled successfully");
 		}
 
 		[HttpPatch("{userId}/restore")]
-		public async Task<ActionResult<BaseResponse<object>>> Restore(Guid userId)
+		public async Task<ActionResult<BaseResponse<object?>>> Restore(Guid userId)
 		{
 			await _userService.RestoreUserAsync(userId);
-			return BaseResponse<object>.Ok(null, "User restored successfully");
+			return BaseResponse<object?>.Ok(null, "User restored successfully");
 		}
 	}
 }
