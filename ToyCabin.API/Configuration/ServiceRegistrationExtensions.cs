@@ -46,6 +46,7 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IUserStoreRepository, UserStoreRepository>();
 			services.AddScoped<IStoreInvitationRepository, StoreInvitationRepository>();
 			services.AddScoped<IWarehouseRepository, WarehouseRepository>();
+			services.AddScoped<IProductColorRepository, ProductColorRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
@@ -60,6 +61,7 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IUserStoreService, UserStoreService>();
 			services.AddScoped<IStoreInvitationService, StoreInvitationService>();
 			services.AddScoped<IWarehouseService, WarehouseService>();
+			services.AddScoped<IProductColorService, ProductColorService>();
 		}
 	}
 }
