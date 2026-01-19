@@ -8,6 +8,7 @@ using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Application.Models.ProductColor.Response;
 using ToyCabin.Application.Models.Store.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
@@ -187,8 +188,19 @@ namespace ToyCabin.Application.Services
 				IsActive = product.IsActive,
 				IsConsignment = product.IsConsignment,
 				CreatedAt = product.CreatedAt,
-				UpdatedAt = product.UpdatedAt
-			};
+				UpdatedAt = product.UpdatedAt,
+
+				Colors = product.ProductColors
+				.Where(c => c.IsActive)
+				.Select(c => new ProductColorResponse
+				{
+					Id = c.Id,
+					Sku = c.Sku,
+					Name = c.Name,
+					IsActive = c.IsActive
+				})
+				.ToList()
+				};
 		}
 		//====SKU CODE Convert=====
 		public string MapCategoryToCode(string categoryName)

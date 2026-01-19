@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Models.ProductColor.Response;
 
 namespace ToyCabin.Application.Models.Product.Response
 {
@@ -25,5 +26,6 @@ namespace ToyCabin.Application.Models.Product.Response
 		public bool IsConsignment { get; set; } = true; 
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
+		public List<ProductColorResponse> Colors { get; set; } = new();
 	}
 }

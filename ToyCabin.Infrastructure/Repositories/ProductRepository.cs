@@ -31,7 +31,9 @@ namespace ToyCabin.Infrastructure.Repositories
 
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
-			var query = _context.Products.AsQueryable();
+			var query = _context.Products
+				.Include(p => p.ProductColors).
+				AsQueryable();
 			if (isActive.HasValue)
 				query = query.Where(p => p.IsActive == isActive.Value);
 			return await query
