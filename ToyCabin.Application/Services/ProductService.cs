@@ -21,13 +21,15 @@ namespace ToyCabin.Application.Services
 		private readonly IProductCategoryRepository _categoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTimeProvider;
-		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
+		private readonly IProductBroadcaster _productBroadcaster;
+        public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster)
 		{
 			_productRepository = productRepository;
 			_categoryRepository = categoryRepository;
 			_unitOfWork = unitOfWork;
 			_dateTimeProvider = dateTimeProvider;
-		}
+			_productBroadcaster = productBroadcaster;
+        }
 		//===Create===
 		public async Task<ProductResponse> CreateProductAsync(ProductRequest request)
 		{
@@ -210,6 +212,15 @@ namespace ToyCabin.Application.Services
 			return code;
 		}
 
-		
-	}
+
+        public async Task SelectProductAsync(Guid id)
+        {
+            // 1. Xử lý logic nghiệp vụ (nếu có)
+            var product = await _productRepository.GetByIdAsync(id);
+
+            // 2. Gọi thông báo (Service không hề biết SignalR là gì)
+            await _productBroadcaster.NotifyProductSelectedAsync(id);
+        }
+
+    }
 }
