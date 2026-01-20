@@ -40,5 +40,27 @@ namespace ToyCabin.Infrastructure.Repositories
 					.OrderByDescending(p => p.CreatedAt)
 					.ToListAsync();
 		}
+
+		public async Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive)
+		{
+			var query = _context.Products
+				.Include(p => p.ProductColors)
+				.AsQueryable();
+
+			if (!string.IsNullOrWhiteSpace(keyword))
+			{
+				var lowerKeyword = keyword.Trim().ToLower();
+				query = query.Where(p => p.Name.ToLower().Contains(lowerKeyword));
+			}
+
+			if (isActive.HasValue)
+			{
+				query = query.Where(p => p.IsActive == isActive.Value);
+			}
+
+			return await query
+				.OrderByDescending(p => p.CreatedAt)
+				.ToListAsync();
+		}
 	}
 }

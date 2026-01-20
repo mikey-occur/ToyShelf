@@ -91,5 +91,18 @@ namespace ToyCabin.API.Controllers
 			await _productService.RestoreProductAsync(id);
 			return ActionResponse.Ok("Product restore successfully");
 		}
+
+
+		/// <summary>
+		/// Search Product byname key word.
+		/// </summary>
+		// ===== Search PRODUCT =====
+		[HttpGet("search")]
+		public async Task<BaseResponse<IEnumerable<ProductResponse>>> Search([FromQuery] string keyword,[FromQuery] bool? isActive)
+		{
+			var result = await _productService.SearchAsync(keyword, isActive);
+
+			return BaseResponse<IEnumerable<ProductResponse>>.Ok(result);
+		}
 	}
 }

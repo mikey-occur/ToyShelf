@@ -96,26 +96,7 @@ namespace ToyCabin.Application.Services
 		}
 
 		//===Get===
-		public async Task<IEnumerable<ProductResponse>> GetActiveProductsAsync()
-		{
-			var products = await  _productRepository.FindAsync(p => p.IsActive);
-			return products.Select(p => MapToResponse(p));
-
-		}
-
-		public async Task<IEnumerable<ProductResponse>> GetAllProductsAsync()
-		{
-			var products = await _productRepository.GetAllAsync();
-			return products.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<ProductResponse>> GetInactiveProductsAsync()
-		{
-			var products = await  _productRepository.FindAsync(p => !p.IsActive);
-			return products.Select(MapToResponse);
-		}
-
-
+	
 		public async Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive)
 		{
 			var products = await  _productRepository.GetProductsAsync(isActive);
@@ -165,6 +146,14 @@ namespace ToyCabin.Application.Services
 			_productRepository.Update(product);
 			await _unitOfWork.SaveChangesAsync();
 			return MapToResponse(product);
+		}
+
+		//====Search====
+		public async Task<IEnumerable<ProductResponse>> SearchAsync(string keyword, bool? isActive)
+		{
+			var products = await _productRepository.SearchAsync(keyword, isActive);
+
+			return products.Select(MapToResponse);
 		}
 
 		// ===== MAPPER =====
