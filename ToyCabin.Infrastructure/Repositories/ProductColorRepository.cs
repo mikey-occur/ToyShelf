@@ -29,6 +29,11 @@ namespace ToyCabin.Infrastructure.Repositories
 			return Task.FromResult(query.AsEnumerable());
 		}
 
-		
+		public async Task<ProductColor?> GetColorBySkuAsync(string sku)
+		{
+			return await _context.ProductColors
+				.Include(c => c.Product)
+				.FirstOrDefaultAsync(c => c.Sku == sku);
+		}
 	}
 }

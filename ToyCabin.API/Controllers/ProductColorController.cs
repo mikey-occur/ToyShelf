@@ -70,9 +70,9 @@ namespace ToyCabin.API.Controllers
 		}
 
 		/// <summary>
-		/// Delete Product.
+		/// Delete Productcolor.
 		/// </summary>
-		// ===== DELETE PRODUCT =====
+		// ===== DELETE PRODUCT COLOR =====
 		[HttpDelete("{id}/delete")]
 		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
 		{
@@ -80,9 +80,9 @@ namespace ToyCabin.API.Controllers
 			return ActionResponse.Ok("Productcolor delete successfully");
 		}
 		/// <summary>
-		/// Disable Product.
+		/// Disable ProductColor.
 		/// </summary>
-		// ===== DISABLE PRODUCT =====
+		// ===== DISABLE PRODUCTCOLOR =====
 		[HttpPost("{id}/disable")]
 		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
@@ -90,14 +90,24 @@ namespace ToyCabin.API.Controllers
 			return ActionResponse.Ok("Productcolor disabled successfully");
 		}
 		/// <summary>
-		/// Restore Product.
+		/// Restore ProductColor.
 		/// </summary>
-		// ===== RESTORE PRODUCT =====
+		// ===== RESTORE PRODUCTColor =====
 		[HttpPost("{id}/restore")]
 		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
 			await _productColorService.RestoreProductColorAsync(id);
 			return ActionResponse.Ok("Productcolor restore successfully");
+		}
+		/// <summary>
+		/// Get ProductColor variant by sku.
+		/// </summary>
+		// ===== Get PRODUCT =====
+		[HttpGet("variant/by-sku/{sku}")]
+		public async Task<BaseResponse<ProductBySkuResponse?>> GetByVariantSku(string sku)
+		{
+			var result = await _productColorService.GetByVariantSkuAsync(sku);
+			return BaseResponse<ProductBySkuResponse?>.Ok(result);
 		}
 	}
 }

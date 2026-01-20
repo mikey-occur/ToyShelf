@@ -11,5 +11,6 @@ namespace ToyCabin.Domain.IRepositories
 	{
 		Task<IEnumerable<ProductColor>> GetProductColorsAsync(bool? isActive);
 		Task<bool> ExistsBySkuAsync(string sku);
+		Task<ProductColor?> GetColorBySkuAsync(string sku);
 	}
 }

@@ -17,7 +17,7 @@ namespace ToyCabin.Application.IServices
 		Task<ProductColorResponse> CreateProductColorAsync(ProductColorRequest request);
 		Task<ProductColorResponse?> UpdateProductColorAsync(Guid id, ProductColorUpdateRequest request);
 		Task<bool> DeleteProductColorAsync(Guid id);
-
+		Task<ProductBySkuResponse?> GetByVariantSkuAsync(string sku);
 		Task<bool> RestoreProductColorAsync(Guid id);
 		Task<bool> DisableProductColorAsync(Guid id);
 	}

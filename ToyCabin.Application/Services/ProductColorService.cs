@@ -120,6 +120,24 @@ namespace ToyCabin.Application.Services
 			return MapToResponse(productColor);
 		}
 
+		//===GetByVariantSku===
+		public async Task<ProductBySkuResponse?> GetByVariantSkuAsync(string sku)
+		{
+			var color = await _productColorRepository.GetColorBySkuAsync(sku);
+
+			if (color == null)
+				return null;
+
+			return new ProductBySkuResponse
+			{
+				ProductId = color.Product.Id,
+				ProductName = color.Product.Name,
+				ProductSku = color.Product.SKU,
+
+				VariantSku = color.Sku,
+				ColorName = color.Name
+			};
+		}
 		//====Mapper===
 		private ProductColorResponse MapToResponse(ProductColor productColor)
 		{
