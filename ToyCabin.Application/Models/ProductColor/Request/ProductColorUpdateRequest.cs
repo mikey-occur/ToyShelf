@@ -10,5 +10,9 @@ namespace ToyCabin.Application.Models.ProductColor.Request
 	{
 		public string Name { get; set; } = null!;
 		public string HexCode { get; set; } = null!;
+		public string? QrCode { get; set; }
+		public string? Model3DUrl { get; set; }
+		public string? ImageUrl { get; set; }
+
 	}
 }

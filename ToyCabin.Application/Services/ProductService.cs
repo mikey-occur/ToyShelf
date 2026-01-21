@@ -54,9 +54,6 @@ namespace ToyCabin.Application.Services
 				SKU = sku,
 				BasePrice = request.Price,
                 Description = request.Description,
-				//QrCode = request.QrCode,
-				//Model3DUrl = request.Model3DUrl,
-				//ImageUrl = request.ImageUrl,
 				Brand = request.Brand,
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
@@ -136,9 +133,6 @@ namespace ToyCabin.Application.Services
 			product.Name = request.Name;
 			product.BasePrice = request.Price;
 			product.Description = request.Description;
-			//product.QrCode = request.QrCode;
-			//product.Model3DUrl = request.Model3DUrl;
-			//product.ImageUrl = request.ImageUrl;
 			product.Brand = request.Brand;
 			product.Material = request.Material;
 			product.OriginCountry = request.OriginCountry;
@@ -169,9 +163,6 @@ namespace ToyCabin.Application.Services
 				SKU = product.SKU,
 				Description = product.Description,
 				Price = product.BasePrice,
-				//QrCode = product.QrCode,
-				//Model3DUrl = product.Model3DUrl,
-				//ImageUrl = product.ImageUrl,
 				Brand = product.Brand,
 				Material = product.Material,
 				OriginCountry = product.OriginCountry,

@@ -58,6 +58,17 @@ namespace ToyCabin.API.Controllers
 		}
 
 		/// <summary>
+		/// Get ProductColor variant by sku.
+		/// </summary>
+		// ===== Get PRODUCT =====
+		[HttpGet("variant/by-sku/{sku}")]
+		public async Task<BaseResponse<ProductBySkuResponse?>> GetByVariantSku(string sku)
+		{
+			var result = await _productColorService.GetByVariantSkuAsync(sku);
+			return BaseResponse<ProductBySkuResponse?>.Ok(result);
+		}
+
+		/// <summary>
 		/// Update ProductColor.
 		/// </summary>
 		// ===== UPDATE PRODUCT color =====
@@ -99,15 +110,6 @@ namespace ToyCabin.API.Controllers
 			await _productColorService.RestoreProductColorAsync(id);
 			return ActionResponse.Ok("Productcolor restore successfully");
 		}
-		/// <summary>
-		/// Get ProductColor variant by sku.
-		/// </summary>
-		// ===== Get PRODUCT =====
-		[HttpGet("variant/by-sku/{sku}")]
-		public async Task<BaseResponse<ProductBySkuResponse?>> GetByVariantSku(string sku)
-		{
-			var result = await _productColorService.GetByVariantSkuAsync(sku);
-			return BaseResponse<ProductBySkuResponse?>.Ok(result);
-		}
+		
 	}
 }

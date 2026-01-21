@@ -13,7 +13,9 @@ namespace ToyCabin.Application.Models.ProductColor.Response
 		public string Sku { get; set; } = null!;
 		public string Name { get; set; } = null!;
 		public string HexCode { get; set; } = null!;
-
+		public string? QrCode { get; set; }
+		public string? Model3DUrl { get; set; }
+		public string? ImageUrl { get; set; }
 		public bool IsActive { get; set; }
 	}
 }

@@ -46,6 +46,9 @@ namespace ToyCabin.Application.Services
 				Sku = sku,
 				Name = request.Name,
 				HexCode = request.HexCode,
+				QrCode = request.QrCode,
+				Model3DUrl = request.Model3DUrl,
+				ImageUrl = request.ImageUrl,
 				IsActive = true
 			};
 			await _productColorRepository.AddAsync(newProductColor);
@@ -115,6 +118,9 @@ namespace ToyCabin.Application.Services
 			// Update fields
 			productColor.Name = request.Name;
 			productColor.HexCode = request.HexCode;
+			productColor.QrCode = request.QrCode;
+			productColor.Model3DUrl = request.Model3DUrl;
+			productColor.ImageUrl = request.ImageUrl;
 			_productColorRepository.Update(productColor);
 			await _unitOfWork.SaveChangesAsync();
 			return MapToResponse(productColor);
@@ -135,9 +141,9 @@ namespace ToyCabin.Application.Services
 				ProductSku = color.Product.SKU,
 				Price = color.Product.BasePrice,
 				Description = color.Product.Description,
-				//QrCode = color.Product.QrCode,
-				//Model3DUrl = color.Product.Model3DUrl,
-				//ImageUrl = color.Product.ImageUrl,
+				QrCode = color.QrCode,
+				Model3DUrl = color.Model3DUrl,
+				ImageUrl = color.ImageUrl,
 				Brand = color.Product.Brand,
 				Material = color.Product.Material,
 				OriginCountry = color.Product.OriginCountry,
@@ -159,7 +165,10 @@ namespace ToyCabin.Application.Services
 				ProductId = productColor.ProductId,
 				Sku = productColor.Sku,
 				HexCode = productColor.HexCode,
-
+				QrCode = productColor.QrCode,
+				Model3DUrl = productColor.Model3DUrl,
+				ImageUrl = productColor.ImageUrl,
+				IsActive = productColor.IsActive
 			};
 		}
 
