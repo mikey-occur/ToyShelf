@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
 using ToyCabin.Application.Models.Store.Response;
+using ToyCabin.Domain.Entities;
 
 namespace ToyCabin.Application.IServices
 {
@@ -22,6 +23,8 @@ namespace ToyCabin.Application.IServices
 
 		Task<bool> RestoreProductAsync(Guid id);
 		Task<bool> DisableProductAsync(Guid id);
+		Task<(IEnumerable<ProductResponse> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1,int pageSize = 10,bool? isActive = null);
 
-	}
+
+    }
 }

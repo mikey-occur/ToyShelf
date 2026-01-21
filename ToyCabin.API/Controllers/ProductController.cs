@@ -91,5 +91,25 @@ namespace ToyCabin.API.Controllers
 			await _productService.RestoreProductAsync(id);
 			return ActionResponse.Ok("Product restore successfully");
 		}
-	}
+
+        [HttpGet("paginated")]
+        public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null)
+        {
+            if (pageNumber < 1) pageNumber = 1;
+            if (pageSize < 1) pageSize = 10;
+
+            var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive);
+
+            var result = new PaginatedResult<ProductResponse>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
+        }
+
+    }
 }

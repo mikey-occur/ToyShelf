@@ -10,7 +10,7 @@ namespace ToyCabin.Domain.IRepositories
 	public interface IProductRepository : IGenericRepository<Product>
 	{
 		Task<int> GetNextSequenceAsync(string categoryCode);
-
 		Task<IEnumerable<Product>> GetProductsAsync(bool? isActive);
-	}
+        Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1,int pageSize = 10,bool? isActive = null);
+    }
 }

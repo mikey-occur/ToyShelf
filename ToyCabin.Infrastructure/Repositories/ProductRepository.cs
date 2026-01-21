@@ -38,5 +38,26 @@ namespace ToyCabin.Infrastructure.Repositories
 					.OrderByDescending(p => p.CreatedAt)
 					.ToListAsync();
 		}
-	}
+
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        bool? isActive = null)
+        {
+            var query = _context.Products.AsQueryable();
+
+            if (isActive.HasValue)
+                query = query.Where(p => p.IsActive == isActive.Value);
+
+            var totalCount = await query.CountAsync();
+
+            var items = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+    }
 }
