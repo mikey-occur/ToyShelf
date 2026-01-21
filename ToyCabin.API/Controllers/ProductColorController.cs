@@ -94,7 +94,7 @@ namespace ToyCabin.API.Controllers
 		/// Disable ProductColor.
 		/// </summary>
 		// ===== DISABLE PRODUCTCOLOR =====
-		[HttpPost("{id}/disable")]
+		[HttpPatch("{id}/disable")]
 		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
 		{
 			await _productColorService.DisableProductColorAsync(id);
@@ -104,7 +104,7 @@ namespace ToyCabin.API.Controllers
 		/// Restore ProductColor.
 		/// </summary>
 		// ===== RESTORE PRODUCTColor =====
-		[HttpPost("{id}/restore")]
+		[HttpPatch("{id}/restore")]
 		public async Task<ActionResult<ActionResponse>> Restore(Guid id)
 		{
 			await _productColorService.RestoreProductColorAsync(id);
