@@ -31,7 +31,7 @@ namespace ToyCabin.API.Controllers
         /// Gets cabin by ID.
         /// </summary>
         [HttpGet("{cabinId}")]
-        public async Task<BaseResponse<CabinResponse>> GetCabinById(Guid cabinId)
+        public async Task<ActionResult<BaseResponse<CabinResponse>>> GetCabinById(Guid cabinId)
         {
             var cabin = await _cabinService.GetCabinByIdAsync(cabinId);
             return BaseResponse<CabinResponse>.Ok(cabin, "Cabin retrieved successfully");
