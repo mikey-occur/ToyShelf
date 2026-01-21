@@ -133,11 +133,22 @@ namespace ToyCabin.Application.Services
 				ProductId = color.Product.Id,
 				ProductName = color.Product.Name,
 				ProductSku = color.Product.SKU,
-
+				Price = color.Product.BasePrice,
+				Description = color.Product.Description,
+				//QrCode = color.Product.QrCode,
+				//Model3DUrl = color.Product.Model3DUrl,
+				//ImageUrl = color.Product.ImageUrl,
+				Brand = color.Product.Brand,
+				Material = color.Product.Material,
+				OriginCountry = color.Product.OriginCountry,
+				AgeRange = color.Product.AgeRange,
+				IsConsignment = color.Product.IsConsignment,
 				VariantSku = color.Sku,
 				ColorName = color.Name
 			};
 		}
+
+	
 		//====Mapper===
 		private ProductColorResponse MapToResponse(ProductColor productColor)
 		{

@@ -403,16 +403,6 @@ namespace ToyCabin.Infrastructure.Context
 				entity.Property(e => e.AgeRange)
 					  .HasMaxLength(50);
 
-				// ===== MEDIA / QR =====
-				entity.Property(e => e.QrCode)
-					  .HasMaxLength(200);
-
-				entity.Property(e => e.Model3DUrl)
-					  .HasMaxLength(500);
-
-				entity.Property(e => e.ImageUrl)
-					  .HasMaxLength(500);
-
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
@@ -454,6 +444,16 @@ namespace ToyCabin.Infrastructure.Context
 
 				entity.Property(e => e.HexCode)
 					  .HasMaxLength(10);
+
+				 //===== MEDIA / QR =====
+				entity.Property(e => e.QrCode)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.Model3DUrl)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.ImageUrl)
+					  .HasMaxLength(500);
 
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
