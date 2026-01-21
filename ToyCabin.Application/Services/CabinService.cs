@@ -77,11 +77,11 @@ namespace ToyCabin.Application.Services
             return cabins.Select(MapToResponse);
         }
 
-        public async Task<CabinResponse?> GetCabinByIdAsync(Guid cabinId)
+        public async Task<CabinResponse> GetCabinByIdAsync(Guid cabinId)
         {
            var cabin =  await _cabinRepository.GetByIdAsync(cabinId);
             if (cabin == null)
-                throw new AppException($"Store not found. Id = {cabinId}", 404);
+                throw new AppException($"Cabin not found. Id = {cabinId}", 404);
             return MapToResponse(cabin);
         }
 

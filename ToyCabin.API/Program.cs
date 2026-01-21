@@ -36,6 +36,9 @@ builder.Services.AddSwaggerGen(options =>
 // ===== HttpContext =====
 builder.Services.AddHttpContextAccessor();
 
+//===== SignalR =====
+builder.Services.AddSignalR();
+
 var app = builder.Build();
 
 // Migration tự động

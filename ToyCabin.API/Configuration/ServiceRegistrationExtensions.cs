@@ -61,6 +61,8 @@ namespace ToyCabin.API.Configuration
 			services.AddScoped<IUserStoreService, UserStoreService>();
 			services.AddScoped<IStoreInvitationService, StoreInvitationService>();
 			services.AddScoped<IWarehouseService, WarehouseService>();
+            services.AddScoped<IProductBroadcaster, SignalRService>();
+        }
 			services.AddScoped<IProductColorService, ProductColorService>();
 		}
 	}
