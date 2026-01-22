@@ -42,7 +42,8 @@ namespace ToyCabin.Infrastructure.Repositories
         public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
         int pageNumber = 1,
         int pageSize = 10,
-        bool? isActive = null)
+        bool? isActive = null,
+		Guid? categoryId =null)
         {
             var query = _context.Products.AsQueryable();
 
@@ -50,6 +51,9 @@ namespace ToyCabin.Infrastructure.Repositories
                 query = query.Where(p => p.IsActive == isActive.Value);
 
             var totalCount = await query.CountAsync();
+
+            if (categoryId.HasValue)
+                query = query.Where(p => p.ProductCategoryId == categoryId.Value);
 
             var items = await query
                 .OrderByDescending(p => p.CreatedAt)

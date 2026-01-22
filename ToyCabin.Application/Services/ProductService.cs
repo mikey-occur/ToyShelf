@@ -222,14 +222,14 @@ namespace ToyCabin.Application.Services
             await _productBroadcaster.NotifyProductSelectedAsync(id);
         }
 
-        public async Task<(IEnumerable<ProductResponse> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1, int pageSize = 10, bool? isActive = null)
+        public async Task<(IEnumerable<ProductResponse> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1, int pageSize = 10, bool? isActive = null, Guid? categoryId = null)
         {
             if (pageNumber < 1)
                 pageNumber = 1;
             if (pageSize < 1)
                 pageSize = 10;
 
-            var (products, totalCount) = await _productRepository.GetProductsPaginatedAsync(pageNumber, pageSize, isActive);
+            var (products, totalCount) = await _productRepository.GetProductsPaginatedAsync(pageNumber, pageSize, isActive,categoryId);
 
             var productResponses = products.Select(MapToResponse);
 
