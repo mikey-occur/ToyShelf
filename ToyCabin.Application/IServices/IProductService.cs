@@ -23,7 +23,7 @@ namespace ToyCabin.Application.IServices
 
 		Task<bool> RestoreProductAsync(Guid id);
 		Task<bool> DisableProductAsync(Guid id);
-		Task<(IEnumerable<ProductResponse> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1,int pageSize = 10,bool? isActive = null,Guid? categoryId = null);
+		Task<(IEnumerable<ProductResponse> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1,int pageSize = 10,bool? isActive = null,Guid? categoryId = null,string? searchItem = null);
 
 
     }

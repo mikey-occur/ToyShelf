@@ -43,7 +43,8 @@ namespace ToyCabin.Infrastructure.Repositories
         int pageNumber = 1,
         int pageSize = 10,
         bool? isActive = null,
-		Guid? categoryId =null)
+		Guid? categoryId =null,
+		string? seacrhItem = null)
         {
             var query = _context.Products.AsQueryable();
 
@@ -54,6 +55,8 @@ namespace ToyCabin.Infrastructure.Repositories
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.ProductCategoryId == categoryId.Value);
+			if (!string.IsNullOrEmpty(seacrhItem))
+				query = query.Where(p => p.Name.Contains(seacrhItem));
 
             var items = await query
                 .OrderByDescending(p => p.CreatedAt)

@@ -93,12 +93,12 @@ namespace ToyCabin.API.Controllers
 		}
 
         [HttpGet("paginated")]
-        public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId =null)
+        public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId =null,string? searchItem =null)
         {
             if (pageNumber < 1) pageNumber = 1;
             if (pageSize < 1) pageSize = 10;
 
-            var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive,categoryId);
+            var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive,categoryId,searchItem);
 
             var result = new PaginatedResult<ProductResponse>
             {
