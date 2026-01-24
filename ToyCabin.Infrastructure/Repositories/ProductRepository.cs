@@ -41,6 +41,31 @@ namespace ToyCabin.Infrastructure.Repositories
 					.ToListAsync();
 		}
 
+        public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
+        int pageNumber = 1,
+        int pageSize = 10,
+        bool? isActive = null,
+		Guid? categoryId =null)
+        {
+            var query = _context.Products.AsQueryable();
+
+            if (isActive.HasValue)
+                query = query.Where(p => p.IsActive == isActive.Value);
+
+            var totalCount = await query.CountAsync();
+
+            if (categoryId.HasValue)
+                query = query.Where(p => p.ProductCategoryId == categoryId.Value);
+
+            var items = await query
+                .OrderByDescending(p => p.CreatedAt)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (items, totalCount);
+        }
+    
 		public async Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive)
 		{
 			var query = _context.Products
