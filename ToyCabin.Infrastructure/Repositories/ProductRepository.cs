@@ -31,7 +31,9 @@ namespace ToyCabin.Infrastructure.Repositories
 
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
-			var query = _context.Products.AsQueryable();
+			var query = _context.Products
+				.Include(p => p.ProductColors).
+				AsQueryable();
 			if (isActive.HasValue)
 				query = query.Where(p => p.IsActive == isActive.Value);
 			return await query
@@ -63,5 +65,27 @@ namespace ToyCabin.Infrastructure.Repositories
 
             return (items, totalCount);
         }
-    }
+    
+		public async Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive)
+		{
+			var query = _context.Products
+				.Include(p => p.ProductColors)
+				.AsQueryable();
+
+			if (!string.IsNullOrWhiteSpace(keyword))
+			{
+				var lowerKeyword = keyword.Trim().ToLower();
+				query = query.Where(p => p.Name.ToLower().Contains(lowerKeyword));
+			}
+
+			if (isActive.HasValue)
+			{
+				query = query.Where(p => p.IsActive == isActive.Value);
+			}
+
+			return await query
+				.OrderByDescending(p => p.CreatedAt)
+				.ToListAsync();
+		}
+	}
 }

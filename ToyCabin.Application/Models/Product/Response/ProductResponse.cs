@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyCabin.Application.Models.ProductColor.Response;
 
 namespace ToyCabin.Application.Models.Product.Response
 {
@@ -14,9 +15,6 @@ namespace ToyCabin.Application.Models.Product.Response
 		public string Name { get; set; } = string.Empty;
 		public decimal Price { get; set; }
 		public string? Description { get; set; }
-		public string? QrCode { get; set; }
-		public string? Model3DUrl { get; set; } 
-		public string? ImageUrl { get; set; }
 		public string? Brand { get; set; }
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
@@ -25,5 +23,6 @@ namespace ToyCabin.Application.Models.Product.Response
 		public bool IsConsignment { get; set; } = true; 
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
+		public List<ProductColorResponse> Colors { get; set; } = new();
 	}
 }
