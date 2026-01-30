@@ -8,6 +8,7 @@ using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
 using ToyCabin.Application.Models.Product.Response;
 using ToyCabin.Application.Models.ProductCategory.Response;
+using ToyCabin.Application.Models.ProductColor.Response;
 using ToyCabin.Application.Models.Store.Response;
 using ToyCabin.Domain.Common.Time;
 using ToyCabin.Domain.Entities;
@@ -53,9 +54,6 @@ namespace ToyCabin.Application.Services
 				SKU = sku,
 				BasePrice = request.Price,
                 Description = request.Description,
-				QrCode = request.QrCode,
-				Model3DUrl = request.Model3DUrl,
-				ImageUrl = request.ImageUrl,
 				Brand = request.Brand,
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
@@ -97,26 +95,7 @@ namespace ToyCabin.Application.Services
 		}
 
 		//===Get===
-		public async Task<IEnumerable<ProductResponse>> GetActiveProductsAsync()
-		{
-			var products = await  _productRepository.FindAsync(p => p.IsActive);
-			return products.Select(p => MapToResponse(p));
-
-		}
-
-		public async Task<IEnumerable<ProductResponse>> GetAllProductsAsync()
-		{
-			var products = await _productRepository.GetAllAsync();
-			return products.Select(MapToResponse);
-		}
-
-		public async Task<IEnumerable<ProductResponse>> GetInactiveProductsAsync()
-		{
-			var products = await  _productRepository.FindAsync(p => !p.IsActive);
-			return products.Select(MapToResponse);
-		}
-
-
+	
 		public async Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive)
 		{
 			var products = await  _productRepository.GetProductsAsync(isActive);
@@ -154,9 +133,6 @@ namespace ToyCabin.Application.Services
 			product.Name = request.Name;
 			product.BasePrice = request.Price;
 			product.Description = request.Description;
-			product.QrCode = request.QrCode;
-			product.Model3DUrl = request.Model3DUrl;
-			product.ImageUrl = request.ImageUrl;
 			product.Brand = request.Brand;
 			product.Material = request.Material;
 			product.OriginCountry = request.OriginCountry;
@@ -166,6 +142,14 @@ namespace ToyCabin.Application.Services
 			_productRepository.Update(product);
 			await _unitOfWork.SaveChangesAsync();
 			return MapToResponse(product);
+		}
+
+		//====Search====
+		public async Task<IEnumerable<ProductResponse>> SearchAsync(string keyword, bool? isActive)
+		{
+			var products = await _productRepository.SearchAsync(keyword, isActive);
+
+			return products.Select(MapToResponse);
 		}
 
 		// ===== MAPPER =====
@@ -179,9 +163,6 @@ namespace ToyCabin.Application.Services
 				SKU = product.SKU,
 				Description = product.Description,
 				Price = product.BasePrice,
-				QrCode = product.QrCode,
-				Model3DUrl = product.Model3DUrl				,
-				ImageUrl = product.ImageUrl,
 				Brand = product.Brand,
 				Material = product.Material,
 				OriginCountry = product.OriginCountry,
@@ -189,8 +170,19 @@ namespace ToyCabin.Application.Services
 				IsActive = product.IsActive,
 				IsConsignment = product.IsConsignment,
 				CreatedAt = product.CreatedAt,
-				UpdatedAt = product.UpdatedAt
-			};
+				UpdatedAt = product.UpdatedAt,
+
+				Colors = product.ProductColors
+				.Where(c => c.IsActive)
+				.Select(c => new ProductColorResponse
+				{
+					Id = c.Id,
+					Sku = c.Sku,
+					Name = c.Name,
+					IsActive = c.IsActive
+				})
+				.ToList()
+				};
 		}
 		//====SKU CODE Convert=====
 		public string MapCategoryToCode(string categoryName)

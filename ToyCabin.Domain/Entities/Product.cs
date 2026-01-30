@@ -20,11 +20,6 @@ namespace ToyCabin.Domain.Entities
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
-
-		public string? QrCode { get; set; }
-		public string? Model3DUrl { get; set; } // link to 3D model
-		public string? ImageUrl { get; set; }
-
 		public bool IsActive { get; set; } = true;
 		public bool IsConsignment { get; set; } = true; // hàng ký gửi -> hàng của store
 

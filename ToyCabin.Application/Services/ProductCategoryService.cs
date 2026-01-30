@@ -33,7 +33,7 @@ namespace ToyCabin.Application.Services
 
 			if (request.ParentId == null)
 			{
-				code = ToCategoryCode(request.Name); 
+				code = ToCategoryCode(request.Code); 
 			}
 			else
 			{
