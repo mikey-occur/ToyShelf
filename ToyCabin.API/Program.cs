@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text.Json.Serialization;
 using ToyCabin.API.Configuration;
+using ToyCabin.API.Hubs;
 using ToyCabin.API.Middleware;
 using ToyCabin.Infrastructure.Common.Time;
 using ToyCabin.Infrastructure.Context;
@@ -63,7 +64,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-
+app.MapHub<ProductHub>("/productHub");
 //app.UseMiddleware<ExceptionMiddleware>();
 
 app.UseHttpsRedirection();

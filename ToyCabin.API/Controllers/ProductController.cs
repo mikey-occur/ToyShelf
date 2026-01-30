@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using ToyCabin.API.Hubs;
 using ToyCabin.Application.Common;
 using ToyCabin.Application.IServices;
 using ToyCabin.Application.Models.Product.Request;
@@ -13,10 +15,12 @@ namespace ToyCabin.API.Controllers
 	public class ProductController : ControllerBase
 	{
         private readonly IProductService _productService;
-		public ProductController(IProductService productService)
+        private readonly IHubContext<ProductHub> _hubContext;
+        public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
 		{
 			   _productService = productService;
-		}
+            _hubContext = hubContext;
+        }
 
 
 		// ===== Get PRODUCTS =====
@@ -109,6 +113,23 @@ namespace ToyCabin.API.Controllers
             };
 
             return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
+        }
+
+		[HttpPost("select")]
+        public async Task<IActionResult> SelectProduct([FromBody] string productId)
+        {
+            if (string.IsNullOrEmpty(productId))
+            {
+                return BadRequest("Product ID không được để trống.");
+            }
+			await _hubContext.Clients.All.SendAsync("OnProductSelected", productId);
+
+            return Ok(new 
+            { 
+                success = true, 
+                message = $"Đã gửi lệnh hiển thị sản phẩm: {productId}",
+                timestamp = System.DateTime.Now 
+            });
         }
 
     }
