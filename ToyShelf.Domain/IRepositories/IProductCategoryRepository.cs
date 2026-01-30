@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using ToyShelf.Domain.Entities;
+
+namespace ToyShelf.Domain.IRepositories
+{
+	public interface IProductCategoryRepository : IGenericRepository<ProductCategory>
+	{
+		Task<ProductCategory?> GetByNameAsync(string name);
+		Task<IEnumerable<ProductCategory>> GetProductCategoriesAsync(bool? isActive);
+
+		Task<bool> HasChildAsync(Guid parentId);
+		Task<bool> ExistsCodeAsync(string code, Guid? parentId);
+	}
+}
