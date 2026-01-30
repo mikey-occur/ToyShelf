@@ -22,17 +22,7 @@ namespace ToyCabin.API.Controllers
             _hubContext = hubContext;
         }
 
-		/// <summary>
-		/// Create Product.
-		/// </summary>
-
-		// ===== CREATE PRODUCT =====
-		[HttpPost]
-		public async Task<BaseResponse<ProductResponse>> Create([FromBody] ProductRequest request)
-		{
-			var result = await _productService.CreateProductAsync(request);
-			return BaseResponse<ProductResponse>.Ok(result, "Product created successfully");
-		}
+	
 
 		/// <summary>
 		/// Create Product.
