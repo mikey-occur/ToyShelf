@@ -20,7 +20,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<UserStore> UserStores { get; set; } = new List<UserStore>();
 		public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 		public virtual ICollection<StoreInvitation> StoreInvitations { get; set; } = new List<StoreInvitation>();
-		public virtual ICollection<CabinSnapshot> CabinSnapshots { get; set; } = new List<CabinSnapshot>();
 		public virtual ICollection<DamageReport> ReportedDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<DamageReport> ReviewedDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<Shipment> RequestedShipments { get; set; } = new List<Shipment>();

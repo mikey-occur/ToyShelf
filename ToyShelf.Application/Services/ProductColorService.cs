@@ -44,8 +44,8 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				ProductId = request.ProductId,
 				Sku = sku,
-				Name = request.Name,
-				HexCode = request.HexCode,
+				//Name = request.Name,
+				//HexCode = request.HexCode,
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
@@ -116,8 +116,8 @@ namespace ToyShelf.Application.Services
 			if (productColor == null)
 				throw new Exception($"ProductColor Id = {id} not found");
 			// Update fields
-			productColor.Name = request.Name;
-			productColor.HexCode = request.HexCode;
+			//productColor.Name = request.Name;
+			//productColor.HexCode = request.HexCode;
 			productColor.QrCode = request.QrCode;
 			productColor.Model3DUrl = request.Model3DUrl;
 			productColor.ImageUrl = request.ImageUrl;
@@ -150,7 +150,7 @@ namespace ToyShelf.Application.Services
 				AgeRange = color.Product.AgeRange,
 				IsConsignment = color.Product.IsConsignment,
 				VariantSku = color.Sku,
-				ColorName = color.Name
+				//ColorName = color.Name
 			};
 		}
 
@@ -161,10 +161,10 @@ namespace ToyShelf.Application.Services
 			return new ProductColorResponse
 			{
 				Id = productColor.Id,
-				Name = productColor.Name,
+				//Name = productColor.Name,
 				ProductId = productColor.ProductId,
 				Sku = productColor.Sku,
-				HexCode = productColor.HexCode,
+				//HexCode = productColor.HexCode,
 				QrCode = productColor.QrCode,
 				Model3DUrl = productColor.Model3DUrl,
 				ImageUrl = productColor.ImageUrl,

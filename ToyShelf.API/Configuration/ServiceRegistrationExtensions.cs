@@ -38,7 +38,6 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IAccountRepository, AccountRepository>();
 			services.AddScoped<IUserRepository, UserRepository>();
 			services.AddScoped<IPasswordResetOtpRepository, PasswordResetOtpRepository>();
-			services.AddScoped<ICabinRepository, CabinRepository>();
 			services.AddScoped<IProductCategoryRepository, ProductCategoryRepository>();
 			services.AddScoped<IProductRepository, ProductRepository>();
 			services.AddScoped<IPartnerRepository, PartnerRepository>();
@@ -53,7 +52,6 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IAccountService, AccountService>();
 			services.AddScoped<IUserService, UserService>();
 			services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
-			services.AddScoped<ICabinService, CabinService>();
 			services.AddScoped<IProductCategoryService, ProductCategoryService>();
 			services.AddScoped<IProductService, ProductService>();
 			services.AddScoped<IPartnerService, PartnerService>();
