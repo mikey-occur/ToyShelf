@@ -178,7 +178,7 @@ namespace ToyShelf.Application.Services
 				{
 					Id = c.Id,
 					Sku = c.Sku,
-					Name = c.Name,
+					//Name = c.Name,
 					IsActive = c.IsActive
 				})
 				.ToList()

@@ -38,8 +38,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				CompanyName = request.CompanyName.Trim(),
-				Tier = request.Tier,
-				RevenueSharePercent = request.RevenueSharePercent,
+				//Tier = request.Tier,
+				//RevenueSharePercent = request.RevenueSharePercent,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
 			};
@@ -75,8 +75,8 @@ namespace ToyShelf.Application.Services
 				throw new AppException($"Partner not found. Id = {id}", 404);
 
 			partner.CompanyName = request.CompanyName.Trim();
-			partner.Tier = request.Tier;
-			partner.RevenueSharePercent = request.RevenueSharePercent;
+			//partner.Tier = request.Tier;
+			//partner.RevenueSharePercent = request.RevenueSharePercent;
 			partner.UpdatedAt = _dateTime.UtcNow;
 
 			_partnerRepository.Update(partner);
@@ -140,8 +140,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = partner.Id,
 				CompanyName = partner.CompanyName,
-				Tier = partner.Tier,
-				RevenueSharePercent = partner.RevenueSharePercent,
+				//Tier = partner.Tier,
+				//RevenueSharePercent = partner.RevenueSharePercent,
 				IsActive = partner.IsActive,
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt

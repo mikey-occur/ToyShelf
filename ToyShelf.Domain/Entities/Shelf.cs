@@ -6,15 +6,25 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
+	public enum ShelfStatus
+	{
+		Available,
+		InUse,
+		Recalled,
+		Maintenance,
+		Retired
+	}
 	public class Shelf
 	{
 		public Guid Id { get; set; }
-		public Guid CabinId { get; set; }
+		public Guid? PartnerId { get; set; }
+		public Guid? StoreId { get; set; }
 		public string Code { get; set; } = null!;
 		public int Level { get; set; }
-		public bool IsActive { get; set; }
-		public virtual Cabin Cabin { get; set; } = null!;
-		public virtual ICollection<ShelfSlot> ShelfSlots { get; set; } = new List<ShelfSlot>();
+		public ShelfStatus Status { get; set; }
+		public DateTime? AssignedAt { get; set; }
+		public DateTime? UnassignedAt { get; set; }
+		public virtual Store? Store { get; set; }
+		public virtual Partner? Partner { get; set; }
 	}
-
 }

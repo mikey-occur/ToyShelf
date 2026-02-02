@@ -20,6 +20,7 @@ namespace ToyShelf.Domain.Entities
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
+
 		public bool IsActive { get; set; } = true;
 		public bool IsConsignment { get; set; } = true; // hàng ký gửi -> hàng của store
 

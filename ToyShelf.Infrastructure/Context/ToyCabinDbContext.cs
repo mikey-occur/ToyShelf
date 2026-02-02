@@ -18,20 +18,24 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
 
 		public DbSet<Partner> Partners { get; set; }
+		public DbSet<PartnerTier> PartnerTiers { get; set; }
 		public DbSet<UserStore> UserStores { get; set; }
 			
 		public DbSet<Store> Stores { get; set; }
 		public DbSet<StoreInvitation> StoreInvitations { get; set; }
 		public DbSet<Warehouse> Warehouses { get; set; }
 
-		public DbSet<Cabin> Cabins { get; set; }
-		public DbSet<CabinSnapshot> CabinSnapshots { get; set; }
 		public DbSet<Shelf> Shelves { get; set; }
-		public DbSet<ShelfSlot> ShelfSlots { get; set; }
 
 		public DbSet<Product> Products { get; set; }
 		public DbSet<ProductCategory> ProductCategories { get; set; }
 		public DbSet<ProductColor> ProductColors { get; set; }
+		public DbSet<Color> Colors { get; set; }
+		public DbSet<PriceTable> PriceTables { get; set; }
+		public DbSet<PriceTableApply> PriceTableApplies { get; set; }
+		public DbSet<PriceSegment> PriceSegments { get; set; }
+		public DbSet<PriceItem> PriceItems { get; set; }
+		public DbSet<CommissionPolicy> CommissionPolicies { get; set; }
 
 
 		public DbSet<Shipment> Shipments { get; set; }
@@ -145,10 +149,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithMany(a => a.Users)
 					  .HasForeignKey(e => e.PartnerId)
 					  .HasConstraintName("FK_User_Partner");
-
-				entity.HasMany(e => e.CabinSnapshots)
-					  .WithOne(a => a.User)
-					  .HasForeignKey(a => a.UserId);
 
 				// Damage
 
@@ -295,7 +295,7 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.UpdatedAt);
 
 				// FK 
-				entity.HasMany(e => e.Cabins)
+				entity.HasMany(e => e.Shelves)
 					  .WithOne(a => a.Store)
 					  .HasForeignKey(a => a.StoreId);
 
@@ -318,52 +318,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_Store_Partner");
 			});
 
-			// ================== Cabin ==================
-			modelBuilder.Entity<Cabin>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.Code)
-					  .IsRequired()	
-					  .HasMaxLength(50);
-
-				entity.Property(e => e.Name)
-					  .IsRequired()
-					  .HasMaxLength(200);
-
-				entity.Property(e => e.LocationDescription)
-					  .IsRequired()
-					  .HasMaxLength(300);
-
-				entity.Property(e => e.IsOnline)
-					  .HasDefaultValue(false);
-
-				entity.Property(e => e.IsActive)
-					  .HasDefaultValue(true);
-
-				entity.Property(e => e.CreatedAt)
-					  .IsRequired()
-					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-				entity.Property(e => e.LastHeartbeatAt);
-				// FK -> Store
-				entity.HasOne(e => e.Store)
-					  .WithMany(s => s.Cabins)
-					  .HasForeignKey(e => e.StoreId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_Cabin_Store");
-
-				entity.HasMany(e => e.CabinSnapshots)
-					  .WithOne(a => a.Cabin)
-					  .HasForeignKey(a => a.CabinId);
-
-				entity.HasMany(e => e.Shelves)
-					  .WithOne(a => a.Cabin)
-					  .HasForeignKey(a => a.CabinId);
-			});
 
 			// ================== Product ==================
 			modelBuilder.Entity<Product>(entity => 
@@ -426,6 +380,37 @@ namespace ToyShelf.Infrastructure.Context
 				      .HasForeignKey(c => c.ProductId);
 			});
 
+			// ================== Color ==================
+			modelBuilder.Entity<Color>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(50);
+
+				entity.Property(e => e.HexCode)
+					  .IsRequired()
+					  .HasMaxLength(7);
+
+				// Quan hệ Color - ProductColor (1 - N)
+				entity.HasMany(e => e.ProductColors)
+					  .WithOne(pc => pc.Color)
+					  .HasForeignKey(pc => pc.ColorId)
+					  .OnDelete(DeleteBehavior.Cascade);
+
+				// Indexes
+				entity.HasIndex(e => e.Name)
+					  .IsUnique();
+
+				entity.HasIndex(e => e.HexCode)
+					  .IsUnique();
+			});
+
+
 			// ================== ProductColor ==================
 			modelBuilder.Entity<ProductColor>(entity =>
 			{
@@ -438,14 +423,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(100);
 
-				entity.Property(e => e.Name)
+				entity.Property(e => e.Price)
 					  .IsRequired()
-					  .HasMaxLength(100);
+					  .HasColumnType("decimal(18,2)");
 
-				entity.Property(e => e.HexCode)
-					  .HasMaxLength(10);
-
-				 //===== MEDIA / QR =====
 				entity.Property(e => e.QrCode)
 					  .HasMaxLength(500);
 
@@ -458,40 +439,240 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
-				// Product
+				// ================== RELATIONSHIPS ==================
+
+				// ProductColor → Product (N - 1)
 				entity.HasOne(e => e.Product)
 					  .WithMany(p => p.ProductColors)
 					  .HasForeignKey(e => e.ProductId)
 					  .OnDelete(DeleteBehavior.Cascade)
 					  .HasConstraintName("FK_ProductColor_Product");
 
-				// Inventory
+				// ProductColor → Color (N - 1)
+				entity.HasOne(e => e.Color)
+					  .WithMany(c => c.ProductColors)
+					  .HasForeignKey(e => e.ColorId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ProductColor_Color");
+
+				// ProductColor → PriceSegment (N - 1)
+				entity.HasOne(e => e.PriceSegment)
+					  .WithMany(ps => ps.ProductColors)
+					  .HasForeignKey(e => e.PriceSegmentId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ProductColor_PriceSegment");
+
+				// ================== CHILD COLLECTIONS ==================
+
 				entity.HasMany(e => e.Inventories)
 					  .WithOne(i => i.ProductColor)
 					  .HasForeignKey(i => i.ProductColorId);
 
-				// OrderItem
 				entity.HasMany(e => e.OrderItems)
 					  .WithOne(o => o.ProductColor)
 					  .HasForeignKey(o => o.ProductColorId);
 
-				// ShipmentItem
 				entity.HasMany(e => e.ShipmentItems)
 					  .WithOne(s => s.ProductColor)
 					  .HasForeignKey(s => s.ProductColorId);
 
-				// InventoryTransaction
 				entity.HasMany(e => e.InventoryTransactions)
 					  .WithOne(t => t.ProductColor)
 					  .HasForeignKey(t => t.ProductColorId);
 
-				// DamageReport
 				entity.HasMany(e => e.DamageReports)
 					  .WithOne(d => d.ProductColor)
 					  .HasForeignKey(d => d.ProductColorId);
 
-				// SKU của ProductColor cũng phải unique
+				// ================== INDEX ==================
+
+				// SKU phải unique
 				entity.HasIndex(e => e.Sku)
+					  .IsUnique();
+			});
+
+
+			// ================== PriceSegment ==================
+			modelBuilder.Entity<PriceSegment>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(50);
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(255);
+
+				entity.Property(e => e.MinPrice)
+					  .IsRequired()
+					  .HasColumnType("decimal(18,2)");
+
+				entity.Property(e => e.MaxPrice)
+					  .HasColumnType("decimal(18,2)");
+
+				// Quan hệ PriceSegment - ProductColor (1 - N)
+				entity.HasMany(e => e.ProductColors)
+					  .WithOne(pc => pc.PriceSegment)
+					  .HasForeignKey(pc => pc.PriceSegmentId)
+					  .OnDelete(DeleteBehavior.Restrict);
+
+				// Quan hệ PriceSegment - PriceItem (1 - N)
+				entity.HasMany(e => e.PriceItems)
+					  .WithOne(pi => pi.PriceSegment)
+					  .HasForeignKey(pi => pi.PriceSegmentId)
+					  .OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(e => e.CommissionPolicies)
+					  .WithOne(pi => pi.PriceSegment)
+					  .HasForeignKey(pi => pi.PriceSegmentId);
+
+				// Indexes
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
+
+				entity.HasIndex(e => new { e.MinPrice, e.MaxPrice });
+			});
+
+			// ================== PriceItem ==================
+			modelBuilder.Entity<PriceItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.CommissionRate)
+					  .IsRequired()
+					  .HasColumnType("decimal(5,4)");
+				// VD: 0.1500 = 15%
+
+				// PriceItem → PriceTable (N - 1)
+				entity.HasOne(e => e.PriceTable)
+					  .WithMany(pt => pt.PriceItems)
+					  .HasForeignKey(e => e.PriceTableId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_PriceItem_PriceTable");
+
+				// PriceItem → PriceSegment (N - 1)
+				entity.HasOne(e => e.PriceSegment)
+					  .WithMany(ps => ps.PriceItems)
+					  .HasForeignKey(e => e.PriceSegmentId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_PriceItem_PriceSegment");
+
+				// Mỗi bảng giá chỉ có 1 item cho mỗi segment
+				entity.HasIndex(e => new { e.PriceTableId, e.PriceSegmentId })
+					  .IsUnique();
+			});
+
+			// ================== PriceTable ==================
+			modelBuilder.Entity<PriceTable>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(255);
+
+				entity.Property(e => e.Type)
+					  .IsRequired()
+					  .HasConversion<string>()   // Tier / Clearance
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.IsActive)
+					  .IsRequired()
+					  .HasDefaultValue(true);
+
+				// Quan hệ PriceTable - PartnerTier (N - 1, nullable cho Clearance)
+				entity.HasOne(e => e.PartnerTier)
+					  .WithMany(pt => pt.PriceTables)
+					  .HasForeignKey(e => e.PartnerTierId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_PriceTable_PartnerTier");
+
+				// Quan hệ PriceTable - PriceItem (1 - N)
+				entity.HasMany(e => e.PriceItems)
+					  .WithOne(pi => pi.PriceTable)
+					  .HasForeignKey(pi => pi.PriceTableId);
+
+				// Quan hệ PriceTable - PriceTableApply (1 - N)
+				entity.HasMany(e => e.PriceTableApplies)
+					  .WithOne(pta => pta.PriceTable)
+					  .HasForeignKey(pta => pta.PriceTableId);
+			});
+
+			// ================== PriceTableApply ==================
+			modelBuilder.Entity<PriceTableApply>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .HasMaxLength(255);
+
+				entity.Property(e => e.IsActive)
+					  .IsRequired()
+					  .HasDefaultValue(true);
+
+				entity.Property(e => e.StartDate)
+					  .IsRequired();
+
+				entity.Property(e => e.EndDate);
+
+				// Quan hệ PriceTableApply - Partner (N - 1)
+				entity.HasOne(e => e.Partner)
+					  .WithMany(p => p.PriceTableApplies)
+					  .HasForeignKey(e => e.PartnerId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_PriceTableApply_Partner");
+
+				// Quan hệ PriceTableApply - PriceTable (N - 1)
+				entity.HasOne(e => e.PriceTable)
+					  .WithMany(pt => pt.PriceTableApplies)
+					  .HasForeignKey(e => e.PriceTableId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_PriceTableApply_PriceTable");
+			});
+
+			// ================== CommissionPolicy ==================
+			modelBuilder.Entity<CommissionPolicy>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.CommissionRate)
+					  .IsRequired()
+					  .HasPrecision(5, 4); // 0.1500 = 15%
+
+				entity.Property(e => e.EffectiveDate)
+					  .IsRequired(false);
+
+				entity.HasOne(e => e.PartnerTier)
+					  .WithMany(t => t.CommissionPolicies)
+					  .HasForeignKey(e => e.PartnerTierId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_CommissionPolicy_PartnerTier");
+
+				entity.HasOne(e => e.PriceSegment)
+					  .WithMany(ps => ps.CommissionPolicies)
+					  .HasForeignKey(e => e.PriceSegmentId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_CommissionPolicy_PriceSegment");
+
+				// RẤT QUAN TRỌNG: chặn trùng rule
+				entity.HasIndex(e => new { e.PartnerTierId, e.PriceSegmentId })
 					  .IsUnique();
 			});
 
@@ -546,15 +727,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(200);
 
-				entity.Property(e => e.Tier)
-					  .IsRequired()
-					  .HasMaxLength(50)
-					  .HasDefaultValue("STANDARD");
-
-				entity.Property(e => e.RevenueSharePercent)
-					  .HasPrecision(5, 2) // ví dụ: 30.00 (%)
-					  .HasComment("Revenue share percentage from 0 to 100");
-
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
@@ -572,7 +744,58 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Users)
 					  .WithOne(s => s.Partner)
 					  .HasForeignKey(s => s.PartnerId);
+
+				entity.HasMany(e => e.Shelves)
+					  .WithOne(s => s.Partner)
+					  .HasForeignKey(s => s.PartnerId);
+
+				entity.HasMany(e => e.PriceTableApplies)
+					  .WithOne(s => s.Partner)
+					  .HasForeignKey(s => s.PartnerId);
+
+				entity.HasOne(e => e.PartnerTier)
+					  .WithMany(e => e.Partners)
+					  .HasForeignKey(e => e.PartnerTierId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Partner_PartnerTier");
 			});
+
+			// ================== PartnerTier ==================
+			modelBuilder.Entity<PartnerTier>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(100);
+
+				entity.Property(e => e.Priority)
+					  .IsRequired();
+
+				// Mỗi Tier có Priority duy nhất
+				entity.HasIndex(e => e.Priority)
+					  .IsUnique();
+
+				// Tên Tier cũng nên unique
+				entity.HasIndex(e => e.Name)
+					  .IsUnique();
+
+				entity.HasMany(e => e.Partners)
+					  .WithOne(s => s.PartnerTier)
+					  .HasForeignKey(s => s.PartnerTierId);
+
+				entity.HasMany(e => e.PriceTables)
+					  .WithOne(s => s.PartnerTier)
+					  .HasForeignKey(s => s.PartnerTierId);
+
+				entity.HasMany(e => e.CommissionPolicies)
+					  .WithOne(s => s.PartnerTier)
+					  .HasForeignKey(s => s.PartnerTierId);
+			});
+
 
 			// ================== UserStore ==================
 			modelBuilder.Entity<UserStore>(entity =>
@@ -646,41 +869,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasDatabaseName("IX_StoreInvitation_Store_User_Status");
 			});
 
-			// ================== CabinSnapshot ==================
-			modelBuilder.Entity<CabinSnapshot>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.EventType)
-					  .IsRequired()
-					  .HasMaxLength(20);
-
-				entity.Property(e => e.ImageUrl)
-					  .IsRequired()
-					  .HasMaxLength(500);
-
-				entity.Property(e => e.TakenAt)
-					  .IsRequired()
-					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-				entity.HasOne(e => e.Cabin)
-					  .WithMany(c => c.CabinSnapshots)
-					  .HasForeignKey(e => e.CabinId)
-					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_CabinSnapshot_Cabin");
-
-				entity.HasOne(e => e.User)
-					  .WithMany(u => u.CabinSnapshots)
-					  .HasForeignKey(e => e.UserId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_CabinSnapshot_User");
-
-				// Query nhanh theo cabin + thời gian
-				entity.HasIndex(e => new { e.CabinId, e.TakenAt });
-			});
 
 			// ================== Shelf ==================
 			modelBuilder.Entity<Shelf>(entity =>
@@ -697,54 +885,29 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Level)
 					  .IsRequired();
 
-				entity.Property(e => e.IsActive)
+				entity.Property(e => e.Status)
 					  .IsRequired()
-					  .HasDefaultValue(true);
+					  .HasConversion<string>() 
+					  .HasMaxLength(20);
 
-				entity.HasOne(e => e.Cabin)
+				entity.Property(e => e.AssignedAt)
+					  .IsRequired(false);
+	
+				entity.Property(e => e.UnassignedAt)
+					  .IsRequired(false);
+
+				// ===== Relationships =====
+				entity.HasOne(e => e.Store)
 					  .WithMany(c => c.Shelves)
-					  .HasForeignKey(e => e.CabinId)	
-					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_Shelf_Cabin");
+					  .HasForeignKey(e => e.StoreId)
+					  .HasConstraintName("FK_Shelf_Store");
 
-				entity.HasMany(e => e.ShelfSlots)
-					  .WithOne(s => s.Shelf)
-					  .HasForeignKey(s => s.ShelfId);
+				entity.HasOne(e => e.Partner)
+					  .WithMany(c => c.Shelves)
+					  .HasForeignKey(e => e.PartnerId)
+					  .HasConstraintName("FK_Shelf_Partner");
 
-				// Mỗi cabin không được có 2 shelf trùng code
-				entity.HasIndex(e => new { e.CabinId, e.Code })
-					  .IsUnique();
-			});
-
-			// ================== ShelfSlot ==================
-			modelBuilder.Entity<ShelfSlot>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.Code)
-					  .IsRequired()
-					  .HasMaxLength(50);
-
-				entity.Property(e => e.DisplayCapacity)
-					  .IsRequired();
-
-				entity.Property(e => e.IdealWeight)
-					  .HasPrecision(10, 2);
-
-				entity.Property(e => e.IsActive)
-					  .HasDefaultValue(true);
-
-				entity.HasOne(e => e.Shelf)
-					  .WithMany(s => s.ShelfSlots)
-					  .HasForeignKey(e => e.ShelfId)
-					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_ShelfSlot_Shelf");
-
-				// Mỗi shelf không được có 2 slot trùng code
-				entity.HasIndex(e => new { e.ShelfId, e.Code })
+				entity.HasIndex(e => e.Code)
 					  .IsUnique();
 			});
 
