@@ -28,9 +28,9 @@ builder.Services
 	});
 builder.Services.AddSwaggerGen(options =>
 {
-    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    options.IncludeXmlComments(xmlPath);
+	var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+	var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+	options.IncludeXmlComments(xmlPath);
 });
 
 // ===== HttpContext =====
@@ -56,12 +56,20 @@ catch (Exception ex)
 	Console.WriteLine($"An error occurred during database migration: {ex.Message}");
 }
 
-if (app.Environment.IsDevelopment())
+// if (app.Environment.IsDevelopment())
+// {
+// 	app.UseSwagger();
+// 	app.UseSwaggerUI();
+// }
+// Chỉ enable Swagger nếu có env var cho phép
+var enableSwagger = app.Environment.IsDevelopment() ||
+	Environment.GetEnvironmentVariable("ENABLE_SWAGGER") == "true";
+
+if (enableSwagger)
 {
 	app.UseSwagger();
 	app.UseSwaggerUI();
 }
-
 app.UseCors("AllowAll");
 
 //app.UseMiddleware<ExceptionMiddleware>();
