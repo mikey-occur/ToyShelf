@@ -1,5 +1,5 @@
 # =====================================================
-# ToyShelf API - Production Dockerfile for Dokploy
+# ToyShelf API - Production Dockerfile for Render
 # .NET 8.0 Web API with multi-stage build optimization
 # =====================================================
 
@@ -30,8 +30,11 @@ RUN dotnet publish ToyShelf.API/ToyShelf.API.csproj \
 # ===== Stage 2: Runtime =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 
-# Install curl for health checks and set timezone
-RUN apk add --no-cache curl tzdata \
+# Install icu-libs for globalization support, curl for health checks, and set timezone
+RUN apk add --no-cache \
+    icu-libs \
+    curl \
+    tzdata \
     && cp /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime \
     && echo "Asia/Ho_Chi_Minh" > /etc/timezone \
     && apk del tzdata
@@ -48,7 +51,7 @@ COPY --from=build --chown=appuser:appgroup /app/publish .
 # Switch to non-root user
 USER appuser
 
-# Expose port (matching appsettings.json)
+# Expose port (Render uses PORT env variable)
 EXPOSE 5035
 
 # Environment variables for production
