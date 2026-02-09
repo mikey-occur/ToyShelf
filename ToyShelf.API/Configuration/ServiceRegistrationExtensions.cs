@@ -3,10 +3,12 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Notifications;
 using ToyShelf.Application.Security;
 using ToyShelf.Application.Services;
+using ToyShelf.Application.Translation;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
 using ToyShelf.Infrastructure.Common.Time;
+using ToyShelf.Infrastructure.Common.Translation;
 using ToyShelf.Infrastructure.Email;
 using ToyShelf.Infrastructure.Repositories;
 using ToyShelf.Infrastructure.Security;
@@ -61,6 +63,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IWarehouseService, WarehouseService>();
             services.AddScoped<IProductBroadcaster, SignalRService>();
 			services.AddScoped<IProductColorService, ProductColorService>();
+			services.AddScoped<ITranslationService, TranslationService>();
 		}
 			
 	}
