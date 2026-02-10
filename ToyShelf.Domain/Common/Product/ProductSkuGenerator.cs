@@ -27,21 +27,43 @@ namespace ToyShelf.Domain.Common.Product
 				["GOLD"] = "GD"
 			};
 
-		public static string GenerateColorComboSku(string productSku, string color)
+		public static string GenerateColorComboSku(string productSku, string colorCode)
 		{
 			if (string.IsNullOrWhiteSpace(productSku))
 				throw new Exception("Product SKU is required");
 
-			if (string.IsNullOrWhiteSpace(color))
-				throw new Exception("Color is required");
+			if (string.IsNullOrWhiteSpace(colorCode))
+				throw new Exception("Color Code is required (Check Color table)");
 
-			var normalizedColor = color.Trim().ToUpper();
+			// Output: "ROBO-001-BK"
+			return $"{productSku.Trim().ToUpper()}-{colorCode.Trim().ToUpper()}";
+		}
 
-			var colorCode = ColorMap.TryGetValue(normalizedColor, out var code)
-				? code
-				: normalizedColor.Substring(0, 1);
+		public static string GetAutoCode(string colorName)
+		{
+			if (string.IsNullOrWhiteSpace(colorName)) return "XX";
 
-			return $"{productSku}-{colorCode}";
+			// Chuẩn hóa: Viết hoa hết
+			string cleanName = colorName.Trim().ToUpper();
+
+			// 1. Ưu tiên tra từ điển (Map cứng cho các màu cơ bản)
+			if (ColorMap.TryGetValue(cleanName, out var code)) return code;
+
+			// 2. Tách chuỗi thành mảng các từ
+			// Vd: "Dark Blue" -> ["DARK", "BLUE"]
+			var words = cleanName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+			// 3. Trường hợp nhiều từ (Dark Blue, Light Green...)
+			if (words.Length >= 2)
+			{
+				// Lấy ký tự đầu của mỗi từ ghép lại
+				// "DARK" lấy 'D', "BLUE" lấy 'B' => "DB"
+				return string.Join("", words.Select(w => w[0]));
+			}
+
+			// 4. Trường hợp 1 từ (Magenta, Cyan...)
+			// Lấy 2 ký tự đầu: "MAGENTA" -> "MA"
+			return cleanName.Length >= 2 ? cleanName.Substring(0, 2) : cleanName;
 		}
 	}
 }

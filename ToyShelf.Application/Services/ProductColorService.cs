@@ -22,19 +22,24 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly IProductRepository _productRepository;
-		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository)
+		private readonly IColorRepository _colorRepository;
+		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository, IColorRepository colorRepository)
 		{
 			_productColorRepository = productColorRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_productRepository = productRepository;
+			_colorRepository = colorRepository;
 		}
 		//===Create===
 		public async Task<ProductColorResponse> CreateProductColorAsync(ProductColorRequest request)
 		{
 			var product = await _productRepository.GetByIdAsync(request.ProductId) ?? throw new AppException("Product not found");
 
-			var sku = ProductSkuGenerator.GenerateColorComboSku(product.SKU,request.Name);
+			var color = await _colorRepository.GetByIdAsync(request.ColorId)
+		    ?? throw new AppException("Color not found");
+
+			var sku = ProductSkuGenerator.GenerateColorComboSku(product.SKU,color.SkuCode);
 
 			var skuExists = await _productColorRepository.ExistsBySkuAsync(sku);
 			if (skuExists)
@@ -43,9 +48,10 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				ProductId = request.ProductId,
+				ColorId = request.ColorId,
+				PriceSegmentId = request.PriceSegmentId,
+				Price = request.Price,
 				Sku = sku,
-				//Name = request.Name,
-				//HexCode = request.HexCode,
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
@@ -116,8 +122,8 @@ namespace ToyShelf.Application.Services
 			if (productColor == null)
 				throw new Exception($"ProductColor Id = {id} not found");
 			// Update fields
-			//productColor.Name = request.Name;
-			//productColor.HexCode = request.HexCode;
+			productColor.PriceSegmentId = request.PriceSegmentId;
+			productColor.Price = request.Price;
 			productColor.QrCode = request.QrCode;
 			productColor.Model3DUrl = request.Model3DUrl;
 			productColor.ImageUrl = request.ImageUrl;
@@ -150,7 +156,7 @@ namespace ToyShelf.Application.Services
 				AgeRange = color.Product.AgeRange,
 				IsConsignment = color.Product.IsConsignment,
 				VariantSku = color.Sku,
-				//ColorName = color.Name
+				ColorName = color.Color.Name
 			};
 		}
 
@@ -161,10 +167,10 @@ namespace ToyShelf.Application.Services
 			return new ProductColorResponse
 			{
 				Id = productColor.Id,
-				//Name = productColor.Name,
+				PriceSegmentId = productColor.PriceSegmentId,
 				ProductId = productColor.ProductId,
 				Sku = productColor.Sku,
-				//HexCode = productColor.HexCode,
+				Price = productColor.Price,
 				QrCode = productColor.QrCode,
 				Model3DUrl = productColor.Model3DUrl,
 				ImageUrl = productColor.ImageUrl,

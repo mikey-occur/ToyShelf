@@ -3,10 +3,12 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Notifications;
 using ToyShelf.Application.Security;
 using ToyShelf.Application.Services;
+using ToyShelf.Application.Translation;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
 using ToyShelf.Infrastructure.Common.Time;
+using ToyShelf.Infrastructure.Common.Translation;
 using ToyShelf.Infrastructure.Email;
 using ToyShelf.Infrastructure.Repositories;
 using ToyShelf.Infrastructure.Security;
@@ -32,6 +34,7 @@ namespace ToyShelf.API.Configuration
 
 			// ===== Common =====
 			services.AddSingleton<IDateTimeProvider, VietnamDateTimeProvider>();
+			services.AddScoped<ITranslationService, TranslationService>();
 
 			// ===== Repositories =====
 			services.AddScoped<IRoleRepository, RoleRepository>();
@@ -46,7 +49,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IStoreInvitationRepository, StoreInvitationRepository>();
 			services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 			services.AddScoped<IProductColorRepository, ProductColorRepository>();
-
+			services.AddScoped<IColorRepository, ColorRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -61,6 +64,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IWarehouseService, WarehouseService>();
             services.AddScoped<IProductBroadcaster, SignalRService>();
 			services.AddScoped<IProductColorService, ProductColorService>();
+			services.AddScoped<IColorService, ColorService>();
 		}
 			
 	}

@@ -396,6 +396,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(7);
 
+				entity.Property(e => e.SkuCode)
+			          .HasMaxLength(10)
+			          .IsRequired();
+
+				entity.HasIndex(e => e.SkuCode).IsUnique();
+
 				// Quan hệ Color - ProductColor (1 - N)
 				entity.HasMany(e => e.ProductColors)
 					  .WithOne(pc => pc.Color)
