@@ -43,5 +43,32 @@ namespace ToyShelf.Domain.Common.Product
 
 			return $"{productSku}-{colorCode}";
 		}
+
+		public static string GetAutoCode(string colorName)
+		{
+			if (string.IsNullOrWhiteSpace(colorName)) return "XX";
+
+			// Chuẩn hóa: Viết hoa hết
+			string cleanName = colorName.Trim().ToUpper();
+
+			// 1. Ưu tiên tra từ điển (Map cứng cho các màu cơ bản)
+			if (ColorMap.TryGetValue(cleanName, out var code)) return code;
+
+			// 2. Tách chuỗi thành mảng các từ
+			// Vd: "Dark Blue" -> ["DARK", "BLUE"]
+			var words = cleanName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+			// 3. Trường hợp nhiều từ (Dark Blue, Light Green...)
+			if (words.Length >= 2)
+			{
+				// Lấy ký tự đầu của mỗi từ ghép lại
+				// "DARK" lấy 'D', "BLUE" lấy 'B' => "DB"
+				return string.Join("", words.Select(w => w[0]));
+			}
+
+			// 4. Trường hợp 1 từ (Magenta, Cyan...)
+			// Lấy 2 ký tự đầu: "MAGENTA" -> "MA"
+			return cleanName.Length >= 2 ? cleanName.Substring(0, 2) : cleanName;
+		}
 	}
 }

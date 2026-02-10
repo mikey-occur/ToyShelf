@@ -10,6 +10,7 @@ namespace ToyShelf.Application.Models.Color.Response
 	{
 		public Guid Id { get; set; }
 		public string Name { get; set; } = null!;     
-		public string HexCode { get; set; } = null!;  
+		public string HexCode { get; set; } = null!;
+		public string SkuCode { get; set; }
 	}
 }
