@@ -8,8 +8,8 @@ namespace ToyShelf.Application.Models.ProductColor.Request
 {
 	public class ProductColorUpdateRequest
 	{
-		public string Name { get; set; } = null!;
-		public string HexCode { get; set; } = null!;
+		public Guid PriceSegmentId { get; set; }
+		public decimal Price { get; set; }
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }
