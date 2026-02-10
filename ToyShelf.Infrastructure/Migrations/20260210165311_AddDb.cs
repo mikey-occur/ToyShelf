@@ -17,7 +17,8 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    HexCode = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false)
+                    HexCode = table.Column<string>(type: "character varying(7)", maxLength: 7, nullable: false),
+                    SkuCode = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -868,6 +869,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_Colors_Name",
                 table: "Colors",
                 column: "Name",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Colors_SkuCode",
+                table: "Colors",
+                column: "SkuCode",
                 unique: true);
 
             migrationBuilder.CreateIndex(

@@ -11,6 +11,6 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class StoreInvitationRepository : GenericRepository<StoreInvitation>, IStoreInvitationRepository
 	{
-		public StoreInvitationRepository(ToyCabinDbContext context) : base(context) { }
+		public StoreInvitationRepository(ToyShelfDbContext context) : base(context) { }
 	}
 }

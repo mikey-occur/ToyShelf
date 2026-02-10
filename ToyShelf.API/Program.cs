@@ -46,7 +46,7 @@ try
 {
 	using (var scope = app.Services.CreateScope())
 	{
-		var context = scope.ServiceProvider.GetRequiredService<ToyCabinDbContext>();
+		var context = scope.ServiceProvider.GetRequiredService<ToyShelfDbContext>();
 		context.Database.Migrate();
 		Console.WriteLine("Database migration applied successfully.");
 	}

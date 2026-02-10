@@ -2,7 +2,6 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,12 +10,10 @@ using ToyShelf.Infrastructure.Context;
 
 namespace ToyShelf.Infrastructure.Migrations
 {
-    [DbContext(typeof(ToyCabinDbContext))]
-    [Migration("20260210092959_AddSkuCodeToColor")]
-    partial class AddSkuCodeToColor
+    [DbContext(typeof(ToyShelfDbContext))]
+    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

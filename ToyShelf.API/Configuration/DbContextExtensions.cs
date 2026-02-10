@@ -10,7 +10,7 @@ namespace ToyShelf.API.Configuration
 			if (string.IsNullOrEmpty(connectionString))
 				throw new ArgumentNullException(nameof(connectionString), "Connection string is null or empty.");
 
-			services.AddDbContext<ToyCabinDbContext>(options =>
+			services.AddDbContext<ToyShelfDbContext>(options =>
 				options.UseNpgsql(connectionString));
 		}
 
