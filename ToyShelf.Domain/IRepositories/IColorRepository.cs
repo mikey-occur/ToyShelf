@@ -11,5 +11,7 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<bool> ExistsByNameOrHexAsync(string name, string hexCode);
 		Task<bool> IsDuplicateAsync(Guid id, string name, string hexCode);
+
+		Task<bool> ExistsBySkuCodeAsync(string skuCode);
 	}
 }

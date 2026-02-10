@@ -7,6 +7,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Color.Request;
 using ToyShelf.Application.Models.Color.Response;
+using ToyShelf.Domain.Common.Product;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 
@@ -31,11 +32,35 @@ namespace ToyShelf.Application.Services
 			{
 				throw new InvalidOperationException($"Color '{request.Name}' or Hex '{request.HexCode}' already exists.");
 			}
+			// XỬ LÝ SKU CODE (Phần mới thêm)
+			string finalCode;
+
+			// Nếu Admin có nhập Code -> Dùng code của Admin
+			if (!string.IsNullOrWhiteSpace(request.SkuCode))
+			{
+				finalCode = request.SkuCode.Trim().ToUpper();
+			}
+			else
+			{
+				// Nếu Admin bỏ trống -> tự sinh (Black -> BK, Dark Blue -> DB)
+				finalCode = ProductSkuGenerator.GetAutoCode(request.Name);
+			}
+			// Kiểm tra tính duy nhất của SKU Code nếu trùng thì thêm số vào đuôi
+			string uniqueCode = finalCode;
+			int counter = 1;
+
+			while (await _colorRepository.ExistsBySkuCodeAsync(uniqueCode))
+			{
+				uniqueCode = $"{finalCode}{counter}"; // BL -> BL1 -> BL2
+				counter++;
+			}
+
 			var color = new Color
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name.Trim(),
-				HexCode = request.HexCode.Trim().ToUpper(), 
+				HexCode = request.HexCode.Trim().ToUpper(),
+				SkuCode = uniqueCode
 			};
 			await _colorRepository.AddAsync(color);
 			await _unitOfWork.SaveChangesAsync();
@@ -100,7 +125,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = color.Id,
 				Name = color.Name,
-				HexCode = color.HexCode
+				HexCode = color.HexCode,
+				SkuCode = color.SkuCode
 			};
 		}
 	}

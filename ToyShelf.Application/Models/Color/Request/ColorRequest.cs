@@ -11,6 +11,6 @@ namespace ToyShelf.Application.Models.Color.Request
 		public string Name { get; set; } = null!;     
 		public string HexCode { get; set; } = null!;
 
-		public string SkuCode { get; set; }
+		public string? SkuCode { get; set; }
 	}
 }

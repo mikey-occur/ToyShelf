@@ -30,5 +30,10 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Colors
 				.AnyAsync(c => c.Id != id && (c.Name == name || c.HexCode == hexCode));
 		}
+
+		public async Task<bool> ExistsBySkuCodeAsync(string skuCode)
+		{
+			return await _context.Colors.AnyAsync(x => x.SkuCode == skuCode);
+		}
 	}
 }
