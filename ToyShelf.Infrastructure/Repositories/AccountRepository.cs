@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class AccountRepository : GenericRepository<Account>, IAccountRepository
 	{
-		public AccountRepository(ToyCabinDbContext context) : base(context){}
+		public AccountRepository(ToyShelfDbContext context) : base(context){}
 		public async Task<Account?> GetLocalAccountByEmailAsync(string email)
 		{
 			return await _context.Accounts

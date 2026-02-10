@@ -11,8 +11,8 @@ using ToyShelf.Infrastructure.Context;
 
 namespace ToyShelf.Infrastructure.Migrations
 {
-    [DbContext(typeof(ToyCabinDbContext))]
-    [Migration("20260202080754_AddDb")]
+    [DbContext(typeof(ToyShelfDbContext))]
+    [Migration("20260210165311_AddDb")]
     partial class AddDb
     {
         /// <inheritdoc />
@@ -104,12 +104,20 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("SkuCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("HexCode")
                         .IsUnique();
 
                     b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("SkuCode")
                         .IsUnique();
 
                     b.ToTable("Colors");
