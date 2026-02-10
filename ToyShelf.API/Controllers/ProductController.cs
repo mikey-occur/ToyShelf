@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using ToyShelf.API.Hubs;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Product.Request;
@@ -13,10 +15,12 @@ namespace ToyShelf.API.Controllers
 	public class ProductController : ControllerBase
 	{
         private readonly IProductService _productService;
-		public ProductController(IProductService productService)
+		private readonly IHubContext<ProductHub> _hubContext;
+        public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
 		{
 			   _productService = productService;
-		}
+				_hubContext = hubContext;
+        }
 
 		/// <summary>
 		/// Create Product.
@@ -123,5 +127,7 @@ namespace ToyShelf.API.Controllers
 
           return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
       }
+
+
     }
   }

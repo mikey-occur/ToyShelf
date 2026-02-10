@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using ToyShelf.API.Configuration;
@@ -63,9 +64,16 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors("AllowAll");
-
+app.UseStaticFiles();
 //app.UseMiddleware<ExceptionMiddleware>();
-
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "wwwroot", "assetbundles")),
+    RequestPath = "/assetbundles",
+    ServeUnknownFileTypes = true,
+    DefaultContentType = "application/octet-stream"
+});
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
