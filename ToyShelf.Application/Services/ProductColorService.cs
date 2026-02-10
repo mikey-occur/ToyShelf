@@ -22,19 +22,24 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly IProductRepository _productRepository;
-		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository)
+		private readonly IColorRepository _colorRepository;
+		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository, IColorRepository colorRepository)
 		{
 			_productColorRepository = productColorRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_productRepository = productRepository;
+			_colorRepository = colorRepository;
 		}
 		//===Create===
 		public async Task<ProductColorResponse> CreateProductColorAsync(ProductColorRequest request)
 		{
 			var product = await _productRepository.GetByIdAsync(request.ProductId) ?? throw new AppException("Product not found");
 
-			var sku = ProductSkuGenerator.GenerateColorComboSku(product.SKU,request.Name);
+			var color = await _colorRepository.GetByIdAsync(request.ColorId)
+		    ?? throw new AppException("Color not found");
+
+			var sku = ProductSkuGenerator.GenerateColorComboSku(product.SKU,color.SkuCode);
 
 			var skuExists = await _productColorRepository.ExistsBySkuAsync(sku);
 			if (skuExists)
@@ -43,9 +48,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				ProductId = request.ProductId,
+				ColorId = request.ColorId,
 				Sku = sku,
-				//Name = request.Name,
-				//HexCode = request.HexCode,
 				QrCode = request.QrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,

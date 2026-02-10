@@ -27,21 +27,16 @@ namespace ToyShelf.Domain.Common.Product
 				["GOLD"] = "GD"
 			};
 
-		public static string GenerateColorComboSku(string productSku, string color)
+		public static string GenerateColorComboSku(string productSku, string colorCode)
 		{
 			if (string.IsNullOrWhiteSpace(productSku))
 				throw new Exception("Product SKU is required");
 
-			if (string.IsNullOrWhiteSpace(color))
-				throw new Exception("Color is required");
+			if (string.IsNullOrWhiteSpace(colorCode))
+				throw new Exception("Color Code is required (Check Color table)");
 
-			var normalizedColor = color.Trim().ToUpper();
-
-			var colorCode = ColorMap.TryGetValue(normalizedColor, out var code)
-				? code
-				: normalizedColor.Substring(0, 1);
-
-			return $"{productSku}-{colorCode}";
+			// Output: "ROBO-001-BK"
+			return $"{productSku.Trim().ToUpper()}-{colorCode.Trim().ToUpper()}";
 		}
 
 		public static string GetAutoCode(string colorName)
