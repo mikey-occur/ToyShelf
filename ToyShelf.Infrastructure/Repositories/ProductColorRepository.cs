@@ -33,6 +33,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.ProductColors
 				.Include(c => c.Product)
+				.Include(c => c.Color)
 				.FirstOrDefaultAsync(c => c.Sku == sku);
 		}
 	}
