@@ -12,10 +12,10 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class GenericRepository<T> : IGenericRepository<T> where T : class
 	{
-		protected readonly ToyCabinDbContext _context;
+		protected readonly ToyShelfDbContext _context;
 		private readonly DbSet<T> _dbSet;
 
-		public GenericRepository(ToyCabinDbContext context)
+		public GenericRepository(ToyShelfDbContext context)
 		{
 			_context = context;
 			_dbSet = context.Set<T>();

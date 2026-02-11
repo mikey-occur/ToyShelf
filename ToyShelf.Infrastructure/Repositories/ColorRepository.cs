@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class ColorRepository : GenericRepository<Color>, IColorRepository
 	{
-		public ColorRepository(ToyCabinDbContext context) : base(context)
+		public ColorRepository(ToyShelfDbContext context) : base(context)
 		{
 		}
 

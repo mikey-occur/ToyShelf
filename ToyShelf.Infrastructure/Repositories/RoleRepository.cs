@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class RoleRepository : GenericRepository<Role>, IRoleRepository
 	{
-		public RoleRepository(ToyCabinDbContext context) : base(context) {}
+		public RoleRepository(ToyShelfDbContext context) : base(context) {}
 
 		public async Task<List<Role>> GetRolesByUserIdAsync(Guid userId)
 		{

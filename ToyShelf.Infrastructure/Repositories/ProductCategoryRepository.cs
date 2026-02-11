@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class ProductCategoryRepository : GenericRepository<ProductCategory>, IProductCategoryRepository
 	{
-		public ProductCategoryRepository(ToyCabinDbContext context) : base(context)
+		public ProductCategoryRepository(ToyShelfDbContext context) : base(context)
 		{
 		}
 

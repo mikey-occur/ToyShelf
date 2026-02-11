@@ -8,9 +8,9 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Infrastructure.Context
 {
-	public class ToyCabinDbContext : DbContext
+	public class ToyShelfDbContext : DbContext
 	{
-		public ToyCabinDbContext(DbContextOptions<ToyCabinDbContext> options) : base(options) {}
+		public ToyShelfDbContext(DbContextOptions<ToyShelfDbContext> options) : base(options) {}
 		public DbSet<Account> Accounts { get; set; }
 		public DbSet<User> Users { get; set; }
 		public DbSet<Role> Roles { get; set; }

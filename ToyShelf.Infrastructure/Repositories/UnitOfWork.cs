@@ -11,10 +11,10 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class UnitOfWork : IUnitOfWork
 	{
-		private readonly ToyCabinDbContext _context;
+		private readonly ToyShelfDbContext _context;
 		private Hashtable _repositories;
 
-		public UnitOfWork(ToyCabinDbContext context)
+		public UnitOfWork(ToyShelfDbContext context)
 		{
 			_context = context;
 			_repositories = new Hashtable();

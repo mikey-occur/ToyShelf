@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class UserRepository : GenericRepository<User>, IUserRepository
 	{
-		public UserRepository(ToyCabinDbContext context) : base(context){}
+		public UserRepository(ToyShelfDbContext context) : base(context){}
 		public async Task<List<User>> GetUsersAsync(bool? isActive)
 		{
 			var query = _context.Users.AsQueryable();
