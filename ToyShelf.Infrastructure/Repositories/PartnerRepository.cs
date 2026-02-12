@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class PartnerRepository : GenericRepository<Partner>, IPartnerRepository
 	{
-		public PartnerRepository(ToyCabinDbContext context) : base(context) { }
+		public PartnerRepository(ToyShelfDbContext context) : base(context) { }
 		public async Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive)
 		{
 			var query = _context.Partners.AsQueryable();

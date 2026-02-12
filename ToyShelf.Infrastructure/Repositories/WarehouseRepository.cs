@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class WarehouseRepository : GenericRepository<Warehouse>, IWarehouseRepository
 	{
-		public WarehouseRepository(ToyCabinDbContext context) : base(context) { }	
+		public WarehouseRepository(ToyShelfDbContext context) : base(context) { }	
 		public async Task<IEnumerable<Warehouse>> GetWarehousesAsync(bool? isActive)
 		{
 			var query = _context.Warehouses.AsQueryable();

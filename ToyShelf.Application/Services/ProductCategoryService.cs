@@ -9,6 +9,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ProductCategory.Request;
 using ToyShelf.Application.Models.ProductCategory.Response;
+using ToyShelf.Application.Translation;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -20,20 +21,23 @@ namespace ToyShelf.Application.Services
 		private readonly IProductCategoryRepository _productCategoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
-		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider)
+		private readonly ITranslationService _translationService;
+		public ProductCategoryService(IProductCategoryRepository productCategoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider, ITranslationService translationService)
 		{
 			_productCategoryRepository = productCategoryRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTimeProvider;
+			_translationService = translationService;
 		}
 		// ===== CREATE =====
 		public async Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request)
 		{
+			string generatedPart = await _translationService.TranslateToCodeAsync(request.Name);
 			string code;
 
 			if (request.ParentId == null)
 			{
-				code = ToCategoryCode(request.Code); 
+				code = generatedPart; 
 			}
 			else
 			{
@@ -42,9 +46,9 @@ namespace ToyShelf.Application.Services
 				if (parent == null)
 					throw new AppException("Parent category not found", 404);
 
-				code = $"{parent.Code}-{ToCategoryCode(request.Code)}";
+				code = $"{parent.Code}-{generatedPart}";
 			}
-			var exists = await _productCategoryRepository.ExistsCodeAsync(request.Code, request.ParentId);
+			var exists = await _productCategoryRepository.ExistsCodeAsync(code, request.ParentId);
 
 			if (exists)
 				throw new InvalidOperationException("Category code already exists");
@@ -152,16 +156,6 @@ namespace ToyShelf.Application.Services
 				UpdatedAt = category.UpdatedAt
 			};
 		}
-		//===== ConvertCode =====
-		private string ToCategoryCode(string name)
-		{
-			return name
-				.Trim()
-				.Replace(" ", "-")
-				.Replace("_", "-")
-				.ToUpper();
-		}
-
 		
 	}
 }

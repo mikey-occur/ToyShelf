@@ -23,6 +23,7 @@ namespace ToyShelf.Application.Models.ProductColor.Response
 		public bool IsConsignment { get; set; } = true;
 		public string VariantSku { get; set; } = null!;
 		public string ColorName { get; set; } = null!;
+		public string? HexCode { get; set; }
 
 	}
 }

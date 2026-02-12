@@ -11,6 +11,6 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class UserStoreRepository : GenericRepository<UserStore>, IUserStoreRepository
 	{
-		public UserStoreRepository(ToyCabinDbContext context) : base(context) { }
+		public UserStoreRepository(ToyShelfDbContext context) : base(context) { }
 	}
 }

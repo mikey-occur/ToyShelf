@@ -13,7 +13,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class PasswordResetOtpRepository : GenericRepository<PasswordResetOtp>, IPasswordResetOtpRepository
 	{
-		public PasswordResetOtpRepository(ToyCabinDbContext context) : base(context){}
+		public PasswordResetOtpRepository(ToyShelfDbContext context) : base(context){}
 		public async Task<PasswordResetOtp?> GetWithAccountAsync(string otpCode, OtpPurpose purpose, string email)
 		{
 			return await _context.PasswordResetOtps
