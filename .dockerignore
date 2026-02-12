@@ -1,0 +1,81 @@
+# ===========================================
+# .NET Build Artifacts
+# ===========================================
+**/bin/
+**/obj/
+**/out/
+**/publish/
+
+# ===========================================
+# IDE & Editor
+# ===========================================
+**/.vs/
+**/.vscode/
+**/.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ===========================================
+# Git & Version Control
+# ===========================================
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# ===========================================
+# Docker Files (prevent recursive copy)
+# ===========================================
+**/Dockerfile*
+**/.dockerfile
+**/.dockerignore
+**/docker-compose*.yml
+**/docker-compose*.yaml
+
+# ===========================================
+# Documentation & Non-essential
+# ===========================================
+**/*.md
+**/LICENSE
+**/CHANGELOG
+**/docs/
+
+# ===========================================
+# Test & Coverage
+# ===========================================
+**/TestResults/
+**/coverage/
+**/*.trx
+**/coverlet.runsettings
+
+# ===========================================
+# Secrets & Environment (DO NOT include in image)
+# ===========================================
+**/.env
+**/.env.*
+**/appsettings.Development.json
+**/appsettings.Local.json
+**/*.pfx
+**/*.p12
+
+# ===========================================
+# OS & Misc
+# ===========================================
+**/.DS_Store
+**/Thumbs.db
+**/desktop.ini
+**/*.log
+**/*.tmp
+**/*.temp
+
+# ===========================================
+# NuGet (restored during build)
+# ===========================================
+**/*.nupkg
+**/packages/
+
+# ===========================================
+# Skills & Custom files
+# ===========================================
+**/SKILL.md
