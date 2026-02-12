@@ -50,8 +50,9 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 			services.AddScoped<IProductColorRepository, ProductColorRepository>();
 			services.AddScoped<IColorRepository, ColorRepository>();
-			// ===== Services =====
-			services.AddScoped<IRoleService, RoleService>();
+			services.AddScoped<IShelfRepository, ShelfRepository>();
+            // ===== Services =====
+            services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
 			services.AddScoped<IUserService, UserService>();
 			services.AddScoped<IForgotPasswordService, ForgotPasswordService>();
@@ -65,7 +66,8 @@ namespace ToyShelf.API.Configuration
             services.AddScoped<IProductBroadcaster, SignalRService>();
 			services.AddScoped<IProductColorService, ProductColorService>();
 			services.AddScoped<IColorService, ColorService>();
-		}
+			services.AddScoped<IShelfService, ShelfService>();
+        }
 			
 	}
 }
