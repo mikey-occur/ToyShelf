@@ -51,6 +51,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IProductColorRepository, ProductColorRepository>();
 			services.AddScoped<IColorRepository, ColorRepository>();
 			services.AddScoped<IPriceSegmentRepository, PriceSegmentRepository>();
+			services.AddScoped<IPartnerTierRepository, PartnerTierRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -67,6 +68,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IProductColorService, ProductColorService>();
 			services.AddScoped<IColorService, ColorService>();
 			services.AddScoped<IPriceSegmentService, PriceSegmentService>();
+			services.AddScoped<IPartnerTierService, PartnerTierService>();
 		}
 			
 	}
