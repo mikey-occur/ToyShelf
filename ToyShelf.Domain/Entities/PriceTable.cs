@@ -8,8 +8,9 @@ namespace ToyShelf.Domain.Entities
 {
 	public enum PriceTableType
 	{
-		Tier,
-		Clearance // Xả kho hàng
+		Tier, // bảng giá thông thường
+		Campaign, // Xả kho hàng
+		Special // bảng giá độc quyền
 	}
 
 	public class PriceTable
