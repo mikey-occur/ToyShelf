@@ -136,11 +136,18 @@ namespace ToyShelf.Application.Services
 			var products = await  _productRepository.GetProductsAsync(isActive);
 			return products.Select(MapToResponse);
 		}
-		public async Task<ProductResponse> GetByIdAsync(Guid id)
+		public async Task<ProductResponse> GetByIdAsync(Guid id, bool? colorActive = false)
 		{
-			var product =  await _productRepository.GetByIdAsync(id);
+		
+			var product = await _productRepository.GetByIdAsync(id, colorActive);
+
 			if (product == null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new KeyNotFoundException($"Product Id = {id} not found");
+
+			
+			if (colorActive == true && !product.IsActive)
+				throw new Exception("Product is currently unavailable");
+
 			return MapToResponse(product);
 		}
 

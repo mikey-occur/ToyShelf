@@ -41,13 +41,22 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ToListAsync();
 		}
 
-		public new async Task<Product?> GetByIdAsync(Guid id)
+		public async Task<Product?> GetByIdAsync(Guid id, bool? colorActive = null)
 		{
-			return await _context.Products
-				.Include(p => p.ProductColors) // Nạp danh sách ProductColor
-					.ThenInclude(pc => pc.Color) // (Nếu cần) Nạp luôn thông tin bảng Color (Name, Code...)
-				.Include(p => p.ProductCategory) // (Nếu cần) Nạp thông tin Category
-				.FirstOrDefaultAsync(p => p.Id == id);
+			var query = _context.Products.AsQueryable();
+
+			if (colorActive.HasValue)
+			{
+				query = query.Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
+							 .ThenInclude(pc => pc.Color);
+			}
+			else
+			{
+				query = query.Include(p => p.ProductColors)
+							 .ThenInclude(pc => pc.Color);
+			}
+
+			return await query.FirstOrDefaultAsync(p => p.Id == id);
 		}
 		public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
         int pageNumber = 1,

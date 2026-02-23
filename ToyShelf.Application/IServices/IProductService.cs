@@ -13,7 +13,7 @@ namespace ToyShelf.Application.IServices
 	public interface IProductService
 	{
 		Task<IEnumerable<ProductResponse>> GetProductsAsync(bool? isActive);
-		Task<ProductResponse> GetByIdAsync(Guid id);
+		Task<ProductResponse> GetByIdAsync(Guid id, bool? colorActive = false);
 		Task<ProductResponse> CreateProductAsync(ProductRequest request);
 		Task<ProductResponse?> UpdateProductAsync(Guid id, ProductUpdateRequest request);
 		Task<bool> DeleteProductAsync(Guid id);
