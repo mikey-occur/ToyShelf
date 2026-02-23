@@ -41,7 +41,24 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ToListAsync();
 		}
 
-        public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
+		public async Task<Product?> GetByIdAsync(Guid id, bool? colorActive = null)
+		{
+			var query = _context.Products.AsQueryable();
+
+			if (colorActive.HasValue)
+			{
+				query = query.Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
+							 .ThenInclude(pc => pc.Color);
+			}
+			else
+			{
+				query = query.Include(p => p.ProductColors)
+							 .ThenInclude(pc => pc.Color);
+			}
+
+			return await query.FirstOrDefaultAsync(p => p.Id == id);
+		}
+		public async Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(
         int pageNumber = 1,
         int pageSize = 10,
         bool? isActive = null,

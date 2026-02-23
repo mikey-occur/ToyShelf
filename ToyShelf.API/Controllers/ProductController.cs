@@ -41,12 +41,12 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<IEnumerable<ProductResponse>>.Ok(result, "Products retrieved successfully");
 		}
 		/// <summary>
-		/// Get by id.
+		/// Get by id, is active cho trường hợp muốn xem mấy màu đã xoá vs lấy màu đang active ra .
 		/// </summary>
 		[HttpGet("{id}")]
-		public async Task<BaseResponse<ProductResponse?>> GetById(Guid id)
+		public async Task<BaseResponse<ProductResponse?>> GetById(Guid id, bool? isActive)
 		{
-			var result = await _productService.GetByIdAsync(id);
+			var result = await _productService.GetByIdAsync(id, isActive);
 			return BaseResponse<ProductResponse?>.Ok(result, "Product retrieved successfully");
 		}
 

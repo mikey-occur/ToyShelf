@@ -10,6 +10,7 @@ using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.ProductCategory.Response;
 using ToyShelf.Application.Models.ProductColor.Response;
 using ToyShelf.Application.Models.Store.Response;
+using ToyShelf.Domain.Common.Product;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -23,14 +24,18 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTimeProvider;
 		private readonly IProductBroadcaster _productBroadcaster;
-        public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster)
+		private readonly IProductColorRepository _productColorRepository;
+		private readonly IColorRepository _colorRepository;
+		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster, IProductColorRepository productColorRepository, IColorRepository colorRepository)
 		{
 			_productRepository = productRepository;
 			_categoryRepository = categoryRepository;
 			_unitOfWork = unitOfWork;
 			_dateTimeProvider = dateTimeProvider;
 			_productBroadcaster = productBroadcaster;
-        }
+			_productColorRepository = productColorRepository;
+			_colorRepository = colorRepository;
+		}
 		//===Create===
 		public async Task<ProductResponse> CreateProductAsync(ProductRequest request)
 		{
@@ -65,8 +70,38 @@ namespace ToyShelf.Application.Services
 			};
 
 			 await _productRepository.AddAsync(product);
-             await _unitOfWork.SaveChangesAsync();
-			 return MapToResponse(product);
+
+			// 4. Xử lý danh sách Colors (nếu có)
+			if (request.Colors != null && request.Colors.Any())
+			{
+				foreach (var colorReq in request.Colors)
+				{
+					// Lấy thông tin Color để lấy SkuCode (ví dụ: "RED", "BLUE")
+
+					var color = await _colorRepository.GetByIdAsync(colorReq.ColorId)
+					?? throw new AppException("Color not found");
+
+					var variantSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, color.SkuCode);
+
+					var newProductColor = new ProductColor
+					{
+						Id = Guid.NewGuid(),
+						ProductId = product.Id, 
+						ColorId = colorReq.ColorId,
+						PriceSegmentId = colorReq.PriceSegmentId,
+						Price = colorReq.Price,
+						Sku = variantSku,
+						QrCode = colorReq.QrCode,
+						Model3DUrl = colorReq.Model3DUrl,
+						ImageUrl = colorReq.ImageUrl,
+						IsActive = true
+					};
+
+					await _productColorRepository.AddAsync(newProductColor);
+				}
+			}
+			await _unitOfWork.SaveChangesAsync();
+			return MapToResponse(product);
 
 		}
 
@@ -101,11 +136,18 @@ namespace ToyShelf.Application.Services
 			var products = await  _productRepository.GetProductsAsync(isActive);
 			return products.Select(MapToResponse);
 		}
-		public async Task<ProductResponse> GetByIdAsync(Guid id)
+		public async Task<ProductResponse> GetByIdAsync(Guid id, bool? colorActive = false)
 		{
-			var product =  await _productRepository.GetByIdAsync(id);
+		
+			var product = await _productRepository.GetByIdAsync(id, colorActive);
+
 			if (product == null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new KeyNotFoundException($"Product Id = {id} not found");
+
+			
+			if (colorActive == true && !product.IsActive)
+				throw new Exception("Product is currently unavailable");
+
 			return MapToResponse(product);
 		}
 
@@ -178,7 +220,12 @@ namespace ToyShelf.Application.Services
 				{
 					Id = c.Id,
 					Sku = c.Sku,
-					//Name = c.Name,
+					ColorId = c.ColorId,
+					PriceSegmentId = c.PriceSegmentId,
+					Price = c.Price,
+					QrCode = c.QrCode,
+					Model3DUrl = c.Model3DUrl,
+					ImageUrl = c.ImageUrl,
 					IsActive = c.IsActive
 				})
 				.ToList()
