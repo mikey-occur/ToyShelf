@@ -434,7 +434,7 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasColumnType("decimal(18,2)");
 
 				entity.Property(e => e.QrCode)
-					  .HasMaxLength(500);
+					  .HasColumnType("text");
 
 				entity.Property(e => e.Model3DUrl)
 					  .HasMaxLength(500);
