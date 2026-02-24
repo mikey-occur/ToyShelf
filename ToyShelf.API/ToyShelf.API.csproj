@@ -19,9 +19,17 @@
     <ProjectReference Include="..\ToyShelf.Infrastructure\ToyShelf.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
+<ItemGroup>
+  <Content Update="wwwroot\**">
+    <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+  </Content>
+</ItemGroup>
+	
+<ItemGroup>
     <Folder Include="DTOs\Account\Request\" />
     <Folder Include="wwwroot\" />
-  </ItemGroup>
+</ItemGroup>
+  
 
 </Project>

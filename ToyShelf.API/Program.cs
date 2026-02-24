@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using ToyShelf.API.Configuration;
+using ToyShelf.API.Hubs;
 using ToyShelf.API.Middleware;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Context;
@@ -55,6 +57,9 @@ catch (Exception ex)
 {
 	Console.WriteLine($"An error occurred during database migration: {ex.Message}");
 }
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".manifest"] = "text/plain";
+provider.Mappings[""] = "application/octet-stream";
 
 // if (app.Environment.IsDevelopment())
 // {
@@ -71,6 +76,12 @@ if (enableSwagger)
 	app.UseSwaggerUI();
 }
 app.UseCors("AllowAll");
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider,
+	ServeUnknownFileTypes = true, 
+    DefaultContentType = "application/octet-stream"
+});
 
 //app.UseMiddleware<ExceptionMiddleware>();
 
@@ -79,6 +90,8 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 
 app.UseAuthorization();
+
+app.MapHub<ProductHub>("/OnProductSelected");
 
 app.MapControllers();
 
