@@ -53,6 +53,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<DamageReport> DamageReports { get; set; }
 		public DbSet<DamageMedia> DamageMedia { get; set; }
 
+		public DbSet<City> Cities { get; set; }
+
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{
 			// ================== ACCOUNT ==================
@@ -1041,6 +1043,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(l => l.WarehouseId)
 					  .OnDelete(DeleteBehavior.Restrict);
 
+				entity.HasOne(e => e.City)
+					  .WithMany(l => l.Warehouses)
+					  .HasForeignKey(e => e.CityId)
+					  .HasConstraintName("FK_Warehouse_City");
+
 				// ===== Index =====
 
 				entity.HasIndex(e => e.Code)
@@ -1448,6 +1455,42 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.HasIndex(e => new { e.OrderId, e.ProductColorId })
 					  .IsUnique();
+			});
+
+			// ================== CITY ==================
+			modelBuilder.Entity<City>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(10);
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(150);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.UpdatedAt)
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				// Unique constraints
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
+
+				entity.HasIndex(e => e.Name)
+					  .IsUnique();
+
+				entity.HasMany(e => e.Warehouses)
+					 .WithOne(w => w.City)
+					 .HasForeignKey(w => w.CityId)
+					 .OnDelete(DeleteBehavior.Restrict); // hoặc Cascade tùy business
 			});
 		}
 	}
