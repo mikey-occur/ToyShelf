@@ -1,12 +1,14 @@
 ﻿using ToyShelf.Application.Auth;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Notifications;
+using ToyShelf.Application.QRcode;
 using ToyShelf.Application.Security;
 using ToyShelf.Application.Services;
 using ToyShelf.Application.Translation;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
+using ToyShelf.Infrastructure.Common.QrCode;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Common.Translation;
 using ToyShelf.Infrastructure.Email;
@@ -75,6 +77,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IPriceTableService, PriceTableService>();
 			services.AddScoped<ICommissionPolicyService, CommissionPolicyService>();
 			services.AddScoped<IShelfService, ShelfService>();
+			services.AddScoped<IQrCodeService, QrCodeService>();
 		}
 			
         }
