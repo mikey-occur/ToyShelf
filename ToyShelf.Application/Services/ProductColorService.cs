@@ -9,6 +9,7 @@ using ToyShelf.Application.Models.Product.Request;
 using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.ProductColor.Request;
 using ToyShelf.Application.Models.ProductColor.Response;
+using ToyShelf.Application.QRcode;
 using ToyShelf.Domain.Common.Product;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
@@ -23,13 +24,15 @@ namespace ToyShelf.Application.Services
 		private readonly IDateTimeProvider _dateTime;
 		private readonly IProductRepository _productRepository;
 		private readonly IColorRepository _colorRepository;
-		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository, IColorRepository colorRepository)
+		private readonly IQrCodeService _qrCodeService;			
+		public ProductColorService(IProductColorRepository productColorRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTime, IProductRepository productRepository, IColorRepository colorRepository, IQrCodeService qrCodeService)
 		{
 			_productColorRepository = productColorRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_productRepository = productRepository;
 			_colorRepository = colorRepository;
+			_qrCodeService = qrCodeService;
 		}
 		//===Create===
 		public async Task<ProductColorResponse> CreateProductColorAsync(ProductColorRequest request)
@@ -44,6 +47,7 @@ namespace ToyShelf.Application.Services
 			var skuExists = await _productColorRepository.ExistsBySkuAsync(sku);
 			if (skuExists)
 				throw new AppException($"ProductColor SKU '{sku}' already exists");
+			string qrCode = _qrCodeService.GenerateQrBase64(sku);
 			var newProductColor = new ProductColor
 			{
 				Id = Guid.NewGuid(),
@@ -52,7 +56,7 @@ namespace ToyShelf.Application.Services
 				PriceSegmentId = request.PriceSegmentId,
 				Price = request.Price,
 				Sku = sku,
-				QrCode = request.QrCode,
+				QrCode = qrCode,
 				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
 				IsActive = true

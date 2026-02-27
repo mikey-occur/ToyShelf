@@ -9,7 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public class Warehouse
 	{
 		public Guid Id { get; set; }
-
+		public Guid CityId { get; set; }
 		public string Code { get; set; } = null!;   // CENTRAL-HCM
 		public string Name { get; set; } = null!;
 		public string? Address { get; set; }
@@ -19,6 +19,6 @@ namespace ToyShelf.Domain.Entities
 
 		// Navigation
 		public virtual ICollection<InventoryLocation> InventoryLocations { get; set; } = new List<InventoryLocation>();
+		public virtual City City { get; set; } = null!;
 	}
-
 }

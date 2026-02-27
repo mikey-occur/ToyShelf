@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260224070041_FixQrCodeMaxLength")]
+    partial class FixQrCodeMaxLength
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -83,43 +86,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("RoleId");
 
                     b.ToTable("AccountRoles");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("character varying(10)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(150)
-                        .HasColumnType("character varying(150)");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Code")
-                        .IsUnique();
-
-                    b.HasIndex("Name")
-                        .IsUnique();
-
-                    b.ToTable("Cities");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Color", b =>
@@ -1232,9 +1198,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
 
-                    b.Property<Guid>("CityId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1259,8 +1222,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CityId");
 
                     b.HasIndex("Code")
                         .IsUnique();
@@ -1800,28 +1761,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.Warehouse", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.City", "City")
-                        .WithMany("Warehouses")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Warehouse_City");
-
-                    b.Navigation("City");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.Account", b =>
                 {
                     b.Navigation("AccountRoles");
 
                     b.Navigation("PasswordResetOtps");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
-                {
-                    b.Navigation("Warehouses");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Color", b =>

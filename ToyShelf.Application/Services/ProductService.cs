@@ -10,6 +10,7 @@ using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.ProductCategory.Response;
 using ToyShelf.Application.Models.ProductColor.Response;
 using ToyShelf.Application.Models.Store.Response;
+using ToyShelf.Application.QRcode;
 using ToyShelf.Domain.Common.Product;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
@@ -24,9 +25,10 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTimeProvider;
 		private readonly IProductBroadcaster _productBroadcaster;
+		private readonly IQrCodeService _qrCodeService;
 		private readonly IProductColorRepository _productColorRepository;
 		private readonly IColorRepository _colorRepository;
-		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster, IProductColorRepository productColorRepository, IColorRepository colorRepository)
+		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster, IProductColorRepository productColorRepository, IColorRepository colorRepository, IQrCodeService qrCodeService)
 		{
 			_productRepository = productRepository;
 			_categoryRepository = categoryRepository;
@@ -35,6 +37,7 @@ namespace ToyShelf.Application.Services
 			_productBroadcaster = productBroadcaster;
 			_productColorRepository = productColorRepository;
 			_colorRepository = colorRepository;
+			_qrCodeService = qrCodeService;
 		}
 		//===Create===
 		public async Task<ProductResponse> CreateProductAsync(ProductRequest request)
@@ -82,7 +85,7 @@ namespace ToyShelf.Application.Services
 					?? throw new AppException("Color not found");
 
 					var variantSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, color.SkuCode);
-
+					string qrCode = _qrCodeService.GenerateQrBase64(variantSku);
 					var newProductColor = new ProductColor
 					{
 						Id = Guid.NewGuid(),
@@ -91,7 +94,7 @@ namespace ToyShelf.Application.Services
 						PriceSegmentId = colorReq.PriceSegmentId,
 						Price = colorReq.Price,
 						Sku = variantSku,
-						QrCode = colorReq.QrCode,
+						QrCode = qrCode,
 						Model3DUrl = colorReq.Model3DUrl,
 						ImageUrl = colorReq.ImageUrl,
 						IsActive = true

@@ -25,12 +25,19 @@ namespace ToyShelf.Infrastructure.Repositories
 			.FirstOrDefaultAsync(pt => pt.Id == id);
 		}
 
-		public Task<IEnumerable<PriceTable>> GetPriceTablesAsync(bool? isActive)
+		public async Task<IEnumerable<PriceTable>> GetPriceTablesAsync(bool? isActive)
 		{
-			var query = _context.PriceTables.AsQueryable();
-			if (isActive.HasValue)
-				query = query.Where(pt => pt.IsActive == isActive.Value);
-			return Task.FromResult(query.AsEnumerable());
+			var query = _context.PriceTables
+			.Include(pt => pt.PartnerTier)          
+			.Include(pt => pt.PriceItems)         
+				.ThenInclude(pi => pi.PriceSegment) 
+			.AsQueryable();
+
+				if (isActive.HasValue)
+				{
+					query = query.Where(pt => pt.IsActive == isActive.Value);
+				}
+			return await query.ToListAsync();
 		}
 
 		public async Task<bool> IsPriceTableInUseAsync(Guid id)
