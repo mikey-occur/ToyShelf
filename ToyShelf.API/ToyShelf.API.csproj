@@ -23,8 +23,4 @@
     <Folder Include="DTOs\Account\Request\" />
     <Folder Include="wwwroot\" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Content Include="wwwroot\**\*" CopyToPublishDirectory="PreserveNewest" />
-  </ItemGroup>
 </Project>
