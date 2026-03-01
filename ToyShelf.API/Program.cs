@@ -74,6 +74,9 @@ app.UseCors("AllowAll");
 
 //app.UseMiddleware<ExceptionMiddleware>();
 
+// Enable serving static files from wwwroot (e.g., /robot)
+app.UseStaticFiles();
+
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
