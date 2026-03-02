@@ -18,23 +18,56 @@ namespace ToyShelf.Application.Services
 		private readonly IWarehouseRepository _warehouseRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
+		private readonly ICityRepository _cityRepository;
+
+		private const string Prefix = "WH";
 
 		public WarehouseService(
 			IWarehouseRepository warehouseRepository,
 			IUnitOfWork unitOfWork,
-			IDateTimeProvider dateTime)
+			IDateTimeProvider dateTime,
+			ICityRepository cityRepository)
 		{
 			_warehouseRepository = warehouseRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+			_cityRepository = cityRepository;
 		}
 		// ================= CREATE =================
 		public async Task<WarehouseResponse> CreateAsync(CreateWarehouseRequest request)
 		{
+			// Kiểm tra City tồn tại
+			var city = await _cityRepository.GetByIdAsync(request.CityId);
+			if (city == null)
+				throw new AppException("City not found.", 404);
+
+			string finalCode;
+
+			// Nếu admin nhập Code
+			if (!string.IsNullOrWhiteSpace(request.Code))
+			{
+				finalCode = request.Code.Trim().ToUpper();
+			}
+			else
+			{
+				var maxNumber = await _warehouseRepository
+					.GetMaxSequenceByCityAsync(request.CityId);
+
+				finalCode = $"{Prefix}-{city.Code}-{(maxNumber + 1):D2}";
+			}
+
+			// Kiểm tra trùng Code trong cùng City
+			bool exists = await _warehouseRepository
+				.ExistsByCodeInCityAsync(finalCode, request.CityId);
+
+			if (exists)
+				throw new InvalidOperationException("Warehouse code already exists in this city.");
+
 			var warehouse = new Warehouse
 			{
 				Id = Guid.NewGuid(),
-				Code = request.Code.Trim(),
+				CityId = request.CityId,
+				Code = finalCode,
 				Name = request.Name.Trim(),
 				Address = request.Address?.Trim(),
 				IsActive = true,
@@ -47,6 +80,7 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(warehouse);
 		}
 
+
 		// ================= GET =================
 		public async Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(bool? isActive)
 		{
@@ -56,7 +90,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<WarehouseResponse> GetByIdAsync(Guid id)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(id);
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException($"Warehouse not found. Id = {id}", 404);
 
@@ -66,7 +100,7 @@ namespace ToyShelf.Application.Services
 		// ================= UPDATE =================
 		public async Task<WarehouseResponse> UpdateAsync(Guid id, UpdateWarehouseRequest request)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(id);
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException($"Warehouse not found. Id = {id}", 404);
 
@@ -83,7 +117,7 @@ namespace ToyShelf.Application.Services
 		// ================= DISABLE / RESTORE =================
 		public async Task DisableAsync(Guid id)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(id);
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException("Warehouse not found", 404);
 
@@ -96,7 +130,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task RestoreAsync(Guid id)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(id);
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException("Warehouse not found", 404);
 
@@ -110,7 +144,7 @@ namespace ToyShelf.Application.Services
 		// ================= DELETE =================
 		public async Task DeleteAsync(Guid id)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(id);
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException("Warehouse not found", 404);
 
@@ -128,6 +162,11 @@ namespace ToyShelf.Application.Services
 				Name = warehouse.Name,
 				Address = warehouse.Address,
 				IsActive = warehouse.IsActive,
+				
+				CityId = warehouse.CityId,
+				CityName = warehouse.City.Name,
+				CityCode = warehouse.City.Code,
+
 				CreatedAt = warehouse.CreatedAt,
 				UpdatedAt = warehouse.UpdatedAt
 			};
