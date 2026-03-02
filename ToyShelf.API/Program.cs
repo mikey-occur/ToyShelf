@@ -74,7 +74,6 @@ app.UseCors("AllowAll");
 
 //app.UseMiddleware<ExceptionMiddleware>();
 
-
 // Enable serving static files from wwwroot (e.g., /robot, /AssetBundles)
 // ServeUnknownFileTypes required for files without extensions
 app.UseStaticFiles(new StaticFileOptions
