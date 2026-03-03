@@ -8,8 +8,7 @@ namespace ToyShelf.Application.Models.Partner.Request
 {
 	public class CreatePartnerRequest
 	{
+		public Guid PartnerTierId { get; set; }
 		public string CompanyName { get; set; } = string.Empty;
-		public string Tier { get; set; } = "STANDARD";
-		public decimal RevenueSharePercent { get; set; }
 	}
 }
