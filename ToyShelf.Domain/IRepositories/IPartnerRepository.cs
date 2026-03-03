@@ -10,5 +10,6 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IPartnerRepository : IGenericRepository<Partner>
 	{
 		Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive);
+		Task<Partner?> GetByIdWithTierAsync(Guid id);
 	}
 }
