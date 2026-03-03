@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.City.Response;
 using ToyShelf.Application.Models.ProductCategory.Request;
 using ToyShelf.Application.Models.ProductCategory.Response;
 using ToyShelf.Application.Models.Role.Response;
@@ -43,6 +44,19 @@ namespace ToyShelf.API.Controllers
 			var result = await _productCategoryService.GetCategoriesAsync(isActive);
 			return BaseResponse<IEnumerable<ProductCategoryResponse>>
 				.Ok(result, "Productcategory retrieved successfully");
+		}
+
+		// ===== GET BY ID =====
+		/// <summary>
+		/// Get product category by id.
+		/// </summary>
+		[HttpGet("{id}")]
+		public async Task<BaseResponse<ProductCategoryResponse?>> GetById(Guid id)
+		{
+			var result = await _productCategoryService.GetByIdAsync(id);
+
+			return BaseResponse<ProductCategoryResponse?>
+				.Ok(result, "ProductCategory retrieved successfully");
 		}
 
 		// ===== UPDATE =====
