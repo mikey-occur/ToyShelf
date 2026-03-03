@@ -58,7 +58,6 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IPriceTableRepository, PriceTableRepository>();
 			services.AddScoped<ICommissionPolicyRepository, CommissionPolicyRepository>();
 			services.AddScoped<ICityRepository, CityRepository>();
-
 			services.AddScoped<IPriceTableApplyRepository, PriceTableApplyRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
