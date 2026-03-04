@@ -14,5 +14,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<bool> IsPriceTableInUseAsync(Guid id);
 
 		Task<IEnumerable<PriceTable>> GetPriceTablesAsync(bool? isActive);
+	    Task DeleteAllPriceItemsAsync(IEnumerable<PriceItem> items);
 	}
 }

@@ -7,6 +7,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.City.Response;
 using ToyShelf.Application.Models.ProductCategory.Request;
 using ToyShelf.Application.Models.ProductCategory.Response;
 using ToyShelf.Application.Translation;
@@ -109,7 +110,19 @@ namespace ToyShelf.Application.Services
 			var productCategories = await _productCategoryRepository.GetProductCategoriesAsync(isActive);
 			return productCategories.Select(MapToResponse);
 		}
-	
+
+		public async Task<ProductCategoryResponse?> GetByIdAsync(Guid id)
+		{
+			var product = await _productCategoryRepository.GetByIdAsync(id);
+
+			if (product == null)
+			{
+				throw new AppException("product not found.", 404);
+			}
+
+			return MapToResponse(product);
+		}
+
 		public async Task RestoreCategoryAsync(Guid id)
 		{
 			var category = await _productCategoryRepository.GetByIdAsync(id);
