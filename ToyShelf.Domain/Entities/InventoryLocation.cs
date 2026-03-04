@@ -14,12 +14,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid? StoreId { get; set; }
 		public string Name { get; set; } = null!;
 		public bool IsActive { get; set; }
-
 		public virtual Warehouse Warehouse { get; set; } = null!;
 		public virtual Store Store { get; set; } = null!;
-
 		public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
-
 		public virtual ICollection<Shipment> FromShipments { get; set; } = new List<Shipment>();
 		public virtual ICollection<Shipment> ToShipments { get; set; } = new List<Shipment>();
 		public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();

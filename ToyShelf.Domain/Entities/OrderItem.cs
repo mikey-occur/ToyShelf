@@ -15,8 +15,8 @@ namespace ToyShelf.Domain.Entities
 		public int Quantity { get; set; }
 		public decimal Price { get; set; }
 
-		public Order Order { get; set; } = null!;
-		public ProductColor ProductColor { get; set; } = null!;
+		public virtual Order Order { get; set; } = null!;
+		public virtual ProductColor ProductColor { get; set; } = null!;
+		public virtual ICollection<CommissionHistory> CommissionHistories { get; set; } = new List<CommissionHistory>();
 	}
-
 }

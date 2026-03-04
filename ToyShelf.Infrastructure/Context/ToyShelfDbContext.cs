@@ -44,6 +44,7 @@ namespace ToyShelf.Infrastructure.Context
 
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderItem> OrderItems { get; set; }	
+        public DbSet<CommissionHistory> CommissionHistories { get; set; }
 
 		public DbSet<Inventory> Inventories { get; set; }
 		public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
@@ -766,6 +767,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.PartnerTierId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Partner_PartnerTier");
+
+				entity.HasMany(e => e.CommissionHistories)
+					  .WithOne(i => i.Partner)
+					  .HasForeignKey(i => i.PartnerId);
 			});
 
 			// ================== PartnerTier ==================
@@ -1451,11 +1456,51 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_OrderItem_ProductColor");
 
+				entity.HasMany(e => e.CommissionHistories)
+					  .WithOne(i => i.OrderItem)
+					  .HasForeignKey(i => i.OrderItemId);
+
 				// ===== Index =====
 
 				entity.HasIndex(e => new { e.OrderId, e.ProductColorId })
 					  .IsUnique();
 			});
+			// ================== Commission History ==================
+			modelBuilder.Entity<CommissionHistory>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					 .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.CommissionAmount)
+					.HasColumnType("decimal(18,2)"); // VD: 100.000,50
+
+				entity.Property(e => e.AppliedRate)
+					.HasColumnType("decimal(18,4)"); // VD: 0.1500 (15%)
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.IsPaidOut)
+					  .IsRequired()
+					  .HasDefaultValue(false);
+
+				// ===== Relationships =====
+				entity.HasOne(ch => ch.OrderItem)
+					.WithMany(oi => oi.CommissionHistories)
+					.HasForeignKey(ch => ch.OrderItemId)
+					.OnDelete(DeleteBehavior.Restrict)
+					.HasConstraintName("FK_CommissionHistory_OrderItem");
+
+				entity.HasOne(ch => ch.Partner)
+					.WithMany(oi => oi.CommissionHistories) 
+					.HasForeignKey(ch => ch.PartnerId)
+					.OnDelete(DeleteBehavior.Restrict)
+				    .HasConstraintName("FK_CommissionHistory_Partner");
+			});
+
 
 			// ================== CITY ==================
 			modelBuilder.Entity<City>(entity =>
