@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using ToyShelf.API.Hubs;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Product.Request;
@@ -12,10 +14,12 @@ namespace ToyShelf.API.Controllers
 	[ApiController]
 	public class ProductController : ControllerBase
 	{
-        private readonly IProductService _productService;
-		public ProductController(IProductService productService)
+		private readonly IProductService _productService;
+		private readonly IHubContext<ProductHub> _hubContext;
+		public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
 		{
-			   _productService = productService;
+			_productService = productService;
+			_hubContext = hubContext;
 		}
 
 		/// <summary>
@@ -71,7 +75,7 @@ namespace ToyShelf.API.Controllers
 		public async Task<BaseResponse<ProductResponse?>> Update(Guid id, [FromBody] ProductUpdateRequest request)
 		{
 			var result = await _productService.UpdateProductAsync(id, request);
-		
+
 			return BaseResponse<ProductResponse?>.Ok(result, "Product updated successfully");
 		}
 		/// <summary>
@@ -105,23 +109,57 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Product restore successfully");
 		}
 
-      [HttpGet("paginated")]
-      public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId =null)
-      {
-          if (pageNumber < 1) pageNumber = 1;
-          if (pageSize < 1) pageSize = 10;
+		[HttpGet("paginated")]
+		public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId = null)
+		{
+			if (pageNumber < 1) pageNumber = 1;
+			if (pageSize < 1) pageSize = 10;
 
-          var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive,categoryId);
+			var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive, categoryId);
 
-          var result = new PaginatedResult<ProductResponse>
-          {
-              Items = items,
-              TotalCount = totalCount,
-              PageNumber = pageNumber,
-              PageSize = pageSize
-          };
+			var result = new PaginatedResult<ProductResponse>
+			{
+				Items = items,
+				TotalCount = totalCount,
+				PageNumber = pageNumber,
+				PageSize = pageSize
+			};
 
-          return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
-      }
+			return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
+		}
+
+		[HttpPost("select")]
+		public async Task<IActionResult> SelectProduct([FromBody] string productId)
+		{
+			if (string.IsNullOrEmpty(productId))
+			{
+				return BadRequest("Product ID không được để trống.");
+			}
+			await _hubContext.Clients.All.SendAsync("OnProductSelected", productId);
+
+			return Ok(new
+			{
+				success = true,
+				message = $"Đã gửi lệnh hiển thị sản phẩm: {productId}",
+				timestamp = System.DateTime.Now
+			});
+		}
+
+		[HttpPost("{rotationDegree}")]
+		public async Task<IActionResult> RotateProduct(int rotationDegree)
+		{
+            await _hubContext.Clients.All.SendAsync("OnProductRotated", rotationDegree);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Đã gửi lệnh xoay model một góc: {rotationDegree} độ"
+            });
+
+
+        }
+
+
+
     }
   }

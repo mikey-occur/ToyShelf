@@ -99,7 +99,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
-app.MapHub<ProductHub>("/OnProductSelected");
+app.MapHub<ProductHub>("/productHub");
 
 app.MapControllers();
 
