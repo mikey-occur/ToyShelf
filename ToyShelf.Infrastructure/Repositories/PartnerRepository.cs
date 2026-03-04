@@ -15,14 +15,24 @@ namespace ToyShelf.Infrastructure.Repositories
 		public PartnerRepository(ToyShelfDbContext context) : base(context) { }
 		public async Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive)
 		{
-			var query = _context.Partners.AsQueryable();
+			var query = _context.Partners
+								.Include(p => p.PartnerTier)
+								.AsQueryable();
 
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);
 
 			return await query
-				.OrderByDescending(w => w.CreatedAt)
-				.ToListAsync();
+							.OrderByDescending(w => w.CreatedAt)
+							.ToListAsync();
 		}
+
+		public async Task<Partner?> GetByIdWithTierAsync(Guid id)
+		{
+			return await _context.Partners
+								 .Include(p => p.PartnerTier)  
+								 .FirstOrDefaultAsync(p => p.Id == id);
+		}
+
 	}
 }

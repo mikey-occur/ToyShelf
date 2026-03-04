@@ -7,9 +7,9 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IPartnerRepository : IGenericRepository<Partner>
+	public interface ICityRepository : IGenericRepository<City>
 	{
-		Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive);
-		Task<Partner?> GetByIdWithTierAsync(Guid id);
+		Task<bool> ExistsByCodeOrNameAsync(string code, string name);
+		Task<bool> IsDuplicateAsync(Guid id, string code, string name);
 	}
 }

@@ -10,9 +10,13 @@ namespace ToyShelf.Application.Models.Partner.Response
 	{
 		public Guid Id { get; set; }
 		public string CompanyName { get; set; } = string.Empty;
-		public string Tier { get; set; } = string.Empty;
-		public decimal RevenueSharePercent { get; set; }
+
+		public Guid PartnerTierId { get; set; }
+		public string PartnerTierName { get; set; } = string.Empty;
+		public int PartnerTierPriority { get; set; }
+
 		public bool IsActive { get; set; }
+
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 	}

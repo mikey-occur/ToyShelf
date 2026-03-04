@@ -57,6 +57,9 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IPartnerTierRepository, PartnerTierRepository>();
 			services.AddScoped<IPriceTableRepository, PriceTableRepository>();
 			services.AddScoped<ICommissionPolicyRepository, CommissionPolicyRepository>();
+			services.AddScoped<ICityRepository, CityRepository>();
+
+			services.AddScoped<IPriceTableApplyRepository, PriceTableApplyRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -78,9 +81,9 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<ICommissionPolicyService, CommissionPolicyService>();
 			services.AddScoped<IShelfService, ShelfService>();
 			services.AddScoped<IQrCodeService, QrCodeService>();
+			services.AddScoped<IPriceTableApplyService, PriceTableApplyService>();
+			services.AddScoped<ICityService, CityService>();
 		}
-			
-        }
-			
-	}
+    }
+}
 

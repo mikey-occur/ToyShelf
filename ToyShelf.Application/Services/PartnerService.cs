@@ -37,9 +37,8 @@ namespace ToyShelf.Application.Services
 			var partner = new Partner
 			{
 				Id = Guid.NewGuid(),
+				PartnerTierId = request.PartnerTierId,
 				CompanyName = request.CompanyName.Trim(),
-				//Tier = request.Tier,
-				//RevenueSharePercent = request.RevenueSharePercent,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
 			};
@@ -47,7 +46,9 @@ namespace ToyShelf.Application.Services
 			await _partnerRepository.AddAsync(partner);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(partner);
+			var createdPartner = await _partnerRepository.GetByIdWithTierAsync(partner.Id);
+
+			return MapToResponse(createdPartner!);
 		}
 
 		// ================= GET =================
@@ -59,7 +60,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<PartnerResponse> GetByIdAsync(Guid id)
 		{
-			var partner = await _partnerRepository.GetByIdAsync(id);
+			var partner = await _partnerRepository.GetByIdWithTierAsync(id);
 
 			if (partner == null)
 				throw new AppException($"Partner not found. Id = {id}", 404);
@@ -70,19 +71,20 @@ namespace ToyShelf.Application.Services
 		// ===== UPDATE =====
 		public async Task<PartnerResponse> UpdateAsync(Guid id, UpdatePartnerRequest request)
 		{
-			var partner = await _partnerRepository.GetByIdAsync(id);
+			var partner = await _partnerRepository.GetByIdWithTierAsync(id);
 			if (partner == null)
 				throw new AppException($"Partner not found. Id = {id}", 404);
 
 			partner.CompanyName = request.CompanyName.Trim();
-			//partner.Tier = request.Tier;
-			//partner.RevenueSharePercent = request.RevenueSharePercent;
+			partner.PartnerTierId = request.PartnerTierId;
 			partner.UpdatedAt = _dateTime.UtcNow;
 
 			_partnerRepository.Update(partner);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(partner);
+			var updatedPartner = await _partnerRepository.GetByIdWithTierAsync(partner.Id);
+
+			return MapToResponse(updatedPartner!);
 		}
 
 		// ===== DISABLE =====
@@ -140,9 +142,13 @@ namespace ToyShelf.Application.Services
 			{
 				Id = partner.Id,
 				CompanyName = partner.CompanyName,
-				//Tier = partner.Tier,
-				//RevenueSharePercent = partner.RevenueSharePercent,
+				
+				PartnerTierId = partner.PartnerTierId,
+				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
+				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
+				
 				IsActive = partner.IsActive,
+
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt
 			};

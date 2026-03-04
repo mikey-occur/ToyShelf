@@ -29,7 +29,5 @@
 <ItemGroup>
     <Folder Include="DTOs\Account\Request\" />
     <Folder Include="wwwroot\" />
-</ItemGroup>
-  
-
+  </ItemGroup>
 </Project>

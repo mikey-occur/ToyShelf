@@ -9,5 +9,8 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IPriceTableApplyRepository : IGenericRepository<PriceTableApply>
 	{
+		Task<bool> HasOverlapAsync(Guid partnerId, DateTime startDate, DateTime? endDate);
+
+		Task<IEnumerable<PriceTableApply>> GetAllWithDetailsAsync(bool? isActive);
 	}
 }

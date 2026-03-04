@@ -27,6 +27,10 @@ RUN dotnet publish ToyShelf.API/ToyShelf.API.csproj \
     --no-restore \
     /p:UseAppHost=false
 
+# Verify wwwroot is published (debug step)
+RUN ls -la /app/publish/ && \
+    (ls -la /app/publish/wwwroot/ 2>/dev/null || echo "wwwroot not found in publish")
+
 # ===== Stage 2: Runtime =====
 FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 
@@ -47,6 +51,9 @@ WORKDIR /app
 
 # Copy published app from build stage
 COPY --from=build --chown=appuser:appgroup /app/publish .
+
+# Explicitly copy wwwroot if it exists (fallback)
+COPY --from=build --chown=appuser:appgroup /src/ToyShelf.API/wwwroot ./wwwroot/
 
 # Switch to non-root user
 USER appuser
