@@ -133,25 +133,30 @@ namespace ToyShelf.Application.Services
 			priceTable.Type = request.Type;
 			priceTable.IsActive = request.IsActive;
 
-			var oldItems = priceTable.PriceItems.ToList();
-			foreach (var item in oldItems)
-			{
-				priceTable.PriceItems.Remove(item);
-			}
-
 			
-			// Thêm items mới
-			if (request.Items != null)
+			// ===== Xử lý PriceItems =====
+			if (request.Items != null && request.Items.Any())
 			{
+				// Xoá toàn bộ item cũ
+				if (priceTable.PriceItems != null && priceTable.PriceItems.Any())
+				{
+					_unitOfWork.Repository<PriceItem>()
+						.DeleteRange(priceTable.PriceItems);
+				}
+
+				// Thêm item mới
 				foreach (var itemReq in request.Items)
 				{
-					priceTable.PriceItems.Add(new PriceItem
+					var newItem = new PriceItem
 					{
 						Id = Guid.NewGuid(),
 						PriceTableId = priceTable.Id,
 						PriceSegmentId = itemReq.PriceSegmentId,
 						CommissionRate = itemReq.CommissionRate
-					});
+					};
+
+					await _unitOfWork.Repository<PriceItem>()
+						.AddAsync(newItem);
 				}
 			}
 
