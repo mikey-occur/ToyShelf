@@ -108,6 +108,25 @@ namespace ToyShelf.Application.Services
 				.ToList();
 		}
 
+		public async Task<PartnerDetailByUserResponse> GetPartnerDetailByUserAsync(
+			GetPartnerDetailByUserRequest request)
+		{
+			var user = await _userRepository.GetUserWithPartnerAsync(request.UserId);
+
+			if (user == null)
+				throw new Exception("User not found");
+
+			return new PartnerDetailByUserResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				PartnerId = user.PartnerId,
+				CompanyName = user.Partner?.CompanyName,
+				PartnerIsActive = user.Partner?.IsActive
+			};
+		}
+
 		public async Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId)
 		{
 			var user = await _userRepository.GetByIdAsync(userId)
