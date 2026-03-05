@@ -26,6 +26,14 @@ namespace ToyShelf.Infrastructure.Repositories
 					.OrderByDescending(w => w.CreatedAt)
 					.ToListAsync();
 		}
+		public async Task<List<User>> GetUsersByStoreOrPartnerAsync()
+		{
+			return await _context.Users
+					.Include(u => u.UserStores)
+						.ThenInclude(us => us.Store)
+					.OrderByDescending(u => u.CreatedAt)
+					.ToListAsync();
+		}
 
 		public async Task<User?> GetByEmailAsync(string email)
 		{
