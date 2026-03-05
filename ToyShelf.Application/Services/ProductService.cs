@@ -184,6 +184,48 @@ namespace ToyShelf.Application.Services
 			product.AgeRange = request.AgeRange;
 			product.IsConsignment = request.IsConsignment;
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
+
+			if (request.ProductColors != null && request.ProductColors.Any())
+			{
+				// Xóa danh sách màu cũ nếu có
+				if (product.ProductColors != null && product.ProductColors.Any())
+				{
+					_unitOfWork.Repository<ProductColor>().DeleteRange(product.ProductColors);
+				}
+
+				// Thêm danh sách màu mới
+				foreach (var colorRequest in request.ProductColors)
+				{
+					var colorEntity = await _colorRepository.GetByIdAsync(colorRequest.ColorId)
+					?? throw new Exception($"Color Id {colorRequest.ColorId} not found");
+
+					// GEN SKU - Đây là bước quan trọng để fix lỗi NOT NULL
+					// Giả sử product.SKU là mã sản phẩm cha (VD: "ROBOT-001")
+					var generatedSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, colorEntity.SkuCode);
+
+					// Kiểm tra trùng SKU (nếu cần thiết trong lúc update)
+					var skuExists = await _productColorRepository.ExistsBySkuAsync(generatedSku);
+					if (skuExists)
+						throw new Exception($"ProductColor SKU '{generatedSku}' already exists");
+
+					var newColor = new ProductColor 
+					{
+						Id = Guid.NewGuid(),
+						ColorId = colorRequest.ColorId,
+						ProductId = product.Id, // Gắn khóa ngoại vào sản phẩm hiện tại
+						PriceSegmentId = colorRequest.PriceSegmentId,
+						Sku = generatedSku, 
+						Price = colorRequest.Price,
+						QrCode = colorRequest.QrCode,
+						Model3DUrl = colorRequest.Model3DUrl,
+						ImageUrl = colorRequest.ImageUrl,
+						IsActive = true
+					};
+
+					await _unitOfWork.Repository<ProductColor>().AddAsync(newColor);
+				}
+			}
+
 			_productRepository.Update(product);
 			await _unitOfWork.SaveChangesAsync();
 			return MapToResponse(product);
