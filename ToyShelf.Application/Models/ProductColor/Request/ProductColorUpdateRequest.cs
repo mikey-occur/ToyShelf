@@ -14,6 +14,7 @@ namespace ToyShelf.Application.Models.ProductColor.Request
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }
+		
 
 	}
 }

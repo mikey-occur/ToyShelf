@@ -175,14 +175,15 @@ namespace ToyShelf.Application.Services
 			if (product == null)
 				throw new Exception($"Product Id = {id} not found");
 			// Update fields
-			product.Name = request.Name;
-			product.BasePrice = request.Price;
-			product.Description = request.Description;
-			product.Brand = request.Brand;
-			product.Material = request.Material;
-			product.OriginCountry = request.OriginCountry;
-			product.AgeRange = request.AgeRange;
-			product.IsConsignment = request.IsConsignment;
+			product.Description = request.Description ?? product.Description;
+			product.Brand = request.Brand ?? product.Brand;
+			product.Material = request.Material ?? product.Material;
+			product.OriginCountry = request.OriginCountry ?? product.OriginCountry;
+			product.AgeRange = request.AgeRange ?? product.AgeRange;
+			if (request.IsConsignment.HasValue)
+			{
+				product.IsConsignment = request.IsConsignment.Value;
+			}
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
 
 			if (request.ProductColors != null && request.ProductColors.Any())
@@ -202,11 +203,13 @@ namespace ToyShelf.Application.Services
 					// GEN SKU - Đây là bước quan trọng để fix lỗi NOT NULL
 					// Giả sử product.SKU là mã sản phẩm cha (VD: "ROBOT-001")
 					var generatedSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, colorEntity.SkuCode);
-
+					
 					// Kiểm tra trùng SKU (nếu cần thiết trong lúc update)
 					var skuExists = await _productColorRepository.ExistsBySkuAsync(generatedSku);
 					if (skuExists)
 						throw new Exception($"ProductColor SKU '{generatedSku}' already exists");
+
+					string qrCode = _qrCodeService.GenerateQrBase64(generatedSku);
 
 					var newColor = new ProductColor 
 					{
@@ -216,7 +219,7 @@ namespace ToyShelf.Application.Services
 						PriceSegmentId = colorRequest.PriceSegmentId,
 						Sku = generatedSku, 
 						Price = colorRequest.Price,
-						QrCode = colorRequest.QrCode,
+						QrCode = qrCode,
 						Model3DUrl = colorRequest.Model3DUrl,
 						ImageUrl = colorRequest.ImageUrl,
 						IsActive = true
