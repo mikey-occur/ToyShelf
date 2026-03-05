@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.User.Request;
 using ToyShelf.Application.Models.User.Response;
@@ -28,6 +29,83 @@ namespace ToyShelf.Application.Services
 		{
 			var users = await _userRepository.GetUsersAsync(isActive);
 			return users.Select(MapToProfile).ToList();
+		}
+
+		public async Task<List<UserResponse>> GetUsersByStoreOrPartnerAsync(
+			GetUserByStoreOrPartnerRequest request,
+			ICurrentUser currentUser)
+		{
+			var users = await _userRepository.GetUsersByStoreOrPartnerAsync();
+
+			var query = users.AsQueryable();
+
+			// ===== PartnerAdmin chỉ thấy partner của mình =====
+
+			if (currentUser.IsPartnerAdmin())
+			{
+				query = query.Where(u =>
+					u.PartnerId == currentUser.PartnerId ||
+					u.UserStores.Any(us => us.Store.PartnerId == currentUser.PartnerId));
+			}
+
+			// ===== Admin filter theo Partner =====
+
+			if (currentUser.IsAdmin() && request.PartnerId.HasValue)
+			{
+				query = query.Where(u =>
+					u.PartnerId == request.PartnerId.Value ||
+					u.UserStores.Any(us => us.Store.PartnerId == request.PartnerId.Value));
+			}
+
+			// ===== Filter theo Store =====
+
+			if (request.StoreId.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserStores.Any(us => us.StoreId == request.StoreId.Value));
+			}
+
+			// ===== Filter theo StoreRole =====
+
+			if (request.StoreRole.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserStores.Any(us => us.StoreRole == request.StoreRole.Value));
+			}
+
+			return query
+				.AsEnumerable()
+				.SelectMany(u =>
+				{
+					if (u.UserStores.Any())
+					{
+						return u.UserStores.Select(us => new UserResponse
+						{
+							UserId = u.Id,
+							FullName = u.FullName,
+							Email = u.Email,
+							PartnerId = us.Store.PartnerId,
+							StoreId = us.StoreId,
+							StoreName = us.Store.Name,
+							StoreRole = us.StoreRole
+						});
+					}
+
+					return new List<UserResponse>
+					{
+						new UserResponse
+						{
+							UserId = u.Id,
+							FullName = u.FullName,
+							Email = u.Email,
+							PartnerId = u.PartnerId,
+							StoreId = null,
+							StoreName = null,
+							StoreRole = null
+						}
+					};
+				})
+				.ToList();
 		}
 
 		public async Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId)
