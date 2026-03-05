@@ -16,7 +16,8 @@ namespace ToyShelf.Application.IServices
 		Task<List<UserResponse>> GetUsersByStoreOrPartnerAsync(
 			GetUserByStoreOrPartnerRequest request,
 			ICurrentUser currentUser);
-
+		Task<PartnerDetailByUserResponse> GetPartnerDetailByUserAsync(
+			GetPartnerDetailByUserRequest request);
 		Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId);
 		Task<UserProfileResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request);
 		Task DisableUserAsync(Guid userId);   
