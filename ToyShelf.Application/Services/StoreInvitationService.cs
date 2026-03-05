@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.StoreInvitation.Request;
+using ToyShelf.Application.Models.StoreInvitation.Response;
 using ToyShelf.Application.Models.UserStore.Request;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -159,5 +161,57 @@ namespace ToyShelf.Application.Services
 
 			return true;
 		}
+
+		public async Task<IEnumerable<StoreInvitationResponse>> GetInvitationsAsync(
+			GetStoreInvitationRequest request,
+			ICurrentUser currentUser)
+		{
+			var invitations = await _invitationRepo.GetAllWithUserAsync();
+
+			// ================= Theo role =================
+
+			if (currentUser.IsPartnerAdmin())
+			{
+				invitations = invitations
+					.Where(x => x.Store.PartnerId == currentUser.PartnerId)
+					.ToList();
+			}
+
+			if (currentUser.IsAdmin() && request.PartnerId.HasValue)
+			{
+				invitations = invitations
+					.Where(x => x.Store.PartnerId == request.PartnerId.Value)
+					.ToList();
+			}
+
+			// ================= Theo Business =================
+
+			if (request.Status.HasValue)
+			{
+				invitations = invitations
+					.Where(x => x.Status == request.Status.Value)
+					.ToList();
+			}
+
+			if (request.StoreId.HasValue)
+			{
+				invitations = invitations
+					.Where(x => x.StoreId == request.StoreId.Value)
+					.ToList();
+			}
+
+			return invitations.Select(x => new StoreInvitationResponse
+			{
+				Id = x.Id,
+				StoreId = x.StoreId,
+				UserId = x.UserId,
+				Email = x.User.Email,
+				StoreRole = x.StoreRole,
+				Status = x.Status,
+				CreatedAt = x.CreatedAt,
+				ExpiredAt = x.ExpiredAt
+			});
+		}
+
 	}
 }

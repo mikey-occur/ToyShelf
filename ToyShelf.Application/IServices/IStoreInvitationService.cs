@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
+using ToyShelf.Application.Models.StoreInvitation.Request;
+using ToyShelf.Application.Models.StoreInvitation.Response;
 using ToyShelf.Application.Models.UserStore.Request;
 
 namespace ToyShelf.Application.IServices
@@ -15,5 +17,8 @@ namespace ToyShelf.Application.IServices
 			ICurrentUser currentUser);
 		Task<bool> AcceptInvitationAsync(Guid invitationId, Guid currentUserId);
 		Task<bool> RejectInvitationAsync(Guid invitationId, Guid currentUserId);
+		Task<IEnumerable<StoreInvitationResponse>> GetInvitationsAsync(
+			GetStoreInvitationRequest request,
+			ICurrentUser currentUser);
 	}
 }	

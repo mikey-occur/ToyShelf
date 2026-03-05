@@ -20,12 +20,12 @@ namespace ToyShelf.Domain.Entities
 		public Guid StoreId { get; set; }
 		public Guid UserId { get; set; }
 		public Guid InvitedByUserId { get; set; }
-		public StoreRole StoreRole { get; set; }
+		public StoreRole StoreRole { get; set; } // Staff , Manager
 		public InvitationStatus Status { get; set; } // Pending, Accepted, Rejected, Expired
 		public DateTime CreatedAt { get; set; }
 		public DateTime? ExpiredAt { get; set; }
-		public Store Store { get; set; } = null!;
-		public User User { get; set; } = null!;
+		public virtual Store Store { get; set; } = null!;
+		public virtual User User { get; set; } = null!;
 	}
 
 }
