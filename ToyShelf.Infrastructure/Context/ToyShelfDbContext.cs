@@ -285,6 +285,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(300);
 
+				entity.Property(e => e.Latitude)
+					  .HasColumnType("double precision");
+
+				entity.Property(e => e.Longitude)
+					  .HasColumnType("double precision");
+
 				entity.Property(e => e.PhoneNumber)
 					  .HasMaxLength(20);
 
@@ -736,6 +742,16 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(200);
 
+				entity.Property(e => e.Address)
+					  .IsRequired()
+					  .HasMaxLength(300);
+
+				entity.Property(e => e.Latitude)
+					  .HasColumnType("double precision");
+
+				entity.Property(e => e.Longitude)
+					  .HasColumnType("double precision");
+
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
@@ -1030,6 +1046,12 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.Address)
 					  .HasMaxLength(500);
+
+				entity.Property(e => e.Latitude)
+					  .HasColumnType("double precision");
+
+				entity.Property(e => e.Longitude)
+					  .HasColumnType("double precision");
 
 				entity.Property(e => e.IsActive)
 					  .IsRequired()

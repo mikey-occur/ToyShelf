@@ -39,6 +39,9 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				PartnerTierId = request.PartnerTierId,
 				CompanyName = request.CompanyName.Trim(),
+				Address= request.Address.Trim(),
+				Latitude = request.Latitude,
+				Longitude = request.Longitude,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
 			};
@@ -76,6 +79,9 @@ namespace ToyShelf.Application.Services
 				throw new AppException($"Partner not found. Id = {id}", 404);
 
 			partner.CompanyName = request.CompanyName.Trim();
+			partner.Address = request.Address.Trim();
+			partner.Latitude = request.Latitude;
+			partner.Longitude = request.Longitude;
 			partner.PartnerTierId = request.PartnerTierId;
 			partner.UpdatedAt = _dateTime.UtcNow;
 
@@ -142,7 +148,10 @@ namespace ToyShelf.Application.Services
 			{
 				Id = partner.Id,
 				CompanyName = partner.CompanyName,
-				
+				Address = partner.Address,
+				Latitude = partner.Latitude,
+				Longitude = partner.Longitude,
+
 				PartnerTierId = partner.PartnerTierId,
 				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
 				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
