@@ -366,6 +366,18 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.AgeRange)
 					  .HasMaxLength(50);
 
+				entity.Property(e => e.Width)
+					  .HasColumnType("decimal(10,2)");
+
+				entity.Property(e => e.Length)
+				      .HasColumnType("decimal(10,2)");
+
+				entity.Property(e => e.Height)
+					  .HasColumnType("decimal(10,2)");
+
+				entity.Property(e => e.Weight)
+					  .HasColumnType("decimal(10,2)");
+
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
