@@ -19,6 +19,10 @@ namespace ToyShelf.Application.Models.Product.Response
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
+		public decimal? Width { get; set; }
+		public decimal? Length { get; set; }
+		public decimal? Height { get; set; }
+		public decimal? Weight { get; set; }
 		public bool IsActive { get; set; } = true;
 		public bool IsConsignment { get; set; } = true; 
 		public DateTime CreatedAt { get; set; }
