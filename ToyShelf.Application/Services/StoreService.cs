@@ -69,6 +69,8 @@ namespace ToyShelf.Application.Services
 				Code = finalCode,
 				Name = request.Name.Trim(),
 				StoreAddress = request.StoreAddress.Trim(),
+				Latitude = request.Latitude,
+				Longitude = request.Longitude,
 				PhoneNumber = request.PhoneNumber,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
@@ -106,6 +108,8 @@ namespace ToyShelf.Application.Services
 
 			store.Name = request.Name.Trim();
 			store.StoreAddress = request.StoreAddress.Trim();
+			store.Latitude = request.Latitude;
+			store.Longitude = request.Longitude;
 			store.PhoneNumber = request.PhoneNumber;
 			store.UpdatedAt = _dateTime.UtcNow;
 
@@ -163,6 +167,8 @@ namespace ToyShelf.Application.Services
 				Code = store.Code,
 				Name = store.Name,
 				StoreAddress = store.StoreAddress,
+				Latitude = store.Latitude,
+				Longitude = store.Longitude,
 				PhoneNumber = store.PhoneNumber,
 				IsActive = store.IsActive,
 				CreatedAt = store.CreatedAt,

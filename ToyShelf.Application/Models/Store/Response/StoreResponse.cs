@@ -13,6 +13,8 @@ namespace ToyShelf.Application.Models.Store.Response
 		public string Code { get; set; } = string.Empty;
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
+		public double? Latitude { get; set; }
+		public double? Longitude { get; set; }
 		public string? PhoneNumber { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime CreatedAt { get; set; }
