@@ -42,11 +42,31 @@ namespace ToyShelf.Application.Services
 			if (partner == null)
 				throw new AppException("Partner not found", 404);
 
+			string finalCode;
+
+			if (!string.IsNullOrWhiteSpace(request.Code))
+			{
+				finalCode = request.Code.Trim().ToUpper();
+			}
+			else
+			{
+				var maxNumber = await _storeRepository
+					.GetMaxSequenceByPartnerAsync(request.PartnerId);
+
+				finalCode = $"{Prefix}-{partner.Code}-{(maxNumber + 1):D2}";
+			}
+
+			bool exists = await _storeRepository
+				.ExistsByCodeInPartnerAsync(finalCode, request.PartnerId);
+
+			if (exists)
+				throw new InvalidOperationException("Store code already exists in this partner.");
+
 			var store = new Store
 			{
 				Id = Guid.NewGuid(),
 				PartnerId = request.PartnerId,
-				Code = request.Code.Trim(),
+				Code = finalCode,
 				Name = request.Name.Trim(),
 				StoreAddress = request.StoreAddress.Trim(),
 				PhoneNumber = request.PhoneNumber,
@@ -59,6 +79,7 @@ namespace ToyShelf.Application.Services
 
 			return MapToResponse(store);
 		}
+
 
 		// ================= GET =================
 		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(bool? isActive)
