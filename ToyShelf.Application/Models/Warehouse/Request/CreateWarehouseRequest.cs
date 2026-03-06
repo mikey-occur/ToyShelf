@@ -12,5 +12,7 @@ namespace ToyShelf.Application.Models.Warehouse.Request
 		public string? Code { get; set; }
 		public string Name { get; set; } = null!;
 		public string? Address { get; set; }
+		public double? Latitude { get; set; }
+		public double? Longitude { get; set; }
 	}
 }

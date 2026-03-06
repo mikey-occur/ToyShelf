@@ -70,6 +70,8 @@ namespace ToyShelf.Application.Services
 				Code = finalCode,
 				Name = request.Name.Trim(),
 				Address = request.Address?.Trim(),
+				Latitude = request.Latitude,
+				Longitude = request.Longitude,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
 			};
@@ -106,6 +108,8 @@ namespace ToyShelf.Application.Services
 
 			warehouse.Name = request.Name.Trim();
 			warehouse.Address = request.Address?.Trim();
+			warehouse.Latitude = request.Latitude;
+			warehouse.Longitude = request.Longitude;
 			warehouse.UpdatedAt = _dateTime.UtcNow;
 
 			_warehouseRepository.Update(warehouse);
@@ -161,6 +165,8 @@ namespace ToyShelf.Application.Services
 				Code = warehouse.Code,
 				Name = warehouse.Name,
 				Address = warehouse.Address,
+				Latitude = warehouse.Latitude,
+				Longitude = warehouse.Longitude,
 				IsActive = warehouse.IsActive,
 				
 				CityId = warehouse.CityId,
