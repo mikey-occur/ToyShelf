@@ -24,5 +24,25 @@ namespace ToyShelf.Infrastructure.Repositories
 					.OrderByDescending(w => w.CreatedAt)
 					.ToListAsync();
 		}
+		public async Task<int> GetMaxSequenceByPartnerAsync(Guid partnerId)
+		{
+			var codes = await _context.Stores
+				.Where(s => s.PartnerId == partnerId)
+				.Select(s => s.Code)
+				.ToListAsync();
+
+			if (!codes.Any())
+				return 0;
+
+			return codes
+				.Select(c => int.Parse(c.Split('-').Last()))
+				.Max();
+		}
+
+		public async Task<bool> ExistsByCodeInPartnerAsync(string code, Guid partnerId)
+		{
+			return await _context.Stores
+				.AnyAsync(s => s.Code == code && s.PartnerId == partnerId);
+		}
 	}
 }

@@ -327,7 +327,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_Store_Partner");
 			});
 
-
 			// ================== Product ==================
 			modelBuilder.Entity<Product>(entity => 
 			{
@@ -749,6 +748,13 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(20);
+
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
 
 				entity.Property(e => e.CompanyName)
 					  .IsRequired()

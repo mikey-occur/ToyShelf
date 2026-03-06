@@ -66,6 +66,10 @@ namespace ToyShelf.Application.Services
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
 				AgeRange = request.AgeRange,
+				Weight = request.Weight,
+				Length = request.Length,
+				Height = request.Height,
+				Width = request.Width,
 				IsActive = true,
 				IsConsignment = true,
 				CreatedAt = _dateTimeProvider.UtcNow
@@ -180,6 +184,10 @@ namespace ToyShelf.Application.Services
 			product.Material = request.Material ?? product.Material;
 			product.OriginCountry = request.OriginCountry ?? product.OriginCountry;
 			product.AgeRange = request.AgeRange ?? product.AgeRange;
+			product.Weight = request.Weight ?? product.Weight;
+			product.Length = request.Length ?? product.Length;
+			product.Height = request.Height ?? product.Height;
+			product.Width = request.Width ?? product.Width;
 			if (request.IsConsignment.HasValue)
 			{
 				product.IsConsignment = request.IsConsignment.Value;
