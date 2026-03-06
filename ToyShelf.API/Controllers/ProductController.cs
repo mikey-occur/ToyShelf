@@ -15,11 +15,10 @@ namespace ToyShelf.API.Controllers
 	public class ProductController : ControllerBase
 	{
 		private readonly IProductService _productService;
-		private readonly IHubContext<ProductHub> _hubContext;
-		public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
+		
+		public ProductController(IProductService productService)
 		{
-			_productService = productService;
-			_hubContext = hubContext;
+			_productService = productService;		
 		}
 
 		/// <summary>
@@ -128,36 +127,7 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
 		}
 
-		[HttpPost("select")]
-		public async Task<IActionResult> SelectProduct([FromBody] string productId)
-		{
-			if (string.IsNullOrEmpty(productId))
-			{
-				return BadRequest("Product ID không được để trống.");
-			}
-			await _hubContext.Clients.All.SendAsync("OnProductSelected", productId);
-
-			return Ok(new
-			{
-				success = true,
-				message = $"Đã gửi lệnh hiển thị sản phẩm: {productId}",
-				timestamp = System.DateTime.Now
-			});
-		}
-
-		[HttpPost("{rotationDegree}")]
-		public async Task<IActionResult> RotateProduct(int rotationDegree)
-		{
-            await _hubContext.Clients.All.SendAsync("OnProductRotated", rotationDegree);
-
-            return Ok(new
-            {
-                success = true,
-                message = $"Đã gửi lệnh xoay model một góc: {rotationDegree} độ"
-            });
-
-
-        }
+	
 
 
 
