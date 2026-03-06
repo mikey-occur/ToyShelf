@@ -22,7 +22,7 @@ namespace ToyShelf.Application.Models.Product.Request
 		public decimal? Length { get; set; }
 		public decimal? Height { get; set; }
 		public decimal? Weight { get; set; }
-		public List<ProductColorUpdateRequest>? ProductColors { get; set; }
+		public List<ProductColorUpdateRequest>? Colors { get; set; }
 
 	}
 }

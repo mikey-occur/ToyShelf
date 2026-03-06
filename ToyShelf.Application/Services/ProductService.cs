@@ -194,7 +194,7 @@ namespace ToyShelf.Application.Services
 			}
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
 
-			if (request.ProductColors != null && request.ProductColors.Any())
+			if (request.Colors != null && request.Colors.Any())
 			{
 				// Xóa danh sách màu cũ nếu có
 				if (product.ProductColors != null && product.ProductColors.Any())
@@ -203,7 +203,7 @@ namespace ToyShelf.Application.Services
 				}
 
 				// Thêm danh sách màu mới
-				foreach (var colorRequest in request.ProductColors)
+				foreach (var colorRequest in request.Colors)
 				{
 					var colorEntity = await _colorRepository.GetByIdAsync(colorRequest.ColorId)
 					?? throw new Exception($"Color Id {colorRequest.ColorId} not found");
@@ -267,6 +267,10 @@ namespace ToyShelf.Application.Services
 				AgeRange = product.AgeRange,
 				IsActive = product.IsActive,
 				IsConsignment = product.IsConsignment,
+				Weight = product.Weight,
+				Length = product.Length,
+				Height = product.Height,
+				Width = product.Width,
 				CreatedAt = product.CreatedAt,
 				UpdatedAt = product.UpdatedAt,
 
