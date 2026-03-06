@@ -12,6 +12,8 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 		public string Code { get; set; } = null!;
 		public string Name { get; set; } = null!;
 		public string? Address { get; set; }
+		public double? Latitude { get; set; }
+		public double? Longitude { get; set; }
 		public bool IsActive { get; set; }
 
 		public Guid CityId { get; set; }

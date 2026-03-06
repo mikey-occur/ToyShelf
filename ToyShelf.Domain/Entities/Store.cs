@@ -13,6 +13,8 @@ namespace ToyShelf.Domain.Entities
 		public string Code { get; set; } = string.Empty; // STORE-HCM01
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
+		public double? Latitude { get; set; }
+		public double? Longitude { get; set; }
 		public string? PhoneNumber { get; set; }
 		public bool IsActive { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
