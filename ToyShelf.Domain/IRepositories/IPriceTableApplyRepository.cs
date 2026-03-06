@@ -12,5 +12,7 @@ namespace ToyShelf.Domain.IRepositories
 		Task<bool> HasOverlapAsync(Guid partnerId, DateTime startDate, DateTime? endDate);
 
 		Task<IEnumerable<PriceTableApply>> GetAllWithDetailsAsync(bool? isActive);
+
+		Task<PriceTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now);
 	}
 }

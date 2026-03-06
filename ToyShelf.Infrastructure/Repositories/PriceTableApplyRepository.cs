@@ -15,6 +15,18 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
+		public async Task<PriceTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now)
+		{
+				return await _context.PriceTableApplies
+			.Include(a => a.PriceTable) // Load thông tin bảng giá để lấy tên/loại
+			.Where(a => a.PartnerId == partnerId &&
+						a.IsActive &&
+						a.StartDate <= now &&
+						(a.EndDate == null || a.EndDate >= now))
+			.OrderByDescending(a => a.StartDate) // Nếu có nhiều bảng giá trùng lặp, lấy bảng mới nhất
+			.FirstOrDefaultAsync();
+		}
+
 		public async Task<IEnumerable<PriceTableApply>> GetAllWithDetailsAsync(bool? isActive)
 		{
 			var query = _context.PriceTableApplies
