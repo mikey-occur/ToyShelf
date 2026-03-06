@@ -11,5 +11,6 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<IEnumerable<Partner>> GetPartnerAsync(bool? isActive);
 		Task<Partner?> GetByIdWithTierAsync(Guid id);
+		Task<IEnumerable<Partner>> GetByCodePrefixAsync(string prefix);
 	}
 }

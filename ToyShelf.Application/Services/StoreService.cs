@@ -21,6 +21,8 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
+		private const string Prefix = "STORE";
+
 		public StoreService(
 			IStoreRepository storeRepository,
 			IPartnerRepository partnerRepository,
