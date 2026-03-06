@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
+using ToyShelf.API.Hubs;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Product.Request;
@@ -17,10 +20,11 @@ namespace ToyShelf.API.Controllers
 	public class ProductColorController : ControllerBase
 	{
 		private readonly IProductColorService _productColorService;
-
-		public ProductColorController(IProductColorService productColorService)
+		private readonly IHubContext<ProductHub> _hubContext;
+		public ProductColorController(IProductColorService productColorService, IHubContext<ProductHub> hubContext)
 		{
 			_productColorService = productColorService;
+			_hubContext = hubContext;
 		}
 
 		//==== CREATE =====
@@ -110,6 +114,37 @@ namespace ToyShelf.API.Controllers
 			await _productColorService.RestoreProductColorAsync(id);
 			return ActionResponse.Ok("Productcolor restore successfully");
 		}
-		
-	}
+
+		[HttpPost("select")]
+        public async Task<IActionResult> SelectProduct([FromBody]string skuCode)
+        {
+            if (string.IsNullOrEmpty(skuCode))
+            {
+                return BadRequest("SkuCode không được để trống.");
+            }
+            await _hubContext.Clients.All.SendAsync("OnProductSelected", skuCode);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Đã gửi lệnh hiển thị sản phẩm: {skuCode}",
+                timestamp = System.DateTime.Now
+            });
+        }
+
+        [HttpPost("{rotationDegree}")]
+        public async Task<IActionResult> RotateProduct(int rotationDegree)
+        {
+            await _hubContext.Clients.All.SendAsync("OnProductRotated", rotationDegree);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Đã gửi lệnh xoay model một góc: {rotationDegree} độ"
+            });
+
+
+        }
+
+    }
 }

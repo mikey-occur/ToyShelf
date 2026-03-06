@@ -18,6 +18,20 @@ namespace ToyShelf.API.Controllers
             _shelfService = shelfService;
         }
 
+        // ===== GET PAGINATED =====
+        /// <summary>
+        /// Get shelves with pagination and optional status filter.
+        /// </summary>
+        [HttpGet]
+        public async Task<BaseResponse<PaginatedResult<ShelfResponse>>> GetPaginated(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null)
+        {
+            var result = await _shelfService.GetPaginatedAsync(pageNumber, pageSize, status);
+            return BaseResponse<PaginatedResult<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
+        }
+
         // ===== CREATE =====
         /// <summary>
         /// Create a new shelf.
@@ -33,12 +47,12 @@ namespace ToyShelf.API.Controllers
         /// <summary>
         /// Get all shelves.
         /// </summary>
-        [HttpGet]
-        public async Task<BaseResponse<IEnumerable<ShelfResponse>>> GetAll()
-        {
-            var result = await _shelfService.GetAllAsync();
-            return BaseResponse<IEnumerable<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
-        }
+        //[HttpGet]
+        //public async Task<BaseResponse<IEnumerable<ShelfResponse>>> GetAll()
+        //{
+        //    var result = await _shelfService.GetAllAsync();
+        //    return BaseResponse<IEnumerable<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
+        //}
 
         // ===== GET BY ID =====
         /// <summary>
@@ -60,20 +74,6 @@ namespace ToyShelf.API.Controllers
         {
             var result = await _shelfService.UpdateAsync(id, request);
             return BaseResponse<ShelfResponse>.Ok(result, "Shelf updated successfully");
-        }
-
-        // ===== GET PAGINATED =====
-        /// <summary>
-        /// Get shelves with pagination and optional status filter.
-        /// </summary>
-        [HttpGet("paginated")]
-        public async Task<BaseResponse<PaginatedResult<ShelfResponse>>> GetPaginated(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? status = null)
-        {
-            var result = await _shelfService.GetPaginatedAsync(pageNumber, pageSize, status);
-            return BaseResponse<PaginatedResult<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
         }
 
         // ===== DELETE =====

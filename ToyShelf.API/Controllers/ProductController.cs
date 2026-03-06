@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
+using ToyShelf.API.Hubs;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Product.Request;
@@ -12,10 +14,11 @@ namespace ToyShelf.API.Controllers
 	[ApiController]
 	public class ProductController : ControllerBase
 	{
-        private readonly IProductService _productService;
+		private readonly IProductService _productService;
+		
 		public ProductController(IProductService productService)
 		{
-			   _productService = productService;
+			_productService = productService;		
 		}
 
 		/// <summary>
@@ -71,7 +74,7 @@ namespace ToyShelf.API.Controllers
 		public async Task<BaseResponse<ProductResponse?>> Update(Guid id, [FromBody] ProductUpdateRequest request)
 		{
 			var result = await _productService.UpdateProductAsync(id, request);
-		
+
 			return BaseResponse<ProductResponse?>.Ok(result, "Product updated successfully");
 		}
 		/// <summary>
@@ -105,23 +108,28 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Product restore successfully");
 		}
 
-      [HttpGet("paginated")]
-      public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId =null)
-      {
-          if (pageNumber < 1) pageNumber = 1;
-          if (pageSize < 1) pageSize = 10;
+		[HttpGet("paginated")]
+		public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId = null)
+		{
+			if (pageNumber < 1) pageNumber = 1;
+			if (pageSize < 1) pageSize = 10;
 
-          var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive,categoryId);
+			var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive, categoryId);
 
-          var result = new PaginatedResult<ProductResponse>
-          {
-              Items = items,
-              TotalCount = totalCount,
-              PageNumber = pageNumber,
-              PageSize = pageSize
-          };
+			var result = new PaginatedResult<ProductResponse>
+			{
+				Items = items,
+				TotalCount = totalCount,
+				PageNumber = pageNumber,
+				PageSize = pageSize
+			};
 
-          return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
-      }
+			return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
+		}
+
+	
+
+
+
     }
   }
