@@ -31,15 +31,46 @@ namespace ToyShelf.Application.Services
 			_dateTime = dateTime;
 		}
 
+		private async Task<string> GeneratePartnerCode(string companyName)
+		{
+			// Lấy chữ cái đầu
+			var prefix = string.Concat(
+				companyName
+				.Split(' ', StringSplitOptions.RemoveEmptyEntries)
+				.Select(w => char.ToUpper(w[0]))
+			);
+
+			// Lấy các code bắt đầu bằng prefix
+			var partners = await _partnerRepository.GetByCodePrefixAsync(prefix);
+
+			int nextNumber = 1;
+
+			if (partners.Any())
+			{
+				var maxNumber = partners
+					.Select(p => p.Code.Split('-').Last())
+					.Select(n => int.Parse(n))
+					.Max();
+
+				nextNumber = maxNumber + 1;
+			}
+
+			return $"{prefix}-{nextNumber:D3}";
+		}
+
+
 		// ===== CREATE =====
 		public async Task<PartnerResponse> CreateAsync(CreatePartnerRequest request)
 		{
+			var code = await GeneratePartnerCode(request.CompanyName);
+
 			var partner = new Partner
 			{
 				Id = Guid.NewGuid(),
+				Code = code,
 				PartnerTierId = request.PartnerTierId,
 				CompanyName = request.CompanyName.Trim(),
-				Address= request.Address.Trim(),
+				Address = request.Address.Trim(),
 				Latitude = request.Latitude,
 				Longitude = request.Longitude,
 				IsActive = true,
@@ -53,6 +84,7 @@ namespace ToyShelf.Application.Services
 
 			return MapToResponse(createdPartner!);
 		}
+
 
 		// ================= GET =================
 		public async Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive)
@@ -147,6 +179,7 @@ namespace ToyShelf.Application.Services
 			return new PartnerResponse
 			{
 				Id = partner.Id,
+				Code = partner.Code,
 				CompanyName = partner.CompanyName,
 				Address = partner.Address,
 				Latitude = partner.Latitude,

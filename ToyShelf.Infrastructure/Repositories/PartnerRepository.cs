@@ -34,5 +34,11 @@ namespace ToyShelf.Infrastructure.Repositories
 								 .FirstOrDefaultAsync(p => p.Id == id);
 		}
 
+		public async Task<IEnumerable<Partner>> GetByCodePrefixAsync(string prefix)
+		{
+			return await _context.Partners
+				.Where(p => p.Code.StartsWith(prefix + "-"))
+				.ToListAsync();
+		}
 	}
 }

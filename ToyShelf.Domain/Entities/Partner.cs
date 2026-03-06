@@ -10,6 +10,7 @@ namespace ToyShelf.Domain.Entities
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerTierId { get; set; }
+		public string Code { get; set; } = string.Empty; // PARTNER-001
 		public string CompanyName { get; set; } = string.Empty;
 		public string Address { get; set; } = string.Empty;
 		public double? Latitude { get; set; }
