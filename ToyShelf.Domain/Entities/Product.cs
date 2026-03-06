@@ -21,6 +21,11 @@ namespace ToyShelf.Domain.Entities
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
 
+		public decimal? Width { get; set; }
+		public decimal? Length { get; set; }
+		public decimal? Height { get; set; }
+		public decimal? Weight { get; set; }
+
 		public bool IsActive { get; set; } = true;
 		public bool IsConsignment { get; set; } = true; // hàng ký gửi -> hàng của store
 

@@ -7,6 +7,7 @@ using ToyShelf.Application.Common.Extensions;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.User.Request;
 using ToyShelf.Application.Models.User.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -31,8 +32,31 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get users successfully");
 		}
 
+
+		[HttpGet("store-users")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
+		public async Task<ActionResult<BaseResponse<List<UserResponse>>>> GetUsersByStoreOrPartner(
+			[FromQuery] GetUserByStoreOrPartnerRequest request,
+			[FromServices] ICurrentUser currentUser)
+		{
+			var result = await _userService.GetUsersByStoreOrPartnerAsync(
+				request,
+				currentUser
+			);
+
+			return BaseResponse<List<UserResponse>>.Ok(result, "Get users successfully");
+		}
+
+		[HttpGet("partner-detail")]
+		public async Task<ActionResult<PartnerDetailByUserResponse>> GetPartnerDetailByUser(
+			[FromQuery] GetPartnerDetailByUserRequest request)
+		{
+			var result = await _userService.GetPartnerDetailByUserAsync(request);
+			return Ok(result);
+		}
+
 		[HttpGet("profile")]
-		[Authorize(Roles = "PartnerAdmin,Partner,Admin,Customer")]
+		[Authorize(Roles = "PartnerAdmin,Partner,Admin")]
 		public async Task<ActionResult<BaseResponse<UserProfileResponse>>> GetProfile([FromServices] ICurrentUser currentUser)
 		{
 			var rs = await _userService.GetProfileByUserIdAsync(currentUser.UserId);

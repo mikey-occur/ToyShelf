@@ -10,6 +10,8 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IUserRepository : IGenericRepository<User>
 	{
 		Task<List<User>> GetUsersAsync(bool? isActive);
+		Task<List<User>> GetUsersByStoreOrPartnerAsync();
+		Task<User?> GetUserWithPartnerAsync(Guid userId);
 		Task<User?> GetByEmailAsync(string email);
 	}
 }

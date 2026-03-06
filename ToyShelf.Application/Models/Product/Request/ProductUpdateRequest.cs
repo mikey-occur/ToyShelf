@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.ProductColor.Request;
 
 namespace ToyShelf.Application.Models.Product.Request
 {
@@ -15,11 +16,12 @@ namespace ToyShelf.Application.Models.Product.Request
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }
-		public bool IsConsignment { get; set; }
+		public bool? IsConsignment { get; set; }
 		public string? Brand { get; set; }
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
+		public List<ProductColorUpdateRequest>? ProductColors { get; set; }
 
 	}
 }

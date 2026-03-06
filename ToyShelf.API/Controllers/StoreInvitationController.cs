@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.StoreInvitation.Request;
+using ToyShelf.Application.Models.StoreInvitation.Response;
 using ToyShelf.Application.Models.UserStore.Request;
 
 namespace ToyShelf.API.Controllers
@@ -60,5 +62,16 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<bool>.Ok(result, "Invitation rejected");
 		}
 
+		[HttpGet]
+		[Authorize(Roles = "PartnerAdmin,Admin")]
+		public async Task<ActionResult<BaseResponse<IEnumerable<StoreInvitationResponse>>>> GetInvitations(
+			[FromQuery] GetStoreInvitationRequest request,
+			[FromServices] ICurrentUser currentUser)
+		{
+			var result = await _storeInvitationService.GetInvitationsAsync(request, currentUser);
+
+			return BaseResponse<IEnumerable<StoreInvitationResponse>>
+				.Ok(result, "Get invitations successfully");
+		}
 	}
 }

@@ -44,5 +44,10 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.PriceTableApplies.AnyAsync(x => x.PriceTableId == id);
 		}
+
+		public async Task DeleteAllPriceItemsAsync(IEnumerable<PriceItem> items)
+		{
+			_context.PriceItems.RemoveRange(items);
+		}
 	}
 }

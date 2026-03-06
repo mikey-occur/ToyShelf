@@ -18,7 +18,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<bool> ExistsBySkuAsync(string sku)
 		{
-			return await _context.ProductColors.AnyAsync(x => x.Sku == sku);
+			return await _context.ProductColors.AnyAsync(x => x.Sku == sku && x.IsActive);
 		}
 
 		public Task<IEnumerable<ProductColor>> GetProductColorsAsync(bool? isActive)

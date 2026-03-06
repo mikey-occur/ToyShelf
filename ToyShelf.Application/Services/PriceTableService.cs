@@ -125,32 +125,42 @@ namespace ToyShelf.Application.Services
 		public async Task<PriceTableResponse> UpdateAsync(Guid id, PriceTableUpdateRequest request)
 		{
 			var priceTable = await _repo.GetByIdWithDetailsAsync(id)
-			?? throw new KeyNotFoundException("Price Table not found");
+	   ?? throw new KeyNotFoundException("Price Table not found");
 
+			// Cập nhật thông tin cha
 			priceTable.Name = request.Name;
 			priceTable.PartnerTierId = request.PartnerTierId;
 			priceTable.Type = request.Type;
 			priceTable.IsActive = request.IsActive;
 
-			priceTable.PriceItems.Clear();
-
-			if (request.Items != null)
+			
+			// ===== Xử lý PriceItems =====
+			if (request.Items != null && request.Items.Any())
 			{
+				// Xoá toàn bộ item cũ
+				if (priceTable.PriceItems != null && priceTable.PriceItems.Any())
+				{
+					_unitOfWork.Repository<PriceItem>()
+						.DeleteRange(priceTable.PriceItems);
+				}
+
+				// Thêm item mới
 				foreach (var itemReq in request.Items)
 				{
-					priceTable.PriceItems.Add(new PriceItem
+					var newItem = new PriceItem
 					{
 						Id = Guid.NewGuid(),
 						PriceTableId = priceTable.Id,
 						PriceSegmentId = itemReq.PriceSegmentId,
 						CommissionRate = itemReq.CommissionRate
-					});
+					};
+
+					await _unitOfWork.Repository<PriceItem>()
+						.AddAsync(newItem);
 				}
 			}
 
-			_repo.Update(priceTable);
 			await _unitOfWork.SaveChangesAsync();
-
 			return MapToResponse(priceTable);
 		}
 

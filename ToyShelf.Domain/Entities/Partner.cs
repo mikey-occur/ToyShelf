@@ -11,6 +11,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public Guid PartnerTierId { get; set; }
 		public string CompanyName { get; set; } = string.Empty;
+		public string Address { get; set; } = string.Empty;
+		public double? Latitude { get; set; }
+		public double? Longitude { get; set; }
 		public bool IsActive { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
@@ -19,5 +22,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<Store> Stores { get; set; } = new List<Store>();
 		public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
 		public virtual ICollection<PriceTableApply> PriceTableApplies { get; set; } = new List<PriceTableApply>();
+		public virtual ICollection<CommissionHistory> CommissionHistories { get; set; } = new List<CommissionHistory>();
 	}
 }

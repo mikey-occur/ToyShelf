@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.City.Response;
 using ToyShelf.Application.Models.CommissionPolicy.Request;
 using ToyShelf.Application.Models.CommissionPolicy.Response;
+using ToyShelf.Application.Services;
 
 namespace ToyShelf.API.Controllers
 {
@@ -45,13 +47,24 @@ namespace ToyShelf.API.Controllers
 		/// <summary>
 		/// GET BY TIER (Xem Hạng Vàng được những quyền lợi gì)
 		/// </summary>
-		// GET ALL
-		// GET BY TIER (Xem Hạng Vàng được những quyền lợi gì)
 		[HttpGet("tier/{tierId}")]
 		public async Task<BaseResponse<IEnumerable<CommissionPolicyResponse>>> GetByTier(Guid tierId)
 		{
 			var result = await _service.GetByTierIdAsync(tierId);
 			return BaseResponse<IEnumerable<CommissionPolicyResponse>>.Ok(result, "Retrieved by Tier successfully");
+		}
+
+		// ===== GET BY ID =====
+		/// <summary>
+		/// Get by id.
+		/// </summary>
+		[HttpGet("{id}")]
+		public async Task<BaseResponse<CommissionPolicyResponse?>> GetById(Guid id)
+		{
+			var result = await _service.GetByIdAsync(id);
+
+			return BaseResponse<CommissionPolicyResponse?>
+				.Ok(result, "City retrieved successfully");
 		}
 
 		/// <summary>
