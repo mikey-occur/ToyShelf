@@ -22,6 +22,7 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<UserStore> UserStores { get; set; }
 			
 		public DbSet<Store> Stores { get; set; }
+		public DbSet<StoreCreationRequest> StoreCreationRequests { get; set; }
 		public DbSet<StoreInvitation> StoreInvitations { get; set; }
 		public DbSet<Warehouse> Warehouses { get; set; }
 
@@ -181,6 +182,15 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Orders)
 					  .WithOne(a => a.Staff)
 					  .HasForeignKey(a => a.StaffId);
+
+				// StoreCreationRequest
+				entity.HasMany(e => e.CreatedStoreRequests)
+					  .WithOne(a => a.RequestedByUser)
+					  .HasForeignKey(a => a.RequestedByUserId);
+
+				entity.HasMany(e => e.ReviewedStoreRequests)
+					  .WithOne(a => a.ReviewedByUser)
+					  .HasForeignKey(a => a.ReviewedByUserId);
 			});
 
 			// ================== ROLE ==================
@@ -326,6 +336,74 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Store_Partner");
 			});
+
+			// ================== StoreCreationRequest ==================
+			modelBuilder.Entity<StoreCreationRequest>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(200);
+
+				entity.Property(e => e.StoreAddress)
+					  .IsRequired()
+					  .HasMaxLength(300);
+
+				entity.Property(e => e.Latitude)
+					  .HasColumnType("double precision");
+
+				entity.Property(e => e.Longitude)
+					  .HasColumnType("double precision");
+
+				entity.Property(e => e.PhoneNumber)
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20)
+					  .HasDefaultValue(StoreRequestStatus.Pending);
+
+				entity.Property(e => e.RejectReason)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.ReviewedAt);
+
+				// Index
+				entity.HasIndex(e => e.Status);
+				entity.HasIndex(e => e.PartnerId);
+				entity.HasIndex(e => e.CreatedAt);
+
+				// FK Partner
+				entity.HasOne(e => e.Partner)
+					  .WithMany(p => p.StoreCreationRequests)
+					  .HasForeignKey(e => e.PartnerId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreCreationRequest_Partner");
+
+				// FK RequestedByUser
+				entity.HasOne(e => e.RequestedByUser)
+					  .WithMany(u => u.CreatedStoreRequests)
+					  .HasForeignKey(e => e.RequestedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreCreationRequest_RequestedByUser");
+
+				// FK ReviewedByUser
+				entity.HasOne(e => e.ReviewedByUser)
+					  .WithMany(u => u.ReviewedStoreRequests)
+					  .HasForeignKey(e => e.ReviewedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreCreationRequest_ReviewedByUser");
+			});
+
 
 			// ================== Product ==================
 			modelBuilder.Entity<Product>(entity => 
@@ -803,6 +881,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_Partner_PartnerTier");
 
 				entity.HasMany(e => e.CommissionHistories)
+					  .WithOne(i => i.Partner)
+					  .HasForeignKey(i => i.PartnerId);
+
+				entity.HasMany(e => e.StoreCreationRequests)
 					  .WithOne(i => i.Partner)
 					  .HasForeignKey(i => i.PartnerId);
 			});
