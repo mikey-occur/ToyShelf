@@ -9,5 +9,6 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IUserStoreRepository : IGenericRepository<UserStore>
 	{
+		Task<IEnumerable<UserStore>> GetUserStoresWithStoreAsync(Guid userId);
 	}
 }
