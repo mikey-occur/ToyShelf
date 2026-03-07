@@ -7,6 +7,7 @@ using ToyShelf.Application.Auth;
 using ToyShelf.Application.Models.StoreInvitation.Request;
 using ToyShelf.Application.Models.StoreInvitation.Response;
 using ToyShelf.Application.Models.UserStore.Request;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
 {
@@ -20,5 +21,8 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<StoreInvitationResponse>> GetInvitationsAsync(
 			GetStoreInvitationRequest request,
 			ICurrentUser currentUser);
+	    Task<IEnumerable<MyStoreInvitationResponse>> GetMyInvitationsAsync(
+			Guid userId,
+			InvitationStatus? status);
 	}
 }	

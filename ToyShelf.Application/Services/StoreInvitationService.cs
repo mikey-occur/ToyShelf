@@ -213,5 +213,34 @@ namespace ToyShelf.Application.Services
 			});
 		}
 
+		public async Task<IEnumerable<MyStoreInvitationResponse>> GetMyInvitationsAsync(
+			Guid userId,
+			InvitationStatus? status)
+		{
+			var invitations = await _invitationRepo.GetAllWithUserAsync();
+			var users = await _userRepository.GetAllAsync();
+
+			var query = invitations.Where(x => x.UserId == userId);
+
+			if (status.HasValue)
+			{
+				query = query.Where(x => x.Status == status.Value);
+			}
+
+			return query
+				.OrderBy(x => x.Status)
+				.Select(x => new MyStoreInvitationResponse
+				{
+					InvitationId = x.Id,
+					StoreId = x.StoreId,
+					StoreName = x.Store.Name,
+					InvitedByName = users
+						.FirstOrDefault(u => u.Id == x.InvitedByUserId)?.FullName,
+					StoreRole = x.StoreRole,
+					Status = x.Status,
+					CreatedAt = x.CreatedAt,
+					ExpiredAt = x.ExpiredAt
+				});
+		}
 	}
 }
