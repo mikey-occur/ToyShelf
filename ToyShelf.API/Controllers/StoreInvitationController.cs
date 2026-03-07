@@ -91,5 +91,16 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<IEnumerable<MyStoreInvitationResponse>>
 				.Ok(result, "Get my invitations successfully");
 		}
+
+		[HttpGet("my-stores")]
+		[Authorize]
+		public async Task<ActionResult<BaseResponse<IEnumerable<MyStoreResponse>>>> GetMyStores(
+			[FromServices] ICurrentUser currentUser)
+		{
+			var result = await _userStoreService.GetMyStoresAsync(currentUser.UserId);
+
+			return BaseResponse<IEnumerable<MyStoreResponse>>
+				.Ok(result, "Get my stores successfully");
+		}
 	}
 }

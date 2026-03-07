@@ -10,6 +10,6 @@ namespace ToyShelf.Application.IServices
 {
 	public interface IUserStoreService
 	{
-		//Task<IEnumerable<MyStoreResponse>> GetMyStoresAsync(Guid userId);
+		Task<IEnumerable<MyStoreResponse>> GetMyStoresAsync(Guid userId);
 	}
 }
