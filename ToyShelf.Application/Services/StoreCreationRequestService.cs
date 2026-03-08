@@ -21,19 +21,24 @@ namespace ToyShelf.Application.Services
 		private readonly IPartnerRepository _partnerRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
+		private readonly IInventoryLocationRepository _inventoryLocationRepository;
+
+		private const string Prefix = "STORE";
 
 		public StoreCreationRequestService(
 			IStoreCreationRequestRepository requestRepository,
 			IStoreRepository storeRepository,
 			IPartnerRepository partnerRepository,
 			IUnitOfWork unitOfWork,
-			IDateTimeProvider dateTime)
+			IDateTimeProvider dateTime,
+			IInventoryLocationRepository inventoryLocationRepository)
 		{
 			_requestRepository = requestRepository;
 			_storeRepository = storeRepository;
 			_partnerRepository = partnerRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+			_inventoryLocationRepository = inventoryLocationRepository;
 		}
 
 		public async Task<StoreCreationRequestResponse> CreateAsync(
@@ -104,7 +109,12 @@ namespace ToyShelf.Application.Services
 			entity.ReviewedAt = _dateTime.UtcNow;
 
 			if (request.Status == StoreRequestStatus.Rejected)
+			{
+				if (string.IsNullOrWhiteSpace(request.RejectReason))
+					throw new AppException("Reject reason is required", 400);
+
 				entity.RejectReason = request.RejectReason;
+			}
 
 			if (request.Status == StoreRequestStatus.Approved)
 			{
@@ -116,7 +126,13 @@ namespace ToyShelf.Application.Services
 				var maxNumber = await _storeRepository
 					.GetMaxSequenceByPartnerAsync(entity.PartnerId);
 
-				var code = $"STORE-{partner.Code}-{(maxNumber + 1):D2}";
+				var code = $"{Prefix}-{partner.Code}-{(maxNumber + 1):D2}";
+
+				bool exists = await _storeRepository
+					.ExistsByCodeInPartnerAsync(code, entity.PartnerId);
+
+				if (exists)
+					throw new InvalidOperationException("Store code already exists in this partner.");
 
 				var store = new Store
 				{
@@ -133,11 +149,20 @@ namespace ToyShelf.Application.Services
 				};
 
 				await _storeRepository.AddAsync(store);
+
+				var location = new InventoryLocation
+				{
+					Id = Guid.NewGuid(),
+					StoreId = store.Id,
+					Type = "STORE",
+					Name = store.Name,
+					IsActive = true
+				};
+
+				await _inventoryLocationRepository.AddAsync(location);
 			}
 
-
 			_requestRepository.Update(entity);
-
 			await _unitOfWork.SaveChangesAsync();
 		}
 

@@ -61,6 +61,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IPriceTableApplyRepository, PriceTableApplyRepository>();
 			services.AddScoped<IStoreCreationRequestRepository, StoreCreationRequestRepository>();
 			services.AddScoped<IInventoryDispositionRepository, InventoryDispositionRepository>();
+			services.AddScoped<IInventoryLocationRepository, InventoryLocationRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();

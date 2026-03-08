@@ -19,6 +19,8 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly ICityRepository _cityRepository;
+		private readonly IInventoryLocationRepository _inventoryLocationRepository;
+
 
 		private const string Prefix = "WH";
 
@@ -26,12 +28,14 @@ namespace ToyShelf.Application.Services
 			IWarehouseRepository warehouseRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime,
-			ICityRepository cityRepository)
+			ICityRepository cityRepository,
+			IInventoryLocationRepository inventoryLocationRepository)
 		{
 			_warehouseRepository = warehouseRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_cityRepository = cityRepository;
+			_inventoryLocationRepository = inventoryLocationRepository;
 		}
 		// ================= CREATE =================
 		public async Task<WarehouseResponse> CreateAsync(CreateWarehouseRequest request)
@@ -77,6 +81,19 @@ namespace ToyShelf.Application.Services
 			};
 
 			await _warehouseRepository.AddAsync(warehouse);
+
+			// Tạo InventoryLocation
+			var location = new InventoryLocation
+			{
+				Id = Guid.NewGuid(),
+				WarehouseId = warehouse.Id,
+				Type = "WAREHOUSE",
+				Name = warehouse.Name,
+				IsActive = true
+			};
+
+			await _inventoryLocationRepository.AddAsync(location);
+
 			await _unitOfWork.SaveChangesAsync();
 
 			return MapToResponse(warehouse);
@@ -112,6 +129,17 @@ namespace ToyShelf.Application.Services
 			warehouse.Longitude = request.Longitude;
 			warehouse.UpdatedAt = _dateTime.UtcNow;
 
+			// Đồng bộ InventoryLocation
+			var location = await _inventoryLocationRepository
+				.GetByWarehouseIdAsync(warehouse.Id);
+
+
+			if (location != null)
+			{
+				location.Name = warehouse.Name;
+				_inventoryLocationRepository.Update(location);
+			}
+
 			_warehouseRepository.Update(warehouse);
 			await _unitOfWork.SaveChangesAsync();
 
@@ -128,6 +156,15 @@ namespace ToyShelf.Application.Services
 			warehouse.IsActive = false;
 			warehouse.UpdatedAt = _dateTime.UtcNow;
 
+			var location = await _inventoryLocationRepository
+					.GetByWarehouseIdAsync(warehouse.Id);
+
+			if (location != null)
+			{
+				location.IsActive = false;
+				_inventoryLocationRepository.Update(location);
+			}
+
 			_warehouseRepository.Update(warehouse);
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -141,6 +178,15 @@ namespace ToyShelf.Application.Services
 			warehouse.IsActive = true;
 			warehouse.UpdatedAt = _dateTime.UtcNow;
 
+			var location = await _inventoryLocationRepository
+					.GetByWarehouseIdAsync(warehouse.Id);
+
+			if (location != null)
+			{
+				location.IsActive = true;
+				_inventoryLocationRepository.Update(location);
+			}
+
 			_warehouseRepository.Update(warehouse);
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -151,6 +197,14 @@ namespace ToyShelf.Application.Services
 			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(id);
 			if (warehouse == null)
 				throw new AppException("Warehouse not found", 404);
+
+			var location = await _inventoryLocationRepository
+					.GetByWarehouseIdAsync(warehouse.Id);
+
+			if (location != null)
+			{
+				_inventoryLocationRepository.Remove(location);
+			}
 
 			_warehouseRepository.Remove(warehouse);
 			await _unitOfWork.SaveChangesAsync();
