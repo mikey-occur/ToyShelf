@@ -78,6 +78,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IPriceItemRepository, PriceItemRepository>();
 			services.AddScoped<ICommissionHistoryRepsitory, CommissionHistoryRepsitory>();
 			services.AddScoped<IInventoryLocationRepository, InventoryLocationRepository>();
+			services.AddScoped<IInventoryRepository, InventoryRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -106,6 +107,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IOrderService, OrderService>();
 			services.AddScoped<IStoreCreationRequestService, StoreCreationRequestService>();
 			services.AddScoped<IInventoryDispositionService, InventoryDispositionService>();
+			services.AddScoped<IInventoryService, InventoryService>();
 		}
     }
 }

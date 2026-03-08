@@ -22,8 +22,9 @@ namespace ToyShelf.Application.Services
 		private readonly IDateTimeProvider _dateTime;
 		private readonly ICommissionService _commissionService;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepository;
+		private readonly IInventoryService _inventoryService;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory)
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService)
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -32,6 +33,7 @@ namespace ToyShelf.Application.Services
 			_dateTime = dateTime;
 			_commissionService = commissionService;
 			_commissionHistoryRepository = commissionHistoryRepsitory;
+			_inventoryService = inventoryService;
 		}
 		public async Task<string> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
@@ -141,7 +143,7 @@ namespace ToyShelf.Application.Services
 
 			// 4. Cập nhật trạng thái cuối cùng cho đơn hàng
 			order.Status = "PAID";
-
+			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
 			return order.Id;
