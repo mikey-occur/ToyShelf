@@ -20,6 +20,8 @@ namespace ToyShelf.Application.Services
 		private readonly IPartnerRepository _partnerRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
+		private readonly IInventoryLocationRepository _inventoryLocationRepository;
+
 
 		private const string Prefix = "STORE";
 
@@ -27,12 +29,14 @@ namespace ToyShelf.Application.Services
 			IStoreRepository storeRepository,
 			IPartnerRepository partnerRepository,
 			IUnitOfWork unitOfWork,
-			IDateTimeProvider dateTime)
+			IDateTimeProvider dateTime,
+			IInventoryLocationRepository inventoryLocationRepository)
 		{
 			_storeRepository = storeRepository;
 			_partnerRepository = partnerRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+			_inventoryLocationRepository = inventoryLocationRepository;
 		}
 
 		// ================= CREATE =================
@@ -77,6 +81,17 @@ namespace ToyShelf.Application.Services
 			};
 
 			await _storeRepository.AddAsync(store);
+
+			var location = new InventoryLocation
+			{
+				Id = Guid.NewGuid(),
+				StoreId = store.Id,
+				Type = "STORE",
+				Name = store.Name,
+				IsActive = true
+			};
+
+			await _inventoryLocationRepository.AddAsync(location);
 			await _unitOfWork.SaveChangesAsync();
 
 			return MapToResponse(store);
@@ -113,6 +128,16 @@ namespace ToyShelf.Application.Services
 			store.PhoneNumber = request.PhoneNumber;
 			store.UpdatedAt = _dateTime.UtcNow;
 
+			var location = await _inventoryLocationRepository
+				.GetByStoreIdAsync(store.Id);
+
+			if (location != null)
+			{
+				location.Name = store.Name;
+				_inventoryLocationRepository.Update(location);
+			}
+
+
 			_storeRepository.Update(store);
 			await _unitOfWork.SaveChangesAsync();
 
@@ -129,6 +154,16 @@ namespace ToyShelf.Application.Services
 			store.IsActive = false;
 			store.UpdatedAt = _dateTime.UtcNow;
 
+			var location = await _inventoryLocationRepository
+				.GetByStoreIdAsync(store.Id);
+
+			if (location != null)
+			{
+				location.IsActive = false;
+				_inventoryLocationRepository.Update(location);
+			}
+
+
 			_storeRepository.Update(store);
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -142,6 +177,16 @@ namespace ToyShelf.Application.Services
 			store.IsActive = true;
 			store.UpdatedAt = _dateTime.UtcNow;
 
+			var location = await _inventoryLocationRepository
+				.GetByStoreIdAsync(store.Id);
+
+			if (location != null)
+			{
+				location.IsActive = true;
+				_inventoryLocationRepository.Update(location);
+			}
+
+
 			_storeRepository.Update(store);
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -152,6 +197,14 @@ namespace ToyShelf.Application.Services
 			var store = await _storeRepository.GetByIdAsync(id);
 			if (store == null)
 				throw new AppException("Store not found", 404);
+
+			var location = await _inventoryLocationRepository
+				.GetByStoreIdAsync(store.Id);
+
+			if (location != null)
+			{
+				_inventoryLocationRepository.Remove(location);
+			}
 
 			_storeRepository.Remove(store);
 			await _unitOfWork.SaveChangesAsync();
