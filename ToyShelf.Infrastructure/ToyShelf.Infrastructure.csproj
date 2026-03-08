@@ -22,5 +22,8 @@
     <ProjectReference Include="..\ToyShelf.Application\ToyShelf.Application.csproj" />
     <ProjectReference Include="..\ToyShelf.Domain\ToyShelf.Domain.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Migrations\" />
+  </ItemGroup>
 
 </Project>

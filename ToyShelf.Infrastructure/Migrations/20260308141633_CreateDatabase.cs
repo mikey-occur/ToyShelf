@@ -6,11 +6,26 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ToyShelf.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddDb : Migration
+    public partial class CreateDatabase : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.CreateTable(
+                name: "Cities",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: false),
+                    Name = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cities", x => x.Id);
+                });
+
             migrationBuilder.CreateTable(
                 name: "Colors",
                 columns: table => new
@@ -111,9 +126,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CityId = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Address = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -121,6 +139,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Warehouses", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Warehouse_City",
+                        column: x => x.CityId,
+                        principalTable: "Cities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -129,7 +153,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PartnerTierId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     CompanyName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Address = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
@@ -207,6 +235,10 @@ namespace ToyShelf.Infrastructure.Migrations
                     Material = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: true),
                     OriginCountry = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
                     AgeRange = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    Width = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
+                    Length = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
+                    Height = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
+                    Weight = table.Column<decimal>(type: "numeric(10,2)", nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     IsConsignment = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -232,6 +264,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     Code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     StoreAddress = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
                     PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -336,7 +370,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     PriceSegmentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Sku = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    QrCode = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    QrCode = table.Column<string>(type: "text", nullable: true),
                     Model3DUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
@@ -454,6 +488,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     TotalAmount = table.Column<decimal>(type: "numeric(18,2)", precision: 18, scale: 2, nullable: false),
                     PaymentMethod = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    OrderCode = table.Column<long>(type: "bigint", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
@@ -469,6 +504,47 @@ namespace ToyShelf.Infrastructure.Migrations
                         name: "FK_Order_Store",
                         column: x => x.StoreId,
                         principalTable: "Stores",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "StoreCreationRequests",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    PartnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    StoreAddress = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    Latitude = table.Column<double>(type: "double precision", nullable: true),
+                    Longitude = table.Column<double>(type: "double precision", nullable: true),
+                    PhoneNumber = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false, defaultValue: "Pending"),
+                    RejectReason = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_StoreCreationRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StoreCreationRequest_Partner",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_StoreCreationRequest_RequestedByUser",
+                        column: x => x.RequestedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_StoreCreationRequest_ReviewedByUser",
+                        column: x => x.ReviewedByUserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -848,6 +924,35 @@ namespace ToyShelf.Infrastructure.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "CommissionHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    OrderItemId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PartnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AppliedRate = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
+                    CommissionAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    IsPaidOut = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CommissionHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CommissionHistory_OrderItem",
+                        column: x => x.OrderItemId,
+                        principalTable: "OrderItems",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_CommissionHistory_Partner",
+                        column: x => x.PartnerId,
+                        principalTable: "Partners",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_AccountRoles_RoleId",
                 table: "AccountRoles",
@@ -857,6 +962,18 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_Accounts_UserId_Provider",
                 table: "Accounts",
                 columns: new[] { "UserId", "Provider" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_Code",
+                table: "Cities",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_Name",
+                table: "Cities",
+                column: "Name",
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -876,6 +993,16 @@ namespace ToyShelf.Infrastructure.Migrations
                 table: "Colors",
                 column: "SkuCode",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommissionHistories_OrderItemId",
+                table: "CommissionHistories",
+                column: "OrderItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CommissionHistories_PartnerId",
+                table: "CommissionHistories",
+                column: "PartnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_CommissionPolicies_PartnerTierId_PriceSegmentId",
@@ -982,6 +1109,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "ProductColorId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Orders_OrderCode",
+                table: "Orders",
+                column: "OrderCode",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Orders_StaffId",
                 table: "Orders",
                 column: "StaffId");
@@ -990,6 +1123,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_Orders_StoreId",
                 table: "Orders",
                 column: "StoreId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Partners_Code",
+                table: "Partners",
+                column: "Code",
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Partners_PartnerTierId",
@@ -1151,6 +1290,31 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "ToLocationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_CreatedAt",
+                table: "StoreCreationRequests",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_PartnerId",
+                table: "StoreCreationRequests",
+                column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_RequestedByUserId",
+                table: "StoreCreationRequests",
+                column: "RequestedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_ReviewedByUserId",
+                table: "StoreCreationRequests",
+                column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_Status",
+                table: "StoreCreationRequests",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_StoreInvitation_Store_User_Status",
                 table: "StoreInvitations",
                 columns: new[] { "StoreId", "UserId", "Status" });
@@ -1188,6 +1352,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "StoreId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Warehouses_CityId",
+                table: "Warehouses",
+                column: "CityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Warehouses_Code",
                 table: "Warehouses",
                 column: "Code",
@@ -1201,6 +1370,9 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "AccountRoles");
 
             migrationBuilder.DropTable(
+                name: "CommissionHistories");
+
+            migrationBuilder.DropTable(
                 name: "CommissionPolicies");
 
             migrationBuilder.DropTable(
@@ -1211,9 +1383,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "InventoryTransactions");
-
-            migrationBuilder.DropTable(
-                name: "OrderItems");
 
             migrationBuilder.DropTable(
                 name: "PasswordResetOtps");
@@ -1234,6 +1403,9 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "ShipmentMedias");
 
             migrationBuilder.DropTable(
+                name: "StoreCreationRequests");
+
+            migrationBuilder.DropTable(
                 name: "StoreInvitations");
 
             migrationBuilder.DropTable(
@@ -1243,13 +1415,13 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "Roles");
 
             migrationBuilder.DropTable(
+                name: "OrderItems");
+
+            migrationBuilder.DropTable(
                 name: "DamageReports");
 
             migrationBuilder.DropTable(
                 name: "InventoryDispositions");
-
-            migrationBuilder.DropTable(
-                name: "Orders");
 
             migrationBuilder.DropTable(
                 name: "Accounts");
@@ -1261,13 +1433,16 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "Shipments");
 
             migrationBuilder.DropTable(
+                name: "Orders");
+
+            migrationBuilder.DropTable(
                 name: "ProductColors");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "InventoryLocations");
 
             migrationBuilder.DropTable(
-                name: "InventoryLocations");
+                name: "Users");
 
             migrationBuilder.DropTable(
                 name: "Colors");
@@ -1289,6 +1464,9 @@ namespace ToyShelf.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "Partners");
+
+            migrationBuilder.DropTable(
+                name: "Cities");
 
             migrationBuilder.DropTable(
                 name: "PartnerTiers");
