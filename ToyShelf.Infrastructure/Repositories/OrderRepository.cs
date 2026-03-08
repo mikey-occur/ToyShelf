@@ -16,14 +16,14 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<Order?> GetOrderWithItemsAndStoreAsync(Guid orderId)
+		public async Task<Order?> GetOrderWithItemsAndStoreAsync(long orderCode)
 		{
-				return await _context.Orders
-			.Include(o => o.Store)              
-				.ThenInclude(s => s.Partner)   
-					.ThenInclude(p => p.PartnerTier) 
-			.Include(o => o.OrderItems)         
-			.FirstOrDefaultAsync(o => o.Id == orderId);
+			return await _context.Orders
+				.Include(o => o.Store)
+					.ThenInclude(s => s.Partner)
+						.ThenInclude(p => p.PartnerTier)
+				.Include(o => o.OrderItems)
+				.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
 		}
 	}
 }

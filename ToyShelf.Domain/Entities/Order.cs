@@ -15,6 +15,7 @@ namespace ToyShelf.Domain.Entities
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = null!;   // CASH, QR
 		public string Status { get; set; } = null!;          // CREATED, PAID, CANCELLED
+		public long OrderCode { get; set; }
 		public DateTime CreatedAt { get; set; }
 
 		public virtual Store Store { get; set; } = null!;

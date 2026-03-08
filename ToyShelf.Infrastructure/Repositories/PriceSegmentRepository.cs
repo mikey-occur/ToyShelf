@@ -20,15 +20,6 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.PriceSegments.AnyAsync(x => x.Code == code);
 		}
-
-		public async Task<PriceSegment?> GetByPriceAsync(decimal price)
-		{
-			return await _context.PriceSegments
-				.Where(s => price >= s.MinPrice && (s.MaxPrice == null || price <= s.MaxPrice))
-				.OrderByDescending(s => s.MinPrice) 
-				.FirstOrDefaultAsync();
-		}
-
 		public async Task<bool> IsSegmentInUseAsync(Guid segmentId)
 		{
 			return await _context.ProductColors.AnyAsync(p => p.PriceSegmentId == segmentId);

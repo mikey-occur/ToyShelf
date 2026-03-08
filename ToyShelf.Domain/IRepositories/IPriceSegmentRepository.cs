@@ -11,6 +11,5 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<bool> ExistsByCodeAsync(string code);
 		Task<bool> IsSegmentInUseAsync(Guid segmentId);
-		Task<PriceSegment?> GetByPriceAsync(decimal price);
 	}
 }

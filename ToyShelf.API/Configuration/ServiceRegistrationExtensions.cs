@@ -1,20 +1,23 @@
-﻿using ToyShelf.Application.Auth;
+﻿using Microsoft.Extensions.Options;
+using PayOS;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Notifications;
 using ToyShelf.Application.QRcode;
 using ToyShelf.Application.Security;
 using ToyShelf.Application.Services;
 using ToyShelf.Application.Translation;
+using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
+using ToyShelf.Infrastructure.Common.Payment;
 using ToyShelf.Infrastructure.Common.QrCode;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Common.Translation;
 using ToyShelf.Infrastructure.Email;
 using ToyShelf.Infrastructure.Repositories;
 using ToyShelf.Infrastructure.Security;
-
 namespace ToyShelf.API.Configuration
 {
 	public static class ServiceRegistrationExtensions
@@ -25,6 +28,16 @@ namespace ToyShelf.API.Configuration
 			services.Configure<EmailOptions>(
 				configuration.GetSection("Email"));
 			services.AddScoped<IEmailService, SmtpEmailService>();
+
+			// ===== PayOS Client =====
+			services.Configure<ToyShelf.Application.Models.Payment.PayOSOptions>(configuration.GetSection("PayOS"));
+			services.AddSingleton<PayOSClient>(sp =>
+			{
+				var options = sp.GetRequiredService<IOptions<ToyShelf.Application.Models.Payment.PayOSOptions>>().Value;
+				return new PayOSClient(options.ClientId, options.ApiKey, options.ChecksumKey);
+			});
+
+
 
 			// ===== Unit of Work & Generic =====
 			services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -59,6 +72,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<ICommissionPolicyRepository, CommissionPolicyRepository>();
 			services.AddScoped<ICityRepository, CityRepository>();
 			services.AddScoped<IPriceTableApplyRepository, PriceTableApplyRepository>();
+			services.AddScoped<IOrderRepository, OrderRepository>();
+			services.AddScoped<IPriceItemRepository, PriceItemRepository>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -82,6 +97,9 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IQrCodeService, QrCodeService>();
 			services.AddScoped<IPriceTableApplyService, PriceTableApplyService>();
 			services.AddScoped<ICityService, CityService>();
+			services.AddScoped<ICommissionService, CommissionService>();
+			services.AddScoped<IPaymentService, PayOSPaymentService>();
+			services.AddScoped<IOrderService, OrderService>();
 		}
     }
 }

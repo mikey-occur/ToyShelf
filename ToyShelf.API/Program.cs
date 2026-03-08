@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using ToyShelf.API.Configuration;
@@ -7,7 +8,6 @@ using ToyShelf.API.Hubs;
 using ToyShelf.API.Middleware;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Context;
-
 
 var builder = WebApplication.CreateBuilder(args);
 

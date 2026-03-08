@@ -188,6 +188,7 @@ namespace ToyShelf.Application.Services
 			product.Length = request.Length ?? product.Length;
 			product.Height = request.Height ?? product.Height;
 			product.Width = request.Width ?? product.Width;
+			
 			if (request.IsConsignment.HasValue)
 			{
 				product.IsConsignment = request.IsConsignment.Value;
