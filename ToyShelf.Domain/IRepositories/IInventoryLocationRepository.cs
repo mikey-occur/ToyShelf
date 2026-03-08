@@ -10,5 +10,6 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IInventoryLocationRepository : IGenericRepository<InventoryLocation>
 	{
 		Task<InventoryLocation?> GetByWarehouseIdAsync(Guid warehouseId);
+		Task<InventoryLocation?> GetByStoreIdAsync(Guid storeId);
 	}
 }
