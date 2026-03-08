@@ -89,12 +89,12 @@ namespace ToyShelf.Application.Services
 
 		}
 
-		public async Task HandlePaymentSuccessAsync(long orderCode)
+		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
 
 			// kiểm tra đơn hàng tồn tại và chưa được xử lý thanh toán thành công trước đó
-			if (order == null || order.Status == "PAID") return;
+			if (order == null || order.Status == "PAID") return null;
 
 			// Xác định Partner nhận hoa hồng thông qua Store 
 			var partnerId = order.Store?.Partner?.Id;
@@ -129,6 +129,7 @@ namespace ToyShelf.Application.Services
 
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
+			return order.Id;
 		}
 	}
 }
