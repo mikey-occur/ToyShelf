@@ -4,9 +4,12 @@ using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Store.Response;
 using ToyShelf.Application.Models.StoreInvitation.Request;
 using ToyShelf.Application.Models.StoreInvitation.Response;
 using ToyShelf.Application.Models.UserStore.Request;
+using ToyShelf.Application.Services;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -15,10 +18,12 @@ namespace ToyShelf.API.Controllers
 	public class StoreInvitationController : ControllerBase
 	{
 		private readonly IStoreInvitationService _storeInvitationService;
+		private readonly IUserStoreService _userStoreService;
 
-		public StoreInvitationController(IStoreInvitationService storeInvitationService)
+		public StoreInvitationController(IStoreInvitationService storeInvitationService, IUserStoreService userStoreService)
 		{
 			_storeInvitationService = storeInvitationService;
+			_userStoreService = userStoreService;
 		}
 
 		[HttpPost("invite")]
@@ -72,6 +77,30 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<IEnumerable<StoreInvitationResponse>>
 				.Ok(result, "Get invitations successfully");
+		}
+
+		[HttpGet("my-invitations")]
+		[Authorize]
+		public async Task<ActionResult<BaseResponse<IEnumerable<MyStoreInvitationResponse>>>> GetMyInvitations(
+			[FromServices] ICurrentUser currentUser,
+			[FromQuery] InvitationStatus? status)
+		{
+			var result = await _storeInvitationService
+				.GetMyInvitationsAsync(currentUser.UserId, status);
+
+			return BaseResponse<IEnumerable<MyStoreInvitationResponse>>
+				.Ok(result, "Get my invitations successfully");
+		}
+
+		[HttpGet("my-stores")]
+		[Authorize]
+		public async Task<ActionResult<BaseResponse<IEnumerable<MyStoreResponse>>>> GetMyStores(
+			[FromServices] ICurrentUser currentUser)
+		{
+			var result = await _userStoreService.GetMyStoresAsync(currentUser.UserId);
+
+			return BaseResponse<IEnumerable<MyStoreResponse>>
+				.Ok(result, "Get my stores successfully");
 		}
 	}
 }

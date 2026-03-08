@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ToyShelf.Application.Models.Store.Request
+namespace ToyShelf.Application.Models.StoreCreationRequest.Request
 {
-	public class UpdateStoreRequest
+	public class CreateStoreCreationRequest
 	{
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;

@@ -7,8 +7,7 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IUserStoreRepository : IGenericRepository<UserStore>
+	public interface IInventoryDispositionRepository : IGenericRepository<InventoryDisposition>
 	{
-		Task<IEnumerable<UserStore>> GetUserStoresWithStoreAsync(Guid userId);
 	}
 }
