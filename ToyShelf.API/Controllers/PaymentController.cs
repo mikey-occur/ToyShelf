@@ -66,5 +66,27 @@ namespace ToyShelf.API.Controllers
 				return BadRequest(new { message = ex.Message });
 			}
 		}
+
+		[HttpPost("webhookt")]
+		public async Task<IActionResult> ReceivetestWebhook([FromBody] Webhook body)
+		{
+			try
+			{
+				// Khi test Postman: Comment dòng Verify của SDK lại
+				// var verifiedData = await _payOSClient.Webhooks.VerifyAsync(body);
+
+				// Giả lập dữ liệu đã xác thực (Dùng đúng mã OrderCode trong DB của bạn)
+				long testOrderCode = body.Data.OrderCode;
+
+				// Gọi logic tính hoa hồng
+				Guid? orderId = await _orderService.HandlePaymentSuccessAsync(testOrderCode);
+
+				return Ok(new { message = "Gia lap Webhook thanh cong", orderId });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { error = ex.Message });
+			}
+		}
 	}
 }

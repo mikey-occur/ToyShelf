@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -34,14 +35,27 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (IGenericRepository<T>)_repositories[type]!;
 		}
 
-		public async Task<int> SaveChangesAsync()
-		{
-			return await _context.SaveChangesAsync();
-		}
+		//public async Task<int> SaveChangesAsync()
+		//{
+		//	return await _context.SaveChangesAsync();
+		//}
 
 		public void Dispose()
 		{
 			_context.Dispose();
+		}
+
+		public async Task<int> SaveChangesAsync()
+		{
+			try
+			{
+				return await _context.SaveChangesAsync();
+			}
+			catch (DbUpdateConcurrencyException ex)
+			{
+				// Log lỗi tại đây hoặc quăng ra một Custom Exception của riêng bạn
+				throw new Exception("Dữ liệu đã bị thay đổi bởi người khác, vui lòng thử lại.");
+			}
 		}
 	}
 }

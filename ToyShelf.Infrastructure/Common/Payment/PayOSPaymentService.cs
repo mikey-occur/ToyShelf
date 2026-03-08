@@ -42,7 +42,7 @@ namespace ToyShelf.Infrastructure.Common.Payment
 			{
 				OrderCode = order.OrderCode,
 				Amount = (int)order.TotalAmount,
-				Description = $"Thanh toan don {order.OrderCode}",
+				Description = $"{order.OrderCode}",
 				Items = items,
 				ReturnUrl = returnUrl,
 				CancelUrl = cancelUrl

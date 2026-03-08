@@ -22,7 +22,6 @@ namespace ToyShelf.Application.Models.Order
 	public class OrderItemRequest
 	{
 		public Guid ProductColorId { get; set; }
-		public decimal Price { get; set; }
 		public int Quantity { get; set; }
 	}
 }

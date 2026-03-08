@@ -21,7 +21,9 @@ namespace ToyShelf.Application.Services
 		private readonly IServices.IPaymentService _paymentService;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly ICommissionService _commissionService;
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService)
+		private readonly ICommissionHistoryRepsitory _commissionHistoryRepository;
+
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory)
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -29,17 +31,19 @@ namespace ToyShelf.Application.Services
 			_paymentService = paymentService;
 			_dateTime = dateTime;
 			_commissionService = commissionService;
+			_commissionHistoryRepository = commissionHistoryRepsitory;
 		}
 		public async Task<string> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
-			long orderCode = long.Parse(DateTimeOffset.Now.ToString("yyMMddHHmmss"));
+			var orderCode = long.Parse(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
 			var order = new Order
 			{
 				Id = Guid.NewGuid(),
 				StoreId = request.StoreId,
 				StaffId = request.StaffId,
 				OrderCode = orderCode,
-				TotalAmount = request.Items.Sum(x => x.Price * x.Quantity),
+				TotalAmount = 0,
+				PaymentMethod = "QR",
 				Status =  "CREATED", // Trạng thái chờ thanh toán
 				CreatedAt = _dateTime.UtcNow,
 
@@ -79,9 +83,13 @@ namespace ToyShelf.Application.Services
 				string paymentUrl = await _paymentService.CreatePaymentLink(order);
 				return paymentUrl;
 			}
-			catch (Exception)
+			catch (Exception ex )
 			{
 				// Nếu tạo link thất bại, có thể cập nhật trạng thái đơn hàng thành FAILED
+				Console.WriteLine("---------- PAYOS API ERROR ----------");
+				Console.WriteLine(ex.Message);
+				if (ex.InnerException != null) Console.WriteLine(ex.InnerException.Message);
+				Console.WriteLine("-------------------------------------");
 				order.Status = "CANCELED";
 				await _unitOfWork.SaveChangesAsync();
 				throw new Exception("Không thể tạo link thanh toán, vui lòng thử lại.");
@@ -94,7 +102,14 @@ namespace ToyShelf.Application.Services
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
 
 			// kiểm tra đơn hàng tồn tại và chưa được xử lý thanh toán thành công trước đó
-			if (order == null || order.Status == "PAID") return null;
+			if (order == null)
+				throw new Exception("Order not found");
+
+			if (order.Status == "PAID")
+			{
+				// webhook duplicate -> ignore
+				return order.Id;
+			}
 
 			// Xác định Partner nhận hoa hồng thông qua Store 
 			var partnerId = order.Store?.Partner?.Id;
@@ -116,12 +131,12 @@ namespace ToyShelf.Application.Services
 					OrderItemId = item.Id,
 					PartnerId = partnerId.Value,
 					AppliedRate = result.Rate, 
-					CommissionAmount = (item.Price * item.Quantity) * (result.Rate / 100),
+					CommissionAmount = (item.Price * item.Quantity) * result.Rate,
 					CreatedAt = _dateTime.UtcNow,
 					IsPaidOut = false
 				};
 
-				item.CommissionHistories.Add(commissionHistory);
+				await _commissionHistoryRepository.AddAsync(commissionHistory);
 			}
 
 			// 4. Cập nhật trạng thái cuối cùng cho đơn hàng
