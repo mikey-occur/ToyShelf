@@ -36,5 +36,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(c => c.Color)
 				.FirstOrDefaultAsync(c => c.Sku == sku);
 		}
+
+		public async Task<ProductColor?> GetByIdWithSegmentAsync(Guid productColorId)
+		{
+			return await _context.ProductColors
+				.Include(pc => pc.PriceSegment)
+				.FirstOrDefaultAsync(pc => pc.Id == productColorId);
+		}
 	}
 }

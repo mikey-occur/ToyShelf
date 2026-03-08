@@ -7,8 +7,7 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IOrderRepository : IGenericRepository<Order>
+	public interface ICommissionHistoryRepsitory : IGenericRepository<CommissionHistory>
 	{
-		Task<Order?> GetOrderWithItemsAndStoreAsync(long orderCode);
 	}
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Common.Commission
 {
-	public interface ICommissionDomainService
+	public interface ICommissionService
 	{
 		Task<CommissionCalculationResult> CalculateCommissionAsync(Guid partnerId, Guid productColorId, decimal soldPrice);
 	}

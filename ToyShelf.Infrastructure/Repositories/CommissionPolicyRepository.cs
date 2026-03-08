@@ -40,5 +40,13 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Where(cp => cp.PartnerTierId == tierId)
 				.ToListAsync();
 		}
+
+		public async Task<CommissionPolicy?> GetPolicyAsync(Guid tierId, Guid segmentId)
+		{
+			return await _context.CommissionPolicies
+				.Where(p => p.PartnerTierId == tierId && p.PriceSegmentId == segmentId)
+				.OrderByDescending(p => p.EffectiveDate) 
+				.FirstOrDefaultAsync();
+		}
 	}
 }

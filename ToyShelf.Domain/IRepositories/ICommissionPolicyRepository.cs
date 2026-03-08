@@ -12,6 +12,7 @@ namespace ToyShelf.Domain.IRepositories
 		Task<CommissionPolicy?> GetByTierAndSegmentAsync(Guid tierId, Guid segmentId);
 		Task<IEnumerable<CommissionPolicy>> GetAllWithDetailsAsync();
 		Task<IEnumerable<CommissionPolicy>> GetByTierIdAsync(Guid tierId);
+		Task<CommissionPolicy?> GetPolicyAsync(Guid tierId, Guid segmentId);
 	}
 }
 

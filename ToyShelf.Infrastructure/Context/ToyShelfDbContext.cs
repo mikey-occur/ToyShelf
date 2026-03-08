@@ -1521,6 +1521,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(20);
 
+				entity.Property(e => e.OrderCode)
+		              .IsRequired();
+
+				entity.HasIndex(e => e.OrderCode)
+		              .IsUnique();
+
 				entity.Property(e => e.Status)
 					  .IsRequired()
 					  .HasMaxLength(20);
