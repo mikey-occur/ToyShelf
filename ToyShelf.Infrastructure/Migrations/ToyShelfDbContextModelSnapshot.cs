@@ -1030,7 +1030,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("FromLocationId")
+                    b.Property<Guid?>("FromLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("RequestedByUserId")
@@ -1844,7 +1844,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .WithMany("FromShipments")
                         .HasForeignKey("FromLocationId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("FK_Shipment_FromLocation");
 
                     b.HasOne("ToyShelf.Domain.Entities.User", "RequestedByUser")

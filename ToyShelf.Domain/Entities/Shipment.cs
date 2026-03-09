@@ -11,7 +11,7 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public string Code { get; set; } = null!;
 
-		public Guid FromLocationId { get; set; }
+		public Guid? FromLocationId { get; set; }
 		public Guid ToLocationId { get; set; }
 
 		public Guid RequestedByUserId { get; set; }
@@ -19,7 +19,7 @@ namespace ToyShelf.Domain.Entities
 
 		public string Status { get; set; } = null!;
 
-		public virtual InventoryLocation FromLocation { get; set; } = null!;
+		public virtual InventoryLocation? FromLocation { get; set; }
 		public virtual InventoryLocation ToLocation { get; set; } = null!;
 
 		public virtual User RequestedByUser { get; set; } = null!;
