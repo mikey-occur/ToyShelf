@@ -738,7 +738,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    FromLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FromLocationId = table.Column<Guid>(type: "uuid", nullable: true),
                     ToLocationId = table.Column<Guid>(type: "uuid", nullable: false),
                     RequestedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     ApprovedByUserId = table.Column<Guid>(type: "uuid", nullable: true),

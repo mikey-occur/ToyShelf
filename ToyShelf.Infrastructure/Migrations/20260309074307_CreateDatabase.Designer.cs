@@ -12,7 +12,7 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    [Migration("20260308141633_CreateDatabase")]
+    [Migration("20260309074307_CreateDatabase")]
     partial class CreateDatabase
     {
         /// <inheritdoc />
@@ -1033,7 +1033,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid>("FromLocationId")
+                    b.Property<Guid?>("FromLocationId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("RequestedByUserId")
@@ -1847,7 +1847,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .WithMany("FromShipments")
                         .HasForeignKey("FromLocationId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("FK_Shipment_FromLocation");
 
                     b.HasOne("ToyShelf.Domain.Entities.User", "RequestedByUser")
