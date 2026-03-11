@@ -6,6 +6,15 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
+	public enum ShipmentStatus
+	{
+		Draft,
+		Approved,
+		Shipping,
+		Received,
+		Cancelled
+	}
+
 	public class Shipment
 	{
 		public Guid Id { get; set; }
@@ -16,8 +25,7 @@ namespace ToyShelf.Domain.Entities
 
 		public Guid RequestedByUserId { get; set; }
 		public Guid? ApprovedByUserId { get; set; }
-
-		public string Status { get; set; } = null!;
+		public ShipmentStatus Status { get; set; }
 
 		public virtual InventoryLocation? FromLocation { get; set; }
 		public virtual InventoryLocation ToLocation { get; set; } = null!;
