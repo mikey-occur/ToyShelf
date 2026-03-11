@@ -20,4 +20,34 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 				i.InventoryLocation.StoreId == storeId &&
 				i.Disposition.Code == dispositionCode);
 	}
+	public async Task<Inventory?> GetAsync(
+			Guid locationId,
+			Guid productColorId,
+			Guid dispositionId)
+	{
+		return await _context.Inventories
+			.FirstOrDefaultAsync(x =>
+				x.InventoryLocationId == locationId &&
+				x.ProductColorId == productColorId &&
+				x.DispositionId == dispositionId);
+	}
+	public async Task<IEnumerable<Inventory>> GetAllInventoryAsync()
+	{
+		return await _context.Inventories
+			.Include(x => x.ProductColor)
+			.Include(x => x.InventoryLocation)
+			.Include(x => x.Disposition)
+			.ToListAsync();
+	}
+
+	public async Task<IEnumerable<Inventory>> GetByLocationAsync(Guid locationId)
+	{
+		return await _context.Inventories
+			.Where(x => x.InventoryLocationId == locationId)
+			.Include(x => x.ProductColor)
+			.Include(x => x.InventoryLocation)
+			.Include(x => x.Disposition)
+			.ToListAsync();
+	}
+
 }

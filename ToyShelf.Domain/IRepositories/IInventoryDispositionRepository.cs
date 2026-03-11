@@ -9,5 +9,6 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IInventoryDispositionRepository : IGenericRepository<InventoryDisposition>
 	{
+		Task<InventoryDisposition?> GetByCodeAsync(string code);
 	}
 }
