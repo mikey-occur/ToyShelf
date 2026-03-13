@@ -78,6 +78,7 @@ namespace ToyShelf.Infrastructure.Repositories
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+				.Include(p => p.ProductColors)
                 .ToListAsync();
 
             return (items, totalCount);

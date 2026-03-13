@@ -4,6 +4,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Shelf.Request;
 using ToyShelf.Application.Models.Shelf.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -85,6 +86,18 @@ namespace ToyShelf.API.Controllers
         {
             await _shelfService.DeleteAsync(id);
             return ActionResponse.Ok("Shelf deleted successfully");
+        }
+
+        // ===== DELETE =====
+        /// <summary>
+        /// Update shelf status
+        /// </summary>
+        [HttpPatch("{id:guid}/status")]
+        public async Task<BaseResponse<ShelfResponse>> UpdateStatus(Guid id, [FromQuery] ShelfStatus status)
+        {
+            var result = await _shelfService.UpdateShelftStatus(id, status);
+            return BaseResponse<ShelfResponse>.Ok(result, "Shelf status updated successfully");
+
         }
     }
 }

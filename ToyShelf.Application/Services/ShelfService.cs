@@ -156,6 +156,26 @@ namespace ToyShelf.Application.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
+        public async Task<ShelfResponse> UpdateShelftStatus(Guid id, ShelfStatus newStatus)
+        {
+            var shelf = await _shelfRepository.GetByIdAsync(id);
+            if (shelf == null)
+                throw new AppException($"Shelf not found. Id = {id}", 404);
+            shelf.Status = newStatus;
+           
+             if (newStatus == ShelfStatus.Recalled)
+            {
+                shelf.UnassignedAt = _dateTime.UtcNow;
+            }
+            else if (newStatus == ShelfStatus.InUse)
+            {
+                shelf.AssignedAt = _dateTime.UtcNow;
+            }
+            _shelfRepository.Update(shelf);
+            await _unitOfWork.SaveChangesAsync();
+            return MapToResponse(shelf);
+        }
+
         // ===== MAPPER =====
         private static ShelfResponse MapToResponse(Shelf shelf)
         {
