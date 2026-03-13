@@ -48,45 +48,30 @@ namespace ToyShelf.API.Controllers
 		{
 			try
 			{
-
-				// 1. Xác thực chữ ký từ PayOS để đảm bảo an toàn, tránh tin tặc giả mạo
+				// 1. Xác thực chữ ký. Nếu sai ChecksumKey nó sẽ văng lỗi ngay đây.
 				var verifiedData = await _payOSClient.Webhooks.VerifyAsync(body);
 
 				if (verifiedData != null)
 				{
+					try
+					{
 					
-					await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
+						await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
+					}
+					catch (Exception dbEx)
+					{
+						
+						Console.WriteLine($"[Cảnh báo DB]: {dbEx.Message}");
+					}
 				}
 
 				return Ok(new { message = "Webhook processed successfully" });
 			}
 			catch (Exception ex)
 			{
-			
-				return BadRequest(new { message = ex.Message });
+				return BadRequest(new { message = "Invalid Signature: " + ex.Message });
 			}
 		}
 
-		[HttpPost("webhookt")]
-		public async Task<IActionResult> ReceivetestWebhook([FromBody] Webhook body)
-		{
-			try
-			{
-				// Khi test Postman: Comment dòng Verify của SDK lại
-				// var verifiedData = await _payOSClient.Webhooks.VerifyAsync(body);
-
-				// Giả lập dữ liệu đã xác thực (Dùng đúng mã OrderCode trong DB của bạn)
-				long testOrderCode = body.Data.OrderCode;
-
-				// Gọi logic tính hoa hồng
-				Guid? orderId = await _orderService.HandlePaymentSuccessAsync(testOrderCode);
-
-				return Ok(new { message = "Gia lap Webhook thanh cong", orderId });
-			}
-			catch (Exception ex)
-			{
-				return BadRequest(new { error = ex.Message });
-			}
-		}
 	}
 }
