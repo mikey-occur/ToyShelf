@@ -108,6 +108,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IStoreCreationRequestService, StoreCreationRequestService>();
 			services.AddScoped<IInventoryDispositionService, InventoryDispositionService>();
 			services.AddScoped<IInventoryService, InventoryService>();
+			services.AddScoped<IInventoryLocationService, InventoryLocationService>();
 		}
     }
 }
