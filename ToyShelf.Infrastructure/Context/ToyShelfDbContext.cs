@@ -22,6 +22,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<UserStore> UserStores { get; set; }
 			
 		public DbSet<Store> Stores { get; set; }
+		public DbSet<StoreOrder> StoreOrders { get; set; }
+		public DbSet<StoreOrderItem> StoreOrderItems { get; set; }
 		public DbSet<StoreCreationRequest> StoreCreationRequests { get; set; }
 		public DbSet<StoreInvitation> StoreInvitations { get; set; }
 		public DbSet<Warehouse> Warehouses { get; set; }
@@ -191,6 +193,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.ReviewedStoreRequests)
 					  .WithOne(a => a.ReviewedByUser)
 					  .HasForeignKey(a => a.ReviewedByUserId);
+
+				// StoreOrder
+				entity.HasMany(e => e.StoreOrders)
+					  .WithOne(a => a.RequestedByUser)
+					  .HasForeignKey(a => a.RequestedByUserId);
 			});
 
 			// ================== ROLE ==================
@@ -336,6 +343,78 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Store_Partner");
 			});
+
+			// ================== StoreOrder ==================
+			modelBuilder.Entity<StoreOrder>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(30);
+
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
+
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.ApprovedAt);
+
+				// FK
+
+				entity.HasOne(e => e.StoreLocation)
+					  .WithMany(a => a.StoreOrders)
+					  .HasForeignKey(e => e.StoreLocationId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_StoreLocation");
+
+				entity.HasOne(e => e.RequestedByUser)
+					  .WithMany(a => a.StoreOrders)
+					  .HasForeignKey(e => e.RequestedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_User");
+
+				entity.HasMany(e => e.Items)
+					  .WithOne(a => a.StoreOrder)
+					  .HasForeignKey(a => a.StoreOrderId);
+			});
+
+			// ================== StoreOrderItem ==================
+			modelBuilder.Entity<StoreOrderItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Quantity)
+					  .IsRequired();
+
+				// FK
+
+				entity.HasOne(e => e.StoreOrder)
+					  .WithMany(a => a.Items)
+					  .HasForeignKey(e => e.StoreOrderId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_StoreOrderItem_StoreOrder");
+
+				entity.HasOne(e => e.ProductColor)
+					  .WithMany(a => a.StoreOrderItems)
+					  .HasForeignKey(e => e.ProductColorId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrderItem_ProductColor");
+			});
+
 
 			// ================== StoreCreationRequest ==================
 			modelBuilder.Entity<StoreCreationRequest>(entity =>
@@ -587,6 +666,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.DamageReports)
 					  .WithOne(d => d.ProductColor)
 					  .HasForeignKey(d => d.ProductColorId);
+
+				entity.HasMany(e => e.StoreOrderItems)
+					  .WithOne(a => a.ProductColor)
+				      .HasForeignKey(a => a.ProductColorId);
 
 				// ================== INDEX ==================
 
@@ -1329,6 +1412,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.IncomingInventoryTransactions)
 					  .WithOne(t => t.ToLocation)
 					  .HasForeignKey(t => t.ToLocationId);
+
+				entity.HasMany(e => e.StoreOrders)
+				      .WithOne(a => a.StoreLocation)
+				      .HasForeignKey(a => a.StoreLocationId);
 			});
 
 			// ================== InventoryDisposition ==================
