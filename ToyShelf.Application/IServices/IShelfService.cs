@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.Models.Shelf.Request;
 using ToyShelf.Application.Models.Shelf.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
 {
@@ -17,5 +18,6 @@ namespace ToyShelf.Application.IServices
         Task<ShelfResponse> UpdateAsync(Guid id, UpdateShelfRequest request);
         Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(int pageNumber = 1, int pageSize = 10, string? status = null);
         Task DeleteAsync(Guid id);
+        Task<ShelfResponse> UpdateShelftStatus(Guid id, ShelfStatus newStatus);
     }
 }
