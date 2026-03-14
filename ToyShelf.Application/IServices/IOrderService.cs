@@ -12,6 +12,6 @@ namespace ToyShelf.Application.IServices
 		Task<string> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request);
 		Task<Guid?> HandlePaymentSuccessAsync(long orderCode);
 
-		Task<OrderDetailResponse?> GetOrderDetailsAsync(Guid orderId);
+		Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode);
 	}
 }
