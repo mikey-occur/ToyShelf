@@ -4,6 +4,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Inventory.Request;
 using ToyShelf.Application.Models.Inventory.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -33,14 +34,13 @@ namespace ToyShelf.API.Controllers
 		[HttpGet]
 		public async Task<ActionResult<BaseResponse<IEnumerable<InventoryResponse>>>> GetInventories(
 		[FromQuery] Guid? locationId,
-		[FromQuery] Guid? dispositionId)
+		[FromQuery] InventoryStatus? status)
 		{
-			var result = await _inventoryService.GetInventoriesAsync(locationId, dispositionId);
+			var result = await _inventoryService.GetInventoriesAsync(locationId, status);
 
 			return BaseResponse<IEnumerable<InventoryResponse>>
 				.Ok(result, "Inventories retrieved successfully");
 		}
-
 
 		// ================= GET BY ID =================
 		[HttpGet("{id}")]

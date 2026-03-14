@@ -6,17 +6,25 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
+	public enum InventoryStatus
+	{
+		Available,
+		InTransit,
+		Damaged,
+		Sold
+	}
+
 	public class Inventory
 	{
 		public Guid Id { get; set; }
 		public Guid InventoryLocationId { get; set; }
 		public Guid ProductColorId { get; set; }
-		public Guid DispositionId { get; set; }
+
+		public InventoryStatus Status { get; set; }
+
 		public int Quantity { get; set; }
 
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!; 
 		public virtual ProductColor ProductColor { get; set; } = null!;
-		public virtual InventoryDisposition Disposition { get; set; } = null!;
 	}
-
 }

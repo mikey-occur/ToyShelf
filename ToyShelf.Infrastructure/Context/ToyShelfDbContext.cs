@@ -51,7 +51,6 @@ namespace ToyShelf.Infrastructure.Context
 
 		public DbSet<Inventory> Inventories { get; set; }
 		public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
-		public DbSet<InventoryDisposition> InventoryDispositions { get; set; }
 		public DbSet<InventoryLocation> InventoryLocations { get; set; }
 
 		public DbSet<DamageReport> DamageReports { get; set; }
@@ -1272,6 +1271,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
 
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
 				entity.Property(e => e.Quantity)
 					  .IsRequired();
 
@@ -1289,15 +1293,9 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Inventory_ProductColor");
 
-				entity.HasOne(e => e.Disposition)
-					  .WithMany(d => d.Inventories)
-					  .HasForeignKey(e => e.DispositionId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_Inventory_Disposition");
-
 				// ===== Index =====
 
-				entity.HasIndex(e => new { e.InventoryLocationId, e.ProductColorId, e.DispositionId })
+				entity.HasIndex(e => new { e.InventoryLocationId, e.ProductColorId, e.Status })
 					  .IsUnique();
 			});
 
@@ -1308,6 +1306,16 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.FromStatus)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.ToStatus)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
 
 				entity.Property(e => e.Quantity)
 					  .IsRequired();
@@ -1339,18 +1347,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ToLocationId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_InventoryTransaction_ToLocation");
-
-				entity.HasOne(e => e.FromDisposition)
-					  .WithMany(d => d.FromInventoryTransactions)
-					  .HasForeignKey(e => e.FromDispositionId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_InventoryTransaction_FromDisposition");
-
-				entity.HasOne(e => e.ToDisposition)
-					  .WithMany(d => d.ToInventoryTransactions)
-					  .HasForeignKey(e => e.ToDispositionId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_InventoryTransaction_ToDisposition");
 			});
 
 			// ================== InventoryLocation ==================
@@ -1416,40 +1412,6 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.StoreOrders)
 				      .WithOne(a => a.StoreLocation)
 				      .HasForeignKey(a => a.StoreLocationId);
-			});
-
-			// ================== InventoryDisposition ==================
-			modelBuilder.Entity<InventoryDisposition>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.Code)
-					  .IsRequired()
-					  .HasMaxLength(30);
-
-				entity.Property(e => e.Description)
-					  .HasMaxLength(255);
-
-				// ===== Relationships =====
-
-				entity.HasMany(e => e.Inventories)
-					  .WithOne(i => i.Disposition)
-					  .HasForeignKey(i => i.DispositionId);
-
-				entity.HasMany(e => e.FromInventoryTransactions)
-					  .WithOne(t => t.FromDisposition)
-					  .HasForeignKey(t => t.FromDispositionId);
-
-				entity.HasMany(e => e.ToInventoryTransactions)
-					  .WithOne(t => t.ToDisposition)
-					  .HasForeignKey(t => t.ToDispositionId);
-
-				// ===== Index =====
-				entity.HasIndex(e => e.Code)
-					  .IsUnique();
 			});
 
 			// ==================== Shipment ==================

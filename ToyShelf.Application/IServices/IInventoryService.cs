@@ -14,7 +14,7 @@ namespace ToyShelf.Application.IServices
 		Task<InventoryResponse> RefillAsync(RefillInventoryRequest request);
 		Task<IEnumerable<InventoryResponse>> GetInventoriesAsync(
 			Guid? locationId,
-			Guid? dispositionId);
+			InventoryStatus? status);
 
 		Task<InventoryResponse> GetByIdAsync(Guid id);
 

@@ -15,30 +15,22 @@ namespace ToyShelf.Application.Services
 	public class InventoryService : IInventoryService
 	{
 		private readonly IInventoryRepository _inventoryRepository;
-		private readonly IInventoryDispositionRepository _dispositionRepository;
 		private readonly IUnitOfWork _unitOfWork;
 
-		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IInventoryDispositionRepository dispositionRepository)
+		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork)
 		{
 			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
-			_dispositionRepository = dispositionRepository;
 		}
 		public async Task<InventoryResponse> RefillAsync(RefillInventoryRequest request)
 		{
 			if (request.Quantity <= 0)
 				throw new AppException("Quantity must be greater than 0", 400);
 
-			var availableDisposition = await _dispositionRepository
-				.GetByCodeAsync("AVAILABLE");
-
-			if (availableDisposition == null)
-				throw new AppException("AVAILABLE disposition not found", 500);
-
 			var inventory = await _inventoryRepository.GetAsync(
 				request.InventoryLocationId,
 				request.ProductColorId,
-				availableDisposition.Id);
+				InventoryStatus.Available);
 
 			if (inventory == null)
 			{
@@ -47,7 +39,7 @@ namespace ToyShelf.Application.Services
 					Id = Guid.NewGuid(),
 					InventoryLocationId = request.InventoryLocationId,
 					ProductColorId = request.ProductColorId,
-					DispositionId = availableDisposition.Id,
+					Status = InventoryStatus.Available,
 					Quantity = request.Quantity
 				};
 
@@ -64,11 +56,12 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(inventory);
 		}
 
+
 		public async Task<IEnumerable<InventoryResponse>> GetInventoriesAsync(
 			Guid? locationId,
-			Guid? dispositionId)
+			InventoryStatus? status)
 		{
-			var inventories = await _inventoryRepository.GetAllAsync();
+			var inventories = await _inventoryRepository.GetAllInventoryAsync();
 
 			var query = inventories.AsQueryable();
 
@@ -77,13 +70,14 @@ namespace ToyShelf.Application.Services
 				query = query.Where(x => x.InventoryLocationId == locationId.Value);
 			}
 
-			if (dispositionId.HasValue)
+			if (status.HasValue)
 			{
-				query = query.Where(x => x.DispositionId == dispositionId.Value);
+				query = query.Where(x => x.Status == status.Value);
 			}
 
 			return query.Select(MapToResponse);
 		}
+
 
 		public async Task<InventoryResponse> GetByIdAsync(Guid id)
 		{
@@ -97,31 +91,25 @@ namespace ToyShelf.Application.Services
 
 		public async Task UpdateStockAfterPaymentAsync(Order order)
 		{
-			// Quy ước Code trạng thái hàng sẵn sàng bán
-			const string availableCode = "AVAILABLE";
-
 			foreach (var item in order.OrderItems)
 			{
-				// 1. Tìm bản ghi tồn kho tại Store cụ thể cho sản phẩm này
-				var inventory = await _inventoryRepository.GetInventoryAsync(order.StoreId, item.ProductColorId, availableCode);
+				var inventory = await _inventoryRepository
+					.GetInventoryAsync(order.StoreId, item.ProductColorId, InventoryStatus.Available);
 
-				// 2. Kiểm tra tính hợp lệ
 				if (inventory == null)
-				{
-					throw new Exception($"Product {item.ProductColorId} Not found in store.");
-				}
+					throw new Exception($"Product {item.ProductColorId} not found in store.");
 
 				if (inventory.Quantity < item.Quantity)
-				{
-					throw new Exception($"Quantity not enounh (avaiable: {inventory.Quantity}, Need: {item.Quantity}).");
-				}
+					throw new Exception($"Quantity not enough (available: {inventory.Quantity}, need: {item.Quantity}).");
 
-				// 3. Thực hiện trừ số lượng
 				inventory.Quantity -= item.Quantity;
 
-				
+				_inventoryRepository.Update(inventory);
 			}
+
+			await _unitOfWork.SaveChangesAsync();
 		}
+
 		private static InventoryResponse MapToResponse(Inventory inventory)
 		{
 			return new InventoryResponse
@@ -129,10 +117,9 @@ namespace ToyShelf.Application.Services
 				Id = inventory.Id,
 				InventoryLocationId = inventory.InventoryLocationId,
 				ProductColorId = inventory.ProductColorId,
-				DispositionId = inventory.DispositionId,
+				Status = inventory.Status,
 				Quantity = inventory.Quantity
 			};
 		}
-
 	}
 }

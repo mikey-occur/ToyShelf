@@ -9,8 +9,12 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IInventoryRepository : IGenericRepository<Inventory>
 	{
-		Task<Inventory?> GetInventoryAsync(Guid storeId, Guid productColorId, string dispositionCode);
-		Task<Inventory?> GetAsync(Guid locationId, Guid productColorId, Guid dispositionId);
+		Task<Inventory?> GetInventoryAsync(Guid storeId, Guid productColorId, InventoryStatus status);
+		Task<Inventory?> GetAsync(
+			Guid locationId,
+			Guid productColorId,
+			InventoryStatus status);
+
 		Task<IEnumerable<Inventory>> GetAllInventoryAsync();
 		Task<IEnumerable<Inventory>> GetByLocationAsync(Guid locationId);
 	}

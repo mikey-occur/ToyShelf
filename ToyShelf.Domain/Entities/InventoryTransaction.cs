@@ -12,8 +12,8 @@ namespace ToyShelf.Domain.Entities
 		public Guid ProductColorId { get; set; }
 		public Guid FromLocationId { get; set; }
 		public Guid ToLocationId { get; set; }
-		public Guid FromDispositionId { get; set; }
-		public Guid ToDispositionId { get; set; }
+		public InventoryStatus FromStatus { get; set; }
+		public InventoryStatus ToStatus { get; set; }
 		public int Quantity { get; set; }
 		public string ReferenceType { get; set; } = null!;   // REFILL, SALE, DAMAGE, RECALL, AUDIT
 		public Guid? ReferenceId { get; set; }
@@ -22,8 +22,5 @@ namespace ToyShelf.Domain.Entities
 		public virtual ProductColor ProductColor { get; set; } = null!;
 		public virtual InventoryLocation FromLocation { get; set; } = null!;
 		public virtual InventoryLocation ToLocation { get; set; } = null!;
-		public virtual InventoryDisposition FromDisposition { get; set; } = null!;
-		public virtual InventoryDisposition ToDisposition { get; set; } = null!;
 	}
-
 }
