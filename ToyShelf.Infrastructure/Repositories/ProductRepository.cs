@@ -62,7 +62,8 @@ namespace ToyShelf.Infrastructure.Repositories
         int pageNumber = 1,
         int pageSize = 10,
         bool? isActive = null,
-		Guid? categoryId =null)
+		Guid? categoryId =null,
+		string? searchItem = null)
         {
             var query = _context.Products.AsQueryable();
 
@@ -73,8 +74,10 @@ namespace ToyShelf.Infrastructure.Repositories
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.ProductCategoryId == categoryId.Value);
+			if (!string.IsNullOrWhiteSpace(searchItem))
+				query = query.Where(p => p.Name.Contains(searchItem));
 
-            var items = await query
+                var items = await query
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
