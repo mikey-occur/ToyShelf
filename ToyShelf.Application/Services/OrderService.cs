@@ -99,9 +99,9 @@ namespace ToyShelf.Application.Services
 
 		}
 
-		public async Task<OrderDetailResponse?> GetOrderDetailsAsync(Guid orderId)
+		public async Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode)
 		{
-			var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderId);
+			var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderCode);
 			if (order == null) throw new Exception($"Order không tồn tại."); ;
 			var response = new OrderDetailResponse
 			{
