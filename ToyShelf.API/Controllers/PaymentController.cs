@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PayOS;
 using PayOS.Models.Webhooks;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.CommissionPolicy.Response;
 using ToyShelf.Application.Models.Order;
 
 namespace ToyShelf.API.Controllers
@@ -72,6 +74,42 @@ namespace ToyShelf.API.Controllers
 				return BadRequest(new { message = "Invalid Signature: " + ex.Message });
 			}
 		}
+		/// <summary>
+		/// lấy detail order 
+		/// </summary>
+	    [HttpGet("{ordercode}")]
+		public async Task<BaseResponse<OrderDetailResponse?>> GetById(long ordercode)
+		{
+			var result = await _orderService.GetOrderDetailsAsync(ordercode);
 
+			return BaseResponse<OrderDetailResponse?>
+				.Ok(result, "Order retrieved successfully");
+		}
+
+		/// <summary>
+		/// Dành cho hàm checkPayment trên Frontend: Kiểm tra trạng thái thanh toán từ Database
+		/// GET: api/Payment/check-payment?orderCode=123456
+		/// </summary>
+		[HttpGet("check-payment")]
+		public async Task<IActionResult> CheckPayment([FromQuery] long orderCode)
+		{
+			try
+			{
+				// Gọi Service tìm đơn hàng trong DB bằng OrderCode
+				var order = await _orderService.GetOrderDetailsAsync(orderCode);
+
+				if (order == null)
+				{
+					return NotFound(new { message = "Không tìm thấy đơn hàng với mã này!" });
+				}
+
+				// Trả về status hiện tại đang lưu trong bảng Orders (VD: PENDING, PAID, CANCELLED)
+				return Ok(new { status = order.Status });
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new { message = $"Lỗi khi kiểm tra DB: {ex.Message}" });
+			}
+		}
 	}
 }

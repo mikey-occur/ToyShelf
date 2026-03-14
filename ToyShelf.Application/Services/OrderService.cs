@@ -99,6 +99,33 @@ namespace ToyShelf.Application.Services
 
 		}
 
+		public async Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode)
+		{
+			var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderCode);
+			if (order == null) throw new Exception($"Order không tồn tại."); ;
+			var response = new OrderDetailResponse
+			{
+				Id = order.Id,
+				OrderCode = order.OrderCode,
+				TotalAmount = order.TotalAmount,
+				PaymentMethod = order.PaymentMethod,
+				Status = order.Status,
+				CreatedAt = order.CreatedAt,
+				StoreName = order.Store?.Name,
+				Items = order.OrderItems.Select(oi => new OrderItemDetailResponse
+				{
+					ProductColorId = oi.ProductColorId,
+					ProductName = oi.ProductColor.Product.Name,
+					Sku = oi.ProductColor.Sku,
+					ImageUrl = oi.ProductColor.ImageUrl,
+					Price = oi.Price,
+					Quantity = oi.Quantity
+				}).ToList()
+			};
+
+			return response;
+		}
+
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
