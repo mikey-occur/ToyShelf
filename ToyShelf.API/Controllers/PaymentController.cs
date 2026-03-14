@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PayOS;
 using PayOS.Models.Webhooks;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.CommissionPolicy.Response;
 using ToyShelf.Application.Models.Order;
 
 namespace ToyShelf.API.Controllers
@@ -72,6 +74,16 @@ namespace ToyShelf.API.Controllers
 				return BadRequest(new { message = "Invalid Signature: " + ex.Message });
 			}
 		}
+		/// <summary>
+		/// lấy detail hoa hồng
+		/// </summary>
+	    [HttpGet("{id}")]
+		public async Task<BaseResponse<OrderDetailResponse?>> GetById(Guid id)
+		{
+			var result = await _orderService.GetOrderDetailsAsync(id);
 
+			return BaseResponse<OrderDetailResponse?>
+				.Ok(result, "City retrieved successfully");
+		}
 	}
 }
