@@ -29,7 +29,6 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Inventories)
 					.ThenInclude(i => i.ProductColor)
 				.Include(x => x.Inventories)
-					.ThenInclude(i => i.Disposition)
 				.Include(x => x.Warehouse)
 				.Include(x => x.Store)
 				.AsQueryable();
