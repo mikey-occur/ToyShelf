@@ -23,11 +23,13 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<DamageReport> ReportedDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<DamageReport> ReviewedDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<Shipment> RequestedShipments { get; set; } = new List<Shipment>();
-		public virtual ICollection<Shipment> ApprovedShipments { get; set; } = new List<Shipment>();
 		public virtual ICollection<ShipmentMedia> UploadedShipmentMedia { get; set; } = new List<ShipmentMedia>();
 		public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 		public virtual ICollection<StoreCreationRequest> CreatedStoreRequests { get; set; } = new List<StoreCreationRequest>();
 		public virtual ICollection<StoreCreationRequest> ReviewedStoreRequests { get; set; } = new List<StoreCreationRequest>();
-		public virtual ICollection<StoreOrder> StoreOrders { get; set; } = new List<StoreOrder>();
+		public virtual ICollection<StoreOrder> RequestStoreOrders { get; set; } = new List<StoreOrder>();
+		public virtual ICollection<StoreOrder> ApprovedStoreOrders { get; set; } = new List<StoreOrder>();
+		public virtual ICollection<ShipmentAssignment> Shippers { get; set; } = new List<ShipmentAssignment>();
+		public virtual ICollection<ShipmentAssignment> AssignedShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 	}
 }
