@@ -75,16 +75,16 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(order);
 		}
 
-		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync()
+		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus status)
 		{
-			var orders = await _storeOrderRepository.GetAllAsync();
+			var orders = await _storeOrderRepository.GetAllWithItemsAsync(status);
 
 			return orders.Select(MapToResponse);
 		}
 
 		public async Task<StoreOrderResponse> GetByIdAsync(Guid id)
 		{
-			var order = await _storeOrderRepository.GetByIdAsync(id);
+			var order = await _storeOrderRepository.GetByIdWithItemsAsync(id);
 
 			if (order == null)
 				throw new AppException("Store order not found", 404);
