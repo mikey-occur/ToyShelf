@@ -83,7 +83,7 @@ app.UseStaticFiles(new StaticFileOptions
     DefaultContentType = "application/octet-stream"
 });
 
-//app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Enable serving static files from wwwroot (e.g., /robot, /AssetBundles)
 // ServeUnknownFileTypes required for files without extensions
