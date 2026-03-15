@@ -4,6 +4,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
 using ToyShelf.Application.Models.StoreOrder.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -31,9 +32,9 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreOrderResponse>>>> GetAll()
+		public async Task<ActionResult<BaseResponse<IEnumerable<StoreOrderResponse>>>> GetAll(StoreOrderStatus status)
 		{
-			var result = await _storeOrderService.GetAllAsync();
+			var result = await _storeOrderService.GetAllAsync(status);
 
 			return BaseResponse<IEnumerable<StoreOrderResponse>>
 				.Ok(result, "Store orders retrieved successfully");
