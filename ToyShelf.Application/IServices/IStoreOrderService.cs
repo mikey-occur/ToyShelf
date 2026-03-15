@@ -16,6 +16,6 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus status);
 		Task<StoreOrderResponse> GetByIdAsync(Guid id);
 		Task ApproveAsync(Guid id, ICurrentUser currentUser);
-		Task RejectAsync(Guid id);
+		Task RejectAsync(Guid id, ICurrentUser currentUser);
 	}
 }

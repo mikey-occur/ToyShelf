@@ -112,14 +112,19 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 			
-		public async Task RejectAsync(Guid id)
+		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
 
 			if (order == null)
 				throw new AppException("Order not found", 404);
 
+			if (order.Status != StoreOrderStatus.Pending)
+				throw new AppException("Order already processed", 400);
+
 			order.Status = StoreOrderStatus.Rejected;
+			order.RejectedAt = _dateTime.UtcNow;
+			order.RejectedByUserId = currentUser.UserId;
 
 			_storeOrderRepository.Update(order);
 

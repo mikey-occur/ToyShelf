@@ -63,9 +63,10 @@ namespace ToyShelf.API.Controllers
 
 		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
-		public async Task<ActionResult<ActionResponse>> Reject(Guid id)
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> Reject(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.RejectAsync(id);
+			await _storeOrderService.RejectAsync(id, currentUser);
 
 			return ActionResponse.Ok("Store order rejected successfully");
 		}
