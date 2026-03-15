@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Account.Request;
 using ToyShelf.Application.Models.Account.Response;
@@ -40,7 +41,7 @@ namespace ToyShelf.Application.Services
 				.GetLocalAccountByEmailAsync(email);
 
 			if (account == null)
-				throw new Exception("Account not found");
+				throw new AppException("Account not found", 404);
 
 			// invalidate OTP cũ
 			var oldOtps = await _otpRepo.FindAsync(o =>
@@ -83,13 +84,13 @@ namespace ToyShelf.Application.Services
 		public async Task<ResetPasswordResponse> ResetPasswordAsync(ResetPasswordRequest request)
 		{
 			if (request.NewPassword != request.ConfirmPassword)
-				throw new Exception("Password and ConfirmPassword do not match");
+				throw new AppException("Password and ConfirmPassword do not match", 400);
 
 			var otp = await _otpRepo
 				.GetWithAccountAsync(request.OtpCode, OtpPurpose.RESET_PASSWORD, request.Email);
 
 			if (otp == null)
-				throw new Exception("Invalid or expired OTP");
+				throw new AppException("Invalid or expired OTP", 400);
 
 			var account = otp.Account!;
 
