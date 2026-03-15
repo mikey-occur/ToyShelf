@@ -19,7 +19,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= FLOW FORGETPASSWORD =================
 		[HttpPost("request")]
-		public async Task<ActionResult<BaseResponse<ForgotPasswordOtpResponse>>> RequestForgotPassword([FromQuery] string email)
+		public async Task<BaseResponse<ForgotPasswordOtpResponse>> RequestForgotPassword([FromQuery] string email)
 		{
 			var rs = await _forgotPasswordService.RequestForgotPasswordAsync(email);
 			return BaseResponse<ForgotPasswordOtpResponse>
@@ -27,7 +27,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPost("reset")]
-		public async Task<ActionResult<BaseResponse<ResetPasswordResponse>>> ResetPassword([FromBody] ResetPasswordRequest request)
+		public async Task<BaseResponse<ResetPasswordResponse>> ResetPassword([FromBody] ResetPasswordRequest request)
 		{
 			var rs = await _forgotPasswordService.ResetPasswordAsync(request);
 			return BaseResponse<ResetPasswordResponse>

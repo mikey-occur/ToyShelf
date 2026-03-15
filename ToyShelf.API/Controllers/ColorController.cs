@@ -21,7 +21,7 @@ namespace ToyShelf.API.Controllers
 		/// Create Color.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<ColorResponse>>> Create(
+		public async Task<BaseResponse<ColorResponse>> Create(
 			[FromBody] ColorRequest request)
 		{
 			var result = await _colorService.CreateAsync(request);

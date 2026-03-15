@@ -23,7 +23,7 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 		// CREATE
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<PartnerTierResponse>>> Create([FromBody] PartnerTierRequest request)
+		public async Task<BaseResponse<PartnerTierResponse>> Create([FromBody] PartnerTierRequest request)
 		{
 			var result = await _service.CreateAsync(request);
 			return BaseResponse<PartnerTierResponse>.Ok(result, "Partner Tier created successfully");

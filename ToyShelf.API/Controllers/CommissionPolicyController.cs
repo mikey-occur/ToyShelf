@@ -25,7 +25,7 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 		// CREATE
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<CommissionPolicyResponse>>> Create(
+		public async Task<BaseResponse<CommissionPolicyResponse>> Create(
 			[FromBody] CommissionPolicyRequest request)
 		{
 			var result = await _service.CreateAsync(request);

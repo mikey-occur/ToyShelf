@@ -23,7 +23,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= CREATE =================
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<StoreOrderResponse>>> Create(
+		public async Task<BaseResponse<StoreOrderResponse>> Create(
 			[FromBody] CreateStoreOrderRequest request)
 		{
 			var result = await _storeOrderService.CreateAsync(request);
@@ -34,7 +34,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreOrderResponse>>>> GetAll(StoreOrderStatus status)
+		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetAll(StoreOrderStatus status)
 		{
 			var result = await _storeOrderService.GetAllAsync(status);
 
@@ -43,7 +43,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<StoreOrderResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<StoreOrderResponse>> GetById(Guid id)
 		{
 			var result = await _storeOrderService.GetByIdAsync(id);
 
