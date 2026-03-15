@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.PriceTableApply.Request;
 using ToyShelf.Application.Models.PriceTableApply.Response;
@@ -31,16 +32,16 @@ namespace ToyShelf.Application.Services
 		{
 			if (request.EndDate.HasValue && request.StartDate >= request.EndDate.Value)
 			{
-				throw new ArgumentException("Ngày kết thúc phải lớn hơn ngày bắt đầu.");
+				throw new ArgumentException("Start day must earlier than end day.");
 			}
 
 			// 2. Validate Khóa ngoại (Có tồn tại không?)
 			// (Ông tự thêm hàm ExistsAsync vào Repo gốc nhé, hoặc dùng GetById != null)
 			var partner = await _partnerRepo.GetByIdAsync(request.PartnerId);
-			if (partner == null) throw new KeyNotFoundException("Partner not found");
+			if (partner == null) throw new AppException("Partner not found", 404);
 
 			var table = await _priceTableRepo.GetByIdAsync(request.PriceTableId);
-			if (table == null) throw new KeyNotFoundException("Price Table not found");
+			if (table == null) throw new AppException("Price Table not found", 404);
 
 			// 3. CHECK TRÙNG LỊCH (QUAN TRỌNG NHẤT)
 			bool isOverlap = await _repo.HasOverlapAsync(request.PartnerId, request.StartDate, request.EndDate);
@@ -82,9 +83,9 @@ namespace ToyShelf.Application.Services
 		{
 			var price = await _repo.GetByIdAsync(id);
 			if (price == null)
-				throw new Exception($"PriceApply Id = {id} not found");
+				throw new AppException($"PriceApply Id = {id} not found", 404);
 			if (!price.IsActive)
-				throw new Exception("Price table apply already inactive");
+				throw new AppException("Price table apply already inactive", 400);
 			price.IsActive = false;
 			_repo.Update(price);
 			 await _unitOfWork.SaveChangesAsync();
@@ -106,9 +107,9 @@ namespace ToyShelf.Application.Services
 		{
 			var price = await _repo.GetByIdAsync(id);
 			if(price == null)
-				throw new Exception($"PriceApply Id = {id} not found");
+				throw new AppException($"PriceApply Id = {id} not found", 404);
 			if (price.IsActive)
-				throw new Exception("Price table apply already active");
+				throw new AppException("Price table apply already active", 400);
 			price.IsActive = true;
 			_repo.Update(price);
 			await _unitOfWork.SaveChangesAsync();

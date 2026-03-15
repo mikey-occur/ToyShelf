@@ -49,6 +49,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<OrderItem> OrderItems { get; set; }	
         public DbSet<CommissionHistory> CommissionHistories { get; set; }
 
+		public DbSet<MonthlySettlement> MonthlySettlements { get; set; }
+
 		public DbSet<Inventory> Inventories { get; set; }
 		public DbSet<InventoryTransaction> InventoryTransactions { get; set; }
 		public DbSet<InventoryLocation> InventoryLocations { get; set; }
@@ -1662,10 +1664,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-				entity.Property(e => e.IsPaidOut)
-					  .IsRequired()
-					  .HasDefaultValue(false);
-
 				// ===== Relationships =====
 				entity.HasOne(ch => ch.OrderItem)
 					.WithMany(oi => oi.CommissionHistories)
@@ -1678,8 +1676,38 @@ namespace ToyShelf.Infrastructure.Context
 					.HasForeignKey(ch => ch.PartnerId)
 					.OnDelete(DeleteBehavior.Restrict)
 				    .HasConstraintName("FK_CommissionHistory_Partner");
+
+				entity.HasOne(ch => ch.MonthlySettlement)
+					.WithMany(ms => ms.CommissionHistories)
+					.HasForeignKey(ch => ch.MonthlySettlementId)
+					.OnDelete(DeleteBehavior.Restrict) 
+					.HasConstraintName("FK_CommissionHistory_MonthlySettlement");
 			});
 
+			// ================== Monthly Settlement (Phiếu chốt sổ tháng) ==================
+			modelBuilder.Entity<MonthlySettlement>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+				entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+				entity.Property(e => e.TotalCommissionAmount)
+					.HasColumnType("decimal(18,2)");
+
+				entity.Property(e => e.Status)
+					.IsRequired()
+					.HasMaxLength(20);
+
+				entity.Property(e => e.CreatedAt)
+					.IsRequired()
+					.HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				// ===== Relationships =====
+				entity.HasOne(ms => ms.Partner)
+					.WithMany(p => p.MonthlySettlements) 
+					.HasForeignKey(ms => ms.PartnerId)
+					.OnDelete(DeleteBehavior.Restrict) 
+					.HasConstraintName("FK_MonthlySettlement_Partner");
+			});
 
 			// ================== CITY ==================
 			modelBuilder.Entity<City>(entity =>

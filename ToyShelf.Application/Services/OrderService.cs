@@ -133,7 +133,7 @@ namespace ToyShelf.Application.Services
 
 			// kiểm tra đơn hàng tồn tại và chưa được xử lý thanh toán thành công trước đó
 			if (order == null)
-				throw new AppException("Order not found");
+				throw new AppException("Order not found", 404);
 
 			if (order.Status == "PAID")
 			{
@@ -163,7 +163,6 @@ namespace ToyShelf.Application.Services
 					AppliedRate = result.Rate, 
 					CommissionAmount = (item.Price * item.Quantity) * result.Rate,
 					CreatedAt = _dateTime.UtcNow,
-					IsPaidOut = false
 				};
 
 				await _commissionHistoryRepository.AddAsync(commissionHistory);
