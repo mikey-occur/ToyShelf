@@ -138,8 +138,13 @@ namespace ToyShelf.Application.Services
 				Id = order.Id,
 				Code = order.Code,
 				StoreLocationId = order.StoreLocationId,
+				RequestedByUserId = order.RequestedByUserId,
+				ApprovedByUserId = order.ApprovedByUserId,
+				RejectedByUserId = order.RejectedByUserId,
 				Status = order.Status,
 				CreatedAt = order.CreatedAt,
+				ApprovedAt = order.ApprovedAt,
+				RejectedAt = order.RejectedAt,
 				Items = order.Items.Select(i => new StoreOrderItemResponse
 				{
 					ProductColorId = i.ProductColorId,
