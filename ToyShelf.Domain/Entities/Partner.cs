@@ -25,5 +25,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<PriceTableApply> PriceTableApplies { get; set; } = new List<PriceTableApply>();
 		public virtual ICollection<CommissionHistory> CommissionHistories { get; set; } = new List<CommissionHistory>();
 		public virtual ICollection<StoreCreationRequest> StoreCreationRequests { get; set; } = new List<StoreCreationRequest>();
+		public virtual ICollection<MonthlySettlement> MonthlySettlements { get; set; } = new List<MonthlySettlement>();
+
 	}
 }

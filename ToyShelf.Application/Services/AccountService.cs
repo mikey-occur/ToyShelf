@@ -49,7 +49,7 @@ namespace ToyShelf.Application.Services
 		public async Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request)
 		{
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
-				throw new Exception("Email already exists");
+				throw new AppException("Email already exists", 409);
 
 			var user = new User
 			{
@@ -99,7 +99,7 @@ namespace ToyShelf.Application.Services
 				throw new ForbiddenException();
 
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
-				throw new Exception("Email already exists");
+				throw new AppException("Email already exists", 409);
 
 			var user = new User
 			{
@@ -123,7 +123,7 @@ namespace ToyShelf.Application.Services
 			await _accountRepository.AddAsync(account);
 
 			var partnerRoleId = await _roleRepository.GetByNameAsync("Partner")
-				?? throw new Exception("Default role Partner not found");
+				?? throw new AppException("Default role Partner not found", 404);
 
 			await _unitOfWork.Repository<AccountRole>()
 				.AddAsync(new AccountRole
@@ -146,10 +146,10 @@ namespace ToyShelf.Application.Services
 				.GetLocalAccountByEmailAsync(email);
 
 			if (account == null)
-				throw new Exception("Account not found");
+				throw new AppException("Account not found",404);
 
 			if (!account.IsFirstLogin)
-				throw new Exception("Account already activated");
+				throw new AppException("Account already activated", 400);
 
 			// invalidate OTP cũ nếu có
 			var oldOtps = await _otpRepo.FindAsync(o =>
@@ -192,23 +192,23 @@ namespace ToyShelf.Application.Services
 		public async Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request)
 		{
 			if (request.NewPassword != request.ConfirmPassword)
-				throw new Exception("Password and ConfirmPassword do not match");
+				throw new AppException("Password and ConfirmPassword do not match", 400);
 
 			var otp = await _otpRepo
 				.GetWithAccountAsync(request.OtpCode, OtpPurpose.ACTIVATE_ACCOUNT, request.Email);
 
 			if (otp == null)
-				throw new Exception("Invalid or expired OTP");
+				throw new AppException("Invalid or expired OTP", 400);
 
 
 			if (otp.ExpiredAt < DateTime.UtcNow || otp.IsUsed)
-				throw new Exception("Invalid or expired OTP");
+				throw new AppException("Invalid or expired OTP", 400);
 
 			var account = otp.Account!;
 
 			// extra safety: chắc chắn đúng account local & chưa activate
 			if (!account.IsFirstLogin)
-				throw new Exception("Account already activated");
+				throw new AppException("Account already activated", 400);
 
 			var salt = _passwordHasher.GenerateSalt();
 			account.Salt = salt;
@@ -232,10 +232,10 @@ namespace ToyShelf.Application.Services
 		public async Task<RegisterResponse> RegisterLocalAsync(RegisterRequest request)
 		{
 			if (request.Password != request.ConfirmPassword)
-				throw new Exception("Password and ConfirmPassword do not match");
+				throw new AppException("Password and ConfirmPassword do not match", 400);
 
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
-				throw new Exception("Email already registered");
+				throw new AppException("Email already registered", 400);
 
 			var salt = _passwordHasher.GenerateSalt();
 
@@ -262,7 +262,7 @@ namespace ToyShelf.Application.Services
 			await _accountRepository.AddAsync(account);
 
 			var customerRole = await _roleRepository.GetByNameAsync("Customer")
-						?? throw new Exception("Default role Customer not found");
+						?? throw new AppException("Default role Customer not found", 404);
 
 			await _unitOfWork.Repository<AccountRole>()
 				.AddAsync(new AccountRole
@@ -286,10 +286,10 @@ namespace ToyShelf.Application.Services
 			var account = await _accountRepository.GetLocalAccountByEmailAsync(request.Email);
 
 			if (account == null || account.PasswordHash == null)
-				throw new Exception("Invalid credentials");
+				throw new AppException("Invalid credentials", 400);
 
 			if (!_passwordHasher.Verify(request.Password, account.Salt!, account.PasswordHash))
-				throw new Exception("Invalid credentials");
+				throw new AppException("Invalid credentials", 400);
 
 			account.LastLoginAt = DateTime.UtcNow;
 			_accountRepository.Update(account);
@@ -361,7 +361,7 @@ namespace ToyShelf.Application.Services
 					await _accountRepository.AddAsync(account);
 
 					var customerRole = await _roleRepository.GetByNameAsync("Customer")
-						?? throw new Exception("Default role Customer not found");
+						?? throw new AppException("Default role Customer not found", 404);
 
 					await _unitOfWork.Repository<AccountRole>()
 						.AddAsync(new AccountRole
@@ -394,13 +394,13 @@ namespace ToyShelf.Application.Services
 		public async Task<SetLocalPasswordResponse> SetLocalPasswordAsync(Guid accountId, SetLocalPasswordRequest request)
 		{
 			if (request.NewPassword != request.ConfirmPassword)
-				throw new Exception("Password and ConfirmPassword do not match");
+				throw new AppException("Password and ConfirmPassword do not match", 400);
 
 			var googleAccount = await _accountRepository.GetByIdWithUserAsync(accountId)
-				?? throw new Exception("Account not found");
+				?? throw new AppException("Account not found", 404);
 
 			if (googleAccount.Provider != AuthProvider.GOOGLE)
-				throw new Exception("Only Google account can set local password");
+				throw new AppException("Only Google account can set local password", 400);
 
 			// kiểm tra đã có local chưa
 			var existedLocal = await _accountRepository
@@ -409,7 +409,7 @@ namespace ToyShelf.Application.Services
 					AuthProvider.LOCAL);
 
 			if (existedLocal != null)
-				throw new Exception("Local account already exists");
+				throw new AppException("Local account already exists", 400);
 
 			var salt = _passwordHasher.GenerateSalt();
 

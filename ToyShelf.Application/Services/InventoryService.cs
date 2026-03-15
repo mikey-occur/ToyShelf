@@ -97,10 +97,10 @@ namespace ToyShelf.Application.Services
 					.GetInventoryAsync(order.StoreId, item.ProductColorId, InventoryStatus.Available);
 
 				if (inventory == null)
-					throw new Exception($"Product {item.ProductColorId} not found in store.");
+					throw new AppException($"Product {item.ProductColorId} not found in store.", 404);
 
 				if (inventory.Quantity < item.Quantity)
-					throw new Exception($"Quantity not enough (available: {inventory.Quantity}, need: {item.Quantity}).");
+					throw new AppException($"Quantity not enough (available: {inventory.Quantity}, need: {item.Quantity}).", 404);
 
 				inventory.Quantity -= item.Quantity;
 

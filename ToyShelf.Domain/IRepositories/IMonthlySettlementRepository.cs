@@ -7,8 +7,8 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface ICommissionHistoryRepsitory : IGenericRepository<CommissionHistory>
+	public interface IMonthlySettlementRepository : IGenericRepository<MonthlySettlement>
 	{
-		Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth);
+		Task<MonthlySettlement?> GetSettlementWithDetailsByIdAsync(Guid id);
 	}
 }

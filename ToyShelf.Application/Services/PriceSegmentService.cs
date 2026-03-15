@@ -26,10 +26,10 @@ namespace ToyShelf.Application.Services
 		public async Task<PriceSegmentResponse> CreateAsync(PriceSegmentRequest request)
 		{
 			if (request.MaxPrice.HasValue && request.MinPrice >= request.MaxPrice.Value)
-				throw new Exception("MinPrice must be less than MaxPrice");
+				throw new AppException("MinPrice must be less than MaxPrice", 400);
 
 			if (await _repo.ExistsByCodeAsync(request.Code))
-				throw new Exception($"Segment Code '{request.Code}' already exists");
+				throw new AppException($"Segment Code '{request.Code}' already exists", 409);
 
 			var segment = new PriceSegment
 			{
@@ -73,7 +73,7 @@ namespace ToyShelf.Application.Services
 			?? throw new AppException("Price Segment not found", 404);
 
 			if (request.MaxPrice.HasValue && request.MinPrice >= request.MaxPrice.Value)
-				throw new Exception("MinPrice must be less than MaxPrice");
+				throw new AppException("MinPrice must be less than MaxPrice", 400);
 
 			segment.Name = request.Name;
 			segment.MinPrice = request.MinPrice;
@@ -103,7 +103,7 @@ namespace ToyShelf.Application.Services
 			var price = await _repo.GetByIdAsync(id);
 			if (price == null)
 			{
-				throw new AppException("Color not found.", 404);
+				throw new AppException("PriceSegment not found.", 404);
 			}
 
 			return MapToResponse(price);
