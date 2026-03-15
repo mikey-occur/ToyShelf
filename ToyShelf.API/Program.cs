@@ -93,7 +93,7 @@ app.UseStaticFiles(new StaticFileOptions
 	DefaultContentType = "application/octet-stream"
 });
 
-//app.UseHttpsRedirection();
+app.UseHttpsRedirection();
 
 app.UseAuthentication();
 
