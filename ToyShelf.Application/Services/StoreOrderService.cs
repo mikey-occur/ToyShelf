@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
@@ -92,7 +93,7 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(order);
 		}
 
-		public async Task ApproveAsync(Guid id)
+		public async Task ApproveAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
 
@@ -104,12 +105,13 @@ namespace ToyShelf.Application.Services
 
 			order.Status = StoreOrderStatus.Approved;
 			order.ApprovedAt = _dateTime.UtcNow;
+			order.ApprovedByUserId = currentUser.UserId;
 
 			_storeOrderRepository.Update(order);
 
 			await _unitOfWork.SaveChangesAsync();
 		}
-
+			
 		public async Task RejectAsync(Guid id)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);

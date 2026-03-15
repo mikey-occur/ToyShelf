@@ -1,5 +1,7 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
@@ -51,9 +53,10 @@ namespace ToyShelf.API.Controllers
 
 		// ================= APPROVE =================
 		[HttpPatch("{id}/approve")]
-		public async Task<ActionResult<ActionResponse>> Approve(Guid id)
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> Approve(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.ApproveAsync(id);
+			await _storeOrderService.ApproveAsync(id, currentUser);
 
 			return ActionResponse.Ok("Store order approved successfully");
 		}

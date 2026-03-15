@@ -198,6 +198,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.RequestStoreOrders)
 					  .WithOne(a => a.RequestedByUser)
 					  .HasForeignKey(a => a.RequestedByUserId);
+
+				entity.HasMany(e => e.RejectedStoreOrders)
+					  .WithOne(a => a.RejectedByUser)
+					  .HasForeignKey(a => a.RejectedByUserId);
 			});
 
 			// ================== ROLE ==================
@@ -370,6 +374,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ApprovedAt);
 
+				entity.Property(e => e.RejectedAt);
+
 				// FK
 
 				entity.HasOne(e => e.StoreLocation)
@@ -394,10 +400,16 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(a => a.StoreOrderId);
 
 				entity.HasOne(e => e.ApprovedByUser)
-				  .WithMany(a => a.ApprovedStoreOrders)
-				  .HasForeignKey(e => e.ApprovedByUserId)
-				  .OnDelete(DeleteBehavior.Restrict)
-				  .HasConstraintName("FK_StoreOrder_ApprovedByUser");
+					  .WithMany(a => a.ApprovedStoreOrders)
+					  .HasForeignKey(e => e.ApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_ApprovedByUser");
+
+				entity.HasOne(e => e.RejectedByUser)
+					  .WithMany(a => a.RejectedStoreOrders)
+					  .HasForeignKey(e => e.RejectedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_RejectedByUser");
 			});
 
 			// ================== StoreOrderItem ==================
