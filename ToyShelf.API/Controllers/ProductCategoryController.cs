@@ -25,7 +25,7 @@ namespace ToyShelf.API.Controllers
 		/// Create Category.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<ProductCategoryResponse>>> CreateCategory(
+		public async Task<BaseResponse<ProductCategoryResponse>> CreateCategory(
 		[FromBody] ProductCategoryRequest request)
 		{
 			var result = await _productCategoryService.CreateCategoryAsync(request);
@@ -39,7 +39,7 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<ProductCategoryResponse>>>> GetCategorys([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<ProductCategoryResponse>>> GetCategorys([FromQuery] bool? isActive)
 		{
 			var result = await _productCategoryService.GetCategoriesAsync(isActive);
 			return BaseResponse<IEnumerable<ProductCategoryResponse>>

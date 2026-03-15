@@ -20,7 +20,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= CREATE =================
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<WarehouseResponse>>> Create(
+		public async Task<BaseResponse<WarehouseResponse>> Create(
 			[FromBody] CreateWarehouseRequest request)
 		{
 			var result = await _warehouseService.CreateAsync(request);
@@ -30,7 +30,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<WarehouseResponse>>>> GetWarehouses(
+		public async Task<BaseResponse<IEnumerable<WarehouseResponse>>> GetWarehouses(
 			[FromQuery] bool? isActive)
 		{
 			var result = await _warehouseService.GetWarehousesAsync(isActive);
@@ -39,7 +39,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<WarehouseResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<WarehouseResponse>> GetById(Guid id)
 		{
 			var result = await _warehouseService.GetByIdAsync(id);
 			return BaseResponse<WarehouseResponse>
@@ -48,7 +48,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= UPDATE =================
 		[HttpPut("{id}")]
-		public async Task<ActionResult<BaseResponse<WarehouseResponse>>> Update(
+		public async Task<BaseResponse<WarehouseResponse>> Update(
 			Guid id,
 			[FromBody] UpdateWarehouseRequest request)
 		{

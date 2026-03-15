@@ -32,7 +32,7 @@ namespace ToyShelf.API.Controllers
 		/// Create ProductColor.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<ProductColorResponse>>> CreateCategory(
+		public async Task<BaseResponse<ProductColorResponse>> CreateCategory(
 		[FromBody] ProductColorRequest request)
 		{
 			var result = await _productColorService.CreateProductColorAsync(request);

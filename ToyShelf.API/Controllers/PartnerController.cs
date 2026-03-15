@@ -22,7 +22,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================== CREATE ==================
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<PartnerResponse>>> Create(
+		public async Task<BaseResponse<PartnerResponse>> Create(
 			[FromBody] CreatePartnerRequest request)
 		{
 			var result = await _partnerService.CreateAsync(request);
@@ -32,7 +32,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================== GET ==================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<PartnerResponse>>>> GetPartners([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<PartnerResponse>>> GetPartners([FromQuery] bool? isActive)
 		{
 			var result = await _partnerService.GetPartnersAsync(isActive);
 			return BaseResponse<IEnumerable<PartnerResponse>>
@@ -40,7 +40,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<PartnerResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<PartnerResponse>> GetById(Guid id)
 		{
 			var result = await _partnerService.GetByIdAsync(id);
 			return BaseResponse<PartnerResponse>
@@ -49,7 +49,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================== UPDATE ==================
 		[HttpPut("{id}")]
-		public async Task<ActionResult<BaseResponse<PartnerResponse>>> Update(
+		public async Task<BaseResponse<PartnerResponse>> Update(
 			Guid id,
 			[FromBody] UpdatePartnerRequest request)
 		{

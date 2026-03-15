@@ -19,7 +19,7 @@ namespace ToyShelf.API.Controllers
 
 		// GET: api/inventorylocation
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<InventoryLocationResponse>>>> GetInventoryLocations([FromQuery] bool? isActive, Guid? StoreId, Guid? WarehouseId)
+		public async Task<BaseResponse<IEnumerable<InventoryLocationResponse>>> GetInventoryLocations([FromQuery] bool? isActive, Guid? StoreId, Guid? WarehouseId)
 		{
 			var result = await _inventoryLocationService.GetInventoryLocationsAsync(isActive, StoreId, WarehouseId);
 
@@ -29,7 +29,7 @@ namespace ToyShelf.API.Controllers
 
 		// GET: api/inventorylocation/{id}
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<InventoryLocationResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<InventoryLocationResponse>> GetById(Guid id)
 		{
 			var result = await _inventoryLocationService.GetByIdAsync(id);
 

@@ -21,7 +21,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= REFILL =================
 		[HttpPost("refill")]
-		public async Task<ActionResult<BaseResponse<InventoryResponse>>> Refill(
+		public async Task<BaseResponse<InventoryResponse>> Refill(
 			[FromBody] RefillInventoryRequest request)
 		{
 			var result = await _inventoryService.RefillAsync(request);
@@ -32,7 +32,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET ALL =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<InventoryResponse>>>> GetInventories(
+		public async Task<BaseResponse<IEnumerable<InventoryResponse>>> GetInventories(
 		[FromQuery] Guid? locationId,
 		[FromQuery] InventoryStatus? status)
 		{
@@ -44,7 +44,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET BY ID =================
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<InventoryResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<InventoryResponse>> GetById(Guid id)
 		{
 			var result = await _inventoryService.GetByIdAsync(id);
 
