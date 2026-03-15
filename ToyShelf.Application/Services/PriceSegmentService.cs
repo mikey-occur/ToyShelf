@@ -103,7 +103,7 @@ namespace ToyShelf.Application.Services
 			var price = await _repo.GetByIdAsync(id);
 			if (price == null)
 			{
-				throw new AppException("Color not found.", 404);
+				throw new AppException("PriceSegment not found.", 404);
 			}
 
 			return MapToResponse(price);
