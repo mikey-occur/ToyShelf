@@ -40,13 +40,13 @@ namespace ToyShelf.Application.Services
 			var product = await _productRepository.GetByIdAsync(request.ProductId) ?? throw new AppException("Product not found");
 
 			var color = await _colorRepository.GetByIdAsync(request.ColorId)
-		    ?? throw new AppException("Color not found");
+		    ?? throw new AppException("Color not found", 404);
 
 			var sku = ProductSkuGenerator.GenerateColorComboSku(product.SKU,color.SkuCode);
 
 			var skuExists = await _productColorRepository.ExistsBySkuAsync(sku);
 			if (skuExists)
-				throw new AppException($"ProductColor SKU '{sku}' already exists");
+				throw new AppException($"ProductColor SKU '{sku}' already exists", 409);
 			string qrCode = _qrCodeService.GenerateQrBase64(sku);
 			var newProductColor = new ProductColor
 			{
@@ -71,7 +71,7 @@ namespace ToyShelf.Application.Services
 		{
 			var productColor = await  _productColorRepository.GetByIdAsync(id);
 			if (productColor is null)
-				throw new Exception($"ProductColor Id = {id} not found");
+				throw new AppException($"ProductColor Id = {id} not found", 404);
 			_productColorRepository.Remove(productColor);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
@@ -81,9 +81,9 @@ namespace ToyShelf.Application.Services
 		{
 			var productColor = await _productColorRepository.GetByIdAsync(id);
 			if (productColor == null)
-				throw new Exception($"ProductColor Id = {id} not found");
+				throw new AppException($"ProductColor Id = {id} not found", 404);
 			if (!productColor.IsActive)
-				throw new Exception("ProductColor already inactive");
+				throw new AppException("ProductColor already inactive", 404);
 			productColor.IsActive = false;
 			_productColorRepository.Update(productColor);
 			await _unitOfWork.SaveChangesAsync();
@@ -94,9 +94,9 @@ namespace ToyShelf.Application.Services
 		{
 			var productColor = await _productColorRepository.GetByIdAsync(id);
 			if (productColor == null)
-				throw new Exception($"ProductColor Id = {id} not found");
+				throw new AppException($"ProductColor Id = {id} not found", 404);
 			if (productColor.IsActive)
-				throw new Exception("ProductColor is already active");
+				throw new AppException("ProductColor is already active", 404);
 			productColor.IsActive = true;
 			_productColorRepository.Update(productColor);
 			await _unitOfWork.SaveChangesAsync();
@@ -108,7 +108,7 @@ namespace ToyShelf.Application.Services
 		{
 			var productColor = await _productColorRepository.GetByIdAsync(id);
 			if (productColor == null)
-				throw new Exception($"ProductColor Id = {id} not found");
+				throw new AppException($"ProductColor Id = {id} not found", 404);
 			return MapToResponse(productColor);
 		}
 
@@ -124,7 +124,7 @@ namespace ToyShelf.Application.Services
 		{
 			var productColor = await _productColorRepository.GetByIdAsync(id);
 			if (productColor == null)
-				throw new Exception($"ProductColor Id = {id} not found");
+				throw new AppException($"ProductColor Id = {id} not found", 404);
 			// Update fields
 			productColor.PriceSegmentId = request.PriceSegmentId;
 			productColor.Price = request.Price;

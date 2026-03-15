@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.CommissionPolicy.Request;
 using ToyShelf.Application.Models.CommissionPolicy.Response;
@@ -50,7 +51,7 @@ namespace ToyShelf.Application.Services
 		public async Task<bool> DeleteAsync(Guid id)
 		{
 			var policy = await _repo.GetByIdAsync(id)
-				?? throw new KeyNotFoundException("Not found");
+				?? throw new AppException("Not found", 404);
 
 			_repo.Remove(policy);
 			await _unitOfWork.SaveChangesAsync();

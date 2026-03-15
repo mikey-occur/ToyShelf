@@ -47,14 +47,14 @@ namespace ToyShelf.Application.Services
 			// Find user by email
 			var user = await _userRepository.GetByEmailAsync(request.Email);
 			if (user == null)
-				throw new Exception("User with this email does not exist or inactive");
+				throw new AppException("User with this email does not exist or inactive", 400);
 
 			// User already in store
 			if (await _userStoreRepo.AnyAsync(x =>
 				x.StoreId == request.StoreId &&
 				x.UserId == user.Id &&
 				x.IsActive))
-				throw new Exception("User already in store");
+				throw new AppException("User already in store", 409);
 
 			// Partner role checks
 			if (isPartner && !isPartnerAdmin)
@@ -84,7 +84,7 @@ namespace ToyShelf.Application.Services
 					x.IsActive);
 
 				if (hasManager)
-					throw new Exception("Store already has a Manager");
+					throw new AppException("Store already has a Manager", 409);
 			}
 
 			// invitation already exists
@@ -92,7 +92,7 @@ namespace ToyShelf.Application.Services
 				x.StoreId == request.StoreId &&
 				x.UserId == user.Id &&
 				x.Status == InvitationStatus.Pending))
-				throw new Exception("Invitation already exists");
+				throw new AppException("Invitation already exists", 409);
 
 			// Create invitation
 			await _invitationRepo.AddAsync(new StoreInvitation
@@ -115,16 +115,16 @@ namespace ToyShelf.Application.Services
 		public async Task<bool> AcceptInvitationAsync(Guid invitationId, Guid currentUserId)
 		{
 			var invitation = await _invitationRepo.GetAsync(x => x.Id == invitationId)
-				?? throw new Exception("Invitation not found");
+				?? throw new AppException("Invitation not found", 404);
 
 			if (invitation.UserId != currentUserId)
 				throw new ForbiddenException();
 
 			if (invitation.Status != InvitationStatus.Pending)
-				throw new Exception("Invitation is not valid");
+				throw new AppException("Invitation is not valid", 400);
 
 			if (invitation.ExpiredAt < DateTime.UtcNow)
-				throw new Exception("Invitation expired");
+				throw new AppException("Invitation expired", 400);
 
 			invitation.Status = InvitationStatus.Accepted;
 			invitation.ExpiredAt = null;
@@ -146,13 +146,13 @@ namespace ToyShelf.Application.Services
 		public async Task<bool> RejectInvitationAsync(Guid invitationId, Guid currentUserId)
 		{
 			var invitation = await _invitationRepo.GetAsync(x => x.Id == invitationId)
-				?? throw new Exception("Invitation not found");
+				?? throw new AppException("Invitation not found", 404);
 
 			if (invitation.UserId != currentUserId)
 				throw new ForbiddenException();
 
 			if (invitation.Status != InvitationStatus.Pending)
-				throw new Exception("Invitation is not valid");
+				throw new AppException("Invitation is not valid", 400);
 
 			invitation.Status = InvitationStatus.Rejected;
 			invitation.ExpiredAt = null;
