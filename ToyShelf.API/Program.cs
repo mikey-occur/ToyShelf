@@ -72,7 +72,7 @@ if (enableSwagger)
 }
 app.UseCors("AllowAll");
 
-//app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 
 // Enable serving static files from wwwroot (e.g., /robot, /AssetBundles)
