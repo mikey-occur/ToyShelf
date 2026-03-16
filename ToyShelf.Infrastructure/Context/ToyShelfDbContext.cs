@@ -182,10 +182,6 @@ namespace ToyShelf.Infrastructure.Context
 				      .WithOne(a => a.UploadedByUser)
 				      .HasForeignKey(a => a.UploadedByUserId);
 
-				// Order 
-				entity.HasMany(e => e.Orders)
-					  .WithOne(a => a.Staff)
-					  .HasForeignKey(a => a.StaffId);
 
 				// StoreCreationRequest
 				entity.HasMany(e => e.CreatedStoreRequests)
@@ -1669,12 +1665,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.StoreId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Order_Store");
-
-				entity.HasOne(e => e.Staff)
-					  .WithMany(u => u.Orders)
-					  .HasForeignKey(e => e.StaffId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_Order_Staff");
 
 				entity.HasMany(e => e.OrderItems)
 					  .WithOne(i => i.Order)
