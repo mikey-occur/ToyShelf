@@ -11,11 +11,14 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public Guid OrderItemId { get; set; }
 		public Guid PartnerId { get; set; }
+		public Guid? MonthlySettlementId { get; set; }
 		public decimal AppliedRate { get; set; }  // % hoa hồng lúc tính (VD: 0.1)
 		public decimal CommissionAmount { get; set; }  
 		public DateTime CreatedAt { get; set; }
-		public bool IsPaidOut { get; set; } = false; // coi phần hoa hồng của món đồ đã chuyển khoản cho đối tác chưa
+		public virtual MonthlySettlement? MonthlySettlement { get; set; }
 		public virtual Partner Partner { get; set; } = null!;
 		public virtual OrderItem OrderItem { get; set; } = null!;
+
+
 	}
 }

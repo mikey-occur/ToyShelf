@@ -86,7 +86,7 @@ namespace ToyShelf.Application.Services
 					// Lấy thông tin Color để lấy SkuCode (ví dụ: "RED", "BLUE")
 
 					var color = await _colorRepository.GetByIdAsync(colorReq.ColorId)
-					?? throw new AppException("Color not found");
+					?? throw new AppException("Color not found", 404);
 
 					var variantSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, color.SkuCode);
 					string qrCode = _qrCodeService.GenerateQrBase64(variantSku);
@@ -117,7 +117,7 @@ namespace ToyShelf.Application.Services
 		{
 			var product =  await _productRepository.GetByIdAsync(id);
 			if (product is null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new AppException($"Product Id = {id} not found", 404);
 			_productRepository.Remove(product);
 			await _unitOfWork.SaveChangesAsync();
 			return true;
@@ -127,9 +127,9 @@ namespace ToyShelf.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new AppException($"Product Id = {id} not found", 404);
 			if (!product.IsActive)
-				throw new Exception("Product already inactive");
+				throw new AppException("Product already inactive", 400);
 			product.IsActive = false;
 			_productRepository.Update(product);
 			await _unitOfWork.SaveChangesAsync();
@@ -153,7 +153,7 @@ namespace ToyShelf.Application.Services
 
 			
 			if (colorActive == true && !product.IsActive)
-				throw new Exception("Product is currently unavailable");
+				throw new AppException("Product is currently unavailable", 400);
 
 			return MapToResponse(product);
 		}
@@ -163,9 +163,9 @@ namespace ToyShelf.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new AppException($"Product Id = {id} not found", 404);
 			if (product.IsActive)
-				throw new Exception("Product already active");
+				throw new AppException("Product already active", 400);
 			product.IsActive = true;
 			_productRepository.Update(product);
 			await _unitOfWork.SaveChangesAsync();
@@ -177,7 +177,7 @@ namespace ToyShelf.Application.Services
 		{
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
-				throw new Exception($"Product Id = {id} not found");
+				throw new AppException($"Product Id = {id} not found", 404);
 			// Update fields
 			product.Description = request.Description ?? product.Description;
 			product.Brand = request.Brand ?? product.Brand;
@@ -197,44 +197,63 @@ namespace ToyShelf.Application.Services
 
 			if (request.Colors != null && request.Colors.Any())
 			{
-				// Xóa danh sách màu cũ nếu có
-				if (product.ProductColors != null && product.ProductColors.Any())
+				// Lấy danh sách ColorId gửi lên từ Frontend
+				var requestedColorIds = request.Colors.Select(c => c.ColorId).ToList();
+
+				// 1. XÓA những màu không còn nằm trong request 
+				var colorsToRemove = product.ProductColors.Where(pc => !requestedColorIds.Contains(pc.ColorId)).ToList();
+				if (colorsToRemove.Any())
 				{
-					_unitOfWork.Repository<ProductColor>().DeleteRange(product.ProductColors);
+					_unitOfWork.Repository<ProductColor>().DeleteRange(colorsToRemove);
 				}
 
-				// Thêm danh sách màu mới
-				foreach (var colorRequest in request.Colors)
+				// 2. THÊM MỚI hoặc CẬP NHẬT
+				foreach (var colorReq in request.Colors)
 				{
-					var colorEntity = await _colorRepository.GetByIdAsync(colorRequest.ColorId)
-					?? throw new Exception($"Color Id {colorRequest.ColorId} not found");
+					// Tìm xem màu này đã có trong sản phẩm chưa
+					var existingColor = product.ProductColors.FirstOrDefault(pc => pc.ColorId == colorReq.ColorId);
 
-					// GEN SKU - Đây là bước quan trọng để fix lỗi NOT NULL
-					// Giả sử product.SKU là mã sản phẩm cha (VD: "ROBOT-001")
-					var generatedSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, colorEntity.SkuCode);
-					
-					// Kiểm tra trùng SKU (nếu cần thiết trong lúc update)
-					var skuExists = await _productColorRepository.ExistsBySkuAsync(generatedSku);
-					if (skuExists)
-						throw new Exception($"ProductColor SKU '{generatedSku}' already exists");
-
-					string qrCode = _qrCodeService.GenerateQrBase64(generatedSku);
-
-					var newColor = new ProductColor 
+					if (existingColor != null)
 					{
-						Id = Guid.NewGuid(),
-						ColorId = colorRequest.ColorId,
-						ProductId = product.Id, // Gắn khóa ngoại vào sản phẩm hiện tại
-						PriceSegmentId = colorRequest.PriceSegmentId,
-						Sku = generatedSku, 
-						Price = colorRequest.Price,
-						QrCode = qrCode,
-						Model3DUrl = colorRequest.Model3DUrl,
-						ImageUrl = colorRequest.ImageUrl,
-						IsActive = true
-					};
+						// NẾU ĐÃ CÓ -> Chỉ cập nhật giá, hình ảnh, 3D... KHÔNG đổi Id, KHÔNG gen lại SKU
+						existingColor.PriceSegmentId = colorReq.PriceSegmentId;
+						existingColor.Price = colorReq.Price;
+						existingColor.Model3DUrl = colorReq.Model3DUrl;
+						existingColor.ImageUrl = colorReq.ImageUrl;
 
-					await _unitOfWork.Repository<ProductColor>().AddAsync(newColor);
+						
+					}
+					else
+					{
+						// NẾU CHƯA CÓ -> Tạo mới hoàn toàn (Đoạn gen SKU chỉ dùng cho hàng mới)
+						var colorEntity = await _colorRepository.GetByIdAsync(colorReq.ColorId)
+							?? throw new AppException($"Color Id {colorReq.ColorId} not found", 404);
+
+						var generatedSku = ProductSkuGenerator.GenerateColorComboSku(product.SKU, colorEntity.SkuCode);
+
+						// Check trùng SKU cho hàng mới
+						var skuExists = await _productColorRepository.ExistsBySkuAsync(generatedSku);
+						if (skuExists)
+							throw new AppException($"ProductColor SKU '{generatedSku}' already exists", 400);
+
+						string qrCode = _qrCodeService.GenerateQrBase64(generatedSku);
+
+						var newColor = new ProductColor
+						{
+							Id = Guid.NewGuid(),
+							ColorId = colorReq.ColorId,
+							ProductId = product.Id,
+							PriceSegmentId = colorReq.PriceSegmentId,
+							Sku = generatedSku,
+							Price = colorReq.Price,
+							QrCode = qrCode,
+							Model3DUrl = colorReq.Model3DUrl,
+							ImageUrl = colorReq.ImageUrl,
+							IsActive = true
+						};
+
+						await _unitOfWork.Repository<ProductColor>().AddAsync(newColor);
+					}
 				}
 			}
 

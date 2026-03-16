@@ -28,7 +28,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPost("invite")]
 		[Authorize(Roles = "PartnerAdmin,Partner")]
-		public async Task<ActionResult<BaseResponse<bool>>> InviteUser(
+		public async Task<BaseResponse<bool>> InviteUser(
 			[FromBody] InviteUserToStoreRequest request,
 			[FromServices] ICurrentUser currentUser)
 		{
@@ -42,7 +42,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPost("{invitationId:guid}/accept")]
 		[Authorize]
-		public async Task<ActionResult<BaseResponse<bool>>> AcceptInvitation(
+		public async Task<BaseResponse<bool>> AcceptInvitation(
 			Guid invitationId,
 			[FromServices] ICurrentUser currentUser)
 		{
@@ -56,7 +56,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPost("{invitationId:guid}/reject")]
 		[Authorize]
-		public async Task<ActionResult<BaseResponse<bool>>> RejectInvitation(
+		public async Task<BaseResponse<bool>> RejectInvitation(
 			Guid invitationId,
 			[FromServices] ICurrentUser currentUser)
 		{
@@ -69,7 +69,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpGet]
 		[Authorize(Roles = "PartnerAdmin,Admin")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreInvitationResponse>>>> GetInvitations(
+		public async Task<BaseResponse<IEnumerable<StoreInvitationResponse>>> GetInvitations(
 			[FromQuery] GetStoreInvitationRequest request,
 			[FromServices] ICurrentUser currentUser)
 		{
@@ -81,7 +81,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpGet("my-invitations")]
 		[Authorize]
-		public async Task<ActionResult<BaseResponse<IEnumerable<MyStoreInvitationResponse>>>> GetMyInvitations(
+		public async Task<BaseResponse<IEnumerable<MyStoreInvitationResponse>>> GetMyInvitations(
 			[FromServices] ICurrentUser currentUser,
 			[FromQuery] InvitationStatus? status)
 		{
@@ -94,7 +94,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpGet("my-stores")]
 		[Authorize]
-		public async Task<ActionResult<BaseResponse<IEnumerable<MyStoreResponse>>>> GetMyStores(
+		public async Task<BaseResponse<IEnumerable<MyStoreResponse>>> GetMyStores(
 			[FromServices] ICurrentUser currentUser)
 		{
 			var result = await _userStoreService.GetMyStoresAsync(currentUser.UserId);

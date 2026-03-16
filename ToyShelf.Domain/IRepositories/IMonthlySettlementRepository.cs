@@ -7,8 +7,8 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IInventoryDispositionRepository : IGenericRepository<InventoryDisposition>
+	public interface IMonthlySettlementRepository : IGenericRepository<MonthlySettlement>
 	{
-		Task<InventoryDisposition?> GetByCodeAsync(string code);
+		Task<MonthlySettlement?> GetSettlementWithDetailsByIdAsync(Guid id);
 	}
 }

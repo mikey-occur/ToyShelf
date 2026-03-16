@@ -23,7 +23,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= FLOW ACTIVATE =================
 		[HttpPost("activate/internal")]
-		public async Task<ActionResult<BaseResponse<CreateAccountResponse>>> CreateAccount([FromBody] CreateAccountRequest request)
+		public async Task<BaseResponse<CreateAccountResponse>> CreateAccount([FromBody] CreateAccountRequest request)
 		{
 			var rs = await _accountService.CreateAccountAsync(request);
 			return BaseResponse<CreateAccountResponse>.Ok(rs, "Account created successfully");
@@ -31,7 +31,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPost("activate/internal/partner")]
 		[Authorize(Roles = "PartnerAdmin")]
-		public async Task<ActionResult<BaseResponse<CreateAccountResponse>>>CreateAccountPartner(
+		public async Task<BaseResponse<CreateAccountResponse>>CreateAccountPartner(
 		[FromBody] CreatePartnerUserRequest request,
 		[FromServices] ICurrentUser currentUser)
 		{
@@ -46,14 +46,14 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPost("activate/request")]
-		public async Task<ActionResult<BaseResponse<ActivationOtpResponse>>> RequestActivateAccount([FromQuery] string email)
+		public async Task<BaseResponse<ActivationOtpResponse>> RequestActivateAccount([FromQuery] string email)
 		{
 			var rs = await _accountService.RequestActivateAccountAsync(email);
 			return BaseResponse<ActivationOtpResponse>.Ok(rs, "Activation OTP sent to email");
 		}
 
 		[HttpPost("activate/confirm")]
-		public async Task<ActionResult<BaseResponse<ActivateAccountResponse>>> ActivateAccount([FromBody] ActivateAccountRequest request)
+		public async Task<BaseResponse<ActivateAccountResponse>> ActivateAccount([FromBody] ActivateAccountRequest request)
 		{
 			var rs = await _accountService.ActivateAccountAndSetPasswordAsync(request);
 			return BaseResponse<ActivateAccountResponse>.Ok(rs, "Account activated successfully");
@@ -61,7 +61,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= FLOW LOCAL =================
 		[HttpPost("register")]
-		public async Task<ActionResult<BaseResponse<RegisterResponse>>> Register([FromBody] RegisterRequest request)
+		public async Task<BaseResponse<RegisterResponse>> Register([FromBody] RegisterRequest request)
 		{
 			var rs = await _accountService.RegisterLocalAsync(request);
 			return BaseResponse<RegisterResponse>.Ok(rs, "User registered successfully");
@@ -69,7 +69,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPost("login")]
 		[AllowAnonymous]
-		public async Task<ActionResult<BaseResponse<LoginResponse>>> Login([FromBody] LoginRequest request)
+		public async Task<BaseResponse<LoginResponse>> Login([FromBody] LoginRequest request)
 		{
 			var rs = await _accountService.LoginLocalAsync(request);
 			return BaseResponse<LoginResponse>.Ok(rs, "User logged in successfully");
@@ -77,7 +77,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= FLOW LOGIN GG =================
 		[HttpPost("login-google")]
-		public async Task<ActionResult<BaseResponse<LoginResponse>>> LoginGoogle([FromBody] GoogleLoginRequest request)
+		public async Task<BaseResponse<LoginResponse>> LoginGoogle([FromBody] GoogleLoginRequest request)
 		{
 			var rs = await _accountService.LoginGoogleAsync(request.IdToken);
 			return BaseResponse<LoginResponse>.Ok(rs, "User logged in with Google successfully");
@@ -85,7 +85,7 @@ namespace ToyShelf.API.Controllers
 
 		[Authorize]
 		[HttpPost("set-password")]
-		public async Task<ActionResult<BaseResponse<SetLocalPasswordResponse>>> SetPassword([FromBody] SetLocalPasswordRequest request)
+		public async Task<BaseResponse<SetLocalPasswordResponse>> SetPassword([FromBody] SetLocalPasswordRequest request)
 		{
 			var accountId = User.GetAccountId(); // từ JWT
 			var rs = await _accountService

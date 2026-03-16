@@ -118,14 +118,14 @@ namespace ToyShelf.Application.Services
 		public async Task<PriceTableResponse> GetByIdAsync(Guid id)
 		{
 			var table = await _repo.GetByIdWithDetailsAsync(id)
-				?? throw new KeyNotFoundException("Price Table not found");
+				?? throw new AppException("Price Table not found", 404);
 			return MapToResponse(table);
 		}
 
 		public async Task<PriceTableResponse> UpdateAsync(Guid id, PriceTableUpdateRequest request)
 		{
 			var priceTable = await _repo.GetByIdWithDetailsAsync(id)
-	   ?? throw new KeyNotFoundException("Price Table not found");
+	   ?? throw new AppException("Price Table not found", 404);
 
 			// Cập nhật thông tin cha
 			priceTable.Name = request.Name;

@@ -23,7 +23,7 @@ namespace ToyShelf.API.Controllers
 
 		[HttpGet]
 		//[Authorize(Roles = "Admin")]	
-		public async Task<ActionResult<BaseResponse<IEnumerable<RoleResponse>>>> GetRoles([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<RoleResponse>>> GetRoles([FromQuery] bool? isActive)
 		{
 			var result = await _roleService.GetRolesAsync(isActive);
 			return BaseResponse<IEnumerable<RoleResponse>>.Ok(result, "Roles retrieved successfully");

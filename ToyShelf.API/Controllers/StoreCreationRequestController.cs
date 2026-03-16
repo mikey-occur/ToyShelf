@@ -24,7 +24,7 @@ namespace ToyShelf.API.Controllers
 		// ================= CREATE REQUEST =================
 		[HttpPost]
 		[Authorize(Roles = "PartnerAdmin")]
-		public async Task<ActionResult<BaseResponse<StoreCreationRequestResponse>>> Create(
+		public async Task<BaseResponse<StoreCreationRequestResponse>> Create(
 			[FromBody] CreateStoreCreationRequest request,
 			[FromServices] ICurrentUser currentUser)
 		{
@@ -36,7 +36,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET LIST =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreCreationRequestResponse>>>> GetRequests(
+		public async Task<BaseResponse<IEnumerable<StoreCreationRequestResponse>>> GetRequests(
 			[FromQuery] StoreRequestStatus? status)
 		{
 			var result = await _service.GetRequestsAsync(status);
@@ -47,7 +47,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET BY ID =================
 		[HttpGet("{id:guid}")]
-		public async Task<ActionResult<BaseResponse<StoreCreationRequestResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<StoreCreationRequestResponse>> GetById(Guid id)
 		{
 			var result = await _service.GetByIdAsync(id);
 
@@ -58,7 +58,7 @@ namespace ToyShelf.API.Controllers
 		// ================= REVIEW =================
 		[HttpPost("{id:guid}/review")]
 		[Authorize(Roles = "Admin")]
-		public async Task<ActionResult<BaseResponse<bool>>> Review(
+		public async Task<BaseResponse<bool>> Review(
 			Guid id,
 			[FromBody] ReviewStoreCreationRequest request,
 			[FromServices] ICurrentUser currentUser)
@@ -72,7 +72,7 @@ namespace ToyShelf.API.Controllers
 		// ================= DELETE =================
 		[HttpDelete("{id:guid}")]
 		[Authorize(Roles = "PartnerAdmin")]
-		public async Task<ActionResult<BaseResponse<bool>>> Delete(Guid id)
+		public async Task<BaseResponse<bool>> Delete(Guid id)
 		{
 			await _service.DeleteAsync(id);
 

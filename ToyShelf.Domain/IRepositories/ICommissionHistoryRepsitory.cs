@@ -9,5 +9,6 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface ICommissionHistoryRepsitory : IGenericRepository<CommissionHistory>
 	{
+		Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth);
 	}
 }

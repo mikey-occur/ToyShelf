@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Order;
 using ToyShelf.Application.Payment;
@@ -60,7 +61,7 @@ namespace ToyShelf.Application.Services
 
 				if (product == null)
 				{
-					throw new Exception($"Sản phẩm với ID {itemReq.ProductColorId} không tồn tại.");
+					throw new AppException($"Product ID {itemReq.ProductColorId} Not Found.",404);
 				}
 
 
@@ -94,9 +95,36 @@ namespace ToyShelf.Application.Services
 				Console.WriteLine("-------------------------------------");
 				order.Status = "CANCELED";
 				await _unitOfWork.SaveChangesAsync();
-				throw new Exception("Không thể tạo link thanh toán, vui lòng thử lại.");
+				throw new AppException("Không thể tạo link thanh toán, vui lòng thử lại.", 500);
 			}
 
+		}
+
+		public async Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode)
+		{
+			var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderCode);
+			if (order == null) throw new AppException($"Order not Exist.",404); ;
+			var response = new OrderDetailResponse
+			{
+				Id = order.Id,
+				OrderCode = order.OrderCode,
+				TotalAmount = order.TotalAmount,
+				PaymentMethod = order.PaymentMethod,
+				Status = order.Status,
+				CreatedAt = order.CreatedAt,
+				StoreName = order.Store?.Name,
+				Items = order.OrderItems.Select(oi => new OrderItemDetailResponse
+				{
+					ProductColorId = oi.ProductColorId,
+					ProductName = oi.ProductColor.Product.Name,
+					Sku = oi.ProductColor.Sku,
+					ImageUrl = oi.ProductColor.ImageUrl,
+					Price = oi.Price,
+					Quantity = oi.Quantity
+				}).ToList()
+			};
+
+			return response;
 		}
 
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
@@ -105,7 +133,7 @@ namespace ToyShelf.Application.Services
 
 			// kiểm tra đơn hàng tồn tại và chưa được xử lý thanh toán thành công trước đó
 			if (order == null)
-				throw new Exception("Order not found");
+				throw new AppException("Order not found", 404);
 
 			if (order.Status == "PAID")
 			{
@@ -117,7 +145,7 @@ namespace ToyShelf.Application.Services
 			var partnerId = order.Store?.Partner?.Id;
 			if (partnerId == null)
 			{
-				throw new Exception("Not found partner for this store");
+				throw new AppException("Not found partner for this store", 404);
 			}
 
 			// 3. Duyệt qua từng sản phẩm để tính và lưu lịch sử hoa hồng
@@ -135,7 +163,6 @@ namespace ToyShelf.Application.Services
 					AppliedRate = result.Rate, 
 					CommissionAmount = (item.Price * item.Quantity) * result.Rate,
 					CreatedAt = _dateTime.UtcNow,
-					IsPaidOut = false
 				};
 
 				await _commissionHistoryRepository.AddAsync(commissionHistory);

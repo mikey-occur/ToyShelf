@@ -23,7 +23,7 @@ namespace ToyShelf.API.Controllers
 		/// Create City.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<CityResponse>>> Create(
+		public async Task<BaseResponse<CityResponse>> Create(
 			[FromBody] CityRequest request)
 		{
 			var result = await _cityService.CreateAsync(request);

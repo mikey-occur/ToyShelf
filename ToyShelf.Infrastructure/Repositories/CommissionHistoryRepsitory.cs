@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -13,6 +14,14 @@ namespace ToyShelf.Infrastructure.Repositories
 	{
 		public CommissionHistoryRepsitory(ToyShelfDbContext context) : base(context)
 		{
+		}
+
+		public async Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth)
+		{
+			return await _context.CommissionHistories
+				.Include(ch => ch.Partner)
+				.Where(ch => ch.MonthlySettlementId == null && ch.CreatedAt < endOfMonth)
+				.ToListAsync();
 		}
 	}
 }

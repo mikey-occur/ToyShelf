@@ -10,6 +10,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Controllers\PartnerController.cs~RF3d599db.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="payOS" Version="2.0.1" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.16" />
