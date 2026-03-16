@@ -34,14 +34,22 @@ namespace ToyShelf.Infrastructure.Repositories
 		}
 		public async Task<IEnumerable<Role>> GetRolesAsync(bool? isActive)
 		{
-			var query = _context.Roles.AsNoTracking().AsQueryable();
+			try
+			{
+				var query = _context.Roles.AsNoTracking().AsQueryable();
 
-			if (isActive.HasValue)
-				query = query.Where(s => s.IsActive == isActive.Value);
+				if (isActive.HasValue)
+					query = query.Where(s => s.IsActive == isActive.Value);
 
-			return await query
-				.OrderByDescending(w => w.CreatedAt)
-				.ToListAsync();
+				return await query
+					.OrderByDescending(w => w.CreatedAt)
+					.ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"[RoleRepository.GetRolesAsync] isActive={isActive} {ex}");
+				throw;
+			}
 		}
 	}
 }

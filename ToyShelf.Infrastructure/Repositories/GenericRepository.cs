@@ -28,7 +28,15 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<IEnumerable<T>> GetAllAsync()
 		{
-			return await _dbSet.AsNoTracking().ToListAsync();
+			try
+			{
+				return await _dbSet.AsNoTracking().ToListAsync();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"[GenericRepository<{typeof(T).Name}>.GetAllAsync] {ex}");
+				throw;
+			}
 		}
 
 		public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
