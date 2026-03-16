@@ -44,6 +44,7 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<Shipment> Shipments { get; set; }
 		public DbSet<ShipmentItem> ShipmentItems { get; set; }
 		public DbSet<ShipmentMedia> ShipmentMedias { get; set; } // Bỏ s
+		public DbSet<ShipmentAssignment> ShipmentAssignments { get; set; }
 
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderItem> OrderItems { get; set; }	
@@ -152,6 +153,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(s => s.User)
 					  .HasForeignKey(s => s.UserId);
 
+				entity.HasMany(e => e.ApprovedStoreOrders)
+					  .WithOne(s => s.ApprovedByUser)
+					  .HasForeignKey(s => s.ApprovedByUserId);
+
 				entity.HasOne(e => e.Partner)
 					  .WithMany(a => a.Users)
 					  .HasForeignKey(e => e.PartnerId)
@@ -173,10 +178,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(a => a.RequestedByUser)
 					  .HasForeignKey(a => a.RequestedByUserId);
 
-				entity.HasMany(e => e.ApprovedShipments)
-				      .WithOne(a => a.ApprovedByUser)
-				      .HasForeignKey(a => a.ApprovedByUserId);
-
 				entity.HasMany(e => e.UploadedShipmentMedia)
 				      .WithOne(a => a.UploadedByUser)
 				      .HasForeignKey(a => a.UploadedByUserId);
@@ -196,9 +197,13 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(a => a.ReviewedByUserId);
 
 				// StoreOrder
-				entity.HasMany(e => e.StoreOrders)
+				entity.HasMany(e => e.RequestStoreOrders)
 					  .WithOne(a => a.RequestedByUser)
 					  .HasForeignKey(a => a.RequestedByUserId);
+
+				entity.HasMany(e => e.RejectedStoreOrders)
+					  .WithOne(a => a.RejectedByUser)
+					  .HasForeignKey(a => a.RejectedByUserId);
 			});
 
 			// ================== ROLE ==================
@@ -371,6 +376,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ApprovedAt);
 
+				entity.Property(e => e.RejectedAt);
+
 				// FK
 
 				entity.HasOne(e => e.StoreLocation)
@@ -380,14 +387,31 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_StoreOrder_StoreLocation");
 
 				entity.HasOne(e => e.RequestedByUser)
-					  .WithMany(a => a.StoreOrders)
+					  .WithMany(a => a.RequestStoreOrders)
 					  .HasForeignKey(e => e.RequestedByUserId)
 					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_StoreOrder_User");
+					  .HasConstraintName("FK_StoreOrder_RequestedByUser");
 
 				entity.HasMany(e => e.Items)
 					  .WithOne(a => a.StoreOrder)
 					  .HasForeignKey(a => a.StoreOrderId);
+
+
+				entity.HasMany(e => e.Shipments)
+					  .WithOne(a => a.StoreOrder)
+					  .HasForeignKey(a => a.StoreOrderId);
+
+				entity.HasOne(e => e.ApprovedByUser)
+					  .WithMany(a => a.ApprovedStoreOrders)
+					  .HasForeignKey(e => e.ApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_ApprovedByUser");
+
+				entity.HasOne(e => e.RejectedByUser)
+					  .WithMany(a => a.RejectedStoreOrders)
+					  .HasForeignKey(e => e.RejectedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_RejectedByUser");
 			});
 
 			// ================== StoreOrderItem ==================
@@ -1429,13 +1453,16 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasMaxLength(50);
 
 				entity.Property(e => e.Status)
-					  .HasConversion<string>()
 					  .IsRequired()
+					  .HasConversion<string>()
 					  .HasMaxLength(20);
 
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-				entity.Property(e => e.RequestedByUserId)
-					  .IsRequired();
+
+				entity.Property(e => e.ReceivedAt);
 
 				// ===== Relationships =====
 
@@ -1457,11 +1484,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Shipment_RequestedByUser");
 
-				entity.HasOne(e => e.ApprovedByUser)
-					  .WithMany(u => u.ApprovedShipments)
-					  .HasForeignKey(e => e.ApprovedByUserId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_Shipment_ApprovedByUser");
+				entity.HasOne(s => s.StoreOrder)
+					  .WithMany(o => o.Shipments)
+					  .HasForeignKey(s => s.StoreOrderId)
+					  .HasConstraintName("FK_Shipment_StoreOrder");
 
 				// Shipment
 
@@ -1472,6 +1498,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Media)
 			          .WithOne(i => i.Shipment)
 			          .HasForeignKey(i => i.ShipmentId);
+
+				entity.HasOne(sa => sa.ShipmentAssignment)
+					  .WithOne(s => s.Shipment)
+					  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
+					  .OnDelete(DeleteBehavior.Restrict);
 
 				// ===== Index =====
 
@@ -1529,10 +1560,12 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.MediaType)
 					  .IsRequired()
+					  .HasConversion<string>()
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.Purpose)
 					  .IsRequired()
+					  .HasConversion<string>()
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
@@ -1558,8 +1591,49 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasIndex(e => e.ShipmentId);
 			});
 
-			// ================== Order ==================
-			modelBuilder.Entity<Order>(entity =>
+			// ================== ShipmentAssignment ==================
+			modelBuilder.Entity<ShipmentAssignment>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.CreatedAt)
+				  .IsRequired()
+				  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.RespondedAt);
+
+				entity.HasOne(e => e.StoreOrder)
+				  .WithMany(s => s.ShipmentAssignments)
+				  .HasForeignKey(e => e.StoreOrderId)
+				  .HasConstraintName("FK_ShipmentAssignment_StoreOrder");
+
+				entity.HasOne(e => e.Shipper)
+				  .WithMany(s => s.Shippers)
+				  .HasForeignKey(e => e.ShipperId)
+				  .HasConstraintName("FK_ShipmentAssignment_Shipper");	
+
+				entity.HasOne(e => e.AssignedByUser)
+				  .WithMany(s => s.AssignedShipmentAssignments)
+				  .HasForeignKey(e => e.AssignedByUserId)
+				  .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
+
+				entity.HasOne(sa => sa.Shipment)
+				  .WithOne(s => s.ShipmentAssignment)
+				  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
+				  .OnDelete(DeleteBehavior.Restrict);
+
+			});
+
+				// ================== Order ==================
+				modelBuilder.Entity<Order>(entity =>
 			{
 				entity.HasKey(e => e.Id);
 

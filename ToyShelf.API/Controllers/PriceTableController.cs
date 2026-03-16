@@ -21,7 +21,7 @@ namespace ToyShelf.API.Controllers
 		/// Create Price Table.
 		/// </summary>
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<PriceTableResponse>>> Create(
+		public async Task<BaseResponse<PriceTableResponse>> Create(
 			[FromBody] PriceTableRequest request)
 		{
 			var result = await _priceTableService.CreateAsync(request);

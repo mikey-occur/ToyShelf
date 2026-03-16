@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
 using ToyShelf.Application.Models.StoreOrder.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -20,7 +23,7 @@ namespace ToyShelf.API.Controllers
 
 		// ================= CREATE =================
 		[HttpPost]
-		public async Task<ActionResult<BaseResponse<StoreOrderResponse>>> Create(
+		public async Task<BaseResponse<StoreOrderResponse>> Create(
 			[FromBody] CreateStoreOrderRequest request)
 		{
 			var result = await _storeOrderService.CreateAsync(request);
@@ -31,16 +34,16 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<ActionResult<BaseResponse<IEnumerable<StoreOrderResponse>>>> GetAll()
+		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetAll(StoreOrderStatus status)
 		{
-			var result = await _storeOrderService.GetAllAsync();
+			var result = await _storeOrderService.GetAllAsync(status);
 
 			return BaseResponse<IEnumerable<StoreOrderResponse>>
 				.Ok(result, "Store orders retrieved successfully");
 		}
 
 		[HttpGet("{id}")]
-		public async Task<ActionResult<BaseResponse<StoreOrderResponse>>> GetById(Guid id)
+		public async Task<BaseResponse<StoreOrderResponse>> GetById(Guid id)
 		{
 			var result = await _storeOrderService.GetByIdAsync(id);
 
@@ -50,18 +53,20 @@ namespace ToyShelf.API.Controllers
 
 		// ================= APPROVE =================
 		[HttpPatch("{id}/approve")]
-		public async Task<ActionResult<ActionResponse>> Approve(Guid id)
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> Approve(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.ApproveAsync(id);
+			await _storeOrderService.ApproveAsync(id, currentUser);
 
 			return ActionResponse.Ok("Store order approved successfully");
 		}
 
 		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
-		public async Task<ActionResult<ActionResponse>> Reject(Guid id)
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> Reject(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.RejectAsync(id);
+			await _storeOrderService.RejectAsync(id, currentUser);
 
 			return ActionResponse.Ok("Store order rejected successfully");
 		}

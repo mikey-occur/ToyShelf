@@ -23,7 +23,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.InventoryLocations
 				.FirstOrDefaultAsync(x => x.StoreId == storeId);
 		}
-		public async Task<List<InventoryLocation>> GetInventoryLocationsAsync(bool? isActive)
+		public async Task<List<InventoryLocation>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId)
 		{
 			var query = _context.InventoryLocations
 				.Include(x => x.Inventories)
@@ -36,6 +36,16 @@ namespace ToyShelf.Infrastructure.Repositories
 			if (isActive.HasValue)
 			{
 				query = query.Where(x => x.IsActive == isActive);
+			}
+
+			if (StoreId.HasValue)
+			{
+							query = query.Where(x => x.StoreId == StoreId);
+			}
+
+			if (WarehouseId.HasValue)
+			{
+				query = query.Where(x => x.WarehouseId == WarehouseId);
 			}
 
 			return await query.ToListAsync();

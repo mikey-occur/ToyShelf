@@ -31,5 +31,23 @@ namespace ToyShelf.Infrastructure.Repositories
 				})
 				.Max();
 		}
+		public async Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus status)
+		{
+			var query = _context.StoreOrders
+				.Include(o => o.Items)
+				.AsQueryable();
+
+			query = query.Where(x => x.Status == status);
+
+			return await query.ToListAsync();
+		}
+
+
+		public async Task<StoreOrder?> GetByIdWithItemsAsync(Guid id)
+		{
+			return await _context.StoreOrders
+				.Include(o => o.Items)
+				.FirstOrDefaultAsync(o => o.Id == id);
+		}
 	}
 }

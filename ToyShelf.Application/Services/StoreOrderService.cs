@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
@@ -75,16 +76,16 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(order);
 		}
 
-		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync()
+		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus status)
 		{
-			var orders = await _storeOrderRepository.GetAllAsync();
+			var orders = await _storeOrderRepository.GetAllWithItemsAsync(status);
 
 			return orders.Select(MapToResponse);
 		}
 
 		public async Task<StoreOrderResponse> GetByIdAsync(Guid id)
 		{
-			var order = await _storeOrderRepository.GetByIdAsync(id);
+			var order = await _storeOrderRepository.GetByIdWithItemsAsync(id);
 
 			if (order == null)
 				throw new AppException("Store order not found", 404);
@@ -92,7 +93,7 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(order);
 		}
 
-		public async Task ApproveAsync(Guid id)
+		public async Task ApproveAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
 
@@ -104,20 +105,26 @@ namespace ToyShelf.Application.Services
 
 			order.Status = StoreOrderStatus.Approved;
 			order.ApprovedAt = _dateTime.UtcNow;
+			order.ApprovedByUserId = currentUser.UserId;
 
 			_storeOrderRepository.Update(order);
 
 			await _unitOfWork.SaveChangesAsync();
 		}
-
-		public async Task RejectAsync(Guid id)
+			
+		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
 
 			if (order == null)
 				throw new AppException("Order not found", 404);
 
+			if (order.Status != StoreOrderStatus.Pending)
+				throw new AppException("Order already processed", 400);
+
 			order.Status = StoreOrderStatus.Rejected;
+			order.RejectedAt = _dateTime.UtcNow;
+			order.RejectedByUserId = currentUser.UserId;
 
 			_storeOrderRepository.Update(order);
 
@@ -131,8 +138,13 @@ namespace ToyShelf.Application.Services
 				Id = order.Id,
 				Code = order.Code,
 				StoreLocationId = order.StoreLocationId,
+				RequestedByUserId = order.RequestedByUserId,
+				ApprovedByUserId = order.ApprovedByUserId,
+				RejectedByUserId = order.RejectedByUserId,
 				Status = order.Status,
 				CreatedAt = order.CreatedAt,
+				ApprovedAt = order.ApprovedAt,
+				RejectedAt = order.RejectedAt,
 				Items = order.Items.Select(i => new StoreOrderItemResponse
 				{
 					ProductColorId = i.ProductColorId,

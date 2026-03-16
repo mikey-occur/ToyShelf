@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260315105652_AddfieldRejecteOfStoreOrder")]
+    partial class AddfieldRejecteOfStoreOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -174,8 +177,10 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid?>("MonthlySettlementId")
-                        .HasColumnType("uuid");
+                    b.Property<bool>("IsPaidOut")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<Guid>("OrderItemId")
                         .HasColumnType("uuid");
@@ -184,8 +189,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("MonthlySettlementId");
 
                     b.HasIndex("OrderItemId");
 
@@ -420,47 +423,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ToLocationId");
 
                     b.ToTable("InventoryTransactions");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.MonthlySettlement", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("timestamp with time zone")
-                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
-
-                    b.Property<int>("Month")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("PartnerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.Property<decimal>("TotalCommissionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TotalItems")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("Year")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartnerId");
-
-                    b.ToTable("MonthlySettlements");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
@@ -1608,12 +1570,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionHistory", b =>
                 {
-                    b.HasOne("ToyShelf.Domain.Entities.MonthlySettlement", "MonthlySettlement")
-                        .WithMany("CommissionHistories")
-                        .HasForeignKey("MonthlySettlementId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_CommissionHistory_MonthlySettlement");
-
                     b.HasOne("ToyShelf.Domain.Entities.OrderItem", "OrderItem")
                         .WithMany("CommissionHistories")
                         .HasForeignKey("OrderItemId")
@@ -1627,8 +1583,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_CommissionHistory_Partner");
-
-                    b.Navigation("MonthlySettlement");
 
                     b.Navigation("OrderItem");
 
@@ -1773,18 +1727,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductColor");
 
                     b.Navigation("ToLocation");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.MonthlySettlement", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.Partner", "Partner")
-                        .WithMany("MonthlySettlements")
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_MonthlySettlement_Partner");
-
-                    b.Navigation("Partner");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
@@ -2296,11 +2238,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ToShipments");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.MonthlySettlement", b =>
-                {
-                    b.Navigation("CommissionHistories");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
                 {
                     b.Navigation("OrderItems");
@@ -2314,8 +2251,6 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.Partner", b =>
                 {
                     b.Navigation("CommissionHistories");
-
-                    b.Navigation("MonthlySettlements");
 
                     b.Navigation("PriceTableApplies");
 

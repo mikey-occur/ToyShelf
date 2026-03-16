@@ -24,10 +24,10 @@ namespace ToyShelf.Application.Services
 			_unitOfWork = unitOfWork;
 		}
 
-		public async Task<IEnumerable<InventoryLocationResponse>> GetInventoryLocationsAsync(bool? isActive)
+		public async Task<IEnumerable<InventoryLocationResponse>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId)
 		{
 			var locations = await _inventoryLocationRepository
-				.GetInventoryLocationsAsync(isActive);
+				.GetInventoryLocationsAsync(isActive, StoreId, WarehouseId);
 
 			return locations.Select(MapToResponse);
 		}
