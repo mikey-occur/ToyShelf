@@ -299,8 +299,11 @@ namespace ToyShelf.Application.Services
 				.Select(c => new ProductColorResponse
 				{
 					Id = c.Id,
+					ProductId = product.Id,
 					Sku = c.Sku,
 					ColorId = c.ColorId,
+					ColorName = c.Color.Name,
+					Hexcode = c.Color.HexCode,
 					PriceSegmentId = c.PriceSegmentId,
 					Price = c.Price,
 					QrCode = c.QrCode,
