@@ -12,7 +12,7 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class RoleRepository : GenericRepository<Role>, IRoleRepository
 	{
-		public RoleRepository(ToyShelfDbContext context) : base(context) {}
+		public RoleRepository(ToyShelfDbContext context) : base(context) { }
 
 		public async Task<List<Role>> GetRolesByUserIdAsync(Guid userId)
 		{
@@ -34,7 +34,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		}
 		public async Task<IEnumerable<Role>> GetRolesAsync(bool? isActive)
 		{
-			var query = _context.Roles.AsQueryable();
+			var query = _context.Roles.AsNoTracking().AsQueryable();
 
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);

@@ -28,7 +28,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<IEnumerable<T>> GetAllAsync()
 		{
-			return await _dbSet.ToListAsync();
+			return await _dbSet.AsNoTracking().ToListAsync();
 		}
 
 		public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)

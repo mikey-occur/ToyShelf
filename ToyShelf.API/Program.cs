@@ -27,6 +27,8 @@ builder.Services
 		opt.JsonSerializerOptions.Converters
 			.Add(new VietnamDateTimeJsonConverter()
 		);
+		opt.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+		opt.JsonSerializerOptions.WriteIndented = false;
 	});
 builder.Services.AddSwaggerGen(options =>
 {
@@ -78,12 +80,12 @@ if (enableSwagger)
 app.UseCors("AllowAll");
 app.UseStaticFiles(new StaticFileOptions
 {
-    ContentTypeProvider = provider,
-	ServeUnknownFileTypes = true, 
-    DefaultContentType = "application/octet-stream"
+	ContentTypeProvider = provider,
+	ServeUnknownFileTypes = true,
+	DefaultContentType = "application/octet-stream"
 });
 
-//app.UseMiddleware<ExceptionMiddleware>();
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Enable serving static files from wwwroot (e.g., /robot, /AssetBundles)
 // ServeUnknownFileTypes required for files without extensions
