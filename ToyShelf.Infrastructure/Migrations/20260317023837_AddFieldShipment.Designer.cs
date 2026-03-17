@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260317023837_AddFieldShipment")]
+    partial class AddFieldShipment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1126,9 +1129,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("StoreOrderId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("WarehouseLocationId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedByUserId");
@@ -1136,8 +1136,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ShipperId");
 
                     b.HasIndex("StoreOrderId");
-
-                    b.HasIndex("WarehouseLocationId");
 
                     b.ToTable("ShipmentAssignments");
                 });
@@ -2056,20 +2054,11 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ShipmentAssignment_StoreOrder");
 
-                    b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "WarehouseLocation")
-                        .WithMany("ShipmentAssignments")
-                        .HasForeignKey("WarehouseLocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
-
                     b.Navigation("AssignedByUser");
 
                     b.Navigation("Shipper");
 
                     b.Navigation("StoreOrder");
-
-                    b.Navigation("WarehouseLocation");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentItem", b =>
@@ -2310,8 +2299,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Inventories");
 
                     b.Navigation("OutgoingInventoryTransactions");
-
-                    b.Navigation("ShipmentAssignments");
 
                     b.Navigation("StoreOrders");
 

@@ -17,6 +17,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(Guid shipperId)
 		{
 			return await _context.ShipmentAssignments
+				.Include(x => x.WarehouseLocation)
 				.Include(x => x.Shipper)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.StoreOrder)
@@ -36,6 +37,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<ShipmentAssignment?> GetByIdWithDetailsAsync(Guid id)
 		{
 			return await _context.ShipmentAssignments
+				.Include(x => x.WarehouseLocation)
 				.Include(x => x.Shipper)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.StoreOrder)
@@ -49,6 +51,24 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Color)  
 				.FirstOrDefaultAsync(x => x.Id == id);
+		}
+
+		public async Task<IEnumerable<ShipmentAssignment>> GetByStoreOrderIdWithDetailsAsync(Guid storeOrderId)
+		{
+			return await _context.ShipmentAssignments
+				.Include(x => x.WarehouseLocation)
+				.Include(x => x.StoreOrder)
+					.ThenInclude(x => x.StoreLocation)
+				.Include(x => x.StoreOrder.Items)
+					.ThenInclude(x => x.ProductColor)
+						.ThenInclude(pc => pc.Product)
+				.Include(x => x.StoreOrder.Items)
+					.ThenInclude(x => x.ProductColor)
+						.ThenInclude(pc => pc.Color)
+				.Include(x => x.Shipper)
+				.Include(x => x.AssignedByUser)
+				.Where(x => x.StoreOrderId == storeOrderId)
+				.ToListAsync();
 		}
 	}
 }

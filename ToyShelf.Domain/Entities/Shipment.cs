@@ -31,6 +31,8 @@ namespace ToyShelf.Domain.Entities
 		public ShipmentStatus Status { get; set; }
 
 		public DateTime CreatedAt { get; set; }
+		public DateTime? PickedUpAt { get; set; }
+		public DateTime? DeliveredAt { get; set; }
 		public DateTime? ReceivedAt { get; set; }
 
 		public virtual StoreOrder StoreOrder { get; set; } = null!;
