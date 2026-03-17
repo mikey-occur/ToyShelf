@@ -30,8 +30,16 @@ namespace ToyShelf.Application.Services
 
 		public async Task<IEnumerable<RoleResponse>> GetRolesAsync(bool? isActive)
 		{
-			var roles = await _roleRepository.GetRolesAsync(isActive);
-			return roles.Select(MapToResponse);
+			try
+			{
+				var roles = await _roleRepository.GetRolesAsync(isActive);
+				return roles.Select(MapToResponse).ToList();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"[RoleService.GetRolesAsync] isActive={isActive} {ex}");
+				throw;
+			}
 		}
 
 		public async Task<RoleResponse?> GetByIdAsync(Guid id)

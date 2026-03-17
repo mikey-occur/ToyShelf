@@ -52,8 +52,16 @@ namespace ToyShelf.Application.Services
 		// ===== 2. GET ALL =====
 		public async Task<IEnumerable<CityResponse>> GetAsync()
 		{
-			var cities = await _cityRepository.GetAllAsync();
-			return cities.Select(c => MapToResponse(c));
+			try
+			{
+				var cities = await _cityRepository.GetAllAsync();
+				return cities.Select(MapToResponse).ToList();
+			}
+			catch (Exception ex)
+			{
+				Console.Error.WriteLine($"[CityService.GetAsync] {ex}");
+				throw;
+			}
 		}
 
 		// ===== 3. GET BY ID =====

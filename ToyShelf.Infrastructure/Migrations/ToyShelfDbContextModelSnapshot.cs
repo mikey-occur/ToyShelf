@@ -482,9 +482,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<Guid>("StaffId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -497,14 +494,17 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OrderCode")
                         .IsUnique();
 
-                    b.HasIndex("StaffId");
-
                     b.HasIndex("StoreId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Orders");
                 });
@@ -1800,13 +1800,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
                 {
-                    b.HasOne("ToyShelf.Domain.Entities.User", "Staff")
-                        .WithMany("Orders")
-                        .HasForeignKey("StaffId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Order_Staff");
-
                     b.HasOne("ToyShelf.Domain.Entities.Store", "Store")
                         .WithMany("Orders")
                         .HasForeignKey("StoreId")
@@ -1814,7 +1807,9 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Order_Store");
 
-                    b.Navigation("Staff");
+                    b.HasOne("ToyShelf.Domain.Entities.User", null)
+                        .WithMany("Orders")
+                        .HasForeignKey("UserId");
 
                     b.Navigation("Store");
                 });

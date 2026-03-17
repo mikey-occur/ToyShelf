@@ -32,7 +32,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
 			var query = _context.Products
-				.Include(p => p.ProductColors).
+				.Include(p => p.ProductColors)
+				.ThenInclude(pc => pc.Color).
 				AsQueryable();
 			if (isActive.HasValue)
 				query = query.Where(p => p.IsActive == isActive.Value);
@@ -62,7 +63,8 @@ namespace ToyShelf.Infrastructure.Repositories
         int pageNumber = 1,
         int pageSize = 10,
         bool? isActive = null,
-		Guid? categoryId =null)
+		Guid? categoryId =null,
+		string? searchItem = null)
         {
             var query = _context.Products.AsQueryable();
 
@@ -73,8 +75,10 @@ namespace ToyShelf.Infrastructure.Repositories
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.ProductCategoryId == categoryId.Value);
+			if (!string.IsNullOrWhiteSpace(searchItem))
+				query = query.Where(p => p.Name.Contains(searchItem));
 
-            var items = await query
+                var items = await query
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
