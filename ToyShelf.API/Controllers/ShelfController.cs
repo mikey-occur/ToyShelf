@@ -44,10 +44,7 @@ namespace ToyShelf.API.Controllers
             return BaseResponse<ShelfResponse>.Ok(result, "Shelf created successfully");
         }
 
-        // ===== GET ALL =====
-        /// <summary>
-        /// Get all shelves.
-        /// </summary>
+      
         //[HttpGet]
         //public async Task<BaseResponse<IEnumerable<ShelfResponse>>> GetAll()
         //{

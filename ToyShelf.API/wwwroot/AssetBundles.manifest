@@ -1,9 +1,0 @@
-ManifestFileVersion: 0
-UnityVersion: 6000.0.59f2
-CRC: 1298090679
-HashAppended: 0
-AssetBundleManifest:
-  AssetBundleInfos:
-    Info_0:
-      Name: robot
-      Dependencies: {}
