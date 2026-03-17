@@ -187,7 +187,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(a => a.Staff)
 					  .HasForeignKey(a => a.StaffId);
 
-
 				// StoreCreationRequest
 				entity.HasMany(e => e.CreatedStoreRequests)
 					  .WithOne(a => a.RequestedByUser)
@@ -535,6 +534,9 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.Description)
 					  .HasMaxLength(1000);
+
+				entity.Property(e => e.Barcode)
+					  .HasMaxLength(200);
 
 				entity.Property(e => e.Brand)
 					  .HasMaxLength(200);
