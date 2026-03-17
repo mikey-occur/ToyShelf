@@ -45,7 +45,14 @@ namespace ToyShelf.Application.Services
 			var category = await _categoryRepository.GetByIdAsync(request.ProductCategoryId);
 			if (category == null)
 				throw new KeyNotFoundException($"Category not found. Id = {request.ProductCategoryId}");
-
+			if (!string.IsNullOrWhiteSpace(request.Barcode))
+			{
+				bool isDuplicate = await _productRepository.IsBarcodeExistsAsync(request.Barcode);
+				if (isDuplicate)
+				{
+					throw new Exception($"Mã Barcode '{request.Barcode}' đã tồn tại trong hệ thống ToyShelf.");
+				}
+			}
 			// Map category code
 			string categoryCode = MapCategoryToCode(category.Code); // robo-dog -> RD
 
@@ -62,7 +69,7 @@ namespace ToyShelf.Application.Services
 				SKU = sku,
 				BasePrice = request.BasePrice,
                 Description = request.Description,
-				Barcode = request.Barcode,
+				Barcode = request.Barcode?.Trim(),
 				Brand = request.Brand,
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
@@ -178,10 +185,18 @@ namespace ToyShelf.Application.Services
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
 				throw new AppException($"Product Id = {id} not found", 404);
+			if (!string.IsNullOrWhiteSpace(request.Barcode) && request.Barcode != product.Barcode)
+			{
+				bool isDuplicate = await _productRepository.IsBarcodeExistsAsync(request.Barcode, id);
+				if (isDuplicate)
+				{
+					throw new AppException($"Barcode '{request.Barcode}' Bar code is in use.", 400);
+				}
+				product.Barcode = request.Barcode.Trim();
+			}
 			// Update fields
 			product.Description = request.Description ?? product.Description;
 			product.BasePrice = request.BasePrice != default ? request.BasePrice : product.BasePrice;
-			product.Barcode = request.Barcode ?? product.Barcode;
 			product.Brand = request.Brand ?? product.Brand;
 			product.Material = request.Material ?? product.Material;
 			product.OriginCountry = request.OriginCountry ?? product.OriginCountry;

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -108,6 +109,22 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await query
 				.OrderByDescending(p => p.CreatedAt)
 				.ToListAsync();
+		}
+
+		public async Task<bool> IsBarcodeExistsAsync(string barcode, Guid? excludeProductId = null)
+		{
+			if (string.IsNullOrWhiteSpace(barcode)) return false;
+
+			var query = _context.Products.AsNoTracking()
+				.Where(p => p.Barcode == barcode.Trim());
+
+			// Nếu là Update, loại trừ ID hiện tại
+			if (excludeProductId.HasValue)
+			{
+				query = query.Where(p => p.Id != excludeProductId.Value);
+			}
+
+			return await query.AnyAsync();
 		}
 	}
 }
