@@ -62,6 +62,7 @@ namespace ToyShelf.Application.Services
 				SKU = sku,
 				BasePrice = request.Price,
                 Description = request.Description,
+				Barcode = request.Barcode,
 				Brand = request.Brand,
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
@@ -180,6 +181,8 @@ namespace ToyShelf.Application.Services
 				throw new AppException($"Product Id = {id} not found", 404);
 			// Update fields
 			product.Description = request.Description ?? product.Description;
+			product.BasePrice = request.Price != default ? request.Price : product.BasePrice;
+			product.Barcode = request.Barcode ?? product.Barcode;
 			product.Brand = request.Brand ?? product.Brand;
 			product.Material = request.Material ?? product.Material;
 			product.OriginCountry = request.OriginCountry ?? product.OriginCountry;
@@ -280,6 +283,7 @@ namespace ToyShelf.Application.Services
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,
+				Barcode = product.Barcode,
 				Price = product.BasePrice,
 				Brand = product.Brand,
 				Material = product.Material,
