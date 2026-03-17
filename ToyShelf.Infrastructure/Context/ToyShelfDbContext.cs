@@ -1434,6 +1434,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.StoreOrders)
 				      .WithOne(a => a.StoreLocation)
 				      .HasForeignKey(a => a.StoreLocationId);
+
+				entity.HasMany(e => e.ShipmentAssignments)
+					  .WithOne(a => a.WarehouseLocation)
+					  .HasForeignKey(a => a.WarehouseLocationId);
 			});
 
 			// ==================== Shipment ==================
@@ -1457,6 +1461,9 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+				entity.Property(e => e.PickedUpAt);
+
+				entity.Property(e => e.DeliveredAt);
 
 				entity.Property(e => e.ReceivedAt);
 
@@ -1626,6 +1633,10 @@ namespace ToyShelf.Infrastructure.Context
 				  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
 				  .OnDelete(DeleteBehavior.Restrict);
 
+				entity.HasOne(e => e.WarehouseLocation)
+				  .WithMany(s => s.ShipmentAssignments)
+				  .HasForeignKey(e => e.WarehouseLocationId)
+				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
 			});
 
 				// ================== Order ==================

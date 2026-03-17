@@ -15,6 +15,12 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public string StoreOrderCode { get; set; } = null!;
 
+		public Guid WarehouseLocationId { get; set; }
+
+		public string WarehouseLocationName { get; set; } = null!;
+
+		public Guid StoreLocationId { get; set; }
+
 		public string StoreLocationName { get; set; } = null!;
 
 		public string ShipperName { get; set; } = null!;

@@ -12,12 +12,10 @@ namespace ToyShelf.Application.IServices
 	public interface IShipmentAssignmentService
 	{
 		Task<ShipmentAssignmentResponse> CreateAsync(CreateShipmentAssignmentRequest request, ICurrentUser currentUser);
-
 		Task AcceptAsync(Guid id, ICurrentUser currentUser);
-
 		Task RejectAsync(Guid id, ICurrentUser currentUser);
-
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(ICurrentUser currentUser);
+		Task<IEnumerable<ShipmentAssignmentResponse>> GetByStoreOrderId(Guid storeOrderId);
 	}
 
 }

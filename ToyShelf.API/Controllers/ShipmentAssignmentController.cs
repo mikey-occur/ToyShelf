@@ -6,6 +6,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
+using ToyShelf.Application.Services;
 
 namespace ToyShelf.API.Controllers
 {
@@ -59,6 +60,15 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Assignments retrieved");
+		}
+
+		[HttpGet("store-order/{storeOrderId}")]
+		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetByStoreOrder(Guid storeOrderId)
+		{
+			var result = await _service.GetByStoreOrderId(storeOrderId);
+
+			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
+				.Ok(result, "Assignments retrieved successfully");
 		}
 	}
 }

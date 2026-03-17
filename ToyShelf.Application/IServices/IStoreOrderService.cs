@@ -13,7 +13,7 @@ namespace ToyShelf.Application.IServices
 	public interface IStoreOrderService
 	{
 		Task<StoreOrderResponse> CreateAsync(CreateStoreOrderRequest request);
-		Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus status);
+		Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status);
 		Task<StoreOrderResponse> GetByIdAsync(Guid id);
 		Task ApproveAsync(Guid id, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, ICurrentUser currentUser);

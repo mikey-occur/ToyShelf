@@ -1,0 +1,16 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ToyShelf.Application.Models.Shipment.Response
+{
+	public class ShipmentItemResponse
+	{
+		public string ProductName { get; set; } = null!;
+		public string Color { get; set; } = null!;
+		public int ExpectedQuantity { get; set; }
+		public int ReceivedQuantity { get; set; }
+	}
+}
