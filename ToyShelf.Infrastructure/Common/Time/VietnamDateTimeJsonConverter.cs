@@ -10,8 +10,37 @@ namespace ToyShelf.Infrastructure.Common.Time
 {
 	public class VietnamDateTimeJsonConverter : JsonConverter<DateTime>
 	{
+		private static readonly string[] VietnamTimeZoneIds =
+		{
+			"SE Asia Standard Time",
+			"Asia/Ho_Chi_Minh"
+		};
+
 		private static readonly TimeZoneInfo VietnamTimeZone =
-			TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+			ResolveVietnamTimeZone();
+
+		private static TimeZoneInfo ResolveVietnamTimeZone()
+		{
+			foreach (var id in VietnamTimeZoneIds)
+			{
+				try
+				{
+					return TimeZoneInfo.FindSystemTimeZoneById(id);
+				}
+				catch (TimeZoneNotFoundException)
+				{
+					// Try next ID.
+				}
+				catch (InvalidTimeZoneException)
+				{
+					// Try next ID.
+				}
+			}
+
+			Console.Error.WriteLine(
+				"[VietnamDateTimeJsonConverter] Vietnam time zone not found. Falling back to UTC.");
+			return TimeZoneInfo.Utc;
+		}
 
 		public override DateTime Read(
 			ref Utf8JsonReader reader,
