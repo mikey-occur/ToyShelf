@@ -20,18 +20,20 @@ namespace ToyShelf.Domain.Entities
 		public Guid StoreOrderId { get; set; }
 		public Guid WarehouseLocationId { get; set; }
 
-		public Guid ShipperId { get; set; }
+		public Guid? ShipperId { get; set; }
 
 		public AssignmentStatus Status { get; set; }
 
 		public DateTime CreatedAt { get; set; }
 		public DateTime? RespondedAt { get; set; }
 
-		public Guid AssignedByUserId { get; set; }
+		public Guid CreatedByUserId { get; set; }
+		public Guid? AssignedByUserId { get; set; }
 
 		public virtual StoreOrder StoreOrder { get; set; } = null!;
-		public virtual User Shipper { get; set; } = null!;
-		public virtual User AssignedByUser { get; set; } = null!;
+		public virtual User? Shipper { get; set; }
+		public virtual User CreatedByUser { get; set; } = null!;
+		public virtual User? AssignedByUser { get; set; } 
 		public virtual Shipment? Shipment { get; set; }
 		public virtual InventoryLocation WarehouseLocation { get; set; } = null!;
 	}

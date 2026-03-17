@@ -42,7 +42,7 @@ namespace ToyShelf.API.Controllers
 
 
 		[HttpPost]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<ShipmentResponse>> Create(
 			[FromBody] CreateShipmentRequest request,
 			[FromServices] ICurrentUser currentUser)
@@ -78,7 +78,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPatch("{id}/receive")]
-		[Authorize(Roles = "Partner")]
+		[Authorize(Roles = "Partner, PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Receive(Guid id)
 		{
 			await _shipmentService.ReceiveAsync(id);

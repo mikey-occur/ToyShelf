@@ -1628,6 +1628,11 @@ namespace ToyShelf.Infrastructure.Context
 				  .HasForeignKey(e => e.AssignedByUserId)
 				  .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
 
+				entity.HasOne(e => e.CreatedByUser)
+				  .WithMany(s => s.CreatedShipmentAssignments)
+				  .HasForeignKey(e => e.CreatedByUserId)
+				  .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
+
 				entity.HasOne(sa => sa.Shipment)
 				  .WithOne(s => s.ShipmentAssignment)
 				  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
