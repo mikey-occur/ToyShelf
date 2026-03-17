@@ -43,6 +43,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				StoreId = request.StoreId,
+				StaffId = request.StaffId,
 				OrderCode = orderCode,
 				TotalAmount = 0,
 				PaymentMethod = "QR",

@@ -10,6 +10,7 @@ namespace ToyShelf.Domain.Entities
 	{
 		public Guid Id { get; set; }
 		public Guid StoreId { get; set; }
+		public Guid StaffId { get; set; }
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = null!;   // CASH, QR
 		public string Status { get; set; } = null!;          // CREATED, PAID, CANCELLED
@@ -17,6 +18,7 @@ namespace ToyShelf.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 
 		public virtual Store Store { get; set; } = null!;
+		public virtual User Staff { get; set; } = null!;
 
 		public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 	}
