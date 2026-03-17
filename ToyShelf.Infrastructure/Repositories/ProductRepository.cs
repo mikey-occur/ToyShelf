@@ -66,9 +66,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		Guid? categoryId =null,
 		string? searchItem = null)
         {
-			try
-			{
-					  var query = _context.Products.AsQueryable();
+            var query = _context.Products.AsQueryable();
 
             if (isActive.HasValue)
                 query = query.Where(p => p.IsActive == isActive.Value);
@@ -77,7 +75,6 @@ namespace ToyShelf.Infrastructure.Repositories
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.ProductCategoryId == categoryId.Value);
-
 			if (!string.IsNullOrWhiteSpace(searchItem))
 				query = query.Where(p => p.Name.Contains(searchItem));
 
@@ -87,16 +84,8 @@ namespace ToyShelf.Infrastructure.Repositories
                 .Take(pageSize)
 				.Include(p => p.ProductColors)
                 .ToListAsync();
-			 return (items, totalCount);
-           
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine($"Lỗi thật sự là: {ex.Message} - {ex.InnerException?.Message}");
-        throw;
-			}
-			
-          
+
+            return (items, totalCount);
         }
     
 		public async Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive)
