@@ -32,7 +32,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
 			var query = _context.Products
-				.Include(p => p.ProductColors).
+				.Include(p => p.ProductColors)
+				.ThenInclude(pc => pc.Color).
 				AsQueryable();
 			if (isActive.HasValue)
 				query = query.Where(p => p.IsActive == isActive.Value);
