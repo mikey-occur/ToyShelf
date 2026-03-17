@@ -57,7 +57,6 @@ namespace ToyShelf.Application.Services
 				Price = request.Price,
 				Sku = sku,
 				QrCode = qrCode,
-				Model3DUrl = request.Model3DUrl,
 				ImageUrl = request.ImageUrl,
 				IsActive = true
 			};
@@ -129,7 +128,6 @@ namespace ToyShelf.Application.Services
 			productColor.PriceSegmentId = request.PriceSegmentId;
 			productColor.Price = request.Price;
 			productColor.QrCode = request.QrCode;
-			productColor.Model3DUrl = request.Model3DUrl;
 			productColor.ImageUrl = request.ImageUrl;
 			_productColorRepository.Update(productColor);
 			await _unitOfWork.SaveChangesAsync();
@@ -149,11 +147,10 @@ namespace ToyShelf.Application.Services
 				ProductId = color.Product.Id,
 				ProductName = color.Product.Name,
 				ProductSku = color.Product.SKU,
-				Price = color.Product.BasePrice,
+				BasePrice = color.Product.BasePrice,
 				Description = color.Product.Description,
 				Barcode = color.Product.Barcode,
 				QrCode = color.QrCode,
-				Model3DUrl = color.Model3DUrl,
 				ImageUrl = color.ImageUrl,
 				Brand = color.Product.Brand,
 				Material = color.Product.Material,
@@ -177,7 +174,6 @@ namespace ToyShelf.Application.Services
 				Sku = productColor.Sku,
 				Price = productColor.Price,
 				QrCode = productColor.QrCode,
-				Model3DUrl = productColor.Model3DUrl,
 				ImageUrl = productColor.ImageUrl,
 				IsActive = productColor.IsActive
 			};

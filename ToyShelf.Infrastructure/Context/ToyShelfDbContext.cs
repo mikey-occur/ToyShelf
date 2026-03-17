@@ -538,6 +538,12 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Barcode)
 					  .HasMaxLength(200);
 
+				// THÊM INDEX CHO BARCODE Ở ĐÂY
+				entity.HasIndex(e => e.Barcode)
+					  .HasDatabaseName("IX_Product_Barcode");
+
+				entity.HasIndex(p => p.Barcode).IsUnique();
+
 				entity.Property(e => e.Brand)
 					  .HasMaxLength(200);
 
@@ -640,10 +646,7 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.QrCode)
 					  .HasColumnType("text");
-
-				entity.Property(e => e.Model3DUrl)
-					  .HasMaxLength(500);
-
+				
 				entity.Property(e => e.ImageUrl)
 					  .HasMaxLength(500);
 
