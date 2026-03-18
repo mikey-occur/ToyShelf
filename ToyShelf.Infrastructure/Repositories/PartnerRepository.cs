@@ -29,7 +29,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<Partner?> GetByIdWithTierAsync(Guid id)
 		{
-			string mainRoleName = "partner admin";
+			string mainRoleName = "partneradmin";
 
 			return await _context.Partners
 				.Include(p => p.PartnerTier)

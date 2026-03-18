@@ -9,7 +9,7 @@ namespace ToyShelf.Application.IServices
 {
 	public interface IOrderService
 	{
-		Task<string> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request);
+		Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request);
 		Task<Guid?> HandlePaymentSuccessAsync(long orderCode);
 
 		Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode);
