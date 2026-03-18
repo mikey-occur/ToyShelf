@@ -11,6 +11,8 @@ namespace ToyShelf.Application.Models.Order
 		// ID của cửa hàng phát sinh đơn hàng
 		public Guid StoreId { get; set; }
 
+		public Guid StaffId { get; set; }
+
 		// Danh sách các món hàng
 		public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();
 	}

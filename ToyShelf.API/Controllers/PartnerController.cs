@@ -40,10 +40,10 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("{id}")]
-		public async Task<BaseResponse<PartnerResponse>> GetById(Guid id)
+		public async Task<BaseResponse<PartnerDetailResponse>> GetById(Guid id)
 		{
 			var result = await _partnerService.GetByIdAsync(id);
-			return BaseResponse<PartnerResponse>
+			return BaseResponse<PartnerDetailResponse>
 				.Ok(result, "Partner retrieved successfully");
 		}
 

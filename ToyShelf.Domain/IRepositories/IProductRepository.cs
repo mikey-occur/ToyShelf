@@ -14,5 +14,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Product?> GetByIdAsync(Guid id, bool? colorActive = null);
 		Task<(IEnumerable<Product> Items, int TotalCount)> GetProductsPaginatedAsync(int pageNumber = 1,int pageSize = 10,bool? isActive = null, Guid? categoryId = null, string? searchItem = null);
 		Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive);
+		Task<bool> IsBarcodeExistsAsync(string barcode, Guid? excludeProductId = null );
 	}
 }

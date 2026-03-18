@@ -17,7 +17,7 @@ namespace ToyShelf.Domain.Entities
 		public decimal Price { get; set; }
 
 		public string? QrCode { get; set; }
-		public string? Model3DUrl { get; set; } // link to 3D model
+
 		public string? ImageUrl { get; set; }
 
 		public bool IsActive { get; set; }

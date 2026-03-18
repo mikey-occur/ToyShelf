@@ -45,7 +45,14 @@ namespace ToyShelf.Application.Services
 			var category = await _categoryRepository.GetByIdAsync(request.ProductCategoryId);
 			if (category == null)
 				throw new KeyNotFoundException($"Category not found. Id = {request.ProductCategoryId}");
-
+			if (!string.IsNullOrWhiteSpace(request.Barcode))
+			{
+				bool isDuplicate = await _productRepository.IsBarcodeExistsAsync(request.Barcode);
+				if (isDuplicate)
+				{
+					throw new Exception($"Mã Barcode '{request.Barcode}' đã tồn tại trong hệ thống ToyShelf.");
+				}
+			}
 			// Map category code
 			string categoryCode = MapCategoryToCode(category.Code); // robo-dog -> RD
 
@@ -60,8 +67,9 @@ namespace ToyShelf.Application.Services
 				Name = request.Name,
 				ProductCategoryId = request.ProductCategoryId,
 				SKU = sku,
-				BasePrice = request.Price,
+				BasePrice = request.BasePrice,
                 Description = request.Description,
+				Barcode = request.Barcode?.Trim(),
 				Brand = request.Brand,
 				Material = request.Material,
 				OriginCountry = request.OriginCountry,
@@ -99,7 +107,6 @@ namespace ToyShelf.Application.Services
 						Price = colorReq.Price,
 						Sku = variantSku,
 						QrCode = qrCode,
-						Model3DUrl = colorReq.Model3DUrl,
 						ImageUrl = colorReq.ImageUrl,
 						IsActive = true
 					};
@@ -178,8 +185,18 @@ namespace ToyShelf.Application.Services
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
 				throw new AppException($"Product Id = {id} not found", 404);
+			if (!string.IsNullOrWhiteSpace(request.Barcode) && request.Barcode != product.Barcode)
+			{
+				bool isDuplicate = await _productRepository.IsBarcodeExistsAsync(request.Barcode, id);
+				if (isDuplicate)
+				{
+					throw new AppException($"Barcode '{request.Barcode}' Bar code is in use.", 400);
+				}
+				product.Barcode = request.Barcode.Trim();
+			}
 			// Update fields
 			product.Description = request.Description ?? product.Description;
+			product.BasePrice = request.BasePrice != default ? request.BasePrice : product.BasePrice;
 			product.Brand = request.Brand ?? product.Brand;
 			product.Material = request.Material ?? product.Material;
 			product.OriginCountry = request.OriginCountry ?? product.OriginCountry;
@@ -218,7 +235,6 @@ namespace ToyShelf.Application.Services
 						// NẾU ĐÃ CÓ -> Chỉ cập nhật giá, hình ảnh, 3D... KHÔNG đổi Id, KHÔNG gen lại SKU
 						existingColor.PriceSegmentId = colorReq.PriceSegmentId;
 						existingColor.Price = colorReq.Price;
-						existingColor.Model3DUrl = colorReq.Model3DUrl;
 						existingColor.ImageUrl = colorReq.ImageUrl;
 
 						
@@ -247,7 +263,6 @@ namespace ToyShelf.Application.Services
 							Sku = generatedSku,
 							Price = colorReq.Price,
 							QrCode = qrCode,
-							Model3DUrl = colorReq.Model3DUrl,
 							ImageUrl = colorReq.ImageUrl,
 							IsActive = true
 						};
@@ -280,7 +295,8 @@ namespace ToyShelf.Application.Services
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,
-				Price = product.BasePrice,
+				Barcode = product.Barcode,
+				BasePrice = product.BasePrice,
 				Brand = product.Brand,
 				Material = product.Material,
 				OriginCountry = product.OriginCountry,
@@ -307,7 +323,6 @@ namespace ToyShelf.Application.Services
 					PriceSegmentId = c.PriceSegmentId,
 					Price = c.Price,
 					QrCode = c.QrCode,
-					Model3DUrl = c.Model3DUrl,
 					ImageUrl = c.ImageUrl,
 					IsActive = c.IsActive
 				})
