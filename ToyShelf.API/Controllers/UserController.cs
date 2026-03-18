@@ -56,7 +56,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("profile")]
-		[Authorize(Roles = "PartnerAdmin,Partner,Admin")]
+		[Authorize(Roles = "PartnerAdmin,Partner,Admin,Warehouse")]
 		public async Task<BaseResponse<UserProfileResponse>> GetProfile([FromServices] ICurrentUser currentUser)
 		{
 			var rs = await _userService.GetProfileByUserIdAsync(currentUser.UserId);

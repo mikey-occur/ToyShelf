@@ -102,7 +102,7 @@ namespace ToyShelf.Application.Services
 
 			var mainUser = partner.Users?.FirstOrDefault();
 			var mainAccount = mainUser?.Accounts?.FirstOrDefault(a =>
-				a.AccountRoles.Any(ar => ar.Role.Name.ToLower().Trim() == "partner admin"));
+				a.AccountRoles.Any(ar => ar.Role.Name.ToLower().Trim() == "partneradmin"));
 
 			return MapToDetailResponse(partner, mainUser, mainAccount);
 		}
