@@ -25,7 +25,20 @@ namespace ToyShelf.Application.Services
 		}
 		public async Task<PriceTableResponse> CreateAsync(PriceTableRequest request)
 		{
-			
+			if (request.Type == PriceTableType.Tier && !request.PartnerTierId.HasValue)
+				throw new AppException("Partner tier is required for Tier price tables", 400);
+
+			if (request.PartnerTierId.HasValue)
+			{
+				if (request.PartnerTierId.Value == Guid.Empty)
+					throw new AppException("Partner tier is invalid", 400);
+
+				var tierExists = await _unitOfWork.Repository<PartnerTier>()
+					.AnyAsync(t => t.Id == request.PartnerTierId.Value);
+				if (!tierExists)
+					throw new AppException("Partner tier not found", 404);
+			}
+
 			var priceTable = new PriceTable
 			{
 				Id = Guid.NewGuid(),
@@ -42,16 +55,16 @@ namespace ToyShelf.Application.Services
 					var priceItem = new PriceItem
 					{
 						Id = Guid.NewGuid(),
-						PriceTableId = priceTable.Id, 
+						PriceTableId = priceTable.Id,
 						PriceSegmentId = itemReq.PriceSegmentId,
 						CommissionRate = itemReq.CommissionRate
 					};
-				
+
 					priceTable.PriceItems.Add(priceItem);
 				}
 			}
 
-			
+
 			await _repo.AddAsync(priceTable);
 			await _unitOfWork.SaveChangesAsync();
 
@@ -64,8 +77,8 @@ namespace ToyShelf.Application.Services
 			var priceTable = await _repo.GetByIdAsync(id)
 			?? throw new KeyNotFoundException("Price Table not found");
 
-			
-		   bool isInUse = await _repo.IsPriceTableInUseAsync(id);
+
+			bool isInUse = await _repo.IsPriceTableInUseAsync(id);
 			if (isInUse)
 			{
 				throw new InvalidOperationException("Can't not delete because in use");
@@ -90,7 +103,7 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}
-	
+
 		public async Task<bool> DisablePriceTableAsync(Guid id)
 		{
 			var priceTable = await _repo.GetByIdAsync(id);
@@ -127,13 +140,27 @@ namespace ToyShelf.Application.Services
 			var priceTable = await _repo.GetByIdWithDetailsAsync(id)
 	   ?? throw new AppException("Price Table not found", 404);
 
+			if (request.Type == PriceTableType.Tier && !request.PartnerTierId.HasValue)
+				throw new AppException("Partner tier is required for Tier price tables", 400);
+
+			if (request.PartnerTierId.HasValue)
+			{
+				if (request.PartnerTierId.Value == Guid.Empty)
+					throw new AppException("Partner tier is invalid", 400);
+
+				var tierExists = await _unitOfWork.Repository<PartnerTier>()
+					.AnyAsync(t => t.Id == request.PartnerTierId.Value);
+				if (!tierExists)
+					throw new AppException("Partner tier not found", 404);
+			}
+
 			// Cập nhật thông tin cha
 			priceTable.Name = request.Name;
 			priceTable.PartnerTierId = request.PartnerTierId;
 			priceTable.Type = request.Type;
 			priceTable.IsActive = request.IsActive;
 
-			
+
 			// ===== Xử lý PriceItems =====
 			if (request.Items != null && request.Items.Any())
 			{
