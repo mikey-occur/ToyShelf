@@ -33,7 +33,7 @@ namespace ToyShelf.Application.Services
 			try
 			{
 				var roles = await _roleRepository.GetRolesAsync(isActive);
-				return roles.Select(MapToResponse);
+				return roles.Select(MapToResponse).ToList();
 			}
 			catch (Exception ex)
 			{

@@ -49,6 +49,7 @@ namespace ToyShelf.Application.Services
 			var assignment = new ShipmentAssignment
 			{
 				Id = Guid.NewGuid(),
+				WarehouseLocationId = request.WarehouseLocationId,
 				StoreOrderId = request.StoreOrderId,
 				ShipperId = request.ShipperId,
 				Status = AssignmentStatus.Pending,
@@ -119,6 +120,14 @@ namespace ToyShelf.Application.Services
 			return assignments.Select(MapToResponse);
 		}
 
+		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetByStoreOrderId(Guid storeOrderId)
+		{
+			var assignments = await _assignmentRepository
+				.GetByStoreOrderIdWithDetailsAsync(storeOrderId);
+
+			return assignments.Select(MapToResponse);
+		}
+
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
 			return new ShipmentAssignmentResponse
@@ -128,6 +137,12 @@ namespace ToyShelf.Application.Services
 				StoreOrderId = assignment.StoreOrderId,
 
 				StoreOrderCode = assignment.StoreOrder.Code,
+
+				WarehouseLocationId = assignment.WarehouseLocationId,
+
+				WarehouseLocationName = assignment.WarehouseLocation.Name,
+
+				StoreLocationId = assignment.StoreOrder.StoreLocationId,
 
 				StoreLocationName = assignment.StoreOrder.StoreLocation.Name,
 

@@ -55,7 +55,7 @@ namespace ToyShelf.Application.Services
 			try
 			{
 				var cities = await _cityRepository.GetAllAsync();
-				return cities.Select(c => MapToResponse(c));
+				return cities.Select(MapToResponse).ToList();
 			}
 			catch (Exception ex)
 			{
