@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Hangfire;
+using Hangfire.PostgreSql;
+using Microsoft.Extensions.Options;
 using PayOS;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.IServices;
@@ -39,6 +41,17 @@ namespace ToyShelf.API.Configuration
 
 
 
+			// ===== Hangfire =====
+			services.AddHangfire(config => config
+				.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+				.UseSimpleAssemblyNameTypeSerializer()
+				.UseRecommendedSerializerSettings()
+				.UsePostgreSqlStorage(options =>
+				{
+					options.UseNpgsqlConnection(configuration.GetConnectionString("PostgreSql"));
+				}));
+			services.AddHangfireServer();
+			
 			// ===== Unit of Work & Generic =====
 			services.AddScoped<IUnitOfWork, UnitOfWork>();
 

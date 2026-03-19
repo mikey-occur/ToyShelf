@@ -1674,6 +1674,18 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
 
+				entity.Property(e => e.CustomerName)
+					  .IsRequired()
+					  .HasMaxLength(100);
+
+				entity.Property(e => e.CustomerPhone)
+					  .IsRequired()
+					  .HasMaxLength(20);
+
+				entity.HasIndex(e => e.CustomerPhone)
+		              .HasDatabaseName("IX_Orders_UserPhone");
+
+
 				entity.Property(e => e.TotalAmount)
 					  .IsRequired()
 					  .HasPrecision(18, 2);
@@ -1800,6 +1812,16 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.TotalCommissionAmount)
 					.HasColumnType("decimal(18,2)");
+
+				entity.Property(e => e.DeductionAmount)
+				     .HasColumnType("decimal(18,2)");
+
+
+				entity.Property(e => e.FinalAmount)
+				      .HasColumnType("decimal(18,2)");
+
+				entity.Property(e => e.Note)
+				      .HasMaxLength(500);
 
 				entity.Property(e => e.Status)
 					.IsRequired()

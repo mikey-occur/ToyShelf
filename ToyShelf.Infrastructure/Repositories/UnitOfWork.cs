@@ -51,7 +51,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			{
 				return await _context.SaveChangesAsync();
 			}
-			catch (DbUpdateConcurrencyException ex)
+			catch (DbUpdateConcurrencyException )
 			{
 				// Log lỗi tại đây hoặc quăng ra một Custom Exception của riêng bạn
 				throw new Exception("Dữ liệu đã bị thay đổi bởi người khác, vui lòng thử lại.");

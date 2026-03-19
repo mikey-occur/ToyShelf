@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260319041026_AddFieldOrder")]
+    partial class AddFieldOrder
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -433,18 +436,8 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<decimal>("DeductionAmount")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("FinalAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<int>("Month")
                         .HasColumnType("integer");
-
-                    b.Property<string>("Note")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
@@ -1095,9 +1088,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("ShipmentAssignmentId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ShipperId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -1116,9 +1106,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("RequestedByUserId");
 
-                    b.HasIndex("ShipmentAssignmentId");
-
-                    b.HasIndex("ShipperId");
+                    b.HasIndex("ShipmentAssignmentId")
+                        .IsUnique();
 
                     b.HasIndex("StoreOrderId");
 
@@ -1135,7 +1124,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("AssignedByUserId")
+                    b.Property<Guid>("AssignedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -1143,13 +1132,10 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("ShipperId")
+                    b.Property<Guid>("ShipperId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
@@ -1166,8 +1152,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AssignedByUserId");
-
-                    b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("ShipperId");
 
@@ -1478,11 +1462,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
-
-                    b.Property<int>("FulfilledQuantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
 
                     b.Property<Guid>("ProductColorId")
                         .HasColumnType("uuid");
@@ -2044,17 +2023,10 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasConstraintName("FK_Shipment_RequestedByUser");
 
                     b.HasOne("ToyShelf.Domain.Entities.ShipmentAssignment", "ShipmentAssignment")
-                        .WithMany("Shipments")
-                        .HasForeignKey("ShipmentAssignmentId")
+                        .WithOne("Shipment")
+                        .HasForeignKey("ToyShelf.Domain.Entities.Shipment", "ShipmentAssignmentId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Shipment_Assignment");
-
-                    b.HasOne("ToyShelf.Domain.Entities.User", "Shipper")
-                        .WithMany("Shipments")
-                        .HasForeignKey("ShipperId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_Shipment_Shipper");
+                        .IsRequired();
 
                     b.HasOne("ToyShelf.Domain.Entities.StoreOrder", "StoreOrder")
                         .WithMany("Shipments")
@@ -2076,8 +2048,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.Navigation("ShipmentAssignment");
 
-                    b.Navigation("Shipper");
-
                     b.Navigation("StoreOrder");
 
                     b.Navigation("ToLocation");
@@ -2088,18 +2058,15 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasOne("ToyShelf.Domain.Entities.User", "AssignedByUser")
                         .WithMany("AssignedShipmentAssignments")
                         .HasForeignKey("AssignedByUserId")
-                        .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
-
-                    b.HasOne("ToyShelf.Domain.Entities.User", "CreatedByUser")
-                        .WithMany("CreatedShipmentAssignments")
-                        .HasForeignKey("CreatedByUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
-                        .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
+                        .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
 
                     b.HasOne("ToyShelf.Domain.Entities.User", "Shipper")
                         .WithMany("Shippers")
                         .HasForeignKey("ShipperId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
                         .HasConstraintName("FK_ShipmentAssignment_Shipper");
 
                     b.HasOne("ToyShelf.Domain.Entities.StoreOrder", "StoreOrder")
@@ -2117,8 +2084,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
 
                     b.Navigation("AssignedByUser");
-
-                    b.Navigation("CreatedByUser");
 
                     b.Navigation("Shipper");
 
@@ -2471,7 +2436,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
                 {
-                    b.Navigation("Shipments");
+                    b.Navigation("Shipment");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Store", b =>
@@ -2504,8 +2469,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.Navigation("AssignedShipmentAssignments");
 
-                    b.Navigation("CreatedShipmentAssignments");
-
                     b.Navigation("CreatedStoreRequests");
 
                     b.Navigation("Orders");
@@ -2521,8 +2484,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ReviewedDamageReports");
 
                     b.Navigation("ReviewedStoreRequests");
-
-                    b.Navigation("Shipments");
 
                     b.Navigation("Shippers");
 

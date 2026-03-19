@@ -44,6 +44,8 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				StoreId = request.StoreId,
 				StaffId = request.StaffId,
+				CustomerName = request.CustomerName,
+				CustomerPhone = request.CustomerPhone,
 				OrderCode = orderCode,
 				TotalAmount = 0,
 				PaymentMethod = "QR",
@@ -111,6 +113,8 @@ namespace ToyShelf.Application.Services
 			var response = new OrderDetailResponse
 			{
 				Id = order.Id,
+				CustomerName = order.CustomerName,
+				CustomerPhone = order.CustomerPhone,
 				OrderCode = order.OrderCode,
 				TotalAmount = order.TotalAmount,
 				PaymentMethod = order.PaymentMethod,

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.StaticFiles;
+﻿using Hangfire;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Reflection;
@@ -6,6 +7,7 @@ using System.Text.Json.Serialization;
 using ToyShelf.API.Configuration;
 using ToyShelf.API.Hubs;
 using ToyShelf.API.Middleware;
+using ToyShelf.Application.IServices;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Context;
 
@@ -42,6 +44,7 @@ builder.Services.AddHttpContextAccessor();
 
 //===== SignalR =====
 builder.Services.AddSignalR();
+
 
 var app = builder.Build();
 
@@ -85,7 +88,9 @@ app.UseStaticFiles(new StaticFileOptions
 	DefaultContentType = "application/octet-stream"
 });
 
-//app.UseMiddleware<ExceptionMiddleware>();
+
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 // Enable serving static files from wwwroot (e.g., /robot, /AssetBundles)
 // ServeUnknownFileTypes required for files without extensions
@@ -94,6 +99,19 @@ app.UseStaticFiles(new StaticFileOptions
 	ServeUnknownFileTypes = true,
 	DefaultContentType = "application/octet-stream"
 });
+
+// ===== Hangfire Dashboard =====
+app.UseHangfireDashboard("/hangfire");
+var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
+recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
+	"auto-monthly-settlement",
+	service => service.GenerateLastMonthSettlementAutoAsync(),
+	"0 0 1 * *",
+	new RecurringJobOptions
+	{
+		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+	}
+);
 
 app.UseHttpsRedirection();
 
