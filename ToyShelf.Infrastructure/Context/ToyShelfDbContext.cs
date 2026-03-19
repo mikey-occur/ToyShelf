@@ -1657,6 +1657,18 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
 
+				entity.Property(e => e.CustomerName)
+					  .IsRequired()
+					  .HasMaxLength(100);
+
+				entity.Property(e => e.CustomerPhone)
+					  .IsRequired()
+					  .HasMaxLength(20);
+
+				entity.HasIndex(e => e.CustomerPhone)
+		              .HasDatabaseName("IX_Orders_UserPhone");
+
+
 				entity.Property(e => e.TotalAmount)
 					  .IsRequired()
 					  .HasPrecision(18, 2);
