@@ -1796,6 +1796,16 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.TotalCommissionAmount)
 					.HasColumnType("decimal(18,2)");
 
+				entity.Property(e => e.DeductionAmount)
+				     .HasColumnType("decimal(18,2)");
+
+
+				entity.Property(e => e.FinalAmount)
+				      .HasColumnType("decimal(18,2)");
+
+				entity.Property(e => e.Note)
+				      .HasMaxLength(500);
+
 				entity.Property(e => e.Status)
 					.IsRequired()
 					.HasMaxLength(20);

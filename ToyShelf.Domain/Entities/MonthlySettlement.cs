@@ -19,10 +19,14 @@ namespace ToyShelf.Domain.Entities
 
 		// Tổng hợp số liệu
 		public int TotalItems { get; set; } 
-		public decimal TotalCommissionAmount { get; set; } 
+		public decimal TotalCommissionAmount { get; set; }
+		public decimal DeductionAmount { get; set; } = 0;
+		public string? Note { get; set; }
+		public decimal FinalAmount { get; set; }
 
 		// Trạng thái: PENDING (Chờ chuyển tiền), PAID (Đã chuyển khoản xong)
 		public string Status { get; set; } = "PENDING";
+
 
 		public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 		public DateTime? PaidAt { get; set; } // Ngày giờ kế toán bấm nút "Đã chuyển tiền"
