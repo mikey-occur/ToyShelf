@@ -11,7 +11,7 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<int> GetMaxSequenceAsync();
 		Task<Shipment?> GetByIdWithDetailsAsync(Guid id);
-		Task<Shipment?> GetByAssignmentIdAsync(Guid assignmentId);
+		Task<List<Shipment>> GetListByAssignmentIdAsync(Guid assignmentId);
 		Task<IEnumerable<Shipment>> GetAllWithDetailsAsync(ShipmentStatus? shipmentStatus);
 		Task<Shipment?> GetByIdWithItemsAsync(Guid id);
 	}

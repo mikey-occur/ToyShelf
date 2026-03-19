@@ -40,12 +40,12 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("assignment/{assignmentId}")]
-		public async Task<BaseResponse<ShipmentResponse>> GetByAssignment(Guid assignmentId)
+		public async Task<BaseResponse<IEnumerable<ShipmentResponse>>> GetByAssignment(Guid assignmentId)
 		{
 			var result = await _shipmentService.GetByAssignmentIdAsync(assignmentId);
 
-			return BaseResponse<ShipmentResponse>
-				.Ok(result, "Get shipment successfully");
+			return BaseResponse<IEnumerable<ShipmentResponse>>
+				.Ok(result, "Get shipments successfully");
 		}
 
 

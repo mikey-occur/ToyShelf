@@ -48,4 +48,13 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 				.Include(x => x.InventoryLocation)
 				.ToListAsync();
 		}
+	public async Task<Inventory?> GetByLocationAndProductAsync(Guid locationId, Guid productColorId)
+	{
+		// Giả sử chỉ lấy inventory trạng thái Available
+		return await _context.Inventories
+			.FirstOrDefaultAsync(x =>
+				x.InventoryLocationId == locationId &&
+				x.ProductColorId == productColorId &&
+				x.Status == InventoryStatus.Available);
+	}
 }

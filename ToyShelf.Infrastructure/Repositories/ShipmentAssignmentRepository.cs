@@ -42,6 +42,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Shipper)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
+				.Include(x => x.Shipments)
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.StoreLocation)
 				.Include(x => x.StoreOrder)

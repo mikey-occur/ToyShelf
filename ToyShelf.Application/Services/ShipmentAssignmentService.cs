@@ -71,22 +71,33 @@ namespace ToyShelf.Application.Services
 		// ================= ASSIGN SHIPPER (WAREHOUSE) =================
 		public async Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser)
 		{
-			var assignment = await _assignmentRepository.GetByIdAsync(request.ShipmentAssignmentId);
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
 
 			if (assignment == null)
 				throw new AppException("Assignment not found", 404);
 
-			if (assignment.ShipperId != null)
-				throw new AppException("Shipper already assigned", 400);
+			// Kiểm tra trạng thái các Shipment liên quan
+			var activeShipment = assignment.Shipments
+				.FirstOrDefault(s => s.Status == ShipmentStatus.Draft || s.Status == ShipmentStatus.Shipping);
 
+			if (activeShipment != null)
+				throw new AppException("Cannot change Shipper, shipment is in progress", 400);
+
+			// Nếu có Shipment nhưng đã Delivery -> cho phép đổi
+			var oldShipperId = assignment.ShipperId;
 			assignment.ShipperId = request.ShipperId;
 			assignment.AssignedByUserId = currentUser.UserId;
 
-			_assignmentRepository.Update(assignment);
+			// Nếu Shipper thay đổi hoặc gán lại Shipper đã từ chối
+			if (oldShipperId != request.ShipperId || assignment.Status == AssignmentStatus.Rejected)
+			{
+				assignment.Status = AssignmentStatus.Pending;
+				assignment.RespondedAt = null;
+			}
 
+			_assignmentRepository.Update(assignment);
 			await _unitOfWork.SaveChangesAsync();
 		}
-
 
 		// ================= SHIPPER ACCEPT =================
 		public async Task AcceptAsync(Guid id, ICurrentUser currentUser)
@@ -192,7 +203,8 @@ namespace ToyShelf.Application.Services
 				{
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
-					Quantity = x.Quantity
+					Quantity = x.Quantity,
+					FulfilledQuantity = x.FulfilledQuantity
 				}).ToList()
 			};
 		}

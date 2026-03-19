@@ -20,6 +20,8 @@ namespace ToyShelf.Application.Services
 		private readonly IShipmentAssignmentRepository _assignmentRepository;
 		private readonly IShipmentItemRepository _shipmentItemRepository;
 		private readonly IShipmentMediaRepository _shipmentMediaRepository;
+		private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
+		private readonly IInventoryRepository _inventoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -30,6 +32,8 @@ namespace ToyShelf.Application.Services
 			IShipmentAssignmentRepository assignmentRepository,
 			IShipmentItemRepository shipmentItemRepository,
 			IShipmentMediaRepository shipmentMediaRepository,
+			IInventoryTransactionRepository inventoryTransactionRepository,
+			IInventoryRepository inventoryRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -37,6 +41,8 @@ namespace ToyShelf.Application.Services
 			_assignmentRepository = assignmentRepository;
 			_shipmentItemRepository = shipmentItemRepository;
 			_shipmentMediaRepository = shipmentMediaRepository;
+			_inventoryTransactionRepository = inventoryTransactionRepository;
+			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -47,14 +53,14 @@ namespace ToyShelf.Application.Services
 
 			return shipments.Select(MapToResponse);
 		}
-		public async Task<ShipmentResponse> GetByAssignmentIdAsync(Guid assignmentId)
+		public async Task<IEnumerable<ShipmentResponse>> GetByAssignmentIdAsync(Guid assignmentId)
 		{
-			var shipment = await _shipmentRepository.GetByAssignmentIdAsync(assignmentId);
+			var shipments = await _shipmentRepository.GetListByAssignmentIdAsync(assignmentId);
 
-			if (shipment == null)
-				throw new AppException("Shipment not found", 404);
+			if (shipments == null || !shipments.Any())
+				throw new AppException("No shipments found", 404);
 
-			return MapToResponse(shipment);
+			return shipments.Select(MapToResponse);
 		}
 
 		public async Task<ShipmentResponse> GetByIdAsync(Guid shipmentId)
@@ -80,9 +86,6 @@ namespace ToyShelf.Application.Services
 			if (assignment.Status != AssignmentStatus.Accepted)
 				throw new AppException("Shipper must accept assignment first", 400);
 
-			if (assignment.Shipment != null)
-				throw new AppException("Shipment already created", 400);
-
 			var code = await GenerateCode();
 
 			var shipment = new Shipment
@@ -94,20 +97,41 @@ namespace ToyShelf.Application.Services
 				FromLocationId = assignment.WarehouseLocationId,
 				ToLocationId = assignment.StoreOrder.StoreLocationId,
 				RequestedByUserId = currentUser.UserId,
+				ShipperId = assignment.ShipperId,
 				Status = ShipmentStatus.Draft,
 				CreatedAt = _dateTime.UtcNow
 			};
 
 			await _shipmentRepository.AddAsync(shipment);
 
-			foreach (var item in assignment.StoreOrder.Items)
+			foreach (var reqItem in request.Items)
 			{
+				var orderItem = assignment.StoreOrder.Items
+					.FirstOrDefault(x => x.ProductColorId == reqItem.ProductColorId);
+
+				if (orderItem == null)
+					throw new AppException("Invalid product", 400);
+
+				var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+
+				if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
+					throw new AppException("Invalid or exceeding quantity", 400);
+
+				// Check tồn kho
+				var inventory = await _inventoryRepository.GetByLocationAndProductAsync(
+						assignment.WarehouseLocationId,
+						orderItem.ProductColorId
+					);
+
+				if (inventory == null || inventory.Quantity < reqItem.ExpectedQuantity)
+					throw new AppException($"Not enough inventory in warehouse '{assignment.WarehouseLocation.Name}' for product '{orderItem.ProductColor.Product.Name}'", 400);
+
 				var shipmentItem = new ShipmentItem
 				{
 					Id = Guid.NewGuid(),
 					ShipmentId = shipment.Id,
-					ProductColorId = item.ProductColorId,
-					ExpectedQuantity = item.Quantity,
+					ProductColorId = orderItem.ProductColorId,
+					ExpectedQuantity = reqItem.ExpectedQuantity,
 					ReceivedQuantity = 0
 				};
 
@@ -124,9 +148,10 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(result);
 		}
 
+
 		public async Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
-			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
+			var shipment = await _shipmentRepository.GetByIdWithItemsAsync(shipmentId);
 
 			if (shipment == null)
 				throw new AppException("Shipment not found", 404);
@@ -134,7 +159,7 @@ namespace ToyShelf.Application.Services
 			if (shipment.Status != ShipmentStatus.Draft)
 				throw new AppException("Shipment not ready for pickup", 400);
 
-
+			// Media 
 			var media = new ShipmentMedia
 			{
 				Id = Guid.NewGuid(),
@@ -148,6 +173,59 @@ namespace ToyShelf.Application.Services
 
 			await _shipmentMediaRepository.AddAsync(media);
 
+			foreach (var item in shipment.Items)
+			{
+				// INVENTORY OUT (Available -> InTransit)
+
+				var inventoryAvailable = await _inventoryRepository
+					.GetAsync(shipment.FromLocationId, item.ProductColorId, InventoryStatus.Available);
+
+				if (inventoryAvailable == null || inventoryAvailable.Quantity < item.ExpectedQuantity)
+					throw new AppException("Not enough stock in warehouse", 400);
+
+				// trừ Available
+				inventoryAvailable.Quantity -= item.ExpectedQuantity;
+
+				// cộng InTransit
+				var inventoryTransit = await _inventoryRepository
+					.GetAsync(shipment.FromLocationId, item.ProductColorId, InventoryStatus.InTransit);
+
+				if (inventoryTransit == null)
+				{
+					inventoryTransit = new Inventory
+					{
+						Id = Guid.NewGuid(),
+						InventoryLocationId = shipment.FromLocationId,
+						ProductColorId = item.ProductColorId,
+						Status = InventoryStatus.InTransit,
+						Quantity = item.ExpectedQuantity
+					};
+
+					await _inventoryRepository.AddAsync(inventoryTransit);
+				}
+				else
+				{
+					inventoryTransit.Quantity += item.ExpectedQuantity;
+				}
+
+				// Transaction
+				var transaction = new InventoryTransaction
+				{
+					Id = Guid.NewGuid(),
+					ProductColorId = item.ProductColorId,
+					FromLocationId = shipment.FromLocationId,
+					ToLocationId = shipment.ToLocationId,
+					FromStatus = InventoryStatus.Available,
+					ToStatus = InventoryStatus.InTransit,
+					Quantity = item.ExpectedQuantity,
+					ReferenceType = InventoryReferenceType.Shipment,
+					ReferenceId = shipment.Id,
+					CreatedAt = _dateTime.UtcNow
+				};
+
+				await _inventoryTransactionRepository.AddAsync(transaction);
+			}
+
 			shipment.Status = ShipmentStatus.Shipping;
 			shipment.PickedUpAt = _dateTime.UtcNow;
 
@@ -155,6 +233,7 @@ namespace ToyShelf.Application.Services
 
 			await _unitOfWork.SaveChangesAsync();
 		}
+
 
 		public async Task DeliveryAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
@@ -196,22 +275,158 @@ namespace ToyShelf.Application.Services
 			if (shipment.Status != ShipmentStatus.Shipping)
 				throw new AppException("Shipment not shipping", 400);
 
+			if (request.Items == null || !request.Items.Any())
+				throw new AppException("Invalid request items", 400);
+
 			foreach (var item in shipment.Items)
 			{
 				var reqItem = request.Items
 					.FirstOrDefault(x => x.ProductColorId == item.ProductColorId);
 
 				if (reqItem == null)
-					throw new AppException("Missing item data", 400);
+					throw new AppException($"Missing item {item.ProductColorId}", 400);
 
-				item.ReceivedQuantity = reqItem.ReceivedQuantity;
+				if (reqItem.ReceivedQuantity < 0 || reqItem.ReceivedQuantity > item.ExpectedQuantity)
+					throw new AppException("Invalid quantity", 400);
+
+				var receivedQty = reqItem.ReceivedQuantity;
+				var damagedQty = item.ExpectedQuantity - receivedQty;
+
+				// Update Shipment Item
+				item.ReceivedQuantity = receivedQty;
+
+				// Update Order
+				var orderItem = shipment.StoreOrder.Items
+					.FirstOrDefault(x => x.ProductColorId == item.ProductColorId);
+
+				if (orderItem == null)
+					throw new AppException("Order item not found", 400);
+
+				if (orderItem.FulfilledQuantity + receivedQty > orderItem.Quantity)
+					throw new AppException("Over fulfilled", 400);
+
+				orderItem.FulfilledQuantity += receivedQty;
+
+				// Inventory
+
+				// 1. Trừ FULL InTransit 
+				var warehouseTransit = await _inventoryRepository
+					.GetAsync(shipment.FromLocationId, item.ProductColorId, InventoryStatus.InTransit);
+
+				if (warehouseTransit == null || warehouseTransit.Quantity < item.ExpectedQuantity)
+					throw new AppException("Invalid transit stock", 400);
+
+				warehouseTransit.Quantity -= item.ExpectedQuantity;
+
+				// 2. Store nhận hàng 
+				if (receivedQty > 0)
+				{
+					var storeAvailable = await _inventoryRepository
+						.GetAsync(shipment.ToLocationId, item.ProductColorId, InventoryStatus.Available);
+
+					if (storeAvailable == null)
+					{
+						storeAvailable = new Inventory
+						{
+							Id = Guid.NewGuid(),
+							InventoryLocationId = shipment.ToLocationId,
+							ProductColorId = item.ProductColorId,
+							Status = InventoryStatus.Available,
+							Quantity = 0
+						};
+
+						await _inventoryRepository.AddAsync(storeAvailable);
+					}
+
+					storeAvailable.Quantity += receivedQty;
+				}
+
+				// 3. Hàng hư 
+				if (damagedQty > 0)
+				{
+					var damagedInventory = await _inventoryRepository
+						.GetAsync(shipment.FromLocationId, item.ProductColorId, InventoryStatus.Damaged);
+
+					if (damagedInventory == null)
+					{
+						damagedInventory = new Inventory
+						{
+							Id = Guid.NewGuid(),
+							InventoryLocationId = shipment.FromLocationId,
+							ProductColorId = item.ProductColorId,
+							Status = InventoryStatus.Damaged,
+							Quantity = 0
+						};
+
+						await _inventoryRepository.AddAsync(damagedInventory);
+					}
+
+					damagedInventory.Quantity += damagedQty;
+				}
+
+				// Transaction
+
+				if (receivedQty > 0)
+				{
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = item.ProductColorId,
+						FromLocationId = shipment.FromLocationId,
+						ToLocationId = shipment.ToLocationId,
+						FromStatus = InventoryStatus.InTransit,
+						ToStatus = InventoryStatus.Available,
+						Quantity = receivedQty,
+						ReferenceType = InventoryReferenceType.Shipment,
+						ReferenceId = shipment.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
+				}
+
+				if (damagedQty > 0)
+				{
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = item.ProductColorId,
+						FromLocationId = shipment.FromLocationId,
+						ToLocationId = shipment.FromLocationId,
+						FromStatus = InventoryStatus.InTransit,
+						ToStatus = InventoryStatus.Damaged,
+						Quantity = damagedQty,
+						ReferenceType = InventoryReferenceType.Shipment,
+						ReferenceId = shipment.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
+				}
 			}
 
+			// Update order status
+			var order = shipment.StoreOrder;
+
+			var totalOrdered = order.Items.Sum(x => x.Quantity);
+			var totalFulfilled = order.Items.Sum(x => x.FulfilledQuantity);
+
+			if (totalFulfilled == 0)
+			{
+				order.Status = StoreOrderStatus.Approved;
+			}
+			else if (totalFulfilled < totalOrdered)
+			{
+				order.Status = StoreOrderStatus.PartiallyFulfilled; 
+			}
+			else
+			{
+				order.Status = StoreOrderStatus.Fulfilled;
+			}
+
+			// Update shipment status
 			shipment.Status = ShipmentStatus.Received;
 			shipment.ReceivedAt = _dateTime.UtcNow;
 
 			await _unitOfWork.SaveChangesAsync();
 		}
+
 
 		private async Task<string> GenerateCode()
 		{

@@ -34,7 +34,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual User? Shipper { get; set; }
 		public virtual User CreatedByUser { get; set; } = null!;
 		public virtual User? AssignedByUser { get; set; } 
-		public virtual Shipment? Shipment { get; set; }
+		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 		public virtual InventoryLocation WarehouseLocation { get; set; } = null!;
 	}
 }

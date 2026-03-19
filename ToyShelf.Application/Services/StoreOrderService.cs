@@ -86,7 +86,13 @@ namespace ToyShelf.Application.Services
 			await _storeOrderRepository.AddAsync(order);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(order);
+			var orderFull = await _storeOrderRepository
+								.GetByIdWithItemsAsync(order.Id);
+
+			if (orderFull == null)
+				throw new AppException("Store order not found", 404);
+
+			return MapToResponse(orderFull);
 		}
 
 		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status)
@@ -161,7 +167,10 @@ namespace ToyShelf.Application.Services
 				Items = order.Items.Select(i => new StoreOrderItemResponse
 				{
 					ProductColorId = i.ProductColorId,
-					Quantity = i.Quantity
+					ProductName = i.ProductColor.Product.Name,
+					Color = i.ProductColor.Color.Name,
+					Quantity = i.Quantity,
+					FulfilledQuantity = i.FulfilledQuantity
 				}).ToList()
 			};
 		}

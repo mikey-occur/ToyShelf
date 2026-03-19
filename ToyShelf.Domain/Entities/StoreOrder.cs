@@ -11,6 +11,7 @@ namespace ToyShelf.Domain.Entities
 		Pending,
 		Approved,
 		Rejected,
+		PartiallyFulfilled,
 		Fulfilled
 	}
 

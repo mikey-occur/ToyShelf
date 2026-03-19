@@ -44,6 +44,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public string Color { get; set; } = null!;
 
 		public int Quantity { get; set; }
+		public int FulfilledQuantity { get; set; } = 0;
 	}
 
 }
