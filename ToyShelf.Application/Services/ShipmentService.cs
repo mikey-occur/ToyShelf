@@ -57,6 +57,16 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(shipment);
 		}
 
+		public async Task<ShipmentResponse> GetByIdAsync(Guid shipmentId)
+		{
+			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
+
+			if (shipment == null)
+				throw new AppException("Shipment not found", 404);
+
+			return MapToResponse(shipment);
+		}
+
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
 			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
@@ -176,9 +186,9 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-		public async Task ReceiveAsync(Guid shipmentId)
+		public async Task ReceiveAsync(Guid shipmentId, ReceiveShipmentRequest request)
 		{
-			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
+			var shipment = await _shipmentRepository.GetByIdWithItemsAsync(shipmentId);
 
 			if (shipment == null)
 				throw new AppException("Shipment not found", 404);
@@ -186,10 +196,19 @@ namespace ToyShelf.Application.Services
 			if (shipment.Status != ShipmentStatus.Shipping)
 				throw new AppException("Shipment not shipping", 400);
 
+			foreach (var item in shipment.Items)
+			{
+				var reqItem = request.Items
+					.FirstOrDefault(x => x.ProductColorId == item.ProductColorId);
+
+				if (reqItem == null)
+					throw new AppException("Missing item data", 400);
+
+				item.ReceivedQuantity = reqItem.ReceivedQuantity;
+			}
+
 			shipment.Status = ShipmentStatus.Received;
 			shipment.ReceivedAt = _dateTime.UtcNow;
-
-			_shipmentRepository.Update(shipment);
 
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -212,7 +231,7 @@ namespace ToyShelf.Application.Services
 				FromLocationName = shipment.FromLocation.Name,
 				ToLocationId = shipment.ToLocationId,
 				ToLocationName = shipment.ToLocation.Name,
-				ShipperName = shipment.ShipmentAssignment.Shipper.FullName,
+				ShipperName = shipment.ShipmentAssignment.Shipper?.FullName,
 				Status = shipment.Status,
 				CreatedAt = shipment.CreatedAt,
 				PickedUpAt = shipment.PickedUpAt,

@@ -18,7 +18,7 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public Guid FromLocationId { get; set; }
 		public string FromLocationName { get; set; } = null!;
 
-		public string ShipperName { get; set; } = null!;
+		public string? ShipperName { get; set; }
 
 		public ShipmentStatus Status { get; set; }
 

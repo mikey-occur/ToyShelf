@@ -21,5 +21,11 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Where(x => x.UserId == userId && x.IsActive)
 				.ToListAsync();
 		}
+
+		public async Task<UserStore?> GetByUserIdAsync(Guid userId)
+		{
+			return await _context.UserStores
+				.FirstOrDefaultAsync(x => x.UserId == userId && x.IsActive);
+		}
 	}
 }

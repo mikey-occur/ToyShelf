@@ -23,9 +23,11 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public string StoreLocationName { get; set; } = null!;
 
-		public string ShipperName { get; set; } = null!;
+		public string? ShipperName { get; set; }
 
-		public string AssignedByName { get; set; } = null!;
+		public string CreatedByName { get; set; } = null!;
+
+		public string? AssignedByName { get; set; } 
 
 		public AssignmentStatus Status { get; set; }
 

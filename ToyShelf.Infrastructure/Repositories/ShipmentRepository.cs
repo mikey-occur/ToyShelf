@@ -82,5 +82,11 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return await query.ToListAsync();
 		}
-	}
+		public async Task<Shipment?> GetByIdWithItemsAsync(Guid id)
+		{
+			return await _context.Shipments
+				.Include(x => x.Items)
+				.FirstOrDefaultAsync(x => x.Id == id);
+		}
+	} 
 }

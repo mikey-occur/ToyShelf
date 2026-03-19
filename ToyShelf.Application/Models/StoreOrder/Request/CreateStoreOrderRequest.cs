@@ -8,9 +8,6 @@ namespace ToyShelf.Application.Models.StoreOrder.Request
 {
 	public class CreateStoreOrderRequest
 	{
-		public Guid StoreLocationId { get; set; }
-		public Guid RequestedByUserId { get; set; }
-
 		public List<CreateStoreOrderItemRequest> Items { get; set; } = new();
 	}
 

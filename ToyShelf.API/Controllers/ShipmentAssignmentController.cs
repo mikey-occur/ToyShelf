@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
 using ToyShelf.Application.Services;
@@ -32,6 +33,19 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<ShipmentAssignmentResponse>
 				.Ok(result, "Shipment assignment created");
 		}
+
+		// ================= ASSIGN SHIPPER =================
+		[HttpPatch("assign-shipper")]
+		[Authorize(Roles = "Warehouse")]
+		public async Task<ActionResponse> AssignShipper(
+			AssignShipperRequest request,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _service.AssignShipperAsync(request, currentUser);
+
+			return ActionResponse.Ok("Shipper assigned successfully");
+		}
+
 
 		[HttpPatch("{id}/accept")]
 		[Authorize(Roles = "Shipper")]
@@ -69,6 +83,15 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Assignments retrieved successfully");
+		}
+
+		[HttpGet]
+		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetAll()
+		{
+			var result = await _service.GetAllAsync();
+
+			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
+				.Ok(result, "Get all assignments successfully");
 		}
 	}
 }
