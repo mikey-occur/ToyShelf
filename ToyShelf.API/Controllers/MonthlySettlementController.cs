@@ -5,6 +5,8 @@ using ToyShelf.Application.Models.MonthlySettlement.Response;
 
 namespace ToyShelf.API.Controllers
 {
+	[Route("api/[controller]")]
+	[ApiController]
 	public class MonthlySettlementController : Controller
 	{
 		
@@ -33,7 +35,7 @@ namespace ToyShelf.API.Controllers
 		/// <summary>
 		/// Kế toán xác nhận đã chuyển khoản thành công cho đối tác
 		/// </summary>
-		[HttpPatch("{id:guid}/pay")]
+		[HttpPatch("{id}/pay")]
 		public async Task<ActionResult<ActionResponse>> Pay(Guid id)
 		{
 			// Gọi thẳng hàm PayAsync chỉ với ID
@@ -48,7 +50,7 @@ namespace ToyShelf.API.Controllers
 		/// <summary>
 		/// Xem chi tiết 1 phiếu chốt sổ (Kèm danh sách các món đồ chơi bên trong)
 		/// </summary>
-		[HttpGet("{id:guid}")]
+		[HttpGet("{id}")]
 		public async Task<BaseResponse<MonthlySettlementResponse>> GetById(Guid id)
 		{
 			
@@ -62,7 +64,7 @@ namespace ToyShelf.API.Controllers
 		/// <summary>
 		/// Lấy toàn bộ danh sách phiếu chốt sổ của tất cả đối tác (Cho Admin)
 		/// </summary>
-		[HttpGet("all")] // <-- THÊM CHỮ "all" VÀO ĐÂY
+		[HttpGet] // <-- THÊM CHỮ "all" VÀO ĐÂY
 		public async Task<BaseResponse<IEnumerable<MonthlySettlementResponse>>> GetAll()
 		{
 			var result = await _settlementService.GetAllAsync();

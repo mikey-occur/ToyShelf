@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 using ToyShelf.API.Hubs;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
@@ -15,10 +16,11 @@ namespace ToyShelf.API.Controllers
 	public class ProductController : ControllerBase
 	{
 		private readonly IProductService _productService;
-		
-		public ProductController(IProductService productService)
+		private readonly IHubContext<ProductHub> _hubContext;
+		public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
 		{
-			_productService = productService;		
+			_productService = productService;
+			_hubContext = hubContext;
 		}
 
 		/// <summary>

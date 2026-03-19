@@ -11,6 +11,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public Guid StoreId { get; set; }
 		public Guid StaffId { get; set; }
+
+		public string CustomerName { get; set; } = string.Empty;
+		public string CustomerPhone { get; set; } = string.Empty;
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = null!;   // CASH, QR
 		public string Status { get; set; } = null!;          // CREATED, PAID, CANCELLED
