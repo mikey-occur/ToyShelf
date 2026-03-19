@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
 
 namespace ToyShelf.Application.IServices
@@ -13,7 +14,9 @@ namespace ToyShelf.Application.IServices
 		Task<MonthlySettlementResponse?> GetByIdAsync(Guid id);
 		Task<bool> PayAsync(Guid id);
 		Task<IEnumerable<MonthlySettlementResponse>> GetAllAsync();
+		Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter);
 		Task GenerateLastMonthSettlementAutoAsync();
+		Task<MonthlySettlementResponse> UpdateDeductionAsync(Guid id, decimal deductionAmount, string note);
 	}
 }
 

@@ -1,7 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
+using ToyShelf.Application.Services;
 
 namespace ToyShelf.API.Controllers
 {
@@ -65,9 +67,9 @@ namespace ToyShelf.API.Controllers
 		/// Lấy toàn bộ danh sách phiếu chốt sổ của tất cả đối tác (Cho Admin)
 		/// </summary>
 		[HttpGet] 
-		public async Task<BaseResponse<IEnumerable<MonthlySettlementResponse>>> GetAll()
+		public async Task<BaseResponse<IEnumerable<MonthlySettlementResponse>>> GetAll([FromQuery] SettlementFilterRequest request)
 		{
-			var result = await _settlementService.GetAllAsync();
+			var result = await _settlementService.GetAllFilterAsync(request);
 
 			return BaseResponse<IEnumerable<MonthlySettlementResponse>>.Ok(
 				result,
@@ -91,7 +93,7 @@ namespace ToyShelf.API.Controllers
 			await _settlementService.GenerateMonthlySettlementAsync(targetMonth, targetYear);
 
 			// 3. Lấy lại toàn bộ danh sách mới nhất
-			var allSettlements = await _settlementService.GetAllAsync();
+			var allSettlements = await _settlementService.GetAllFilterAsync(new SettlementFilterRequest());
 
 			// 4. Trả về kết quả kèm câu thông báo xịn xò
 			return BaseResponse<IEnumerable<MonthlySettlementResponse>>.Ok(
@@ -99,5 +101,17 @@ namespace ToyShelf.API.Controllers
 				$"Đã chốt sổ tự động thành công cho tháng {targetMonth}/{targetYear}!"
 			);
 		}
+
+		/// <summary>
+		/// Cập nhật số tiền hao trừ (Phạt, cấn trừ, phí vận chuyển...).
+		/// </summary>
+		[HttpPut("{id}/deduction")]
+		public async Task<BaseResponse<MonthlySettlementResponse>> UpdateDeduction(Guid id, [FromBody] UpdateDeductionRequest request)
+		{
+			var result = await _settlementService.UpdateDeductionAsync(id, request.DeductionAmount, request.Note ?? "");
+
+			return BaseResponse<MonthlySettlementResponse>.Ok(result, "Cập nhật số tiền hao trừ và tính lại tổng thành công");
+		}
+
 	}
 }
