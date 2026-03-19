@@ -182,6 +182,10 @@ namespace ToyShelf.Infrastructure.Context
 				      .WithOne(a => a.UploadedByUser)
 				      .HasForeignKey(a => a.UploadedByUserId);
 
+				// Order 
+				entity.HasMany(e => e.Orders)
+					  .WithOne(a => a.Staff)
+					  .HasForeignKey(a => a.StaffId);
 
 				// StoreCreationRequest
 				entity.HasMany(e => e.CreatedStoreRequests)
@@ -531,6 +535,15 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Description)
 					  .HasMaxLength(1000);
 
+				entity.Property(e => e.Barcode)
+					  .HasMaxLength(200);
+
+				// THÊM INDEX CHO BARCODE Ở ĐÂY
+				entity.HasIndex(e => e.Barcode)
+					  .HasDatabaseName("IX_Product_Barcode");
+
+				entity.HasIndex(p => p.Barcode).IsUnique();
+
 				entity.Property(e => e.Brand)
 					  .HasMaxLength(200);
 
@@ -633,10 +646,7 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.QrCode)
 					  .HasColumnType("text");
-
-				entity.Property(e => e.Model3DUrl)
-					  .HasMaxLength(500);
-
+				
 				entity.Property(e => e.ImageUrl)
 					  .HasMaxLength(500);
 
@@ -1681,6 +1691,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.StoreId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Order_Store");
+
+				entity.HasOne(e => e.Staff)
+					  .WithMany(u => u.Orders)
+					  .HasForeignKey(e => e.StaffId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Order_Staff");
 
 				entity.HasMany(e => e.OrderItems)
 					  .WithOne(i => i.Order)

@@ -31,9 +31,13 @@ namespace ToyShelf.API.Controllers
 			{
 				// Gọi OrderService để lưu DB (CREATED) và lấy link thanh toán
 				// Hàm này bạn đã viết, bao gồm việc sinh OrderCode và gọi PayOSPaymentService
-				string checkoutUrl = await _orderService.CreateOrderAndGetPaymentLinkAsync(request);
+				var result = await _orderService.CreateOrderAndGetPaymentLinkAsync(request);
 
-				return Ok(new { checkoutUrl });
+				return Ok(new
+				{
+					orderCode = result.OrderCode,
+					checkoutUrl = result.PaymentUrl
+				});
 			}
 			catch (Exception ex)
 			{
