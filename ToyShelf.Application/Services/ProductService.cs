@@ -372,5 +372,13 @@ namespace ToyShelf.Application.Services
 
             return (productResponses, totalCount);
         }
+
+		public async Task<ProductResponse?> GetByBarCode(string barCode)
+		{
+			var product = await _productRepository.GetByBarCode(barCode);
+			if (product == null)
+				return null;
+			return MapToResponse(product);
+        }
     }
 }
