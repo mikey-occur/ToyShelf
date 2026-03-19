@@ -1,5 +1,8 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using ToyShelf.Application.Common;
 
 namespace ToyShelf.API.Middleware
@@ -7,10 +10,23 @@ namespace ToyShelf.API.Middleware
 	public class ExceptionMiddleware
 	{
 		private readonly RequestDelegate _next;
+		private readonly ILogger<ExceptionMiddleware> _logger;
+		private readonly IWebHostEnvironment _environment;
+		private readonly bool _includeErrorDetail;
 
-		public ExceptionMiddleware(RequestDelegate next)
+		public ExceptionMiddleware(
+			RequestDelegate next,
+			ILogger<ExceptionMiddleware> logger,
+			IWebHostEnvironment environment)
 		{
 			_next = next;
+			_logger = logger;
+			_environment = environment;
+			_includeErrorDetail = _environment.IsDevelopment() ||
+				string.Equals(
+					Environment.GetEnvironmentVariable("ENABLE_DETAILED_ERRORS"),
+					"true",
+					StringComparison.OrdinalIgnoreCase);
 		}
 
 		public async Task InvokeAsync(HttpContext context)
@@ -25,8 +41,21 @@ namespace ToyShelf.API.Middleware
 			}
 		}
 
-		private static Task HandleExceptionAsync(HttpContext context, Exception ex)
+		private Task HandleExceptionAsync(HttpContext context, Exception ex)
 		{
+			_logger.LogError(
+				ex,
+				"Unhandled exception. Method={Method} Path={Path} TraceId={TraceId}",
+				context.Request.Method,
+				context.Request.Path,
+				context.TraceIdentifier);
+
+			if (context.Response.HasStarted)
+			{
+				_logger.LogWarning("Response already started, cannot write error response.");
+				return Task.CompletedTask;
+			}
+
 			int statusCode = (int)HttpStatusCode.InternalServerError;
 			string message = "Đã xảy ra lỗi không xác định.";
 			string? errorCode = null;
@@ -44,12 +73,27 @@ namespace ToyShelf.API.Middleware
 				errorCode = appEx.ErrorCode;
 			}
 
-			var response = new
+			object response;
+			if (_includeErrorDetail)
 			{
-				error = message,
-				code = errorCode,
-				status = statusCode
-			};
+				response = new
+				{
+					error = message,
+					code = errorCode,
+					status = statusCode,
+					detail = ex.ToString(),
+					traceId = context.TraceIdentifier
+				};
+			}
+			else
+			{
+				response = new
+				{
+					error = message,
+					code = errorCode,
+					status = statusCode
+				};
+			}
 
 			context.Response.ContentType = "application/json";
 			context.Response.StatusCode = statusCode;

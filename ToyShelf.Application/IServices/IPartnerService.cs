@@ -15,7 +15,7 @@ namespace ToyShelf.Application.IServices
 
 		// ===== GET =====
 		Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive);
-		Task<PartnerResponse> GetByIdAsync(Guid id);
+		Task<PartnerDetailResponse> GetByIdAsync(Guid id);
 
 		// ===== UPDATE =====
 		Task<PartnerResponse> UpdateAsync(Guid id, UpdatePartnerRequest request);

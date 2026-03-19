@@ -93,14 +93,18 @@ namespace ToyShelf.Application.Services
 			return stores.Select(MapToResponse);
 		}
 
-		public async Task<PartnerResponse> GetByIdAsync(Guid id)
+		public async Task<PartnerDetailResponse> GetByIdAsync(Guid id)
 		{
 			var partner = await _partnerRepository.GetByIdWithTierAsync(id);
 
 			if (partner == null)
 				throw new AppException($"Partner not found. Id = {id}", 404);
 
-			return MapToResponse(partner);
+			var mainUser = partner.Users?.FirstOrDefault();
+			var mainAccount = mainUser?.Accounts?.FirstOrDefault(a =>
+				a.AccountRoles.Any(ar => ar.Role.Name.ToLower().Trim() == "partneradmin"));
+
+			return MapToDetailResponse(partner, mainUser, mainAccount);
 		}
 
 		// ===== UPDATE =====
@@ -193,6 +197,37 @@ namespace ToyShelf.Application.Services
 
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt
+			};
+		}
+
+		private static PartnerDetailResponse MapToDetailResponse(Partner partner, User? mainUser, Account? mainAccount)
+		{
+			return new PartnerDetailResponse
+			{
+				
+				Id = partner.Id,
+				Code = partner.Code,
+				CompanyName = partner.CompanyName,
+				Address = partner.Address,
+				Latitude = partner.Latitude,
+				Longitude = partner.Longitude,
+				PartnerTierId = partner.PartnerTierId,
+				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
+				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
+				IsActive = partner.IsActive,
+				CreatedAt = partner.CreatedAt,
+				UpdatedAt = partner.UpdatedAt,
+
+			
+				PartnerAccount = mainUser != null ? new PartnerAdminResponse
+				{
+					Id = mainUser.Id,
+					Email = mainUser.Email,
+					FullName = mainUser.FullName,
+					AvatarUrl = mainUser.AvatarUrl,
+					IsActive = mainUser.IsActive,
+					LastLoginAt = mainAccount?.LastLoginAt
+				} : null
 			};
 		}
 	}

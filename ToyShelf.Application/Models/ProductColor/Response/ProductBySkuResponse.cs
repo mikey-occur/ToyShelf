@@ -11,8 +11,9 @@ namespace ToyShelf.Application.Models.ProductColor.Response
 		public Guid ProductId { get; set; }
 		public string ProductSku { get; set; } = null!;
 		public string ProductName { get; set; } = null!;
-		public decimal Price { get; set; }
+		public decimal BasePrice { get; set; }
 		public string? Description { get; set; }
+		public string? Barcode { get; set; }
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }

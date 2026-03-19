@@ -18,10 +18,26 @@ namespace ToyShelf.Application.Models.Partner.Response
 		public Guid PartnerTierId { get; set; }
 		public string PartnerTierName { get; set; } = string.Empty;
 		public int PartnerTierPriority { get; set; }
-
 		public bool IsActive { get; set; }
 
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
+	}
+
+
+	public class PartnerDetailResponse : PartnerResponse
+	{
+		// Kế thừa toàn bộ trường ở trên, chỉ nhét thêm tài khoản vào đây
+		public PartnerAdminResponse? PartnerAccount { get; set; }
+	}
+
+	public class PartnerAdminResponse
+	{
+		public Guid Id { get; set; }
+		public string Email { get; set; } = string.Empty;
+		public string FullName { get; set; } = string.Empty;
+		public string? AvatarUrl { get; set; }
+		public bool IsActive { get; set; }
+		public DateTime? LastLoginAt { get; set; }
 	}
 }

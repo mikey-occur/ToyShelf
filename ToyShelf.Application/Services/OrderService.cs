@@ -36,13 +36,14 @@ namespace ToyShelf.Application.Services
 			_commissionHistoryRepository = commissionHistoryRepsitory;
 			_inventoryService = inventoryService;
 		}
-		public async Task<string> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
+		public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
 			var orderCode = long.Parse(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
 			var order = new Order
 			{
 				Id = Guid.NewGuid(),
 				StoreId = request.StoreId,
+				StaffId = request.StaffId,
 				OrderCode = orderCode,
 				TotalAmount = 0,
 				PaymentMethod = "QR",
@@ -83,7 +84,11 @@ namespace ToyShelf.Application.Services
 			{
 				// Gọi service bạn vừa fix gạch đỏ xong
 				string paymentUrl = await _paymentService.CreatePaymentLink(order);
-				return paymentUrl;
+				return new CreateOrderResponse
+				{
+					OrderCode = order.OrderCode,
+					PaymentUrl = paymentUrl
+				};
 			}
 			catch (Exception ex )
 			{
