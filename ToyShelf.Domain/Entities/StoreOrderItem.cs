@@ -14,6 +14,7 @@ namespace ToyShelf.Domain.Entities
 		public Guid ProductColorId { get; set; }
 
 		public int Quantity { get; set; }
+		public int FulfilledQuantity { get; set; } = 0;
 
 		// Navigation
 		public virtual StoreOrder StoreOrder { get; set; } = null!;

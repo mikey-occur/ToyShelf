@@ -10,7 +10,6 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Request
 	{
 		public Guid WarehouseLocationId { get; set; }
 		public Guid StoreOrderId { get; set; }
-		public Guid ShipperId { get; set; }
 	}
 
 }

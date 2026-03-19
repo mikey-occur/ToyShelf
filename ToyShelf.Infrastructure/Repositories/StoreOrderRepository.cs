@@ -35,18 +35,28 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			var query = _context.StoreOrders
 				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Product)
+				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Color)
 				.AsQueryable();
 
-			if (status.HasValue) query = query.Where(x => x.Status == status);
+			if (status.HasValue)
+				query = query.Where(x => x.Status == status);
 
 			return await query.ToListAsync();
 		}
-
 
 		public async Task<StoreOrder?> GetByIdWithItemsAsync(Guid id)
 		{
 			return await _context.StoreOrders
 				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Product)
+				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Color)
 				.FirstOrDefaultAsync(o => o.Id == id);
 		}
 	}

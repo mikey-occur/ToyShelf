@@ -31,18 +31,26 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Get shipments successfully");
 		}
 
+		[HttpGet("{id}")]
+		public async Task<BaseResponse<ShipmentResponse>> GetById(Guid id)
+		{
+			var result = await _shipmentService.GetByIdAsync(id);
+
+			return BaseResponse<ShipmentResponse>.Ok(result, "Get shipment success");
+		}
+
 		[HttpGet("assignment/{assignmentId}")]
-		public async Task<BaseResponse<ShipmentResponse>> GetByAssignment(Guid assignmentId)
+		public async Task<BaseResponse<IEnumerable<ShipmentResponse>>> GetByAssignment(Guid assignmentId)
 		{
 			var result = await _shipmentService.GetByAssignmentIdAsync(assignmentId);
 
-			return BaseResponse<ShipmentResponse>
-				.Ok(result, "Get shipment successfully");
+			return BaseResponse<IEnumerable<ShipmentResponse>>
+				.Ok(result, "Get shipments successfully");
 		}
 
 
 		[HttpPost]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<ShipmentResponse>> Create(
 			[FromBody] CreateShipmentRequest request,
 			[FromServices] ICurrentUser currentUser)
@@ -79,9 +87,9 @@ namespace ToyShelf.API.Controllers
 
 		[HttpPatch("{id}/receive")]
 		[Authorize(Roles = "Partner")]
-		public async Task<ActionResult<ActionResponse>> Receive(Guid id)
+		public async Task<ActionResult<ActionResponse>> Receive(Guid id, ReceiveShipmentRequest request)
 		{
-			await _shipmentService.ReceiveAsync(id);
+			await _shipmentService.ReceiveAsync(id, request);
 
 			return ActionResponse.Ok("Shipment received successfully");
 		}

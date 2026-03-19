@@ -182,6 +182,10 @@ namespace ToyShelf.Infrastructure.Context
 				      .WithOne(a => a.UploadedByUser)
 				      .HasForeignKey(a => a.UploadedByUserId);
 
+				entity.HasMany(e => e.Shipments)
+					  .WithOne(a => a.Shipper)
+					  .HasForeignKey(a => a.ShipperId);
+
 				// Order 
 				entity.HasMany(e => e.Orders)
 					  .WithOne(a => a.Staff)
@@ -425,6 +429,9 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Quantity)
 					  .IsRequired();
 
+				entity.Property(e => e.FulfilledQuantity)
+					  .IsRequired()
+					  .HasDefaultValue(0);
 				// FK
 
 				entity.HasOne(e => e.StoreOrder)
@@ -1354,6 +1361,7 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ReferenceType)
 					  .IsRequired()
+					  .HasConversion<string>()
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.CreatedAt)
@@ -1502,6 +1510,13 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(s => s.StoreOrderId)
 					  .HasConstraintName("FK_Shipment_StoreOrder");
 
+
+				entity.HasOne(e => e.Shipper)
+					  .WithMany(u => u.Shipments)
+					  .HasForeignKey(e => e.ShipperId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Shipment_Shipper");
+
 				// Shipment
 
 				entity.HasMany(e => e.Items)
@@ -1512,10 +1527,12 @@ namespace ToyShelf.Infrastructure.Context
 			          .WithOne(i => i.Shipment)
 			          .HasForeignKey(i => i.ShipmentId);
 
-				entity.HasOne(sa => sa.ShipmentAssignment)
-					  .WithOne(s => s.Shipment)
-					  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
-					  .OnDelete(DeleteBehavior.Restrict);
+				entity.HasOne(s => s.ShipmentAssignment)
+					  .WithMany(sa => sa.Shipments)
+					  .HasForeignKey(s => s.ShipmentAssignmentId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Shipment_Assignment");
+
 
 				// ===== Index =====
 
@@ -1638,10 +1655,10 @@ namespace ToyShelf.Infrastructure.Context
 				  .HasForeignKey(e => e.AssignedByUserId)
 				  .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
 
-				entity.HasOne(sa => sa.Shipment)
-				  .WithOne(s => s.ShipmentAssignment)
-				  .HasForeignKey<Shipment>(s => s.ShipmentAssignmentId)
-				  .OnDelete(DeleteBehavior.Restrict);
+				entity.HasOne(e => e.CreatedByUser)
+				  .WithMany(s => s.CreatedShipmentAssignments)
+				  .HasForeignKey(e => e.CreatedByUserId)
+				  .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
 
 				entity.HasOne(e => e.WarehouseLocation)
 				  .WithMany(s => s.ShipmentAssignments)

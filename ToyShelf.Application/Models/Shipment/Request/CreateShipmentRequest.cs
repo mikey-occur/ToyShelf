@@ -9,5 +9,12 @@ namespace ToyShelf.Application.Models.Shipment.Request
 	public class CreateShipmentRequest
 	{
 		public Guid ShipmentAssignmentId { get; set; }
+		public List<CreateShipmentItemRequest> Items { get; set; } = new();
+	}
+
+	public class CreateShipmentItemRequest
+	{
+		public Guid ProductColorId { get; set; }
+		public int ExpectedQuantity { get; set; }
 	}
 }

@@ -18,6 +18,7 @@ namespace ToyShelf.Application.Services
 	{
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IInventoryLocationRepository _locationRepository;
+		private readonly IUserStoreRepository _userStoreRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -26,21 +27,33 @@ namespace ToyShelf.Application.Services
 		public StoreOrderService(
 			IStoreOrderRepository storeOrderRepository,
 			IInventoryLocationRepository locationRepository,
+			IUserStoreRepository userStoreRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
 			_storeOrderRepository = storeOrderRepository;
 			_locationRepository = locationRepository;
+			_userStoreRepository = userStoreRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
 
-		public async Task<StoreOrderResponse> CreateAsync(CreateStoreOrderRequest request)
+		public async Task<StoreOrderResponse> CreateAsync(CreateStoreOrderRequest request, ICurrentUser currentUser)
 		{
-			var location = await _locationRepository.GetByIdAsync(request.StoreLocationId);
+
+			// 1. Lấy store của user
+			var userStore = await _userStoreRepository
+				.GetByUserIdAsync(currentUser.UserId);
+
+			if (userStore == null || !userStore.IsActive)
+				throw new AppException("User is not assigned to any store", 403);
+
+			// 2. Lấy InventoryLocation của store
+			var location = await _locationRepository
+				.GetStoreLocationByStoreIdAsync(userStore.StoreId);
 
 			if (location == null)
-				throw new AppException("Store location not found", 404);
+				throw new AppException("Store inventory location not found", 404);
 
 			var maxNumber = await _storeOrderRepository
 				.GetMaxSequenceAsync();
@@ -51,8 +64,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				Code = code,
-				StoreLocationId = request.StoreLocationId,
-				RequestedByUserId = request.RequestedByUserId,
+				StoreLocationId = location.Id,
+				RequestedByUserId = currentUser.UserId,
 				Status = StoreOrderStatus.Pending,
 				CreatedAt = _dateTime.UtcNow
 			};
@@ -73,7 +86,13 @@ namespace ToyShelf.Application.Services
 			await _storeOrderRepository.AddAsync(order);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(order);
+			var orderFull = await _storeOrderRepository
+								.GetByIdWithItemsAsync(order.Id);
+
+			if (orderFull == null)
+				throw new AppException("Store order not found", 404);
+
+			return MapToResponse(orderFull);
 		}
 
 		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status)
@@ -148,7 +167,10 @@ namespace ToyShelf.Application.Services
 				Items = order.Items.Select(i => new StoreOrderItemResponse
 				{
 					ProductColorId = i.ProductColorId,
-					Quantity = i.Quantity
+					ProductName = i.ProductColor.Product.Name,
+					Color = i.ProductColor.Color.Name,
+					Quantity = i.Quantity,
+					FulfilledQuantity = i.FulfilledQuantity
 				}).ToList()
 			};
 		}

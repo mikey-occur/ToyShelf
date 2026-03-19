@@ -23,10 +23,12 @@ namespace ToyShelf.API.Controllers
 
 		// ================= CREATE =================
 		[HttpPost]
+		[Authorize(Roles = "Partner")]
 		public async Task<BaseResponse<StoreOrderResponse>> Create(
-			[FromBody] CreateStoreOrderRequest request)
+			[FromBody] CreateStoreOrderRequest request,
+			[FromServices] ICurrentUser currentUser)
 		{
-			var result = await _storeOrderService.CreateAsync(request);
+			var result = await _storeOrderService.CreateAsync(request, currentUser);
 
 			return BaseResponse<StoreOrderResponse>
 				.Ok(result, "Store order created successfully");
