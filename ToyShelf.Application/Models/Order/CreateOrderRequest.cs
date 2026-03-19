@@ -13,8 +13,8 @@ namespace ToyShelf.Application.Models.Order
 
 		public Guid StaffId { get; set; }
 
-		public string CustomerName { get; set; } 
-		public string CustomerPhone { get; set; }
+		public string CustomerName { get; set; } = string.Empty;
+		public string CustomerPhone { get; set; } = string.Empty;
 
 		// Danh sách các món hàng
 		public List<OrderItemRequest> Items { get; set; } = new List<OrderItemRequest>();

@@ -13,6 +13,7 @@ namespace ToyShelf.Application.IServices
 		Task<MonthlySettlementResponse?> GetByIdAsync(Guid id);
 		Task<bool> PayAsync(Guid id);
 		Task<IEnumerable<MonthlySettlementResponse>> GetAllAsync();
+		Task GenerateLastMonthSettlementAutoAsync();
 	}
 }
 

@@ -131,7 +131,10 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		
-
+		public async Task GenerateLastMonthSettlementAutoAsync()
+		{
+			var lastMonth = DateTime.UtcNow.AddMonths(-1);
+			await GenerateMonthlySettlementAsync(lastMonth.Month, lastMonth.Year);
+		}
 	}
 }
