@@ -45,8 +45,7 @@ RUN apk add --no-cache \
     curl \
     tzdata \
     && cp /usr/share/zoneinfo/Asia/Ho_Chi_Minh /etc/localtime \
-    && echo "Asia/Ho_Chi_Minh" > /etc/timezone \
-    && apk del tzdata
+    && echo "Asia/Ho_Chi_Minh" > /etc/timezone
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S appgroup \
@@ -71,7 +70,8 @@ ENV APP_PORT=5035 \
     ASPNETCORE_ENVIRONMENT=Production \
     DOTNET_RUNNING_IN_CONTAINER=true \
     DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=false \
-    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
+    ASPNETCORE_FORWARDEDHEADERS_ENABLED=true \
+    TZ=Asia/Ho_Chi_Minh
 
 # Health check with fallback: prefer /health, fallback to root connectivity
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \

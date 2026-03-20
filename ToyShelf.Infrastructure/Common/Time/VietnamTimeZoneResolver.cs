@@ -25,13 +25,10 @@ namespace ToyShelf.Infrastructure.Common.Time
                 {
                     return TimeZoneInfo.FindSystemTimeZoneById(id);
                 }
-                catch (TimeZoneNotFoundException)
+                catch (Exception ex) when (IsLookupFailure(ex))
                 {
-                    // Try next ID.
-                }
-                catch (InvalidTimeZoneException)
-                {
-                    // Try next ID.
+                    Console.Error.WriteLine(
+                        $"[VietnamTimeZoneResolver] Failed time zone id '{id}': {ex.GetType().Name}. Trying next.");
                 }
             }
 
@@ -42,6 +39,8 @@ namespace ToyShelf.Infrastructure.Common.Time
 
         private static IEnumerable<string> GetCandidateTimeZoneIds()
         {
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
             var customTimeZoneIds = Environment.GetEnvironmentVariable(TimeZoneIdsEnv);
             if (!string.IsNullOrWhiteSpace(customTimeZoneIds))
             {
@@ -49,20 +48,38 @@ namespace ToyShelf.Infrastructure.Common.Time
                     new[] { ',', ';', '|' },
                     StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
                 {
-                    yield return id;
+                    if (seen.Add(id))
+                    {
+                        yield return id;
+                    }
                 }
             }
 
             var customTimeZoneId = Environment.GetEnvironmentVariable(TimeZoneIdEnv);
             if (!string.IsNullOrWhiteSpace(customTimeZoneId))
             {
-                yield return customTimeZoneId.Trim();
+                var trimmed = customTimeZoneId.Trim();
+                if (seen.Add(trimmed))
+                {
+                    yield return trimmed;
+                }
             }
 
             foreach (var id in DefaultVietnamTimeZoneIds)
             {
-                yield return id;
+                if (seen.Add(id))
+                {
+                    yield return id;
+                }
             }
+        }
+
+        private static bool IsLookupFailure(Exception ex)
+        {
+            return ex is TimeZoneNotFoundException
+                || ex is InvalidTimeZoneException
+                || ex is IOException
+                || ex is UnauthorizedAccessException;
         }
     }
 }
