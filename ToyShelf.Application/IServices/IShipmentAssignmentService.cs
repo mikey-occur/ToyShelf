@@ -19,5 +19,6 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(ICurrentUser currentUser);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetByStoreOrderId(Guid storeOrderId);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync();
+		Task<ShipmentAssignmentResponse> GetByIdAsync(Guid id);
 	}
 }
