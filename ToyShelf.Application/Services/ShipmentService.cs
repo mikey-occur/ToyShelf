@@ -454,6 +454,7 @@ namespace ToyShelf.Application.Services
 				ReceivedAt = shipment.ReceivedAt,
 				Items = shipment.Items.Select(x => new ShipmentItemResponse
 				{
+					ProductColorId = x.ProductColorId,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
 					ExpectedQuantity = x.ExpectedQuantity,

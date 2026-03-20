@@ -8,6 +8,7 @@ namespace ToyShelf.Application.Models.Shipment.Response
 {
 	public class ShipmentItemResponse
 	{
+		public Guid ProductColorId { get; set; }
 		public string ProductName { get; set; } = null!;
 		public string Color { get; set; } = null!;
 		public int ExpectedQuantity { get; set; }
