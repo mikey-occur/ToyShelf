@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.CommissionHistory.Response;
+using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
 using ToyShelf.Application.Models.PriceTable.Response;
 using ToyShelf.Domain.Entities;
@@ -44,14 +45,16 @@ namespace ToyShelf.Application.Services
 
 			foreach (var group in groupedByPartner)
 			{
+				var totalCommission = group.Sum(ch => ch.CommissionAmount);
 				var settlement = new MonthlySettlement
 				{
 					Id = Guid.NewGuid(),
 					PartnerId = group.Key,
 					Month = month,
 					Year = year,
-					TotalItems = group.Count(),
-					TotalCommissionAmount = group.Sum(ch => ch.CommissionAmount),
+					DeductionAmount = 0,                  
+					Note = null,                 
+					FinalAmount = totalCommission,
 					Status = "PENDING",
 					CreatedAt = DateTime.UtcNow,
 					Partner = group.First().Partner
@@ -109,10 +112,56 @@ namespace ToyShelf.Application.Services
 			return true;
 		}
 
+		public async Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter)
+		{
+			var settlements = await _settlementRepository.GetFilteredSettlementsAsync(
+							filter.Year,
+							filter.Month,
+							filter.PartnerId,
+							filter.Status );
+
+			return settlements.Select(MapToResponse);
+		}
+
 		public async Task<IEnumerable<MonthlySettlementResponse>> GetAllAsync()
 		{
 			var settlements = await _settlementRepository.GetAllAsync();
 			return settlements.Select(MapToResponse);
+		}
+
+		public async Task GenerateLastMonthSettlementAutoAsync()
+		{
+			var lastMonth = DateTime.UtcNow.AddMonths(-1);
+			await GenerateMonthlySettlementAsync(lastMonth.Month, lastMonth.Year);
+		}
+
+		public async Task<MonthlySettlementResponse> UpdateDeductionAsync(Guid id, decimal deductionAmount, string note)
+		{
+			// 1. Tìm cái phiếu chốt sổ dưới DB
+			var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(id);
+
+			// 2. Bắt lỗi chặt chẽ
+			if (settlement == null)
+				throw new AppException("Not found settlement.", 404);
+
+			if (settlement.Status == "PAID")
+				throw new AppException("Have already paid", 400);
+
+			if (deductionAmount > settlement.TotalCommissionAmount)
+				throw new AppException("debuction no large than total amount", 400);
+
+			// 3. Cập nhật số tiền trừ và ghi chú
+			settlement.DeductionAmount = deductionAmount;
+			settlement.Note = note;
+
+			// 4. Tính toán lại Tổng thực nhận (FinalAmount)
+			settlement.FinalAmount = settlement.TotalCommissionAmount - deductionAmount;
+
+			// 5. Lưu đè xuống Database
+			_unitOfWork.Repository<MonthlySettlement>().Update(settlement);
+			await _unitOfWork.SaveChangesAsync();
+
+			return MapToResponse(settlement);
 		}
 
 		private static MonthlySettlementResponse MapToResponse(MonthlySettlement settlement)
@@ -126,12 +175,13 @@ namespace ToyShelf.Application.Services
 				Year = settlement.Year,
 				TotalItems = settlement.TotalItems,
 				TotalCommissionAmount = settlement.TotalCommissionAmount,
+				DeductionAmount = settlement.DeductionAmount,
+				FinalAmount = settlement.FinalAmount,
+				Note = settlement.Note,
 				Status = settlement.Status,
 				CreatedAt = settlement.CreatedAt
 			};
 		}
-
-		
-
+	
 	}
 }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
 using ToyShelf.Domain.Common.Time;
@@ -49,12 +50,11 @@ namespace ToyShelf.Application.Services
 			var assignment = new ShipmentAssignment
 			{
 				Id = Guid.NewGuid(),
-				WarehouseLocationId = request.WarehouseLocationId,
 				StoreOrderId = request.StoreOrderId,
-				ShipperId = request.ShipperId,
+				WarehouseLocationId = request.WarehouseLocationId,
 				Status = AssignmentStatus.Pending,
 				CreatedAt = _dateTime.UtcNow,
-				AssignedByUserId = currentUser.UserId
+				CreatedByUserId = currentUser.UserId,	
 			};
 
 			await _assignmentRepository.AddAsync(assignment);
@@ -66,6 +66,37 @@ namespace ToyShelf.Application.Services
 				throw new AppException("Shipment assignment not found", 404);
 
 			return MapToResponse(result);
+		}
+
+		// ================= ASSIGN SHIPPER (WAREHOUSE) =================
+		public async Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser)
+		{
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
+
+			if (assignment == null)
+				throw new AppException("Assignment not found", 404);
+
+			// Kiểm tra trạng thái các Shipment liên quan
+			var activeShipment = assignment.Shipments
+				.FirstOrDefault(s => s.Status == ShipmentStatus.Draft || s.Status == ShipmentStatus.Shipping);
+
+			if (activeShipment != null)
+				throw new AppException("Cannot change Shipper, shipment is in progress", 400);
+
+			// Nếu có Shipment nhưng đã Delivery -> cho phép đổi
+			var oldShipperId = assignment.ShipperId;
+			assignment.ShipperId = request.ShipperId;
+			assignment.AssignedByUserId = currentUser.UserId;
+
+			// Nếu Shipper thay đổi hoặc gán lại Shipper đã từ chối
+			if (oldShipperId != request.ShipperId || assignment.Status == AssignmentStatus.Rejected)
+			{
+				assignment.Status = AssignmentStatus.Pending;
+				assignment.RespondedAt = null;
+			}
+
+			_assignmentRepository.Update(assignment);
+			await _unitOfWork.SaveChangesAsync();
 		}
 
 		// ================= SHIPPER ACCEPT =================
@@ -128,6 +159,14 @@ namespace ToyShelf.Application.Services
 			return assignments.Select(MapToResponse);
 		}
 
+		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync()
+		{
+			var assignments = await _assignmentRepository.GetAllWithDetailsAsync();
+
+			return assignments.Select(MapToResponse);
+		}
+
+
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
 			return new ShipmentAssignmentResponse
@@ -146,9 +185,13 @@ namespace ToyShelf.Application.Services
 
 				StoreLocationName = assignment.StoreOrder.StoreLocation.Name,
 
-				ShipperName = assignment.Shipper.FullName,
+				ShipperName = assignment.Shipper?.FullName,
 
-				AssignedByName = assignment.AssignedByUser.FullName,
+				CreatedByName = assignment.CreatedByUser != null
+					? assignment.CreatedByUser.FullName
+					: throw new Exception("CreatedByUser not loaded"),
+
+				AssignedByName = assignment.AssignedByUser?.FullName,
 
 				Status = assignment.Status,
 
@@ -160,7 +203,8 @@ namespace ToyShelf.Application.Services
 				{
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
-					Quantity = x.Quantity
+					Quantity = x.Quantity,
+					FulfilledQuantity = x.FulfilledQuantity
 				}).ToList()
 			};
 		}

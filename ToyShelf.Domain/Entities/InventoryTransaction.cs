@@ -6,6 +6,14 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
+	public enum InventoryReferenceType
+	{
+		Shipment,
+		Sale,
+		Damage,
+		Refill,
+		Audit
+	}
 	public class InventoryTransaction
 	{
 		public Guid Id { get; set; }
@@ -15,7 +23,7 @@ namespace ToyShelf.Domain.Entities
 		public InventoryStatus FromStatus { get; set; }
 		public InventoryStatus ToStatus { get; set; }
 		public int Quantity { get; set; }
-		public string ReferenceType { get; set; } = null!;   // REFILL, SALE, DAMAGE, RECALL, AUDIT
+		public InventoryReferenceType ReferenceType { get; set; }
 		public Guid? ReferenceId { get; set; }
 		public DateTime CreatedAt { get; set; }
 		// Navigation

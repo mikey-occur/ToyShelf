@@ -21,6 +21,7 @@ namespace ToyShelf.Domain.Entities
 		public string Code { get; set; } = null!;
 
 		public Guid StoreOrderId { get; set; }
+		public Guid? ShipperId { get; set; }
 
 		public Guid FromLocationId { get; set; }
 		public Guid ToLocationId { get; set; }
@@ -36,6 +37,7 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? ReceivedAt { get; set; }
 
 		public virtual StoreOrder StoreOrder { get; set; } = null!;
+		public virtual User? Shipper { get; set; }
 
 		public virtual InventoryLocation FromLocation { get; set; } = null!;
 		public virtual InventoryLocation ToLocation { get; set; } = null!;

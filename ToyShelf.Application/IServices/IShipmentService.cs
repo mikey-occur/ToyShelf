@@ -13,10 +13,11 @@ namespace ToyShelf.Application.IServices
 	public interface IShipmentService
 	{
 		Task<IEnumerable<ShipmentResponse>> GetAllAsync(ShipmentStatus? shipmentStatus);
-		Task<ShipmentResponse> GetByAssignmentIdAsync(Guid assignmentId);
+		Task<IEnumerable<ShipmentResponse>> GetByAssignmentIdAsync(Guid assignmentId);
+		Task<ShipmentResponse> GetByIdAsync(Guid shipmentId);
 		Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser);
 		Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser);
 		Task DeliveryAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser);
-		Task ReceiveAsync(Guid shipmentId);
+		Task ReceiveAsync(Guid shipmentId, ReceiveShipmentRequest request);
 	}
 }

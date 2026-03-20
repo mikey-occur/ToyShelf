@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ToyShelf.Application.Models.Shipment.Request
+{
+	public class AssignShipperRequest
+	{
+		public Guid ShipmentAssignmentId { get; set; }
+		public Guid ShipperId { get; set; }
+	}
+}
