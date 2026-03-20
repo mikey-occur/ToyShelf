@@ -166,6 +166,16 @@ namespace ToyShelf.Application.Services
 			return assignments.Select(MapToResponse);
 		}
 
+		public async Task<ShipmentAssignmentResponse> GetByIdAsync(Guid id)
+		{
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(id);
+
+			if (assignment == null)
+				throw new AppException("Assignment not found", 404);
+
+			return MapToResponse(assignment);
+		}
+
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{

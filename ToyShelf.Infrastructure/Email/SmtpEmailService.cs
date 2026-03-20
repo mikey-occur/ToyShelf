@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Notifications;
 using ToyShelf.Domain.Entities;
+using ToyShelf.Infrastructure.Common.Time;
 
 namespace ToyShelf.Infrastructure.Email
 {
@@ -35,7 +36,7 @@ namespace ToyShelf.Infrastructure.Email
 				_ => "ToyCabin verification code"
 			};
 
-			var vietnamTimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+			var vietnamTimeZone = VietnamTimeZoneResolver.VietnamTimeZone;
 			var expiredAtVn = TimeZoneInfo.ConvertTimeFromUtc(expiredAt, vietnamTimeZone);
 
 			var body = OtpEmailTemplate.Build(
