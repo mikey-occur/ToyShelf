@@ -31,6 +31,8 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public AssignmentStatus Status { get; set; }
 
+		public ShipmentStatus ShipmentStatus { get; set; }
+
 		public DateTime CreatedAt { get; set; }
 
 		public DateTime? RespondedAt { get; set; }
