@@ -292,6 +292,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = product.Id,
 				ProductCategoryId = product.ProductCategoryId,
+				ProductCategoryName = product.ProductCategory.Name,
 				Name = product.Name,
 				SKU = product.SKU,
 				Description = product.Description,

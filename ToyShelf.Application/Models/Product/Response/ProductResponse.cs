@@ -11,6 +11,8 @@ namespace ToyShelf.Application.Models.Product.Response
 	{
 		public Guid Id { get; set; }
 		public Guid ProductCategoryId { get; set; }
+
+		public string ProductCategoryName { get; set; } = string.Empty;
 		public string SKU { get; set; } = string.Empty; 
 		public string Name { get; set; } = string.Empty;
 		public decimal BasePrice { get; set; }
