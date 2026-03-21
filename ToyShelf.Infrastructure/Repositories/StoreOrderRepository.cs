@@ -34,6 +34,13 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus? status)
 		{
 			var query = _context.StoreOrders
+				.Include(o => o.StoreLocation)
+					.ThenInclude(sl => sl.Store)
+				.Include(o => o.RequestedByUser)
+				.Include(o => o.ApprovedByUser)
+				.Include(o => o.RejectedByUser)
+				.Include(o => o.Shipments)
+				.Include(o => o.ShipmentAssignments)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
@@ -51,6 +58,13 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<StoreOrder?> GetByIdWithItemsAsync(Guid id)
 		{
 			return await _context.StoreOrders
+				.Include(o => o.StoreLocation)
+					.ThenInclude(sl => sl.Store)
+				.Include(o => o.RequestedByUser)
+				.Include(o => o.ApprovedByUser)
+				.Include(o => o.RejectedByUser)
+				.Include(o => o.Shipments)
+				.Include(o => o.ShipmentAssignments)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
