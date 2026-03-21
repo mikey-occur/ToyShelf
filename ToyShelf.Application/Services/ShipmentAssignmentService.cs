@@ -204,7 +204,7 @@ namespace ToyShelf.Application.Services
 				AssignedByName = assignment.AssignedByUser?.FullName,
 
 				Status = assignment.Status,
-
+				ShipmentStatus = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Status ?? ShipmentStatus.Draft,
 				CreatedAt = assignment.CreatedAt,
 
 				RespondedAt = assignment.RespondedAt,
