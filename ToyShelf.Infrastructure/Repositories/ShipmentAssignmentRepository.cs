@@ -19,6 +19,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.ShipmentAssignments
 				.Include(x => x.WarehouseLocation)
 				.Include(x => x.Shipper)
+				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
 				.Include(x => x.StoreOrder)
@@ -40,6 +41,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.ShipmentAssignments
 				.Include(x => x.WarehouseLocation)
 				.Include(x => x.Shipper)
+				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
 				.Include(x => x.Shipments)
@@ -62,6 +64,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.WarehouseLocation)
 				.Include(x => x.CreatedByUser)
 				.Include(x => x.Shipper)
+				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 
 				.Include(x => x.StoreOrder)
@@ -86,6 +89,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.ShipmentAssignments
 				.Include(x => x.WarehouseLocation)
 				.Include(x => x.Shipper)
+				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
 				.Include(x => x.StoreOrder)
