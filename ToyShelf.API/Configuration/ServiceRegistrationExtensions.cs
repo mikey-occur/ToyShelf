@@ -13,6 +13,7 @@ using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
+using ToyShelf.Infrastructure.Common.ExportExcel;
 using ToyShelf.Infrastructure.Common.Payment;
 using ToyShelf.Infrastructure.Common.QrCode;
 using ToyShelf.Infrastructure.Common.Time;
@@ -132,6 +133,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IMonthlySettlementService, MonthlySettlementService>();
 			services.AddScoped<IShipmentAssignmentService, ShipmentAssignmentService>();
 			services.AddScoped<IShipmentService, ShipmentService>();
+			services.AddScoped<IExportService, ExcelExportService>();
 		}
     }
 }
