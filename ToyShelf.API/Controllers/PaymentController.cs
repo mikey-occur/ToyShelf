@@ -54,34 +54,35 @@ namespace ToyShelf.API.Controllers
 		{
 			try
 			{
-				// 1. Xác thực chữ ký. Nếu sai ChecksumKey nó sẽ văng lỗi ngay đây.
+				// 1. Xác thực chữ ký từ PayOS
 				var verifiedData = await _payOSClient.Webhooks.VerifyAsync(body);
 
 				if (verifiedData != null)
 				{
-					try
-					{
-					
-						await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
-					}
-					catch (Exception dbEx)
-					{
-						
-						Console.WriteLine($"[Cảnh báo DB]: {dbEx.Message}");
-					}
+					// 2. Chạy logic xử lý đơn hàng
+					await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
 				}
 
 				return Ok(new { message = "Webhook processed successfully" });
 			}
 			catch (Exception ex)
 			{
-				return BadRequest(new { message = "Invalid Signature: " + ex.Message });
+				
+				Console.WriteLine($"[WEBHOOK ERROR]: {ex.Message}\n{ex.StackTrace}");
+
+				// Nếu lỗi có chữ "Signature" (Sai chữ ký) thì trả 400.
+				if (ex.Message.Contains("Signature") || ex.Message.Contains("checksum"))
+				{
+					return BadRequest(new { message = "Invalid Signature" });
+				}
+
+				return StatusCode(500, new { message = "Internal server error. Please retry." });
 			}
 		}
 		/// <summary>
 		/// lấy detail order 
 		/// </summary>
-	    [HttpGet("{ordercode}")]
+		[HttpGet("{ordercode}")]
 		public async Task<BaseResponse<OrderDetailResponse?>> GetById(long ordercode)
 		{
 			var result = await _orderService.GetOrderDetailsAsync(ordercode);
