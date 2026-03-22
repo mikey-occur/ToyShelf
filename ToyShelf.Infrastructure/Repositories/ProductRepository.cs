@@ -33,6 +33,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
 			var query = _context.Products
+				.Include(p => p.ProductCategory)
 				.Include(p => p.ProductColors)
 				.ThenInclude(pc => pc.Color).
 				AsQueryable();
@@ -49,12 +50,12 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			if (colorActive.HasValue)
 			{
-				query = query.Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
+				query = query.Include(p => p.ProductCategory).Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
 							 .ThenInclude(pc => pc.Color);
 			}
 			else
 			{
-				query = query.Include(p => p.ProductColors)
+				query = query.Include(p => p.ProductCategory).Include(p => p.ProductColors)
 							 .ThenInclude(pc => pc.Color);
 			}
 
@@ -111,6 +112,7 @@ namespace ToyShelf.Infrastructure.Repositories
                 .OrderByDescending(p => p.CreatedAt)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+				.Include(p => p.ProductCategory)
 				.Include(p => p.ProductColors)
 					   .ThenInclude(pc => pc.Color)
 				.ToListAsync();
