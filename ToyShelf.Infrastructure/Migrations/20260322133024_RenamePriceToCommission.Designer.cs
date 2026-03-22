@@ -12,8 +12,8 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    [Migration("20260315102128_AddMonthlySettlement")]
-    partial class AddMonthlySettlement
+    [Migration("20260322133024_RenamePriceToCommission")]
+    partial class RenamePriceToCommission
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -197,6 +197,31 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("CommissionHistories");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasColumnType("decimal(5,4)");
+
+                    b.Property<Guid>("CommissionTableId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PriceSegmentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PriceSegmentId");
+
+                    b.HasIndex("CommissionTableId", "PriceSegmentId")
+                        .IsUnique();
+
+                    b.ToTable("CommissionItems");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
                 {
                     b.Property<Guid>("Id")
@@ -224,6 +249,73 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("CommissionPolicies");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid?>("PartnerTierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PartnerTierId");
+
+                    b.ToTable("CommissionTables");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTableApply", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("CommissionTableId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("EndDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("PartnerId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CommissionTableId");
+
+                    b.HasIndex("PartnerId");
+
+                    b.ToTable("CommissionTableApplies");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
@@ -436,8 +528,18 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<decimal>("DeductionAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("FinalAmount")
+                        .HasColumnType("decimal(18,2)");
+
                     b.Property<int>("Month")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("timestamp with time zone");
@@ -477,6 +579,16 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("CustomerName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("CustomerPhone")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<long>("OrderCode")
                         .HasColumnType("bigint");
 
@@ -501,6 +613,9 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("numeric(18,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CustomerPhone")
+                        .HasDatabaseName("IX_Orders_UserPhone");
 
                     b.HasIndex("OrderCode")
                         .IsUnique();
@@ -658,31 +773,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("PasswordResetOtps");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<decimal>("CommissionRate")
-                        .HasColumnType("decimal(5,4)");
-
-                    b.Property<Guid>("PriceSegmentId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommissionTableId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PriceSegmentId");
-
-                    b.HasIndex("CommissionTableId", "PriceSegmentId")
-                        .IsUnique();
-
-                    b.ToTable("CommissionItems");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.PriceSegment", b =>
                 {
                     b.Property<Guid>("Id")
@@ -715,73 +805,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("PriceSegments");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<Guid?>("PartnerTierId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartnerTierId");
-
-                    b.ToTable("CommissionTables");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTableApply", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("EndDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)");
-
-                    b.Property<Guid>("PartnerId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("CommissionTableId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTime>("StartDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PartnerId");
-
-                    b.HasIndex("CommissionTableId");
-
-                    b.ToTable("CommissionTableApplies");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -791,6 +814,10 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<string>("AgeRange")
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
+
+                    b.Property<string>("Barcode")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<decimal>("BasePrice")
                         .HasColumnType("decimal(18,2)");
@@ -855,6 +882,10 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("decimal(10,2)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Barcode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Product_Barcode");
 
                     b.HasIndex("ProductCategoryId");
 
@@ -923,10 +954,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("boolean")
                         .HasDefaultValue(true);
-
-                    b.Property<string>("Model3DUrl")
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
 
                     b.Property<decimal>("Price")
                         .HasColumnType("decimal(18,2)");
@@ -1043,18 +1070,35 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ApprovedByUserId")
-                        .HasColumnType("uuid");
-
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
-                    b.Property<Guid?>("FromLocationId")
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("FromLocationId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("PickedUpAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ShipmentAssignmentId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ShipperId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Status")
@@ -1062,23 +1106,79 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<Guid>("StoreOrderId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ToLocationId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ApprovedByUserId");
 
                     b.HasIndex("Code")
                         .IsUnique();
 
                     b.HasIndex("RequestedByUserId");
 
+                    b.HasIndex("ShipmentAssignmentId");
+
+                    b.HasIndex("ShipperId");
+
+                    b.HasIndex("StoreOrderId");
+
                     b.HasIndex("ToLocationId");
 
                     b.HasIndex("FromLocationId", "ToLocationId");
 
                     b.ToTable("Shipments");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("AssignedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<Guid>("CreatedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ShipperId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<Guid>("StoreOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("WarehouseLocationId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AssignedByUserId");
+
+                    b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("ShipperId");
+
+                    b.HasIndex("StoreOrderId");
+
+                    b.HasIndex("WarehouseLocationId");
+
+                    b.ToTable("ShipmentAssignments");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentItem", b =>
@@ -1330,6 +1430,9 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("ApprovedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -1339,6 +1442,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<DateTime?>("RejectedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RejectedByUserId")
+                        .HasColumnType("uuid");
 
                     b.Property<Guid>("RequestedByUserId")
                         .HasColumnType("uuid");
@@ -1353,8 +1462,12 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ApprovedByUserId");
+
                     b.HasIndex("Code")
                         .IsUnique();
+
+                    b.HasIndex("RejectedByUserId");
 
                     b.HasIndex("RequestedByUserId");
 
@@ -1368,6 +1481,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<int>("FulfilledQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<Guid>("ProductColorId")
                         .HasColumnType("uuid");
@@ -1572,6 +1690,27 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Partner");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.CommissionTable", "CommissionTable")
+                        .WithMany("CommissionItems")
+                        .HasForeignKey("CommissionTableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionItem_CommissionTable");
+
+                    b.HasOne("ToyShelf.Domain.Entities.PriceSegment", "PriceSegment")
+                        .WithMany("CommissionItems")
+                        .HasForeignKey("PriceSegmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionItem_PriceSegment");
+
+                    b.Navigation("CommissionTable");
+
+                    b.Navigation("PriceSegment");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.PartnerTier", "PartnerTier")
@@ -1591,6 +1730,38 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("PartnerTier");
 
                     b.Navigation("PriceSegment");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.PartnerTier", "PartnerTier")
+                        .WithMany("CommissionTables")
+                        .HasForeignKey("PartnerTierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_CommissionTable_PartnerTier");
+
+                    b.Navigation("PartnerTier");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTableApply", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.CommissionTable", "CommissionTable")
+                        .WithMany("CommissionTableApplies")
+                        .HasForeignKey("CommissionTableId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionTableApply_CommissionTable");
+
+                    b.HasOne("ToyShelf.Domain.Entities.Partner", "Partner")
+                        .WithMany("CommissionTableApplies")
+                        .HasForeignKey("PartnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionTableApply_Partner");
+
+                    b.Navigation("CommissionTable");
+
+                    b.Navigation("Partner");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
@@ -1790,59 +1961,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Account");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.PriceSegment", "PriceSegment")
-                        .WithMany("CommissionItems")
-                        .HasForeignKey("PriceSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_PriceItem_PriceSegment");
-
-                    b.HasOne("ToyShelf.Domain.Entities.CommissionTable", "CommissionTable")
-                        .WithMany("CommissionItems")
-                        .HasForeignKey("CommissionTableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_PriceItem_PriceTable");
-
-                    b.Navigation("PriceSegment");
-
-                    b.Navigation("CommissionTable");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.PartnerTier", "PartnerTier")
-                        .WithMany("CommissionTables")
-                        .HasForeignKey("PartnerTierId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_PriceTable_PartnerTier");
-
-                    b.Navigation("PartnerTier");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTableApply", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.Partner", "Partner")
-                        .WithMany("CommissionTableApplies")
-                        .HasForeignKey("PartnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_PriceTableApply_Partner");
-
-                    b.HasOne("ToyShelf.Domain.Entities.CommissionTable", "CommissionTable")
-                        .WithMany("CommissionTableApplies")
-                        .HasForeignKey("CommissionTableId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("FK_PriceTableApply_PriceTable");
-
-                    b.Navigation("Partner");
-
-                    b.Navigation("CommissionTable");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.ProductCategory", "ProductCategory")
@@ -1914,16 +2032,11 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Shipment", b =>
                 {
-                    b.HasOne("ToyShelf.Domain.Entities.User", "ApprovedByUser")
-                        .WithMany("ApprovedShipments")
-                        .HasForeignKey("ApprovedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_Shipment_ApprovedByUser");
-
                     b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "FromLocation")
                         .WithMany("FromShipments")
                         .HasForeignKey("FromLocationId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
                         .HasConstraintName("FK_Shipment_FromLocation");
 
                     b.HasOne("ToyShelf.Domain.Entities.User", "RequestedByUser")
@@ -1933,6 +2046,26 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Shipment_RequestedByUser");
 
+                    b.HasOne("ToyShelf.Domain.Entities.ShipmentAssignment", "ShipmentAssignment")
+                        .WithMany("Shipments")
+                        .HasForeignKey("ShipmentAssignmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_Shipment_Assignment");
+
+                    b.HasOne("ToyShelf.Domain.Entities.User", "Shipper")
+                        .WithMany("Shipments")
+                        .HasForeignKey("ShipperId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Shipment_Shipper");
+
+                    b.HasOne("ToyShelf.Domain.Entities.StoreOrder", "StoreOrder")
+                        .WithMany("Shipments")
+                        .HasForeignKey("StoreOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Shipment_StoreOrder");
+
                     b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "ToLocation")
                         .WithMany("ToShipments")
                         .HasForeignKey("ToLocationId")
@@ -1940,13 +2073,61 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Shipment_ToLocation");
 
-                    b.Navigation("ApprovedByUser");
-
                     b.Navigation("FromLocation");
 
                     b.Navigation("RequestedByUser");
 
+                    b.Navigation("ShipmentAssignment");
+
+                    b.Navigation("Shipper");
+
+                    b.Navigation("StoreOrder");
+
                     b.Navigation("ToLocation");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.User", "AssignedByUser")
+                        .WithMany("AssignedShipmentAssignments")
+                        .HasForeignKey("AssignedByUserId")
+                        .HasConstraintName("FK_ShipmentAssignment_AssignedByUser");
+
+                    b.HasOne("ToyShelf.Domain.Entities.User", "CreatedByUser")
+                        .WithMany("CreatedShipmentAssignments")
+                        .HasForeignKey("CreatedByUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
+
+                    b.HasOne("ToyShelf.Domain.Entities.User", "Shipper")
+                        .WithMany("Shippers")
+                        .HasForeignKey("ShipperId")
+                        .HasConstraintName("FK_ShipmentAssignment_Shipper");
+
+                    b.HasOne("ToyShelf.Domain.Entities.StoreOrder", "StoreOrder")
+                        .WithMany("ShipmentAssignments")
+                        .HasForeignKey("StoreOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ShipmentAssignment_StoreOrder");
+
+                    b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "WarehouseLocation")
+                        .WithMany("ShipmentAssignments")
+                        .HasForeignKey("WarehouseLocationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
+
+                    b.Navigation("AssignedByUser");
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("Shipper");
+
+                    b.Navigation("StoreOrder");
+
+                    b.Navigation("WarehouseLocation");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentItem", b =>
@@ -2055,12 +2236,24 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreOrder", b =>
                 {
+                    b.HasOne("ToyShelf.Domain.Entities.User", "ApprovedByUser")
+                        .WithMany("ApprovedStoreOrders")
+                        .HasForeignKey("ApprovedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_StoreOrder_ApprovedByUser");
+
+                    b.HasOne("ToyShelf.Domain.Entities.User", "RejectedByUser")
+                        .WithMany("RejectedStoreOrders")
+                        .HasForeignKey("RejectedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_StoreOrder_RejectedByUser");
+
                     b.HasOne("ToyShelf.Domain.Entities.User", "RequestedByUser")
-                        .WithMany("StoreOrders")
+                        .WithMany("RequestStoreOrders")
                         .HasForeignKey("RequestedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("FK_StoreOrder_User");
+                        .HasConstraintName("FK_StoreOrder_RequestedByUser");
 
                     b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "StoreLocation")
                         .WithMany("StoreOrders")
@@ -2068,6 +2261,10 @@ namespace ToyShelf.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("FK_StoreOrder_StoreLocation");
+
+                    b.Navigation("ApprovedByUser");
+
+                    b.Navigation("RejectedByUser");
 
                     b.Navigation("RequestedByUser");
 
@@ -2155,6 +2352,13 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductColors");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
+                {
+                    b.Navigation("CommissionItems");
+
+                    b.Navigation("CommissionTableApplies");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
                 {
                     b.Navigation("DamageMedia");
@@ -2171,6 +2375,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Inventories");
 
                     b.Navigation("OutgoingInventoryTransactions");
+
+                    b.Navigation("ShipmentAssignments");
 
                     b.Navigation("StoreOrders");
 
@@ -2196,9 +2402,9 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     b.Navigation("CommissionHistories");
 
-                    b.Navigation("MonthlySettlements");
-
                     b.Navigation("CommissionTableApplies");
+
+                    b.Navigation("MonthlySettlements");
 
                     b.Navigation("Shelves");
 
@@ -2213,25 +2419,18 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     b.Navigation("CommissionPolicies");
 
-                    b.Navigation("Partners");
-
                     b.Navigation("CommissionTables");
+
+                    b.Navigation("Partners");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.PriceSegment", b =>
                 {
+                    b.Navigation("CommissionItems");
+
                     b.Navigation("CommissionPolicies");
 
-                    b.Navigation("CommissionItems");
-
                     b.Navigation("ProductColors");
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
-                {
-                    b.Navigation("CommissionItems");
-
-                    b.Navigation("CommissionTableApplies");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
@@ -2273,6 +2472,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Media");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
+                {
+                    b.Navigation("Shipments");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.Store", b =>
                 {
                     b.Navigation("InventoryLocations");
@@ -2289,19 +2493,31 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreOrder", b =>
                 {
                     b.Navigation("Items");
+
+                    b.Navigation("ShipmentAssignments");
+
+                    b.Navigation("Shipments");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.User", b =>
                 {
                     b.Navigation("Accounts");
 
-                    b.Navigation("ApprovedShipments");
+                    b.Navigation("ApprovedStoreOrders");
+
+                    b.Navigation("AssignedShipmentAssignments");
+
+                    b.Navigation("CreatedShipmentAssignments");
 
                     b.Navigation("CreatedStoreRequests");
 
                     b.Navigation("Orders");
 
+                    b.Navigation("RejectedStoreOrders");
+
                     b.Navigation("ReportedDamageReports");
+
+                    b.Navigation("RequestStoreOrders");
 
                     b.Navigation("RequestedShipments");
 
@@ -2309,9 +2525,11 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.Navigation("ReviewedStoreRequests");
 
-                    b.Navigation("StoreInvitations");
+                    b.Navigation("Shipments");
 
-                    b.Navigation("StoreOrders");
+                    b.Navigation("Shippers");
+
+                    b.Navigation("StoreInvitations");
 
                     b.Navigation("UploadedShipmentMedia");
 

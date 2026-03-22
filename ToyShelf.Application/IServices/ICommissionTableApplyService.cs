@@ -8,10 +8,10 @@ using ToyShelf.Application.Models.PriceTableApply.Response;
 
 namespace ToyShelf.Application.IServices
 {
-	public interface IPriceTableApplyService
+	public interface ICommissionTableApplyService
 	{
-		Task<PriceTableApplyResponse> CreateAsync(PriceTableApplyRequest request);
-		Task<IEnumerable<PriceTableApplyResponse>> GetAllAsync(bool? isActive);
+		Task<CommissionTableApplyResponse> CreateAsync(CommissionTableApply request);
+		Task<IEnumerable<CommissionTableApplyResponse>> GetAllAsync(bool? isActive);
 		Task<bool> DeleteAsync(Guid id);
 		Task<bool> RestorePriceTableApplyAsync(Guid id);
 		Task<bool> DisablePriceTableApply(Guid id);

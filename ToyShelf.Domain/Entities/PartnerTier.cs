@@ -13,8 +13,8 @@ namespace ToyShelf.Domain.Entities
 		public int Priority { get; set; }
 		public virtual ICollection<Partner> Partners { get; set; } = new List<Partner>();
 
-		public virtual ICollection<PriceTable> PriceTables { get; set; }
-			= new List<PriceTable>();
+		public virtual ICollection<CommissionTable> CommissionTables { get; set; }
+			= new List<CommissionTable>();
 
 		public virtual ICollection<CommissionPolicy> CommissionPolicies { get; set; }
 		= new List<CommissionPolicy>();

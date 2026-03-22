@@ -13,14 +13,14 @@ using ToyShelf.Domain.IRepositories;
 
 namespace ToyShelf.Application.Services
 {
-	public class PriceTableApplyService : IPriceTableApplyService
+	public class CommissionTableApplyService : ICommissionTableApplyService
 	{
-		private readonly IPriceTableApplyRepository _repo;
+		private readonly ICommissionTableApplyRepository _repo;
 		private readonly IPartnerRepository _partnerRepo;       
-		private readonly IPriceTableRepository _priceTableRepo; 
+		private readonly ICommissionTableRepository _priceTableRepo; 
 		private readonly IUnitOfWork _unitOfWork;
 
-		public PriceTableApplyService(IPriceTableApplyRepository repo, IPartnerRepository partnerRepo, IPriceTableRepository priceTableRepo, IUnitOfWork unitOfWork)
+		public CommissionTableApplyService(ICommissionTableApplyRepository repo, IPartnerRepository partnerRepo, ICommissionTableRepository priceTableRepo, IUnitOfWork unitOfWork)
 		{
 			_repo = repo;
 			_partnerRepo = partnerRepo;
@@ -28,7 +28,7 @@ namespace ToyShelf.Application.Services
 			_unitOfWork = unitOfWork;
 		}
 
-		public async Task<PriceTableApplyResponse> CreateAsync(PriceTableApplyRequest request)
+		public async Task<CommissionTableApplyResponse> CreateAsync(Models.PriceTableApply.Request.CommissionTableApply request)
 		{
 			if (request.EndDate.HasValue && request.StartDate >= request.EndDate.Value)
 			{
@@ -51,11 +51,11 @@ namespace ToyShelf.Application.Services
 			}
 
 			// 4. Tạo mới
-			var apply = new PriceTableApply
+			var apply = new Domain.Entities.CommissionTableApply
 			{
 				Id = Guid.NewGuid(),
 				PartnerId = request.PartnerId,
-				PriceTableId = request.PriceTableId,
+				CommissionTableId = request.PriceTableId,
 				Name = request.Name,
 				StartDate = request.StartDate,
 				EndDate = request.EndDate,
@@ -92,13 +92,13 @@ namespace ToyShelf.Application.Services
 			return true;
 		}
 
-		public async Task<IEnumerable<PriceTableApplyResponse>> GetAllAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTableApplyResponse>> GetAllAsync(bool? isActive)
 		{
 			var list = await _repo.GetAllWithDetailsAsync(isActive);
 			return list.Select(x => MapToResponse(
 				   x,
 				   x.Partner?.CompanyName,
-				   x.PriceTable?.Name
+				   x.CommissionTable?.Name
                    ));
 
 		}
@@ -118,16 +118,16 @@ namespace ToyShelf.Application.Services
 
 		}
 
-		private static PriceTableApplyResponse MapToResponse(PriceTableApply entity, string? pName, string? tName)
+		private static CommissionTableApplyResponse MapToResponse(Domain.Entities.CommissionTableApply entity, string? pName, string? tName)
 		{
 			
 
-			return new PriceTableApplyResponse
+			return new CommissionTableApplyResponse
 			{
 				Id = entity.Id,
 				PartnerId = entity.PartnerId,
 				PartnerName = pName ?? "Unknown",
-				PriceTableId = entity.PriceTableId,
+				PriceTableId = entity.CommissionTableId,
 				PriceTableName = tName ?? "Unknown",
 				Name = entity.Name,
 				IsActive = entity.IsActive,

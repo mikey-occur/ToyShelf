@@ -8,11 +8,11 @@ namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class PriceTableController : ControllerBase
+	public class CommissionTableController : ControllerBase
 	{
-		private readonly IPriceTableService _priceTableService;
+		private readonly ICommissionTableService _priceTableService;
 
-		public PriceTableController(IPriceTableService priceTableService)
+		public CommissionTableController(ICommissionTableService priceTableService)
 		{
 			_priceTableService = priceTableService;
 		}
@@ -21,50 +21,50 @@ namespace ToyShelf.API.Controllers
 		/// Create Price Table.
 		/// </summary>
 		[HttpPost]
-		public async Task<BaseResponse<PriceTableResponse>> Create(
-			[FromBody] PriceTableRequest request)
+		public async Task<BaseResponse<CommissionTableResponse>> Create(
+			[FromBody] CommissionTableRequest request)
 		{
 			var result = await _priceTableService.CreateAsync(request);
 
-			return BaseResponse<PriceTableResponse>.Ok(result, "Price Table created successfully");
+			return BaseResponse<CommissionTableResponse>.Ok(result, "Price Table created successfully");
 		}
 
 		/// <summary>
-		/// Get Price Tables (Filter by isActive).
+		/// Get CommissionTable  (Filter by isActive).
 		/// </summary>
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<PriceTableResponse>>> GetPriceTables([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<CommissionTableResponse>>> GetPriceTables([FromQuery] bool? isActive)
 		{
 			var result = await _priceTableService.GetPriceTablesAsync(isActive);
-			return BaseResponse<IEnumerable<PriceTableResponse>>.Ok(result, "Price Tables retrieved successfully");
+			return BaseResponse<IEnumerable<CommissionTableResponse>>.Ok(result, "Price Tables retrieved successfully");
 		}
 
 		// ===== GET BY ID =====
 		/// <summary>
-		/// Get Price Table by id.
+		/// Get CommissionTable  by id.
 		/// </summary>
 		[HttpGet("{id}")]
-		public async Task<BaseResponse<PriceTableResponse>> GetById(Guid id)
+		public async Task<BaseResponse<CommissionTableResponse>> GetById(Guid id)
 		{
 			var result = await _priceTableService.GetByIdAsync(id);
-			return BaseResponse<PriceTableResponse>.Ok(result, "Price Table retrieved successfully");
+			return BaseResponse<CommissionTableResponse>.Ok(result, "Price Table retrieved successfully");
 		}
 
 		// ===== UPDATE =====
 		/// <summary>
-		/// Update Price Table.
+		/// Update CommissionTable.
 		/// </summary>
 		[HttpPut("{id}")]
-		public async Task<BaseResponse<PriceTableResponse>> Update(Guid id, [FromBody] PriceTableUpdateRequest request)
+		public async Task<BaseResponse<CommissionTableResponse>> Update(Guid id, [FromBody] CommissionTableUpdateRequest request)
 		{
 			var result = await _priceTableService.UpdateAsync(id, request);
 
-			return BaseResponse<PriceTableResponse>.Ok(result, "Price Table updated successfully");
+			return BaseResponse<CommissionTableResponse>.Ok(result, "Price Table updated successfully");
 		}
 
 		// ===== DELETE =====
 		/// <summary>
-		/// Delete Price Table (Check in use).
+		/// Delete CommissionTable (Check in use).
 		/// </summary>
 		[HttpDelete("{id}/delete")]
 		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
@@ -75,7 +75,7 @@ namespace ToyShelf.API.Controllers
 
 		// ===== DISABLE =====
 		/// <summary>
-		/// Disable Price Table.
+		/// Disable CommissionTable.
 		/// </summary>
 		[HttpPatch("{id}/disable")]
 		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
@@ -86,7 +86,7 @@ namespace ToyShelf.API.Controllers
 
 		// ===== RESTORE =====
 		/// <summary>
-		/// Restore Price Table.
+		/// Restore CommissionTable.
 		/// </summary>
 		[HttpPatch("{id}/restore")]
 		public async Task<ActionResult<ActionResponse>> Restore(Guid id)

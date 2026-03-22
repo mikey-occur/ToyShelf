@@ -6,27 +6,27 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
-	public enum PriceTableType
+	public enum CommissionTableType
 	{
 		Tier, // bảng giá thông thường
 		Campaign, // Xả kho hàng
 		Special // bảng giá độc quyền
 	}
 
-	public class PriceTable
+	public class CommissionTable
 	{
 		public Guid Id { get; set; }
 		public Guid? PartnerTierId { get; set; }
 		public string Name { get; set; } = null!;
-		public PriceTableType Type { get; set; }
+		public CommissionTableType Type { get; set; }
 		public bool IsActive { get; set; } = true;
 
 		// Relationship ngược về Tier (để biết bảng này thường dùng cho Tier nào)
 		public virtual PartnerTier? PartnerTier { get; set; }
 		// Danh sách các mức % chi tiết
-		public virtual ICollection<PriceItem> PriceItems { get; set; } = new List<PriceItem>();
+		public virtual ICollection<CommissionItem> CommissionItems { get; set; } = new List<CommissionItem>();
 		// Lịch sử áp dụng
-		public virtual ICollection<PriceTableApply> PriceTableApplies { get; set; } = new List<PriceTableApply>();
+		public virtual ICollection<CommissionTableApply> CommissionTableApplies { get; set; } = new List<CommissionTableApply>();
 
 	}
 }

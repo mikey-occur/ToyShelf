@@ -7,12 +7,12 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IPriceTableApplyRepository : IGenericRepository<PriceTableApply>
+	public interface ICommissionTableApplyRepository : IGenericRepository<CommissionTableApply>
 	{
 		Task<bool> HasOverlapAsync(Guid partnerId, DateTime startDate, DateTime? endDate);
 
-		Task<IEnumerable<PriceTableApply>> GetAllWithDetailsAsync(bool? isActive);
+		Task<IEnumerable<CommissionTableApply>> GetAllWithDetailsAsync(bool? isActive);
 
-		Task<PriceTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now);
+		Task<CommissionTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now);
 	}
 }
