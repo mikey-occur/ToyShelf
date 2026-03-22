@@ -11,16 +11,16 @@ namespace ToyShelf.Domain.Common.Commission
 	public class CommissionService : ICommissionService
 	{
 		private readonly IUnitOfWork _unitOfWork;
-		private readonly IPriceItemRepository _priceItemRepository;
+		private readonly ICommissionItemRepository _priceItemRepository;
 		private readonly IProductColorRepository _productColorRepository;
-		private readonly IPriceTableApplyRepository _priceTableApplyRepository;
+		private readonly ICommissionTableApplyRepository _priceTableApplyRepository;
 		private readonly ICommissionPolicyRepository _commissionPolicyRepository;
 		private readonly IPartnerRepository _partnerRepository;
 		public CommissionService(
 			IUnitOfWork unitOfWork,
-			IPriceItemRepository priceItemRepository,
+			ICommissionItemRepository priceItemRepository,
 			IProductColorRepository productColorRepository,
-			IPriceTableApplyRepository priceTableApplyRepository,
+			ICommissionTableApplyRepository priceTableApplyRepository,
 			ICommissionPolicyRepository commissionPolicyRepository,
 			IPartnerRepository partnerRepository)
 		{
@@ -46,12 +46,12 @@ namespace ToyShelf.Domain.Common.Commission
 			var activeApply = await _priceTableApplyRepository.GetActiveByPartnerAsync(partnerId, DateTime.UtcNow);
 			if (activeApply != null)
 			{
-				var priceItem = await   _priceItemRepository.GetItemAsync(activeApply.PriceTableId, segment.Id);
+				var priceItem = await   _priceItemRepository.GetItemAsync(activeApply.CommissionTableId, segment.Id);
 				if (priceItem != null)
 				{
 					return new CommissionCalculationResult(
 						priceItem.CommissionRate,
-						$"Bảng giá của partner: {activeApply.PriceTable.Name} ({segment.Name})");
+						$"Bảng giá của partner: {activeApply.CommissionTable.Name} ({segment.Name})");
 				}
 			}
 

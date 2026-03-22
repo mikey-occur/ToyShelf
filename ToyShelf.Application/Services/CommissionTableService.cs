@@ -10,22 +10,22 @@ using ToyShelf.Application.Models.PriceTable.Response;
 using ToyShelf.Application.Models.ProductColor.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
-using static ToyShelf.Application.Models.PriceTable.Response.PriceTableResponse;
+using static ToyShelf.Application.Models.PriceTable.Response.CommissionTableResponse;
 
 namespace ToyShelf.Application.Services
 {
-	public class PriceTableService : IPriceTableService
+	public class CommissionTableService : ICommissionTableService
 	{
 		private readonly IUnitOfWork _unitOfWork;
-		private readonly IPriceTableRepository _repo;
-		public PriceTableService(IUnitOfWork unitOfWork, IPriceTableRepository repo)
+		private readonly ICommissionTableRepository _repo;
+		public CommissionTableService(IUnitOfWork unitOfWork, ICommissionTableRepository repo)
 		{
 			_unitOfWork = unitOfWork;
 			_repo = repo;
 		}
-		public async Task<PriceTableResponse> CreateAsync(PriceTableRequest request)
+		public async Task<CommissionTableResponse> CreateAsync(CommissionTableRequest request)
 		{
-			if (request.Type == PriceTableType.Tier && !request.PartnerTierId.HasValue)
+			if (request.Type == CommissionTableType.Tier && !request.PartnerTierId.HasValue)
 				throw new AppException("Partner tier is required for Tier price tables", 400);
 
 			if (request.PartnerTierId.HasValue)
@@ -39,7 +39,7 @@ namespace ToyShelf.Application.Services
 					throw new AppException("Partner tier not found", 404);
 			}
 
-			var priceTable = new PriceTable
+			var priceTable = new CommissionTable
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name,
@@ -52,15 +52,15 @@ namespace ToyShelf.Application.Services
 			{
 				foreach (var itemReq in request.Items)
 				{
-					var priceItem = new PriceItem
+					var priceItem = new CommissionItem
 					{
 						Id = Guid.NewGuid(),
-						PriceTableId = priceTable.Id,
+						CommissionTableId = priceTable.Id,
 						PriceSegmentId = itemReq.PriceSegmentId,
 						CommissionRate = itemReq.CommissionRate
 					};
 
-					priceTable.PriceItems.Add(priceItem);
+					priceTable.CommissionItems.Add(priceItem);
 				}
 			}
 
@@ -116,31 +116,31 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 			return true;
 		}
-		public async Task<IEnumerable<PriceTableResponse>> GetAllAsync()
+		public async Task<IEnumerable<CommissionTableResponse>> GetAllAsync()
 		{
 			var tables = await _repo.GetAllAsync();
 			return tables.Select(MapToResponse);
 		}
 
-		public async Task<IEnumerable<PriceTableResponse>> GetPriceTablesAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTableResponse>> GetPriceTablesAsync(bool? isActive)
 		{
 			var priceTables = await _repo.GetPriceTablesAsync(isActive);
 			return priceTables.Select(MapToResponse);
 		}
 
-		public async Task<PriceTableResponse> GetByIdAsync(Guid id)
+		public async Task<CommissionTableResponse> GetByIdAsync(Guid id)
 		{
 			var table = await _repo.GetByIdWithDetailsAsync(id)
 				?? throw new AppException("Price Table not found", 404);
 			return MapToResponse(table);
 		}
 
-		public async Task<PriceTableResponse> UpdateAsync(Guid id, PriceTableUpdateRequest request)
+		public async Task<CommissionTableResponse> UpdateAsync(Guid id, CommissionTableUpdateRequest request)
 		{
 			var priceTable = await _repo.GetByIdWithDetailsAsync(id)
 	   ?? throw new AppException("Price Table not found", 404);
 
-			if (request.Type == PriceTableType.Tier && !request.PartnerTierId.HasValue)
+			if (request.Type == CommissionTableType.Tier && !request.PartnerTierId.HasValue)
 				throw new AppException("Partner tier is required for Tier price tables", 400);
 
 			if (request.PartnerTierId.HasValue)
@@ -161,28 +161,28 @@ namespace ToyShelf.Application.Services
 			priceTable.IsActive = request.IsActive;
 
 
-			// ===== Xử lý PriceItems =====
+			// ===== Xử lý CommissionItems =====
 			if (request.Items != null && request.Items.Any())
 			{
 				// Xoá toàn bộ item cũ
-				if (priceTable.PriceItems != null && priceTable.PriceItems.Any())
+				if (priceTable.CommissionItems != null && priceTable.CommissionItems.Any())
 				{
-					_unitOfWork.Repository<PriceItem>()
-						.DeleteRange(priceTable.PriceItems);
+					_unitOfWork.Repository<CommissionItem>()
+						.DeleteRange(priceTable.CommissionItems);
 				}
 
 				// Thêm item mới
 				foreach (var itemReq in request.Items)
 				{
-					var newItem = new PriceItem
+					var newItem = new CommissionItem
 					{
 						Id = Guid.NewGuid(),
-						PriceTableId = priceTable.Id,
+						CommissionTableId = priceTable.Id,
 						PriceSegmentId = itemReq.PriceSegmentId,
 						CommissionRate = itemReq.CommissionRate
 					};
 
-					await _unitOfWork.Repository<PriceItem>()
+					await _unitOfWork.Repository<CommissionItem>()
 						.AddAsync(newItem);
 				}
 			}
@@ -192,9 +192,9 @@ namespace ToyShelf.Application.Services
 		}
 
 		// Mapping 
-		private static PriceTableResponse MapToResponse(PriceTable entity)
+		private static CommissionTableResponse MapToResponse(CommissionTable entity)
 		{
-			return new PriceTableResponse
+			return new CommissionTableResponse
 			{
 				Id = entity.Id,
 				Name = entity.Name,
@@ -202,7 +202,7 @@ namespace ToyShelf.Application.Services
 				PartnerTierId = entity.PartnerTierId,
 				PartnerTierName = entity.PartnerTier?.Name,
 				IsActive = entity.IsActive,
-				Items = entity.PriceItems.Select(i => new PriceItemResponse
+				Items = entity.CommissionItems.Select(i => new CommissionItemResponse
 				{
 					Id = i.Id,
 					PriceSegmentId = i.PriceSegmentId,

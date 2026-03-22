@@ -10,26 +10,26 @@ using ToyShelf.Infrastructure.Context;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
-	public class PriceTableRepository : GenericRepository<PriceTable>, IPriceTableRepository
+	public class CommissionTableRepository : GenericRepository<CommissionTable>, ICommissionTableRepository
 	{
-		public PriceTableRepository(ToyShelfDbContext context) : base(context)
+		public CommissionTableRepository(ToyShelfDbContext context) : base(context)
 		{
 		}
 
-		public async Task<PriceTable?> GetByIdWithDetailsAsync(Guid id)
+		public async Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id)
 		{
-			return await _context.PriceTables
+			return await _context.CommissionTables
 			.Include(pt => pt.PartnerTier)           
-			.Include(pt => pt.PriceItems)            
+			.Include(pt => pt.CommissionItems)            
 				.ThenInclude(pi => pi.PriceSegment)  
 			.FirstOrDefaultAsync(pt => pt.Id == id);
 		}
 
-		public async Task<IEnumerable<PriceTable>> GetPriceTablesAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive)
 		{
-			var query = _context.PriceTables
+			var query = _context.CommissionTables
 			.Include(pt => pt.PartnerTier)          
-			.Include(pt => pt.PriceItems)         
+			.Include(pt => pt.CommissionItems)         
 				.ThenInclude(pi => pi.PriceSegment) 
 			.AsQueryable();
 
@@ -42,7 +42,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<bool> IsPriceTableInUseAsync(Guid id)
 		{
-			return await _context.PriceTableApplies.AnyAsync(x => x.PriceTableId == id);
+			return await _context.CommissionTableApplies.AnyAsync(x => x.CommissionTableId == id);
 		}
 
 

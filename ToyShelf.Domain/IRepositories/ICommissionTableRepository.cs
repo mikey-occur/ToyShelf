@@ -7,12 +7,12 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IPriceTableRepository : IGenericRepository<PriceTable>
+	public interface ICommissionTableRepository : IGenericRepository<CommissionTable>
 	{
-		Task<PriceTable?> GetByIdWithDetailsAsync(Guid id);
+		Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id);
 
 		Task<bool> IsPriceTableInUseAsync(Guid id);
 
-		Task<IEnumerable<PriceTable>> GetPriceTablesAsync(bool? isActive);
+		Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive);
 	}
 }

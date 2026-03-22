@@ -9,15 +9,15 @@ using ToyShelf.Domain.IRepositories;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
-	public class PriceItemRepository : GenericRepository<PriceItem>, IPriceItemRepository
+	public class PriceItemRepository : GenericRepository<CommissionItem>, ICommissionItemRepository
 	{
 		public PriceItemRepository(Context.ToyShelfDbContext context) : base(context) { }
 		
 		
-		public async Task<Domain.Entities.PriceItem?> GetItemAsync(Guid priceTableId, Guid segmentId)
+		public async Task<Domain.Entities.CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId)
 		{
-			return await _context.PriceItems
-				.FirstOrDefaultAsync(pi => pi.PriceTableId == priceTableId && pi.PriceSegmentId == segmentId);
+			return await _context.CommissionItems
+				.FirstOrDefaultAsync(pi => pi.CommissionTableId == priceTableId && pi.PriceSegmentId == segmentId);
 		}
 	
 
