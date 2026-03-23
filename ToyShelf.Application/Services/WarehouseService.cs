@@ -96,7 +96,7 @@ namespace ToyShelf.Application.Services
 
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(warehouse);
+			return MapToResponse(warehouse, location);
 		}
 
 
@@ -104,7 +104,18 @@ namespace ToyShelf.Application.Services
 		public async Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(bool? isActive)
 		{
 			var warehouses = await _warehouseRepository.GetWarehousesAsync(isActive);
-			return warehouses.Select(MapToResponse);
+
+			var result = new List<WarehouseResponse>();
+
+			foreach (var wh in warehouses)
+			{
+				var location = await _inventoryLocationRepository
+					.GetByWarehouseIdAsync(wh.Id);
+
+				result.Add(MapToResponse(wh, location));
+			}
+
+			return result;
 		}
 
 		public async Task<WarehouseResponse> GetByIdAsync(Guid id)
@@ -113,8 +124,12 @@ namespace ToyShelf.Application.Services
 			if (warehouse == null)
 				throw new AppException($"Warehouse not found. Id = {id}", 404);
 
-			return MapToResponse(warehouse);
+			var location = await _inventoryLocationRepository
+				.GetByWarehouseIdAsync(warehouse.Id);
+
+			return MapToResponse(warehouse, location);
 		}
+
 
 		// ================= UPDATE =================
 		public async Task<WarehouseResponse> UpdateAsync(Guid id, UpdateWarehouseRequest request)
@@ -143,7 +158,7 @@ namespace ToyShelf.Application.Services
 			_warehouseRepository.Update(warehouse);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(warehouse);
+			return MapToResponse(warehouse, location);
 		}
 
 		// ================= DISABLE / RESTORE =================
@@ -211,7 +226,7 @@ namespace ToyShelf.Application.Services
 		}
 
 		// ================= MAPPER =================
-		private static WarehouseResponse MapToResponse(Warehouse warehouse)
+		private static WarehouseResponse MapToResponse(Warehouse warehouse, InventoryLocation? location)
 		{
 			return new WarehouseResponse
 			{
@@ -226,6 +241,8 @@ namespace ToyShelf.Application.Services
 				CityId = warehouse.CityId,
 				CityName = warehouse.City.Name,
 				CityCode = warehouse.City.Code,
+
+				WarehouseLocationId = location?.Id,
 
 				CreatedAt = warehouse.CreatedAt,
 				UpdatedAt = warehouse.UpdatedAt
