@@ -20,6 +20,8 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 		public string CityName { get; set; } = null!;
 		public string CityCode { get; set; } = null!;
 
+		public Guid? WarehouseLocationId { get; set; }
+
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 	}
