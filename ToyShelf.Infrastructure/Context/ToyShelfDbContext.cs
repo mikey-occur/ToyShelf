@@ -1508,6 +1508,24 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.ShipmentAssignments)
 					  .WithOne(a => a.WarehouseLocation)
 					  .HasForeignKey(a => a.WarehouseLocationId);
+
+				// ===== Unique =====
+				entity.HasIndex(e => e.WarehouseId)
+					  .IsUnique()
+					  .HasFilter("\"WarehouseId\" IS NOT NULL");
+
+				entity.HasIndex(e => e.StoreId)
+					  .IsUnique()
+					  .HasFilter("\"StoreId\" IS NOT NULL");
+
+				// ===== Check constraint (NEW WAY) =====
+				entity.ToTable(t =>
+				{
+					t.HasCheckConstraint(
+						"CK_InventoryLocation_OnlyOneOwner",
+						"(\"WarehouseId\" IS NOT NULL AND \"StoreId\" IS NULL) OR (\"WarehouseId\" IS NULL AND \"StoreId\" IS NOT NULL)"
+					);
+				});
 			});
 
 			// ==================== Shipment ==================
