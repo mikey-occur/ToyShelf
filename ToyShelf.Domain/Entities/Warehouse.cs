@@ -20,7 +20,8 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? UpdatedAt { get; set; }
 
 		// Navigation
-		public virtual ICollection<InventoryLocation> InventoryLocations { get; set; } = new List<InventoryLocation>();
 		public virtual City City { get; set; } = null!;
+		public virtual ICollection<InventoryLocation> InventoryLocations { get; set; } = new List<InventoryLocation>();
+		public virtual ICollection<UserWarehouse> UserWarehouses { get; set; } = new List<UserWarehouse>();
 	}
 }

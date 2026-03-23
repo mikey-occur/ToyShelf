@@ -13,6 +13,7 @@ namespace ToyShelf.Infrastructure.Context
 		public ToyShelfDbContext(DbContextOptions<ToyShelfDbContext> options) : base(options) {}
 		public DbSet<Account> Accounts { get; set; }
 		public DbSet<User> Users { get; set; }
+		public DbSet<UserWarehouse> UserWarehouses { get; set; }
 		public DbSet<Role> Roles { get; set; }
 		public DbSet<AccountRole> AccountRoles { get; set; }
 		public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
@@ -208,7 +209,53 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.RejectedStoreOrders)
 					  .WithOne(a => a.RejectedByUser)
 					  .HasForeignKey(a => a.RejectedByUserId);
+
+				// UserWarehouse
+				entity.HasMany(e => e.UserWarehouses)
+					  .WithOne(a => a.User)
+					  .HasForeignKey(a => a.UserId);
 			});
+
+			// ================== USER WAREHOUSE ==================
+			modelBuilder.Entity<UserWarehouse>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Role)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.IsActive)
+					  .IsRequired()
+					  .HasDefaultValue(true);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.UpdatedAt);
+
+				// Tránh duplicate (1 user - 1 warehouse)
+				entity.HasIndex(e => new { e.UserId, e.WarehouseId })
+					  .IsUnique();
+
+				// ===== Relationship =====
+
+				entity.HasOne(e => e.User)
+					  .WithMany(u => u.UserWarehouses)
+					  .HasForeignKey(e => e.UserId)
+					  .HasConstraintName("FK_UserWarehouse_User");
+
+				entity.HasOne(e => e.Warehouse)
+					  .WithMany(w => w.UserWarehouses)
+					  .HasForeignKey(e => e.WarehouseId)
+					  .HasConstraintName("FK_UserWarehouse_Warehouse");
+			});
+
 
 			// ================== ROLE ==================
 			modelBuilder.Entity<Role>(entity =>
@@ -1295,6 +1342,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithMany(l => l.Warehouses)
 					  .HasForeignKey(e => e.CityId)
 					  .HasConstraintName("FK_Warehouse_City");
+
+				// UserWarehouse
+				entity.HasMany(e => e.UserWarehouses)
+					  .WithOne(a => a.Warehouse)
+					  .HasForeignKey(a => a.WarehouseId);
 
 				// ===== Index =====
 
