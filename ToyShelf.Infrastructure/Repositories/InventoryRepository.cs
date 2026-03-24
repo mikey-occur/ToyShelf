@@ -43,11 +43,17 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 	public async Task<IEnumerable<Inventory>> GetByLocationAsync(Guid locationId)
 		{
 			return await _context.Inventories
-				.Where(x => x.InventoryLocationId == locationId)
-				.Include(x => x.ProductColor)
-				.Include(x => x.InventoryLocation)
-				.ToListAsync();
-		}
+				  .Where(x => x.InventoryLocationId == locationId)
+					.Include(x => x.ProductColor)
+						.ThenInclude(pc => pc.Product)
+					.Include(x => x.ProductColor)
+						.ThenInclude(pc => pc.Color)
+					.Include(x => x.InventoryLocation)
+						.ThenInclude(l => l.Warehouse)
+					.Include(x => x.InventoryLocation)
+						.ThenInclude(l => l.Store)
+					.ToListAsync();
+	}
 	public async Task<Inventory?> GetByLocationAndProductAsync(Guid locationId, Guid productColorId)
 	{
 		// Giả sử chỉ lấy inventory trạng thái Available
@@ -101,5 +107,13 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 		}
 
 		return await query.ToListAsync();
+	}
+
+	public async Task<InventoryLocation?> GetLocationByIdAsync(Guid locationId)
+	{
+		return await _context.InventoryLocations
+			.Include(l => l.Warehouse)
+			.Include(l => l.Store)
+			.FirstOrDefaultAsync(l => l.Id == locationId);
 	}
 }

@@ -18,7 +18,7 @@ namespace ToyShelf.Application.IServices
 		Task<InventoryResponse> GetByIdAsync(Guid id);
 		Task UpdateStockAfterPaymentAsync(Order order);
 		Task<WarehouseInventoryResponse> GetWarehouseInventoryAsync(Guid warehouseId);
-		Task<WarehouseInventoryOverviewResponse> GetWarehouseInventoryOverviewAsync(Guid warehouseId);
+		Task<LocationInventoryOverviewResponse> GetLocationInventoryOverviewAsync(Guid locationId);
 		Task<IEnumerable<GlobalInventoryResponse>> GetGlobalInventoryAsync(InventoryLocationType? type);
 	}
 }
