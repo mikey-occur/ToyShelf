@@ -6,10 +6,16 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
+	public enum InventoryLocationType
+	{
+		Warehouse,
+		Store 
+	}
+
 	public class InventoryLocation
 	{
 		public Guid Id { get; set; }
-		public string Type { get; set; } = null!; // WAREHOUSE, STORE
+		public InventoryLocationType Type { get; set; } // WAREHOUSE, STORE
 		public Guid? WarehouseId { get; set; }
 		public Guid? StoreId { get; set; }
 		public string Name { get; set; } = null!;

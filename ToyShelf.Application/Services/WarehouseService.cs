@@ -87,7 +87,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				WarehouseId = warehouse.Id,
-				Type = "WAREHOUSE",
+				Type = InventoryLocationType.Warehouse,
 				Name = warehouse.Name,
 				IsActive = true
 			};

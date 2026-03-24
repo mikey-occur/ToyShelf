@@ -1451,6 +1451,7 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.Type)
 					  .IsRequired()
+					  .HasConversion<string>()
 					  .HasMaxLength(20);
 
 				entity.Property(e => e.Name)
