@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Models.Inventory.Request;
 using ToyShelf.Application.Models.Inventory.Response;
+using ToyShelf.Application.Models.InventoryTransaction;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
@@ -21,5 +22,9 @@ namespace ToyShelf.Application.IServices
 		Task<LocationInventoryOverviewResponse> GetLocationInventoryOverviewAsync(Guid locationId);
 		Task<IEnumerable<GlobalInventoryResponse>> GetGlobalInventoryAsync(InventoryLocationType? type);
 		Task<GlobalProductInventoryByProductResponse> GetInventoryByProductAsync(Guid productId);
+		Task<IEnumerable<InventoryTransactionResponse>> GetAllTransactionsAsync(
+			Guid? productId = null,
+			Guid? fromLocationId = null,
+			Guid? toLocationId = null);
 	}
 }

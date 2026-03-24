@@ -7,6 +7,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Inventory.Request;
 using ToyShelf.Application.Models.Inventory.Response;
+using ToyShelf.Application.Models.InventoryTransaction;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 
@@ -16,13 +17,15 @@ namespace ToyShelf.Application.Services
 	{
 		private readonly IInventoryRepository _inventoryRepository;
 		private readonly IWarehouseRepository _warehouseRepository;
+		private readonly IInventoryTransactionRepository _transactionRepository;
 		private readonly IUnitOfWork _unitOfWork;
 
-		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IWarehouseRepository warehouseRepository)
+		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IWarehouseRepository warehouseRepository, IInventoryTransactionRepository transactionRepository)
 		{
 			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
 			_warehouseRepository = warehouseRepository;
+			_transactionRepository = transactionRepository;
 		}
 		public async Task<InventoryResponse> RefillAsync(RefillInventoryRequest request)
 		{
@@ -334,6 +337,32 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		// Lấy tất cả sản phẩm đang có giao dịch, có filter theo productId, fromLocationId, toLocationId (tùy chọn)
+		public async Task<IEnumerable<InventoryTransactionResponse>> GetAllTransactionsAsync(
+			Guid? productId = null,
+			Guid? fromLocationId = null,
+			Guid? toLocationId = null)
+		{
+			// Dùng repository chuẩn, đã filter theo Id
+			var transactions = await _transactionRepository.GetAllTransactionsAsync(
+				productId,
+				fromLocationId,
+				toLocationId
+			);
+
+			// Map sang response
+			return transactions.Select(t => new InventoryTransactionResponse
+			{
+				TransactionId = t.Id,
+				ProductColorId = t.ProductColorId,
+				ColorName = t.ProductColor.Color?.Name ?? "Unknown",
+				ProductName = t.ProductColor.Product.Name,
+				FromLocation = t.FromLocation?.Name ?? "N/A",
+				ToLocation = t.ToLocation?.Name ?? "N/A",
+				Quantity = t.Quantity,
+				CreatedAt = t.CreatedAt
+			}).ToList();
+		}
 
 		private static InventoryResponse MapToResponse(Inventory inventory)
 		{
