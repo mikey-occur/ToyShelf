@@ -83,4 +83,23 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 			.Where(i => i.InventoryLocation.WarehouseId == warehouseId)
 			.ToListAsync();
 	}
+	public async Task<IEnumerable<Inventory>> GetAllInventoryWithDetailsAsync(InventoryLocationType? type)
+	{
+		var query = _context.Inventories
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Product)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Color)
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Warehouse)
+			.AsQueryable();
+
+		// Nếu có filter type, áp dụng
+		if (type.HasValue)
+		{
+			query = query.Where(i => i.InventoryLocation != null && i.InventoryLocation.Type == type.Value);
+		}
+
+		return await query.ToListAsync();
+	}
 }

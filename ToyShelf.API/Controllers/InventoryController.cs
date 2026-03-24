@@ -53,7 +53,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể, bao gồm thông tin về sản phẩm, màu sắc và số lượng tồn kho.
+		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể. Xài cho khi tạo Shipment
 		/// </summary>
 		[HttpGet("warehouse/{warehouseId}/inventory")]
 		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(Guid warehouseId)
@@ -66,7 +66,7 @@ namespace ToyShelf.API.Controllers
 
 
 		/// <summary>
-		/// Admin có thể xem tổng quan về hàng tồn kho của một kho hàng, bao gồm số lượng sản phẩm theo từng loại, màu sắc và tình trạng tồn kho (còn hàng, sắp hết hàng, hết hàng).
+		/// Admin có thể xem tổng quan về hàng tồn kho của một kho hàng, bao gồm số lượng sản phẩm theo từng loại, màu sắc và tình trạng tồn kho (còn hàng, sắp hết hàng, hết hàng). Xài cho báo cáo, quản lí.
 		/// </summary>
 		[HttpGet("warehouse/{warehouseId}/inventory-overview")]
 		public async Task<BaseResponse<WarehouseInventoryOverviewResponse>> GetOverview(Guid warehouseId)
@@ -77,5 +77,20 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Get warehouse inventory overview successfully");
 		}
 
+		/// <summary>
+		/// Lấy toàn bộ inventory toàn hệ thống (Global Inventory)
+		/// </summary>
+		/// <returns>Danh sách inventory theo location → product → color + trạng thái</returns>
+		[HttpGet("global")]
+		public async Task<ActionResult<BaseResponse<IEnumerable<GlobalInventoryResponse>>>> GetGlobalInventory(InventoryLocationType? type)
+		{
+
+			var globalInventory = await _inventoryService.GetGlobalInventoryAsync(type);
+
+			return BaseResponse<IEnumerable<GlobalInventoryResponse>>.Ok(
+				globalInventory,
+				"Get global inventory successfully"
+			);
+		}
 	}
 }

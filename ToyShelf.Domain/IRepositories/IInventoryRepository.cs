@@ -20,5 +20,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Inventory?> GetByLocationAndProductAsync(Guid locationId, Guid productColorId);
 		Task<List<Inventory>> GetByWarehouseIdAsync(Guid warehouseId);
 		Task<List<Inventory>> GetAllByWarehouseIdAsync(Guid warehouseId);
+		Task<IEnumerable<Inventory>> GetAllInventoryWithDetailsAsync(InventoryLocationType? type);
 	}
 }
