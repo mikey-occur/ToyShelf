@@ -9,5 +9,10 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IInventoryTransactionRepository : IGenericRepository<InventoryTransaction>
 	{
+		Task<IEnumerable<InventoryTransaction>> GetByProductIdAsync(Guid productId);
+		Task<IEnumerable<InventoryTransaction>> GetAllTransactionsAsync(
+		   Guid? productId = null,
+		   Guid? fromLocationId = null,
+		   Guid? toLocationId = null);
 	}
 }

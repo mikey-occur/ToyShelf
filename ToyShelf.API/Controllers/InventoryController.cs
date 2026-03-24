@@ -4,6 +4,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Inventory.Request;
 using ToyShelf.Application.Models.Inventory.Response;
+using ToyShelf.Application.Models.InventoryTransaction;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
@@ -109,5 +110,27 @@ namespace ToyShelf.API.Controllers
 				"Get inventory by product successfully"
 			);
 		}
+
+		/// <summary>
+		/// Lấy tất cả giao dịch (all inventory transactions), có thể filter theo product hoặc location
+		/// </summary>
+		[HttpGet("transactions")]
+		public async Task<BaseResponse<IEnumerable<InventoryTransactionResponse>>> GetAllTransactions(
+			[FromQuery] Guid? productId = null,
+			[FromQuery] Guid? fromLocationId = null,
+			[FromQuery] Guid? toLocationId = null)
+		{
+			var result = await _inventoryService.GetAllTransactionsAsync(
+				productId,
+				fromLocationId,
+				toLocationId
+			);
+
+			return BaseResponse<IEnumerable<InventoryTransactionResponse>>.Ok(
+				result,
+				"Get all inventory transactions successfully"
+			);
+		}
+
 	}
 }
