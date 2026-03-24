@@ -226,6 +226,69 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<IEnumerable<GlobalInventoryResponse>> GetGlobalInventoryAsync(InventoryLocationType? type)
+		{
+			var inventories = await _inventoryRepository.GetAllInventoryWithDetailsAsync(type);
+
+			inventories = inventories.Where(i => i.InventoryLocation != null).ToList();
+
+			var result = inventories
+				.GroupBy(i => i.InventoryLocationId) // group theo InventoryLocationId
+				.Select(locationGroup =>
+				{
+					var location = locationGroup.First().InventoryLocation!;
+					return new GlobalInventoryResponse
+					{
+						InventoryLocationId = location.Id,  // ID trung gian
+						Id = location.Type == InventoryLocationType.Warehouse
+								? location.WarehouseId ?? Guid.Empty
+								: location.StoreId ?? Guid.Empty, // ID thực Warehouse/Store
+						Name = location.Name,
+						Type = location.Type,
+						Products = locationGroup
+							.Where(i => i.ProductColor != null && i.ProductColor.Product != null)
+							.GroupBy(i => i.ProductColor.ProductId)
+							.Select(productGroup =>
+							{
+								var product = productGroup.First().ProductColor.Product!;
+								return new GlobalProductInventoryItem
+								{
+									ProductId = product.Id,
+									ProductName = product.Name,
+									Colors = productGroup
+										.Where(x => x.ProductColor.Color != null)
+										.GroupBy(i => i.ProductColorId)
+										.Select(colorGroup =>
+										{
+											var color = colorGroup.First().ProductColor.Color!;
+											return new GlobalColorInventoryItem
+											{
+												ColorId = color.Id,
+												ColorName = color.Name,
+												Available = colorGroup
+													.Where(x => x.Status == InventoryStatus.Available)
+													.Sum(x => x.Quantity),
+												InTransit = colorGroup
+													.Where(x => x.Status == InventoryStatus.InTransit)
+													.Sum(x => x.Quantity),
+												Damaged = colorGroup
+													.Where(x => x.Status == InventoryStatus.Damaged)
+													.Sum(x => x.Quantity),
+												Sold = colorGroup
+													.Where(x => x.Status == InventoryStatus.Sold)
+													.Sum(x => x.Quantity)
+											};
+										})
+										.ToList()
+								};
+							})
+							.ToList()
+					};
+				})
+				.ToList();
+
+			return result;
+		}
 
 		private static InventoryResponse MapToResponse(Inventory inventory)
 		{
