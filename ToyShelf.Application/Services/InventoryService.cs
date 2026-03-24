@@ -162,6 +162,69 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<WarehouseInventoryOverviewResponse> GetWarehouseInventoryOverviewAsync(Guid warehouseId)
+		{
+			var warehouse = await _warehouseRepository.GetByIdAsync(warehouseId);
+
+			if (warehouse == null)
+				throw new AppException("Warehouse not found", 404);
+
+			var inventories = await _inventoryRepository.GetAllByWarehouseIdAsync(warehouseId);
+
+			if (!inventories.Any())
+			{
+				return new WarehouseInventoryOverviewResponse
+				{
+					WarehouseId = warehouse.Id,
+					WarehouseName = warehouse.Name,
+					Products = new List<ProductInventoryOverviewItem>()
+				};
+			}
+
+			var groupedProducts = inventories
+				.GroupBy(i => i.ProductColor.ProductId)
+				.Select(productGroup => new ProductInventoryOverviewItem
+				{
+					ProductId = productGroup.Key,
+					ProductName = productGroup.First().ProductColor.Product.Name,
+
+					Colors = productGroup
+						.GroupBy(i => i.ProductColorId)
+						.Select(colorGroup =>
+						{
+							return new ColorInventoryOverviewItem
+							{
+								ProductColorId = colorGroup.Key,
+								ColorName = colorGroup.First().ProductColor.Color.Name,
+
+								Available = colorGroup
+									.Where(x => x.Status == InventoryStatus.Available)
+									.Sum(x => x.Quantity),
+
+								InTransit = colorGroup
+									.Where(x => x.Status == InventoryStatus.InTransit)
+									.Sum(x => x.Quantity),
+
+								Damaged = colorGroup
+									.Where(x => x.Status == InventoryStatus.Damaged)
+									.Sum(x => x.Quantity),
+
+								Sold = colorGroup
+									.Where(x => x.Status == InventoryStatus.Sold)
+									.Sum(x => x.Quantity)
+							};
+						})
+						.ToList()
+				})
+				.ToList();
+
+			return new WarehouseInventoryOverviewResponse
+			{
+				WarehouseId = warehouse.Id,
+				WarehouseName = warehouse.Name,
+				Products = groupedProducts
+			};
+		}
 
 
 		private static InventoryResponse MapToResponse(Inventory inventory)

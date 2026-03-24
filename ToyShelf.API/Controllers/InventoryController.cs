@@ -63,5 +63,19 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<WarehouseInventoryResponse>
 				.Ok(result, "Get warehouse inventory successfully");
 		}
+
+
+		/// <summary>
+		/// Admin có thể xem tổng quan về hàng tồn kho của một kho hàng, bao gồm số lượng sản phẩm theo từng loại, màu sắc và tình trạng tồn kho (còn hàng, sắp hết hàng, hết hàng).
+		/// </summary>
+		[HttpGet("warehouse/{warehouseId}/inventory-overview")]
+		public async Task<BaseResponse<WarehouseInventoryOverviewResponse>> GetOverview(Guid warehouseId)
+		{
+			var result = await _inventoryService.GetWarehouseInventoryOverviewAsync(warehouseId);
+
+			return BaseResponse<WarehouseInventoryOverviewResponse>
+				.Ok(result, "Get warehouse inventory overview successfully");
+		}
+
 	}
 }
