@@ -17,7 +17,8 @@ namespace ToyShelf.API.Controllers
 	{
 		private readonly IProductService _productService;
 		private readonly IHubContext<ProductHub> _hubContext;
-		public ProductController(IProductService productService, IHubContext<ProductHub> hubContext)
+		
+		public ProductController(IProductService productService,IHubContext<ProductHub> hubContext)
 		{
 			_productService = productService;
 			_hubContext = hubContext;
@@ -111,12 +112,12 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("paginated")]
-		public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId = null,string? searchItem =null)
+		public async Task<BaseResponse<PaginatedResult<ProductResponse>>> GetProductsPaginated([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10, [FromQuery] bool? isActive = null, [FromQuery] Guid? categoryId = null, string? searchItem = null)
 		{
 			if (pageNumber < 1) pageNumber = 1;
 			if (pageSize < 1) pageSize = 10;
 
-			var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive, categoryId,searchItem);
+			var (items, totalCount) = await _productService.GetProductsPaginatedAsync(pageNumber, pageSize, isActive, categoryId, searchItem);
 
 			var result = new PaginatedResult<ProductResponse>
 			{
@@ -129,9 +130,46 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<PaginatedResult<ProductResponse>>.Ok(result, "Products retrieved successfully");
 		}
 
-	
 
+		[HttpGet("barcode/{barCode}")]
+		public async Task<BaseResponse<ProductResponse?>> GetByBarCode(string barCode)
+		{
+			var product = await _productService.GetByBarCode(barCode);
+			return BaseResponse<ProductResponse?>.Ok(product, "Product retrieved successfully");
+        }
 
+		[HttpPost("select")]
+        public async Task<IActionResult> SelectProduct([FromBody]string barCode)
+        {
+            if (string.IsNullOrEmpty(barCode))
+            {
+                return BadRequest("BarCode không được để trống.");
+            }
+            await _hubContext.Clients.All.SendAsync("OnProductSelected", barCode);
 
+            return Ok(new
+            {
+                success = true,
+                message = $"Đã gửi lệnh hiển thị sản phẩm: {barCode}",
+                timestamp = System.DateTime.Now
+            });
+        }
+
+        [HttpPost("hello")]
+        public async Task<IActionResult> HelloGuest([FromBody] string text)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return BadRequest("BarCode không được để trống.");
+            }
+            await _hubContext.Clients.All.SendAsync("ReceiveMessage", text);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Đã gửi lệnh hiển thị: {text}",
+                timestamp = System.DateTime.Now
+            });
+        }
     }
   }
