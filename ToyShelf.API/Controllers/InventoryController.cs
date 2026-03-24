@@ -51,5 +51,17 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<InventoryResponse>
 				.Ok(result, "Inventory retrieved successfully");
 		}
+
+		/// <summary>
+		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể, bao gồm thông tin về sản phẩm, màu sắc và số lượng tồn kho.
+		/// </summary>
+		[HttpGet("warehouse/{warehouseId}/inventory")]
+		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(Guid warehouseId)
+		{
+			var result = await _inventoryService.GetWarehouseInventoryAsync(warehouseId);
+
+			return BaseResponse<WarehouseInventoryResponse>
+				.Ok(result, "Get warehouse inventory successfully");
+		}
 	}
 }
