@@ -165,6 +165,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			if(string.IsNullOrWhiteSpace(barCode)) return null;
 
 			var product = await _context.Products
+				.Include(p => p.ProductCategory)
 				.Include(p => p.ProductColors)
 				 .ThenInclude(pc => pc.Color)
 				.FirstOrDefaultAsync(p => p.Barcode == barCode);
