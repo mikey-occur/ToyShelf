@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.Models.Inventory.Response
 {
-	public class WarehouseInventoryOverviewResponse
+	// Response models
+	public class LocationInventoryOverviewResponse
 	{
-		public Guid WarehouseId { get; set; }
-		public string WarehouseName { get; set; } = null!;
+		public Guid LocationId { get; set; }
+		public string LocationName { get; set; } = null!;
+		public InventoryLocationType Type { get; set; }
 		public List<ProductInventoryOverviewItem> Products { get; set; } = new();
 	}
 
@@ -30,4 +33,5 @@ namespace ToyShelf.Application.Models.Inventory.Response
 		public int Damaged { get; set; }
 		public int Sold { get; set; }
 	}
+
 }

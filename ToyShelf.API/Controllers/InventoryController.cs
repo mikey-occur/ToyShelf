@@ -66,16 +66,19 @@ namespace ToyShelf.API.Controllers
 
 
 		/// <summary>
-		/// Admin có thể xem tổng quan về hàng tồn kho của một kho hàng, bao gồm số lượng sản phẩm theo từng loại, màu sắc và tình trạng tồn kho (còn hàng, sắp hết hàng, hết hàng). Xài cho báo cáo, quản lí.
+		/// Admin có thể xem tổng quan về hàng tồn kho của một location (Warehouse hoặc Store),
+		/// bao gồm số lượng sản phẩm theo từng loại, màu sắc và tình trạng tồn kho.
+		/// Dùng cho báo cáo và quản lý.
 		/// </summary>
-		[HttpGet("warehouse/{warehouseId}/inventory-overview")]
-		public async Task<BaseResponse<WarehouseInventoryOverviewResponse>> GetOverview(Guid warehouseId)
+		[HttpGet("location/{locationId}/inventory-overview")]
+		public async Task<BaseResponse<LocationInventoryOverviewResponse>> GetLocationOverview(Guid locationId)
 		{
-			var result = await _inventoryService.GetWarehouseInventoryOverviewAsync(warehouseId);
+			var result = await _inventoryService.GetLocationInventoryOverviewAsync(locationId);
 
-			return BaseResponse<WarehouseInventoryOverviewResponse>
-				.Ok(result, "Get warehouse inventory overview successfully");
+			return BaseResponse<LocationInventoryOverviewResponse>
+				.Ok(result, "Get location inventory overview successfully");
 		}
+
 
 		/// <summary>
 		/// Lấy toàn bộ inventory toàn hệ thống (Global Inventory)

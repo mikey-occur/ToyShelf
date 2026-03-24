@@ -162,66 +162,55 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		public async Task<WarehouseInventoryOverviewResponse> GetWarehouseInventoryOverviewAsync(Guid warehouseId)
+		public async Task<LocationInventoryOverviewResponse> GetLocationInventoryOverviewAsync(Guid locationId)
 		{
-			var warehouse = await _warehouseRepository.GetByIdAsync(warehouseId);
+			// Lấy location (Warehouse hoặc Store)
+			var location = await _inventoryRepository.GetLocationByIdAsync(locationId);
+			if (location == null)
+				throw new AppException("Location not found", 404);
 
-			if (warehouse == null)
-				throw new AppException("Warehouse not found", 404);
-
-			var inventories = await _inventoryRepository.GetAllByWarehouseIdAsync(warehouseId);
+			// Lấy tất cả inventory trong location này
+			var inventories = await _inventoryRepository.GetByLocationAsync(locationId);
 
 			if (!inventories.Any())
 			{
-				return new WarehouseInventoryOverviewResponse
+				return new LocationInventoryOverviewResponse
 				{
-					WarehouseId = warehouse.Id,
-					WarehouseName = warehouse.Name,
+					LocationId = location.Id,
+					LocationName = location.Name,
+					Type = location.Type,
 					Products = new List<ProductInventoryOverviewItem>()
 				};
 			}
 
 			var groupedProducts = inventories
+				.Where(i => i.ProductColor != null && i.ProductColor.Product != null)
 				.GroupBy(i => i.ProductColor.ProductId)
 				.Select(productGroup => new ProductInventoryOverviewItem
 				{
 					ProductId = productGroup.Key,
 					ProductName = productGroup.First().ProductColor.Product.Name,
-
 					Colors = productGroup
+						.Where(i => i.ProductColor.Color != null)
 						.GroupBy(i => i.ProductColorId)
-						.Select(colorGroup =>
+						.Select(colorGroup => new ColorInventoryOverviewItem
 						{
-							return new ColorInventoryOverviewItem
-							{
-								ProductColorId = colorGroup.Key,
-								ColorName = colorGroup.First().ProductColor.Color.Name,
-
-								Available = colorGroup
-									.Where(x => x.Status == InventoryStatus.Available)
-									.Sum(x => x.Quantity),
-
-								InTransit = colorGroup
-									.Where(x => x.Status == InventoryStatus.InTransit)
-									.Sum(x => x.Quantity),
-
-								Damaged = colorGroup
-									.Where(x => x.Status == InventoryStatus.Damaged)
-									.Sum(x => x.Quantity),
-
-								Sold = colorGroup
-									.Where(x => x.Status == InventoryStatus.Sold)
-									.Sum(x => x.Quantity)
-							};
+							ProductColorId = colorGroup.Key,
+							ColorName = colorGroup.First().ProductColor.Color.Name,
+							Available = colorGroup.Where(x => x.Status == InventoryStatus.Available).Sum(x => x.Quantity),
+							InTransit = colorGroup.Where(x => x.Status == InventoryStatus.InTransit).Sum(x => x.Quantity),
+							Damaged = colorGroup.Where(x => x.Status == InventoryStatus.Damaged).Sum(x => x.Quantity),
+							Sold = colorGroup.Where(x => x.Status == InventoryStatus.Sold).Sum(x => x.Quantity)
 						})
 						.ToList()
 				})
 				.ToList();
 
-			return new WarehouseInventoryOverviewResponse
+			return new LocationInventoryOverviewResponse
 			{
-				WarehouseId = warehouse.Id,
-				WarehouseName = warehouse.Name,
+				LocationId = location.Id,
+				LocationName = location.Name,
+				Type = location.Type,
 				Products = groupedProducts
 			};
 		}
