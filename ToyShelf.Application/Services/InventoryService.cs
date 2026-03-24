@@ -279,6 +279,62 @@ namespace ToyShelf.Application.Services
 			return result;
 		}
 
+
+		public async Task<GlobalProductInventoryByProductResponse> GetInventoryByProductAsync(Guid productId)
+		{
+			var inventories = await _inventoryRepository.GetByProductIdAsync(productId);
+
+			if (!inventories.Any())
+				throw new AppException("Product inventory not found", 404);
+
+			var productName = inventories.First().ProductColor?.Product?.Name ?? "Unknown";
+
+			// Nhóm theo location
+			var locations = inventories
+				.Where(i => i.InventoryLocation != null)
+				.GroupBy(i => i.InventoryLocationId)
+				.Select(lg =>
+				{
+					var location = lg.First().InventoryLocation!;
+
+					// Nhóm theo màu trong location
+					var colors = lg
+						.Where(i => i.ProductColor?.Color != null)
+						.GroupBy(i => i.ProductColorId)
+						.Select(cg =>
+						{
+							var color = cg.First().ProductColor!.Color!;
+							return new ProductColorInventoryItem
+							{
+								ColorId = color.Id,
+								ColorName = color.Name,
+								Available = cg.Where(x => x.Status == InventoryStatus.Available).Sum(x => x.Quantity),
+								InTransit = cg.Where(x => x.Status == InventoryStatus.InTransit).Sum(x => x.Quantity),
+								Damaged = cg.Where(x => x.Status == InventoryStatus.Damaged).Sum(x => x.Quantity),
+								Sold = cg.Where(x => x.Status == InventoryStatus.Sold).Sum(x => x.Quantity)
+							};
+						})
+						.ToList();
+
+					return new LocationInventoryItem
+					{
+						LocationId = location.Id,
+						LocationName = location.Name,
+						Type = location.Type.ToString().ToUpper(),
+						Colors = colors
+					};
+				})
+				.ToList();
+
+			return new GlobalProductInventoryByProductResponse
+			{
+				ProductId = productId,
+				ProductName = productName,
+				Locations = locations
+			};
+		}
+
+
 		private static InventoryResponse MapToResponse(Inventory inventory)
 		{
 			return new InventoryResponse
