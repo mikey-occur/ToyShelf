@@ -24,8 +24,9 @@ namespace ToyShelf.Application.Services
 		private readonly ICommissionService _commissionService;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepository;
 		private readonly IInventoryService _inventoryService;
+		IInventoryRepository _inventoryRepository;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService)
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -35,6 +36,7 @@ namespace ToyShelf.Application.Services
 			_commissionService = commissionService;
 			_commissionHistoryRepository = commissionHistoryRepsitory;
 			_inventoryService = inventoryService;
+			_inventoryRepository = inventoryRepository;
 		}
 		public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
@@ -66,6 +68,17 @@ namespace ToyShelf.Application.Services
 					throw new AppException($"Product ID {itemReq.ProductColorId} Not Found.",404);
 				}
 
+				var inventory = await _inventoryRepository.GetInventoryAsync(request.StoreId, itemReq.ProductColorId, InventoryStatus.Available);
+
+				if (inventory == null)
+				{
+					throw new AppException($"Product (ID: {itemReq.ProductColorId}) Stock Not Found.", 400);
+				}
+
+				if (inventory.Quantity < itemReq.Quantity)
+				{
+					throw new AppException($"Product (ID: {itemReq.ProductColorId}) Stock {inventory.Quantity} Not engouh to buy {itemReq.Quantity} ", 400);
+				}
 
 				var orderItem = new OrderItem
 				{
@@ -161,6 +174,12 @@ namespace ToyShelf.Application.Services
 			{
 				// Gọi CommissionService với logic ưu tiên Bảng giá -> Tier Policy
 				var result = await _commissionService.CalculateCommissionAsync(partnerId.Value, item.ProductColorId, item.Price);
+
+				if (result == null)
+				{
+					
+					throw new AppException($"Can't caculate commission {item.ProductColorId}", 500);
+				}
 
 				// Tạo bản ghi vào bảng CommissionHistory (Sử dụng đúng Rate và SourceDescription từ record)
 				var commissionHistory = new CommissionHistory

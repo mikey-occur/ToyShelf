@@ -8,41 +8,41 @@ namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class PriceTableApplyController : ControllerBase
+	public class CommissionTableApplyController : ControllerBase
 	{
-		private readonly IPriceTableApplyService _service;
+		private readonly ICommissionTableApplyService _service;
 
-		public PriceTableApplyController(IPriceTableApplyService service)
+		public CommissionTableApplyController(ICommissionTableApplyService service)
 		{
 			_service = service;
 		}
 
 		/// <summary>
-		/// Create Price Table Apply.
+		/// Create CommissionTableApply.
 		/// </summary>
 		[HttpPost]
-		public async Task<BaseResponse<PriceTableApplyResponse>> Create(
-			[FromBody] PriceTableApplyRequest request)
+		public async Task<BaseResponse<CommissionTableApplyResponse>> Create(
+			[FromBody] CommissionTableApply request)
 		{
 			var result = await _service.CreateAsync(request);
-			return BaseResponse<PriceTableApplyResponse>
+			return BaseResponse<CommissionTableApplyResponse>
 				.Ok(result, "Price table apply created successfully");
 		}
 
 		/// <summary>
-		/// Get all Price Table Apply.
+		/// Get all CommissionTableApply.
 		/// </summary>
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<PriceTableApplyResponse>>> GetAll(
+		public async Task<BaseResponse<IEnumerable<CommissionTableApplyResponse>>> GetAll(
 			[FromQuery] bool? isActive)
 		{
 			var result = await _service.GetAllAsync(isActive);
-			return BaseResponse<IEnumerable<PriceTableApplyResponse>>
+			return BaseResponse<IEnumerable<CommissionTableApplyResponse>>
 				.Ok(result, "Price table apply retrieved successfully");
 		}
 
 		/// <summary>
-		/// Delete Price Table Apply (Hard delete).
+		/// Delete CommissionTableApply (Hard delete).
 		/// </summary>
 		[HttpDelete("{id}/delete")]
 		public async Task<ActionResult<ActionResponse>> Delete(Guid id)
@@ -52,7 +52,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Disable Price Table Apply (Soft delete).
+		/// Disable CommissionTableApply (Soft delete).
 		/// </summary>
 		[HttpPatch("{id}/disable")]
 		public async Task<ActionResult<ActionResponse>> Disable(Guid id)
@@ -62,7 +62,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Restore Price Table Apply.
+		/// Restore CommissionTableApply.
 		/// </summary>
 		[HttpPatch("{id}/restore")]
 		public async Task<ActionResult<ActionResponse>> Restore(Guid id)

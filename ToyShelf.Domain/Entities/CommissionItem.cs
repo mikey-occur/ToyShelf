@@ -6,19 +6,19 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
-	public class PriceItem
+	public class CommissionItem
 	{
 		public Guid Id { get; set; }
 
 		// Thuộc bảng giá nào?
-		public Guid PriceTableId { get; set; }
+		public Guid CommissionTableId { get; set; }
 
 		// Áp dụng cho phân khúc nào?
 		public Guid PriceSegmentId { get; set; }
 
 		// Hoa hồng bao nhiêu %?
 		public decimal CommissionRate { get; set; } // VD: 0.15 (15%)
-		public virtual PriceTable PriceTable { get; set; } = null!;
+		public virtual CommissionTable CommissionTable { get; set; } = null!;
 		public virtual PriceSegment PriceSegment { get; set; } = null!;
 	}
 }

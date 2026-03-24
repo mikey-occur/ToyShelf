@@ -33,6 +33,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<Product>> GetProductsAsync(bool? isActive)
 		{
 			var query = _context.Products
+				.Include(p => p.ProductCategory)
 				.Include(p => p.ProductColors)
 				.ThenInclude(pc => pc.Color).
 				AsQueryable();
@@ -49,12 +50,12 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			if (colorActive.HasValue)
 			{
-				query = query.Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
+				query = query.Include(p => p.ProductCategory).Include(p => p.ProductColors.Where(pc => pc.IsActive == colorActive.Value))
 							 .ThenInclude(pc => pc.Color);
 			}
 			else
 			{
-				query = query.Include(p => p.ProductColors)
+				query = query.Include(p => p.ProductCategory).Include(p => p.ProductColors)
 							 .ThenInclude(pc => pc.Color);
 			}
 
@@ -72,21 +73,51 @@ namespace ToyShelf.Infrastructure.Repositories
             if (isActive.HasValue)
                 query = query.Where(p => p.IsActive == isActive.Value);
 
-            var totalCount = await query.CountAsync();
+           
 
             if (categoryId.HasValue)
                 query = query.Where(p => p.ProductCategoryId == categoryId.Value);
 			if (!string.IsNullOrWhiteSpace(searchItem))
-				query = query.Where(p => p.Name.Contains(searchItem));
+			{
+				var keyword = searchItem.Trim().ToLower();
+				query = query.Where(p =>
+					p.Name.ToLower().Contains(keyword) ||
+					p.SKU.ToLower().Contains(keyword) ||
+					(p.Barcode != null && p.Barcode.ToLower().Contains(keyword))
+				);
+			}
 
-                var items = await query
+
+			var totalCount = await query.CountAsync();
+
+
+			if (!string.IsNullOrWhiteSpace(searchItem))
+			{
+				var keyword = searchItem.Trim().ToLower();
+
+				query = query
+					// 100% SKU hoặc Barcode thì đẩy lên Top 1
+					.OrderByDescending(p => p.SKU.ToLower() == keyword || (p.Barcode != null && p.Barcode.ToLower() == keyword))
+					// Không trúng 100% mã thì ưu tiên thằng nào có Tên BẮT ĐẦU bằng từ khóa
+					.ThenByDescending(p => p.Name.ToLower().StartsWith(keyword))
+					// Không trúng 100% mã và không bắt đầu bằng từ khóa thì ưu tiên thằng nào có Tên CHỨA từ khóa
+					.ThenByDescending(p => p.CreatedAt);
+			}
+			else
+			{
+				query = query.OrderByDescending(p => p.CreatedAt);
+			}
+
+			var items = await query
                 .OrderByDescending(p => p.CreatedAt)
 				.Include(p => p.ProductColors) 
             .ThenInclude(pc => pc.Color)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
+				.Include(p => p.ProductCategory)
 				.Include(p => p.ProductColors)
-                .ToListAsync();
+					   .ThenInclude(pc => pc.Color)
+				.ToListAsync();
 
             return (items, totalCount);
         }

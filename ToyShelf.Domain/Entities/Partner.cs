@@ -22,7 +22,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<User> Users { get; set; } = new List<User>();
 		public virtual ICollection<Store> Stores { get; set; } = new List<Store>();
 		public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
-		public virtual ICollection<PriceTableApply> PriceTableApplies { get; set; } = new List<PriceTableApply>();
+		public virtual ICollection<CommissionTableApply> CommissionTableApplies { get; set; } = new List<CommissionTableApply>();
 		public virtual ICollection<CommissionHistory> CommissionHistories { get; set; } = new List<CommissionHistory>();
 		public virtual ICollection<StoreCreationRequest> StoreCreationRequests { get; set; } = new List<StoreCreationRequest>();
 		public virtual ICollection<MonthlySettlement> MonthlySettlements { get; set; } = new List<MonthlySettlement>();

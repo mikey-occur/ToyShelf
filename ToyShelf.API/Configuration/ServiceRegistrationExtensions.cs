@@ -13,6 +13,7 @@ using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
+using ToyShelf.Infrastructure.Common.ExportExcel;
 using ToyShelf.Infrastructure.Common.Payment;
 using ToyShelf.Infrastructure.Common.QrCode;
 using ToyShelf.Infrastructure.Common.Time;
@@ -81,13 +82,13 @@ namespace ToyShelf.API.Configuration
          	services.AddScoped<IShelfRepository, ShelfRepository>();
 			services.AddScoped<IPriceSegmentRepository, PriceSegmentRepository>();
 			services.AddScoped<IPartnerTierRepository, PartnerTierRepository>();
-			services.AddScoped<IPriceTableRepository, PriceTableRepository>();
+			services.AddScoped<ICommissionTableRepository, CommissionTableRepository>();
 			services.AddScoped<ICommissionPolicyRepository, CommissionPolicyRepository>();
 			services.AddScoped<ICityRepository, CityRepository>();
-			services.AddScoped<IPriceTableApplyRepository, PriceTableApplyRepository>();
+			services.AddScoped<ICommissionTableApplyRepository, CommissionTableApplyRepository>();
 			services.AddScoped<IStoreCreationRequestRepository, StoreCreationRequestRepository>();
 			services.AddScoped<IOrderRepository, OrderRepository>();
-			services.AddScoped<IPriceItemRepository, PriceItemRepository>();
+			services.AddScoped<ICommissionItemRepository, PriceItemRepository>();
 			services.AddScoped<ICommissionHistoryRepsitory, CommissionHistoryRepsitory>();
 			services.AddScoped<IInventoryLocationRepository, InventoryLocationRepository>();
 			services.AddScoped<IInventoryRepository, InventoryRepository>();
@@ -116,11 +117,11 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IColorService, ColorService>();
 			services.AddScoped<IPriceSegmentService, PriceSegmentService>();
 			services.AddScoped<IPartnerTierService, PartnerTierService>();
-			services.AddScoped<IPriceTableService, PriceTableService>();
+			services.AddScoped<ICommissionTableService, CommissionTableService>();
 			services.AddScoped<ICommissionPolicyService, CommissionPolicyService>();
 			services.AddScoped<IShelfService, ShelfService>();
 			services.AddScoped<IQrCodeService, QrCodeService>();
-			services.AddScoped<IPriceTableApplyService, PriceTableApplyService>();
+			services.AddScoped<ICommissionTableApplyService, CommissionTableApplyService>();
 			services.AddScoped<ICityService, CityService>();
 			services.AddScoped<ICommissionService, CommissionService>();
 			services.AddScoped<IPaymentService, PayOSPaymentService>();
@@ -132,6 +133,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IMonthlySettlementService, MonthlySettlementService>();
 			services.AddScoped<IShipmentAssignmentService, ShipmentAssignmentService>();
 			services.AddScoped<IShipmentService, ShipmentService>();
+			services.AddScoped<IExportService, ExcelExportService>();
 		}
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
-	public class PriceTableApply
+	public class CommissionTableApply
 	{
 		public Guid Id { get; set; }
 
@@ -14,7 +14,7 @@ namespace ToyShelf.Domain.Entities
 		public Guid PartnerId { get; set; }
 
 		// Dùng bảng giá nào?
-		public Guid PriceTableId { get; set; }
+		public Guid CommissionTableId { get; set; }
 
 		// Hiệu lực từ ngày nào đến ngày nào?
 		public string? Name { get; set; } // VD: "Ký phụ lục hợp đồng số 05/2024"
@@ -25,6 +25,6 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? EndDate { get; set; } // Nếu null nghĩa là đang áp dụng vô thời hạn
 
 		public virtual Partner Partner { get; set; } = null!;
-		public virtual PriceTable PriceTable { get; set; } = null!;
+		public virtual CommissionTable CommissionTable { get; set; } = null!;
 	}
 }

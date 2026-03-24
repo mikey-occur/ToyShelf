@@ -9,16 +9,16 @@ using ToyShelf.Domain.IRepositories;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
-	public class PriceTableApplyRepository : GenericRepository<PriceTableApply>, IPriceTableApplyRepository
+	public class CommissionTableApplyRepository : GenericRepository<CommissionTableApply>, ICommissionTableApplyRepository
 	{
-		public PriceTableApplyRepository(Context.ToyShelfDbContext context) : base(context)
+		public CommissionTableApplyRepository(Context.ToyShelfDbContext context) : base(context)
 		{
 		}
 
-		public async Task<PriceTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now)
+		public async Task<CommissionTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now)
 		{
-				return await _context.PriceTableApplies
-			.Include(a => a.PriceTable) // Load thông tin bảng giá để lấy tên/loại
+				return await _context.CommissionTableApplies
+			.Include(a => a.CommissionTable) // Load thông tin bảng giá để lấy tên/loại
 			.Where(a => a.PartnerId == partnerId &&
 						a.IsActive &&
 						a.StartDate <= now &&
@@ -27,11 +27,11 @@ namespace ToyShelf.Infrastructure.Repositories
 			.FirstOrDefaultAsync();
 		}
 
-		public async Task<IEnumerable<PriceTableApply>> GetAllWithDetailsAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTableApply>> GetAllWithDetailsAsync(bool? isActive)
 		{
-			var query = _context.PriceTableApplies
+			var query = _context.CommissionTableApplies
 				.Include(x => x.Partner)
-				.Include(x => x.PriceTable)
+				.Include(x => x.CommissionTable)
 				.AsQueryable();
 
 			if (isActive.HasValue)
@@ -50,7 +50,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			var checkEndDate = endDate ?? DateTime.MaxValue;
 
 			
-			return await _context.PriceTableApplies.AnyAsync(x =>
+			return await _context.CommissionTableApplies.AnyAsync(x =>
 				x.PartnerId == partnerId &&
 				x.IsActive &&
 				x.StartDate < checkEndDate &&

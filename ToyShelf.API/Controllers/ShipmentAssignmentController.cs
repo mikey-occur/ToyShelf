@@ -93,5 +93,14 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Get all assignments successfully");
 		}
+
+		[HttpGet("{id}")]
+		public async Task<BaseResponse<ShipmentAssignmentResponse>> GetById(Guid id)
+		{
+			var result = await _service.GetByIdAsync(id);
+
+			return BaseResponse<ShipmentAssignmentResponse>
+				.Ok(result, "Assignment retrieved successfully");
+		}
 	}
 }

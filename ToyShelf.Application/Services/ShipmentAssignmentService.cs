@@ -166,6 +166,16 @@ namespace ToyShelf.Application.Services
 			return assignments.Select(MapToResponse);
 		}
 
+		public async Task<ShipmentAssignmentResponse> GetByIdAsync(Guid id)
+		{
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(id);
+
+			if (assignment == null)
+				throw new AppException("Assignment not found", 404);
+
+			return MapToResponse(assignment);
+		}
+
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
@@ -194,13 +204,14 @@ namespace ToyShelf.Application.Services
 				AssignedByName = assignment.AssignedByUser?.FullName,
 
 				Status = assignment.Status,
-
+				ShipmentStatus = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Status ?? ShipmentStatus.Draft,
 				CreatedAt = assignment.CreatedAt,
 
 				RespondedAt = assignment.RespondedAt,
 
 				Items = assignment.StoreOrder.Items.Select(x => new ShipmentAssignmentItemResponse
 				{
+					ProductColorId = x.ProductColorId,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
 					Quantity = x.Quantity,

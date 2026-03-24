@@ -7,8 +7,8 @@ using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Domain.IRepositories
 {
-	public interface IPriceItemRepository : IGenericRepository<PriceItem>
+	public interface ICommissionItemRepository : IGenericRepository<CommissionItem>
 	{
-		Task<PriceItem?> GetItemAsync(Guid priceTableId, Guid segmentId);
+		Task<CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId);
 	}
 }

@@ -174,7 +174,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PriceTables",
+                name: "CommissionTables",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -306,7 +306,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PriceItems",
+                name: "CommissionItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -326,13 +326,13 @@ namespace ToyShelf.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_PriceItem_PriceTable",
                         column: x => x.PriceTableId,
-                        principalTable: "PriceTables",
+                        principalTable: "CommissionTables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
-                name: "PriceTableApplies",
+                name: "CommissionTableApplies",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
@@ -355,7 +355,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     table.ForeignKey(
                         name: "FK_PriceTableApply_PriceTable",
                         column: x => x.PriceTableId,
-                        principalTable: "PriceTables",
+                        principalTable: "CommissionTables",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -1154,13 +1154,13 @@ namespace ToyShelf.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_PriceItems_PriceSegmentId",
-                table: "PriceItems",
+                table: "CommissionItems",
                 column: "PriceSegmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PriceItems_PriceTableId_PriceSegmentId",
-                table: "PriceItems",
-                columns: new[] { "PriceTableId", "PriceSegmentId" },
+                table: "CommissionItems",
+                columns: new[] { "CommissionTableId", "PriceSegmentId" },
                 unique: true);
 
             migrationBuilder.CreateIndex(
@@ -1176,17 +1176,17 @@ namespace ToyShelf.Infrastructure.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_PriceTableApplies_PartnerId",
-                table: "PriceTableApplies",
+                table: "CommissionTableApplies",
                 column: "PartnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PriceTableApplies_PriceTableId",
-                table: "PriceTableApplies",
-                column: "PriceTableId");
+                table: "CommissionTableApplies",
+                column: "CommissionTableId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PriceTables_PartnerTierId",
-                table: "PriceTables",
+                table: "CommissionTables",
                 column: "PartnerTierId");
 
             migrationBuilder.CreateIndex(
@@ -1388,10 +1388,10 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "PasswordResetOtps");
 
             migrationBuilder.DropTable(
-                name: "PriceItems");
+                name: "CommissionItems");
 
             migrationBuilder.DropTable(
-                name: "PriceTableApplies");
+                name: "CommissionTableApplies");
 
             migrationBuilder.DropTable(
                 name: "Shelves");
@@ -1427,7 +1427,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "Accounts");
 
             migrationBuilder.DropTable(
-                name: "PriceTables");
+                name: "CommissionTables");
 
             migrationBuilder.DropTable(
                 name: "Shipments");

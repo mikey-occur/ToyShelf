@@ -13,6 +13,7 @@ namespace ToyShelf.Infrastructure.Context
 		public ToyShelfDbContext(DbContextOptions<ToyShelfDbContext> options) : base(options) {}
 		public DbSet<Account> Accounts { get; set; }
 		public DbSet<User> Users { get; set; }
+		public DbSet<UserWarehouse> UserWarehouses { get; set; }
 		public DbSet<Role> Roles { get; set; }
 		public DbSet<AccountRole> AccountRoles { get; set; }
 		public DbSet<PasswordResetOtp> PasswordResetOtps { get; set; }
@@ -34,10 +35,10 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<ProductCategory> ProductCategories { get; set; }
 		public DbSet<ProductColor> ProductColors { get; set; }
 		public DbSet<Color> Colors { get; set; }
-		public DbSet<PriceTable> PriceTables { get; set; }
-		public DbSet<PriceTableApply> PriceTableApplies { get; set; }
+		public DbSet<CommissionTable> CommissionTables { get; set; }
+		public DbSet<CommissionTableApply> CommissionTableApplies { get; set; }
 		public DbSet<PriceSegment> PriceSegments { get; set; }
-		public DbSet<PriceItem> PriceItems { get; set; }
+		public DbSet<CommissionItem> CommissionItems { get; set; }
 		public DbSet<CommissionPolicy> CommissionPolicies { get; set; }
 
 
@@ -208,7 +209,53 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.RejectedStoreOrders)
 					  .WithOne(a => a.RejectedByUser)
 					  .HasForeignKey(a => a.RejectedByUserId);
+
+				// UserWarehouse
+				entity.HasMany(e => e.UserWarehouses)
+					  .WithOne(a => a.User)
+					  .HasForeignKey(a => a.UserId);
 			});
+
+			// ================== USER WAREHOUSE ==================
+			modelBuilder.Entity<UserWarehouse>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Role)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.IsActive)
+					  .IsRequired()
+					  .HasDefaultValue(true);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.UpdatedAt);
+
+				// Tránh duplicate (1 user - 1 warehouse)
+				entity.HasIndex(e => new { e.UserId, e.WarehouseId })
+					  .IsUnique();
+
+				// ===== Relationship =====
+
+				entity.HasOne(e => e.User)
+					  .WithMany(u => u.UserWarehouses)
+					  .HasForeignKey(e => e.UserId)
+					  .HasConstraintName("FK_UserWarehouse_User");
+
+				entity.HasOne(e => e.Warehouse)
+					  .WithMany(w => w.UserWarehouses)
+					  .HasForeignKey(e => e.WarehouseId)
+					  .HasConstraintName("FK_UserWarehouse_Warehouse");
+			});
+
 
 			// ================== ROLE ==================
 			modelBuilder.Entity<Role>(entity =>
@@ -746,8 +793,8 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(pc => pc.PriceSegmentId)
 					  .OnDelete(DeleteBehavior.Restrict);
 
-				// Quan hệ PriceSegment - PriceItem (1 - N)
-				entity.HasMany(e => e.PriceItems)
+				// Quan hệ PriceSegment - CommissionItem (1 - N)
+				entity.HasMany(e => e.CommissionItems)
 					  .WithOne(pi => pi.PriceSegment)
 					  .HasForeignKey(pi => pi.PriceSegmentId)
 					  .OnDelete(DeleteBehavior.Cascade);
@@ -763,8 +810,8 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasIndex(e => new { e.MinPrice, e.MaxPrice });
 			});
 
-			// ================== PriceItem ==================
-			modelBuilder.Entity<PriceItem>(entity =>
+			// ================== CommissionItem ==================
+			modelBuilder.Entity<CommissionItem>(entity =>
 			{
 				entity.HasKey(e => e.Id);
 
@@ -776,27 +823,27 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasColumnType("decimal(5,4)");
 				// VD: 0.1500 = 15%
 
-				// PriceItem → PriceTable (N - 1)
-				entity.HasOne(e => e.PriceTable)
-					  .WithMany(pt => pt.PriceItems)
-					  .HasForeignKey(e => e.PriceTableId)
+				// CommissionItem → CommissionTable (N - 1)
+				entity.HasOne(e => e.CommissionTable)
+					  .WithMany(pt => pt.CommissionItems)
+					  .HasForeignKey(e => e.CommissionTableId)
 					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_PriceItem_PriceTable");
+					  .HasConstraintName("FK_CommissionItem_CommissionTable");
 
-				// PriceItem → PriceSegment (N - 1)
+				// CommissionItem → PriceSegment (N - 1)
 				entity.HasOne(e => e.PriceSegment)
-					  .WithMany(ps => ps.PriceItems)
+					  .WithMany(ps => ps.CommissionItems)
 					  .HasForeignKey(e => e.PriceSegmentId)
 					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_PriceItem_PriceSegment");
+					  .HasConstraintName("FK_CommissionItem_PriceSegment");
 
 				// Mỗi bảng giá chỉ có 1 item cho mỗi segment
-				entity.HasIndex(e => new { e.PriceTableId, e.PriceSegmentId })
+				entity.HasIndex(e => new { e.CommissionTableId, e.PriceSegmentId })
 					  .IsUnique();
 			});
 
-			// ================== PriceTable ==================
-			modelBuilder.Entity<PriceTable>(entity =>
+			// ================== CommissionTable ==================
+			modelBuilder.Entity<CommissionTable>(entity =>
 			{
 				entity.HasKey(e => e.Id);
 
@@ -816,26 +863,26 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValue(true);
 
-				// Quan hệ PriceTable - PartnerTier (N - 1, nullable cho Clearance)
+				// Quan hệ CommissionTable - PartnerTier (N - 1, nullable cho Clearance)
 				entity.HasOne(e => e.PartnerTier)
-					  .WithMany(pt => pt.PriceTables)
+					  .WithMany(pt => pt.CommissionTables)
 					  .HasForeignKey(e => e.PartnerTierId)
 					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_PriceTable_PartnerTier");
+					  .HasConstraintName("FK_CommissionTable_PartnerTier");
 
-				// Quan hệ PriceTable - PriceItem (1 - N)
-				entity.HasMany(e => e.PriceItems)
-					  .WithOne(pi => pi.PriceTable)
-					  .HasForeignKey(pi => pi.PriceTableId);
+				// Quan hệ CommissionTable - CommissionItem (1 - N)
+				entity.HasMany(e => e.CommissionItems)
+					  .WithOne(pi => pi.CommissionTable)
+					  .HasForeignKey(pi => pi.CommissionTableId);
 
-				// Quan hệ PriceTable - PriceTableApply (1 - N)
-				entity.HasMany(e => e.PriceTableApplies)
-					  .WithOne(pta => pta.PriceTable)
-					  .HasForeignKey(pta => pta.PriceTableId);
+				// Quan hệ CommissionTable - CommissionTableApply (1 - N)
+				entity.HasMany(e => e.CommissionTableApplies)
+					  .WithOne(pta => pta.CommissionTable)
+					  .HasForeignKey(pta => pta.CommissionTableId);
 			});
 
-			// ================== PriceTableApply ==================
-			modelBuilder.Entity<PriceTableApply>(entity =>
+			// ================== CommissionTableApply ==================
+			modelBuilder.Entity<CommissionTableApply>(entity =>
 			{
 				entity.HasKey(e => e.Id);
 
@@ -854,19 +901,19 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.EndDate);
 
-				// Quan hệ PriceTableApply - Partner (N - 1)
+				// Quan hệ CommissionTableApply - Partner (N - 1)
 				entity.HasOne(e => e.Partner)
-					  .WithMany(p => p.PriceTableApplies)
+					  .WithMany(p => p.CommissionTableApplies)
 					  .HasForeignKey(e => e.PartnerId)
 					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_PriceTableApply_Partner");
+					  .HasConstraintName("FK_CommissionTableApply_Partner");
 
-				// Quan hệ PriceTableApply - PriceTable (N - 1)
-				entity.HasOne(e => e.PriceTable)
-					  .WithMany(pt => pt.PriceTableApplies)
-					  .HasForeignKey(e => e.PriceTableId)
+				// Quan hệ CommissionTableApply - CommissionTable (N - 1)
+				entity.HasOne(e => e.CommissionTable)
+					  .WithMany(pt => pt.CommissionTableApplies)
+					  .HasForeignKey(e => e.CommissionTableId)
 					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_PriceTableApply_PriceTable");
+					  .HasConstraintName("FK_CommissionTableApply_CommissionTable");
 			});
 
 			// ================== CommissionPolicy ==================
@@ -991,7 +1038,7 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(s => s.Partner)
 					  .HasForeignKey(s => s.PartnerId);
 
-				entity.HasMany(e => e.PriceTableApplies)
+				entity.HasMany(e => e.CommissionTableApplies)
 					  .WithOne(s => s.Partner)
 					  .HasForeignKey(s => s.PartnerId);
 
@@ -1037,7 +1084,7 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(s => s.PartnerTier)
 					  .HasForeignKey(s => s.PartnerTierId);
 
-				entity.HasMany(e => e.PriceTables)
+				entity.HasMany(e => e.CommissionTables)
 					  .WithOne(s => s.PartnerTier)
 					  .HasForeignKey(s => s.PartnerTierId);
 
@@ -1296,6 +1343,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.CityId)
 					  .HasConstraintName("FK_Warehouse_City");
 
+				// UserWarehouse
+				entity.HasMany(e => e.UserWarehouses)
+					  .WithOne(a => a.Warehouse)
+					  .HasForeignKey(a => a.WarehouseId);
+
 				// ===== Index =====
 
 				entity.HasIndex(e => e.Code)
@@ -1456,6 +1508,24 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.ShipmentAssignments)
 					  .WithOne(a => a.WarehouseLocation)
 					  .HasForeignKey(a => a.WarehouseLocationId);
+
+				// ===== Unique =====
+				entity.HasIndex(e => e.WarehouseId)
+					  .IsUnique()
+					  .HasFilter("\"WarehouseId\" IS NOT NULL");
+
+				entity.HasIndex(e => e.StoreId)
+					  .IsUnique()
+					  .HasFilter("\"StoreId\" IS NOT NULL");
+
+				// ===== Check constraint (NEW WAY) =====
+				entity.ToTable(t =>
+				{
+					t.HasCheckConstraint(
+						"CK_InventoryLocation_OnlyOneOwner",
+						"(\"WarehouseId\" IS NOT NULL AND \"StoreId\" IS NULL) OR (\"WarehouseId\" IS NULL AND \"StoreId\" IS NOT NULL)"
+					);
+				});
 			});
 
 			// ==================== Shipment ==================

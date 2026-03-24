@@ -34,5 +34,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<ShipmentAssignment> AssignedShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 		public virtual ICollection<ShipmentAssignment> CreatedShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+		public virtual ICollection<UserWarehouse> UserWarehouses { get; set; } = new List<UserWarehouse>();
 	}
 }

@@ -9,15 +9,15 @@ using ToyShelf.Application.Models.ProductColor.Response;
 
 namespace ToyShelf.Application.IServices
 {
-	public interface IPriceTableService
+	public interface ICommissionTableService
 	{
-		Task<PriceTableResponse> CreateAsync(PriceTableRequest request);
-		Task<PriceTableResponse> GetByIdAsync(Guid id);
-		Task<IEnumerable<PriceTableResponse>> GetPriceTablesAsync(bool? isActive);
-		Task<IEnumerable<PriceTableResponse>> GetAllAsync();
+		Task<CommissionTableResponse> CreateAsync(CommissionTableRequest request);
+		Task<CommissionTableResponse> GetByIdAsync(Guid id);
+		Task<IEnumerable<CommissionTableResponse>> GetPriceTablesAsync(bool? isActive);
+		Task<IEnumerable<CommissionTableResponse>> GetAllAsync();
 		Task<bool> RestorePriceTableAsync(Guid id);
 		Task<bool> DisablePriceTableAsync(Guid id);
-		Task<PriceTableResponse> UpdateAsync(Guid id, PriceTableUpdateRequest request);
+		Task<CommissionTableResponse> UpdateAsync(Guid id, CommissionTableUpdateRequest request);
 		Task<bool> DeleteAsync(Guid id);
 	}
 }

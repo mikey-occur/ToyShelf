@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Application.Models.PriceTable.Response
 {
-	public class PriceTableResponse
+	public class CommissionTableResponse
 	{
 		public Guid Id { get; set; }
 		public string Name { get; set; }
@@ -15,9 +15,9 @@ namespace ToyShelf.Application.Models.PriceTable.Response
 		public string? PartnerTierName { get; set; } 
 		public bool IsActive { get; set; }
 
-		public List<PriceItemResponse> Items { get; set; } = new();
+		public List<CommissionItemResponse> Items { get; set; } = new();
 
-		public class PriceItemResponse
+		public class CommissionItemResponse
 		{
 			public Guid Id { get; set; }
 			public Guid PriceSegmentId { get; set; }
