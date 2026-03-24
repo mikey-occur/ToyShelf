@@ -116,4 +116,19 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 			.Include(l => l.Store)
 			.FirstOrDefaultAsync(l => l.Id == locationId);
 	}
+
+	public async Task<IEnumerable<Inventory>> GetByProductIdAsync(Guid productId)
+	{
+		return await _context.Inventories
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Product)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Color)
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Warehouse)
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Store)
+			.Where(i => i.ProductColor != null && i.ProductColor.ProductId == productId)
+			.ToListAsync();
+	}
 }

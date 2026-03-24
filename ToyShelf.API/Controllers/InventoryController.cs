@@ -95,5 +95,19 @@ namespace ToyShelf.API.Controllers
 				"Get global inventory successfully"
 			);
 		}
+
+		/// <summary>
+		/// Lấy tồn kho chi tiết theo sản phẩm
+		/// </summary>
+		[HttpGet("product/{productId}/inventory")]
+		public async Task<BaseResponse<GlobalProductInventoryByProductResponse>> GetInventoryByProduct(Guid productId)
+		{
+			var result = await _inventoryService.GetInventoryByProductAsync(productId);
+
+			return BaseResponse<GlobalProductInventoryByProductResponse>.Ok(
+				result,
+				"Get inventory by product successfully"
+			);
+		}
 	}
 }
