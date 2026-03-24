@@ -37,6 +37,7 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<Color> Colors { get; set; }
 		public DbSet<CommissionTable> CommissionTables { get; set; }
 		public DbSet<CommissionTableApply> CommissionTableApplies { get; set; }
+		public DbSet<CommissionItemCategory> CommissionItemCategories { get; set; }
 		public DbSet<PriceSegment> PriceSegments { get; set; }
 		public DbSet<CommissionItem> CommissionItems { get; set; }
 		public DbSet<CommissionPolicy> CommissionPolicies { get; set; }
@@ -793,12 +794,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(pc => pc.PriceSegmentId)
 					  .OnDelete(DeleteBehavior.Restrict);
 
-				// Quan hệ PriceSegment - CommissionItem (1 - N)
-				entity.HasMany(e => e.CommissionItems)
-					  .WithOne(pi => pi.PriceSegment)
-					  .HasForeignKey(pi => pi.PriceSegmentId)
-					  .OnDelete(DeleteBehavior.Cascade);
-
 				entity.HasMany(e => e.CommissionPolicies)
 					  .WithOne(pi => pi.PriceSegment)
 					  .HasForeignKey(pi => pi.PriceSegmentId);
@@ -830,16 +825,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Cascade)
 					  .HasConstraintName("FK_CommissionItem_CommissionTable");
 
-				// CommissionItem → PriceSegment (N - 1)
-				entity.HasOne(e => e.PriceSegment)
-					  .WithMany(ps => ps.CommissionItems)
-					  .HasForeignKey(e => e.PriceSegmentId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_CommissionItem_PriceSegment");
+				// CommissionItem → CommissionItemCategory (N - 1)
+				entity.HasMany(e => e.ItemCategories)
+					  .WithOne(ic => ic.CommissionItem)
+					  .HasForeignKey(ic => ic.CommissionItemId)
+					  .OnDelete(DeleteBehavior.Cascade);
 
-				// Mỗi bảng giá chỉ có 1 item cho mỗi segment
-				entity.HasIndex(e => new { e.CommissionTableId, e.PriceSegmentId })
-					  .IsUnique();
 			});
 
 			// ================== CommissionTable ==================
@@ -916,6 +907,22 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_CommissionTableApply_CommissionTable");
 			});
 
+
+			modelBuilder.Entity<CommissionItemCategory>(entity =>
+			{
+				// Khai báo khóa chính ghép
+				entity.HasKey(cic => new { cic.CommissionItemId, cic.ProductCategoryId });
+
+				entity.HasOne(cic => cic.CommissionItem)
+					  .WithMany(i => i.ItemCategories)
+					  .HasForeignKey(cic => cic.CommissionItemId);
+
+				entity.HasOne(cic => cic.ProductCategory)
+					  .WithMany(pc => pc.CommissionItemCategories)
+					  .HasForeignKey(cic => cic.ProductCategoryId);
+			});
+
+
 			// ================== CommissionPolicy ==================
 			modelBuilder.Entity<CommissionPolicy>(entity =>
 			{
@@ -984,6 +991,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Products)
 					  .WithOne(a => a.ProductCategory)
 					  .HasForeignKey(a => a.ProductCategoryId);
+
+				// FK -> CommissionItemCategory
+				entity.HasMany(e => e.CommissionItemCategories)
+					  .WithOne(cic => cic.ProductCategory)
+					  .HasForeignKey(cic => cic.ProductCategoryId);
 			});
 
 			// ================== Partner ==================

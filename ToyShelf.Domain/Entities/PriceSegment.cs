@@ -15,7 +15,7 @@ namespace ToyShelf.Domain.Entities
 		public decimal? MaxPrice { get; set; }
 
 		public virtual ICollection<ProductColor> ProductColors { get; set; } = new List<ProductColor>();
-		public virtual ICollection<CommissionItem> CommissionItems { get; set; } = new List<CommissionItem>();
+
 		public virtual ICollection<CommissionPolicy> CommissionPolicies { get; set; }
 			= new List<CommissionPolicy>();
 	}

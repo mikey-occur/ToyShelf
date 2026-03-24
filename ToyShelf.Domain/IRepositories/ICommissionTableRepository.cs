@@ -9,10 +9,10 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface ICommissionTableRepository : IGenericRepository<CommissionTable>
 	{
-		Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id);
+		//Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id);
 
 		Task<bool> IsPriceTableInUseAsync(Guid id);
 
-		Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive);
+		//Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive);
 	}
 }

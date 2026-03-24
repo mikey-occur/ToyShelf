@@ -16,29 +16,29 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id)
-		{
-			return await _context.CommissionTables
-			.Include(pt => pt.PartnerTier)           
-			.Include(pt => pt.CommissionItems)            
-				.ThenInclude(pi => pi.PriceSegment)  
-			.FirstOrDefaultAsync(pt => pt.Id == id);
-		}
+		//public async Task<CommissionTable?> GetByIdWithDetailsAsync(Guid id)
+		//{
+		//	return await _context.CommissionTables
+		//	.Include(pt => pt.PartnerTier)           
+		//	.Include(pt => pt.CommissionItems)            
+		//		.ThenInclude(pi => pi.PriceSegment)  
+		//	.FirstOrDefaultAsync(pt => pt.Id == id);
+		//}
 
-		public async Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive)
-		{
-			var query = _context.CommissionTables
-			.Include(pt => pt.PartnerTier)          
-			.Include(pt => pt.CommissionItems)         
-				.ThenInclude(pi => pi.PriceSegment) 
-			.AsQueryable();
+		//public async Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive)
+		//{
+		//	var query = _context.CommissionTables
+		//	.Include(pt => pt.PartnerTier)          
+		//	.Include(pt => pt.CommissionItems)         
+		//		.ThenInclude(pi => pi.PriceSegment) 
+		//	.AsQueryable();
 
-				if (isActive.HasValue)
-				{
-					query = query.Where(pt => pt.IsActive == isActive.Value);
-				}
-			return await query.ToListAsync();
-		}
+		//		if (isActive.HasValue)
+		//		{
+		//			query = query.Where(pt => pt.IsActive == isActive.Value);
+		//		}
+		//	return await query.ToListAsync();
+		//}
 
 		public async Task<bool> IsPriceTableInUseAsync(Guid id)
 		{

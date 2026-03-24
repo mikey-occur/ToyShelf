@@ -9,6 +9,6 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface ICommissionItemRepository : IGenericRepository<CommissionItem>
 	{
-		Task<CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId);
+		//Task<CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId);
 	}
 }

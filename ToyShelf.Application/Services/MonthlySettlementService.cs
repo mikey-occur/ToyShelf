@@ -19,12 +19,14 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepsitory;
 		private readonly IMonthlySettlementRepository _settlementRepository;
+		private readonly IExportService _exportService;
 
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository)
+		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExportService exportService)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
 			_settlementRepository = settlementRepository;
+			_exportService = exportService;
 		}
 
 		// Tổng kết hoá đơn tháng
@@ -164,6 +166,8 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(settlement);
 		}
 
+
+
 		private static MonthlySettlementResponse MapToResponse(MonthlySettlement settlement)
 		{
 			return new MonthlySettlementResponse
@@ -182,6 +186,34 @@ namespace ToyShelf.Application.Services
 				CreatedAt = settlement.CreatedAt
 			};
 		}
-	
+
+		public async Task<byte[]> ExportSettlementsToExcelAsync(SettlementFilterRequest filter)
+		{
+			if (!filter.Month.HasValue || !filter.Year.HasValue)
+			{
+				throw new AppException("please filter month and year", 400);
+			}
+
+			if (filter.Month.Value < 1 || filter.Month.Value > 12)
+			{
+				throw new AppException("Month is from 1 - 12 ", 400);
+			}
+
+			// --------------------------------------------------
+
+			// 3. Đã an toàn, bắt đầu đi lấy data
+			var settlements = await GetAllFilterAsync(filter);
+
+			// 4. Check rỗng
+			if (settlements == null || !settlements.Any())
+			{
+				throw new AppException($"No data to export {filter.Month}/{filter.Year}!", 404);
+			}
+
+			// 5. Đóng gói thành Excel
+			var fileBytes = _exportService.ExportSettlements(settlements);
+
+			return fileBytes;
+		}
 	}
 }

@@ -43,17 +43,17 @@ namespace ToyShelf.Domain.Common.Commission
 			var segment = productColor.PriceSegment;
 
 			// get price table apply
-			var activeApply = await _priceTableApplyRepository.GetActiveByPartnerAsync(partnerId, DateTime.UtcNow);
-			if (activeApply != null)
-			{
-				var priceItem = await   _priceItemRepository.GetItemAsync(activeApply.CommissionTableId, segment.Id);
-				if (priceItem != null)
-				{
-					return new CommissionCalculationResult(
-						priceItem.CommissionRate,
-						$"Bảng giá của partner: {activeApply.CommissionTable.Name} ({segment.Name})");
-				}
-			}
+			//var activeApply = await _priceTableApplyRepository.GetActiveByPartnerAsync(partnerId, DateTime.UtcNow);
+			//if (activeApply != null)
+			//{
+			//	var priceItem = await   _priceItemRepository.GetItemAsync(activeApply.CommissionTableId, segment.Id);
+			//	if (priceItem != null)
+			//	{
+			//		return new CommissionCalculationResult(
+			//			priceItem.CommissionRate,
+			//			$"Bảng giá của partner: {activeApply.CommissionTable.Name} ({segment.Name})");
+			//	}
+			//}
 
 			// 3. ƯU TIÊN 2: Dùng chính sách mặc định theo Tier của Partner
 			var partner = await _partnerRepository.GetByIdAsync(partnerId);
