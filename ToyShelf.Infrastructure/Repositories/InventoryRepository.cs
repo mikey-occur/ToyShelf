@@ -57,4 +57,17 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 				x.ProductColorId == productColorId &&
 				x.Status == InventoryStatus.Available);
 	}
+	public async Task<List<Inventory>> GetByWarehouseIdAsync(Guid warehouseId)
+	{
+		return await _context.Inventories
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Product)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Color)
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Warehouse)
+			.Where(i => i.InventoryLocation.WarehouseId == warehouseId
+					 && i.Status == InventoryStatus.Available)
+			.ToListAsync();
+	}
 }

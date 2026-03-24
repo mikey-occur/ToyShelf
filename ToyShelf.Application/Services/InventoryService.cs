@@ -15,12 +15,14 @@ namespace ToyShelf.Application.Services
 	public class InventoryService : IInventoryService
 	{
 		private readonly IInventoryRepository _inventoryRepository;
+		private readonly IWarehouseRepository _warehouseRepository;
 		private readonly IUnitOfWork _unitOfWork;
 
-		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork)
+		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IWarehouseRepository warehouseRepository)
 		{
 			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
+			_warehouseRepository = warehouseRepository;
 		}
 		public async Task<InventoryResponse> RefillAsync(RefillInventoryRequest request)
 		{
@@ -109,6 +111,58 @@ namespace ToyShelf.Application.Services
 
 			await _unitOfWork.SaveChangesAsync();
 		}
+
+		public async Task<WarehouseInventoryResponse> GetWarehouseInventoryAsync(Guid warehouseId)
+		{
+			// 1. Lấy warehouse trước
+			var warehouse = await _warehouseRepository.GetByIdAsync(warehouseId);
+
+			if (warehouse == null)
+				throw new AppException("Warehouse not found", 404);
+
+			// 2. Lấy inventory
+			var inventories = await _inventoryRepository.GetByWarehouseIdAsync(warehouseId);
+
+			// 3. Nếu chưa có hàng → vẫn trả warehouse bình thường
+			if (!inventories.Any())
+			{
+				return new WarehouseInventoryResponse
+				{
+					WarehouseId = warehouse.Id,
+					WarehouseName = warehouse.Name,
+					Products = new List<ProductInventoryItem>()
+				};
+			}
+
+			// 4. Group như bình thường
+			var groupedProducts = inventories
+				.GroupBy(i => i.ProductColor.ProductId)
+				.Select(productGroup => new ProductInventoryItem
+				{
+					ProductId = productGroup.Key,
+					ProductName = productGroup.First().ProductColor.Product.Name,
+
+					Colors = productGroup
+						.GroupBy(i => i.ProductColorId)
+						.Select(colorGroup => new ColorInventoryItem
+						{
+							ProductColorId = colorGroup.Key,
+							ColorName = colorGroup.First().ProductColor.Color.Name,
+							Quantity = colorGroup.Sum(x => x.Quantity)
+						})
+						.ToList()
+				})
+				.ToList();
+
+			return new WarehouseInventoryResponse
+			{
+				WarehouseId = warehouse.Id,
+				WarehouseName = warehouse.Name,
+				Products = groupedProducts
+			};
+		}
+
+
 
 		private static InventoryResponse MapToResponse(Inventory inventory)
 		{
