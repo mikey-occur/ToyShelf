@@ -110,6 +110,8 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			var items = await query
                 .OrderByDescending(p => p.CreatedAt)
+				.Include(p => p.ProductColors) 
+            .ThenInclude(pc => pc.Color)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
 				.Include(p => p.ProductCategory)
@@ -157,5 +159,18 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return await query.AnyAsync();
 		}
+
+		public async Task<Product?> GetByBarCode(string barCode)
+		{
+			if(string.IsNullOrWhiteSpace(barCode)) return null;
+
+			var product = await _context.Products
+				.Include(p => p.ProductCategory)
+				.Include(p => p.ProductColors)
+				 .ThenInclude(pc => pc.Color)
+				.FirstOrDefaultAsync(p => p.Barcode == barCode);
+										
+			return product;
+        }
 	}
 }
