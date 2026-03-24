@@ -54,7 +54,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<InventoryLocation?> GetStoreLocationByStoreIdAsync(Guid storeId)
 		{
 			return await _context.InventoryLocations
-				.FirstOrDefaultAsync(x => x.StoreId == storeId && x.Type == "STORE");
+				.FirstOrDefaultAsync(x => x.StoreId == storeId && x.Type == InventoryLocationType.Store);
 		}
 	}
 }

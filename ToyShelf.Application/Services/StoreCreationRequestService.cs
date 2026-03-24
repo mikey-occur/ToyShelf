@@ -154,7 +154,7 @@ namespace ToyShelf.Application.Services
 				{
 					Id = Guid.NewGuid(),
 					StoreId = store.Id,
-					Type = "STORE",
+					Type = InventoryLocationType.Store,
 					Name = store.Name,
 					IsActive = true
 				};
