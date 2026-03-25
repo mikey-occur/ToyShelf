@@ -14,6 +14,9 @@ namespace ToyShelf.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 		public virtual ICollection<Warehouse> Warehouses { get; set; }
-	= new List<Warehouse>();
+			= new List<Warehouse>();
+
+		public virtual ICollection<Store> Stores { get; set; }
+			= new List<Store>();
 	}
 }

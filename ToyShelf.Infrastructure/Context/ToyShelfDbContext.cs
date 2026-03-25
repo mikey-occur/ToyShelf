@@ -400,6 +400,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.PartnerId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Store_Partner");
+
+				entity.HasOne(e => e.City)
+					  .WithMany(a => a.Stores)
+					  .HasForeignKey(e => e.CityId)
+					  .HasConstraintName("FK_Store_City");
 			});
 
 			// ================== StoreOrder ==================
@@ -1953,6 +1958,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsUnique();
 
 				entity.HasMany(e => e.Warehouses)
+					 .WithOne(w => w.City)
+					 .HasForeignKey(w => w.CityId)
+					 .OnDelete(DeleteBehavior.Restrict); // hoặc Cascade tùy business
+
+				entity.HasMany(e => e.Stores)
 					 .WithOne(w => w.City)
 					 .HasForeignKey(w => w.CityId)
 					 .OnDelete(DeleteBehavior.Restrict); // hoặc Cascade tùy business
