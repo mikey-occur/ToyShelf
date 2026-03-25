@@ -11,6 +11,7 @@ namespace ToyShelf.Domain.Entities
 		Draft,
 		Approved,
 		Shipping,
+		Delivered,
 		Received,
 		Cancelled
 	}

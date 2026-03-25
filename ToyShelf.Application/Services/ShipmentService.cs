@@ -258,6 +258,7 @@ namespace ToyShelf.Application.Services
 
 			await _shipmentMediaRepository.AddAsync(media);
 
+			shipment.Status = ShipmentStatus.Delivered;
 			shipment.DeliveredAt = _dateTime.UtcNow;
 
 			_shipmentRepository.Update(shipment);

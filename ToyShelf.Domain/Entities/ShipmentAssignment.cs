@@ -9,6 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public enum AssignmentStatus
 	{
 		Pending,
+		Assigned,
 		Accepted,
 		Rejected
 	}

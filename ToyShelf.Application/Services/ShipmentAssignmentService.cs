@@ -91,7 +91,7 @@ namespace ToyShelf.Application.Services
 			// Nếu Shipper thay đổi hoặc gán lại Shipper đã từ chối
 			if (oldShipperId != request.ShipperId || assignment.Status == AssignmentStatus.Rejected)
 			{
-				assignment.Status = AssignmentStatus.Pending;
+				assignment.Status = AssignmentStatus.Assigned;
 				assignment.RespondedAt = null;
 			}
 
