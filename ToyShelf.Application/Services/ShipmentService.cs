@@ -72,6 +72,15 @@ namespace ToyShelf.Application.Services
 
 			return MapToResponse(shipment);
 		}
+		public async Task<IEnumerable<ShipmentResponse>> GetByStoreOrderIdAsync(Guid storeOrderId)
+		{
+			var shipments = await _shipmentRepository.GetByStoreOrderIdAsync(storeOrderId);
+
+			if (shipments == null || !shipments.Any())
+				throw new AppException("No shipments found for this store order", 404);
+
+			return shipments.Select(MapToResponse);
+		}
 
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
@@ -258,6 +267,7 @@ namespace ToyShelf.Application.Services
 
 			await _shipmentMediaRepository.AddAsync(media);
 
+			shipment.Status = ShipmentStatus.Delivered;
 			shipment.DeliveredAt = _dateTime.UtcNow;
 
 			_shipmentRepository.Update(shipment);
