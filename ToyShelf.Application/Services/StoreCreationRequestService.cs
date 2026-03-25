@@ -52,6 +52,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				PartnerId = currentUser.PartnerId!.Value,
+				CityId = request.CityId,
 				Name = request.Name.Trim(),
 				StoreAddress = request.StoreAddress.Trim(),
 				Latitude = request.Latitude,
@@ -65,7 +66,8 @@ namespace ToyShelf.Application.Services
 			await _requestRepository.AddAsync(entity);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(entity);
+			var created = await _requestRepository.GetByIdWithCityAsync(entity.Id);
+			return MapToResponse(created!);
 		}
 
 
@@ -79,7 +81,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<StoreCreationRequestResponse> GetByIdAsync(Guid id)
 		{
-			var entity = await _requestRepository.GetByIdAsync(id);
+			var entity = await _requestRepository.GetByIdWithCityAsync(id);
 
 			if (entity == null)
 				throw new AppException($"Store creation request not found. Id = {id}", 404);
@@ -96,7 +98,7 @@ namespace ToyShelf.Application.Services
 			if (!currentUser.IsAdmin())
 				throw new ForbiddenException("Only Admin can review store request");
 
-			var entity = await _requestRepository.GetByIdAsync(id);
+			var entity = await _requestRepository.GetByIdWithCityAsync(id);
 
 			if (entity == null)
 				throw new AppException("Store creation request not found", 404);
@@ -138,6 +140,7 @@ namespace ToyShelf.Application.Services
 				{
 					Id = Guid.NewGuid(),
 					PartnerId = entity.PartnerId,
+					CityId = entity.CityId,
 					Code = code,
 					Name = entity.Name,
 					StoreAddress = entity.StoreAddress,
@@ -186,6 +189,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = entity.Id,
 				PartnerId = entity.PartnerId,
+				CityId = entity.CityId,
+				CityName = entity.City?.Name ?? string.Empty,
 				Name = entity.Name,
 				StoreAddress = entity.StoreAddress,
 				Latitude = entity.Latitude,
