@@ -14,6 +14,6 @@ namespace ToyShelf.Application.Models.PriceTable.Request
 		public CommissionTableType Type { get; set; }
 		public bool IsActive { get; set; }
 
-		public List<PriceItemRequest> Items { get; set; } = new();
+		public List<CommissionItemRequest> Items { get; set; } = new();
 	}
 }
