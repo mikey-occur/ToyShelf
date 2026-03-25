@@ -13,7 +13,8 @@ namespace ToyShelf.Application.Models.ProductColor.Request
 		public decimal Price { get; set; }
 		public string? QrCode { get; set; }
 		public string? ImageUrl { get; set; }
-		
+		public string? Model3DUrl { get; set; }
+
 
 	}
 }

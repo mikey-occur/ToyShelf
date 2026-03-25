@@ -106,6 +106,7 @@ namespace ToyShelf.Application.Services
 						PriceSegmentId = colorReq.PriceSegmentId,
 						Price = colorReq.Price,
 						Sku = variantSku,
+						Model3DUrl = colorReq.Model3DUrl,
 						QrCode = qrCode,
 						ImageUrl = colorReq.ImageUrl,
 						IsActive = true
@@ -236,8 +237,9 @@ namespace ToyShelf.Application.Services
 						existingColor.PriceSegmentId = colorReq.PriceSegmentId;
 						existingColor.Price = colorReq.Price;
 						existingColor.ImageUrl = colorReq.ImageUrl;
+						existingColor.Model3DUrl = colorReq.Model3DUrl;
 
-						
+
 					}
 					else
 					{
@@ -325,6 +327,7 @@ namespace ToyShelf.Application.Services
 					Price = c.Price,
 					QrCode = c.QrCode,
 					ImageUrl = c.ImageUrl,
+					Model3DUrl = c.Model3DUrl,
 					IsActive = c.IsActive
 				})
 				.ToList()

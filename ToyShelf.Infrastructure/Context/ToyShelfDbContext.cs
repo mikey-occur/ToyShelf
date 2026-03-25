@@ -711,7 +711,10 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.QrCode)
 					  .HasColumnType("text");
-				
+
+				entity.Property(e => e.Model3DUrl)
+					  .HasMaxLength(500);
+
 				entity.Property(e => e.ImageUrl)
 					  .HasMaxLength(500);
 
