@@ -99,11 +99,17 @@ namespace ToyShelf.Application.Services
 
 
 		// ================= GET =================
-		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(bool? isActive)
+		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(
+				bool? isActive,
+				Guid? ownerId,
+				string? keyword)
 		{
-			var stores = await _storeRepository.GetStoresAsync(isActive);
+			var stores = await _storeRepository
+				.GetStoresAsync(isActive, ownerId, keyword);
+
 			return stores.Select(MapToResponse);
 		}
+
 
 		public async Task<StoreResponse> GetByIdAsync(Guid id)
 		{
@@ -213,16 +219,32 @@ namespace ToyShelf.Application.Services
 		// ================= MAPPER =================
 		private static StoreResponse MapToResponse(Store store)
 		{
+			var location = store.InventoryLocations
+				.FirstOrDefault(l => l.Type == InventoryLocationType.Store);
+
+			var owner = store.UserStores
+				.FirstOrDefault(us =>
+					us.StoreRole == StoreRole.Manager &&
+					us.IsActive);
+
 			return new StoreResponse
 			{
 				Id = store.Id,
 				PartnerId = store.PartnerId,
+
+				InventoryLocationId = location?.Id ?? Guid.Empty,
+
 				Code = store.Code,
 				Name = store.Name,
 				StoreAddress = store.StoreAddress,
+
+				OwnerId = owner?.UserId,
+				OwnerName = owner?.User?.FullName ?? string.Empty,
+
 				Latitude = store.Latitude,
 				Longitude = store.Longitude,
 				PhoneNumber = store.PhoneNumber,
+
 				IsActive = store.IsActive,
 				CreatedAt = store.CreatedAt,
 				UpdatedAt = store.UpdatedAt

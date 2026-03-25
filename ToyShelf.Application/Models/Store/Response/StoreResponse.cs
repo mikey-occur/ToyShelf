@@ -10,9 +10,12 @@ namespace ToyShelf.Application.Models.Store.Response
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
+		public Guid InventoryLocationId { get; set; }
 		public string Code { get; set; } = string.Empty;
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
+		public Guid? OwnerId { get; set; }
+		public string OwnerName { get; set; } = string.Empty;
 		public double? Latitude { get; set; }
 		public double? Longitude { get; set; }
 		public string? PhoneNumber { get; set; }

@@ -9,7 +9,10 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IStoreRepository : IGenericRepository<Store>
 	{
-		Task<IEnumerable<Store>> GetStoresAsync(bool? isActive);
+		Task<IEnumerable<Store>> GetStoresAsync(
+			bool? isActive,
+			Guid? ownerId = null,
+			string? keyword = null);
 		Task<int> GetMaxSequenceByPartnerAsync(Guid partnerId);
 		Task<bool> ExistsByCodeInPartnerAsync(string code, Guid partnerId);
 	}
