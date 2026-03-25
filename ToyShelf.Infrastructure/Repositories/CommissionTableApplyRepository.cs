@@ -44,15 +44,15 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
-		public async Task<bool> HasOverlapAsync(Guid partnerId, DateTime startDate, DateTime? endDate)
+		public async Task<bool> HasOverlapAsync(Guid partnerId, CommissionTableType tableType, DateTime startDate, DateTime? endDate)
 		{
-		
+
 			var checkEndDate = endDate ?? DateTime.MaxValue;
 
-			
 			return await _context.CommissionTableApplies.AnyAsync(x =>
 				x.PartnerId == partnerId &&
 				x.IsActive &&
+				x.CommissionTable != null && x.CommissionTable.Type == tableType &&
 				x.StartDate < checkEndDate &&
 				(x.EndDate ?? DateTime.MaxValue) > startDate
 			);

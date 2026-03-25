@@ -44,10 +44,10 @@ namespace ToyShelf.Application.Services
 			if (table == null) throw new AppException("Price Table not found", 404);
 
 			// 3. CHECK TRÙNG LỊCH (QUAN TRỌNG NHẤT)
-			bool isOverlap = await _repo.HasOverlapAsync(request.PartnerId, request.StartDate, request.EndDate);
+			bool isOverlap = await _repo.HasOverlapAsync(request.PartnerId, table.Type, request.StartDate, request.EndDate);
 			if (isOverlap)
 			{
-				throw new InvalidOperationException($"Partner '{partner.CompanyName}' đã có bảng giá áp dụng trong khoảng thời gian này rồi. Vui lòng kiểm tra lại.");
+				throw new InvalidOperationException($"Partner '{partner.CompanyName}' đã có bảng giá [{table.Type}] áp dụng trong khoảng thời gian này rồi. Vui lòng kiểm tra lại.");
 			}
 
 			// 4. Tạo mới
