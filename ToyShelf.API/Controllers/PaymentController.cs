@@ -116,5 +116,35 @@ namespace ToyShelf.API.Controllers
 				return BadRequest(new { message = $"Lỗi khi kiểm tra DB: {ex.Message}" });
 			}
 		}
+
+		/// <summary>
+		/// [TEST ONLY] Cửa sau giả lập PayOS gọi Webhook thành công.
+		/// Giúp test nhanh logic tính hoa hồng mà không cần thanh toán thật.
+		/// </summary>
+		[HttpPost("mock-webhook/{orderCode}")]
+		public async Task<IActionResult> MockPaymentSuccess(long orderCode)
+		{
+			try
+			{
+				// Bỏ qua toàn bộ bước xác thực chữ ký của PayOS.
+				// Đâm thẳng vào hàm xử lý cập nhật trạng thái PAID và TÍNH HOA HỒNG!
+				await _orderService.HandlePaymentSuccessAsync(orderCode);
+
+				return Ok(new
+				{
+					success = true,
+					message = $"[MOCK] Đã giả lập thanh toán thành công cho đơn {orderCode} và chạy xong logic tính tiền!"
+				});
+			}
+			catch (Exception ex)
+			{
+				return StatusCode(500, new
+				{
+					success = false,
+					message = $"Lỗi khi chạy logic tính tiền: {ex.Message}",
+					detail = ex.StackTrace
+				});
+			}
+		}
 	}
 }

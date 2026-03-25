@@ -13,7 +13,7 @@ namespace ToyShelf.Domain.IRepositories
 
 		Task<IEnumerable<CommissionTableApply>> GetAllWithDetailsAsync(bool? isActive);
 
-		Task<CommissionTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now);
+		Task<List<CommissionTableApply>> GetActiveAppliesByPartnerAsync(Guid partnerId, DateTime now);
 
 		Task<List<CommissionTableApply>> GetActiveTierAppliesAsync(Guid partnerId);
 	}
