@@ -20,6 +20,12 @@ namespace ToyShelf.Application.Models.Inventory.Response
 	{
 		public Guid ProductId { get; set; }
 		public string ProductName { get; set; } = null!;
+		public string? Description { get; set; }
+		public string? Brand { get; set; }
+		public string? Material { get; set; }
+		public string? OriginCountry { get; set; }
+		public string? AgeRange { get; set; }
+
 		public List<GlobalColorInventoryItem> Colors { get; set; } = new();
 	}
 
