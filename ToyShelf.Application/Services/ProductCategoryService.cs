@@ -33,23 +33,8 @@ namespace ToyShelf.Application.Services
 		// ===== CREATE =====
 		public async Task<ProductCategoryResponse> CreateCategoryAsync(ProductCategoryRequest request)
 		{
-			string generatedPart = await _translationService.TranslateToCodeAsync(request.Name);
-			string code;
-
-			if (request.ParentId == null)
-			{
-				code = generatedPart; 
-			}
-			else
-			{
-				var parent = await _productCategoryRepository
-					.GetByIdAsync(request.ParentId.Value);
-				if (parent == null)
-					throw new AppException("Parent category not found", 404);
-
-				code = $"{parent.Code}-{generatedPart}";
-			}
-			var exists = await _productCategoryRepository.ExistsCodeAsync(code, request.ParentId);
+			string generatedCode = await _translationService.TranslateToCodeAsync(request.Name);
+			var exists = await _productCategoryRepository.ExistsCodeAsync(generatedCode);
 
 			if (exists)
 				throw new InvalidOperationException("Category code already exists");
@@ -58,8 +43,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name.Trim(),
-				Code = code,
-				ParentId = request.ParentId,
+				Code = generatedCode,
 				Description = request.Description,
 				IsActive = true,
 				CreatedAt = _dateTime.UtcNow
@@ -76,11 +60,6 @@ namespace ToyShelf.Application.Services
 			var category = await _productCategoryRepository.GetByIdAsync(id);
 			if (category == null)
 				throw new AppException("Category not found", 404);
-
-			var hasChild = await _productCategoryRepository.HasChildAsync(id);
-			if (hasChild)
-				throw new AppException(
-					"Cannot delete category because it has child categories", 500);
 
 			_productCategoryRepository.Remove(category);
 			await _unitOfWork.SaveChangesAsync();

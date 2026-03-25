@@ -12,7 +12,7 @@ namespace ToyShelf.Domain.Entities
 		Campaign = 2, // Xả kho hàng (Ưu tiên số 2)
 		Tier = 3
 	}
-
+	
 	public class CommissionTable
 	{
 		public Guid Id { get; set; }

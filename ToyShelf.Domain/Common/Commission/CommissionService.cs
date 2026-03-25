@@ -14,21 +14,19 @@ namespace ToyShelf.Domain.Common.Commission
 		private readonly ICommissionItemRepository _commissionItemRepository;
 		private readonly IProductColorRepository _productColorRepository;
 		private readonly ICommissionTableApplyRepository _commissionTableApplyRepository;
-		private readonly ICommissionPolicyRepository _commissionPolicyRepository;
+
 		private readonly IPartnerRepository _partnerRepository;
 		public CommissionService(
 			IUnitOfWork unitOfWork,
 			ICommissionItemRepository CommisisonItemRepository,
 			IProductColorRepository productColorRepository,
 			ICommissionTableApplyRepository commissionTableApplyRepository,
-			ICommissionPolicyRepository commissionPolicyRepository,
 			IPartnerRepository partnerRepository)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionItemRepository = CommisisonItemRepository;
 			_productColorRepository = productColorRepository;
 			_commissionTableApplyRepository = commissionTableApplyRepository;
-			_commissionPolicyRepository = commissionPolicyRepository;
 			_partnerRepository = partnerRepository;
 		}
 

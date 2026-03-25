@@ -24,7 +24,6 @@ namespace ToyShelf.Domain.Entities
 
 		public virtual Color Color { get; set; } = null!;
 		public virtual Product Product { get; set; } = null!;
-		public virtual PriceSegment PriceSegment { get; set; } = null!;
 		public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
 		public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
 		public virtual ICollection<ShipmentItem> ShipmentItems { get; set; } = new List<ShipmentItem>();

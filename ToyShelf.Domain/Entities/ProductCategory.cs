@@ -8,18 +8,14 @@ namespace ToyShelf.Domain.Entities
 {
 	public class ProductCategory
 	{
-		public Guid Id { get; set; }
-		public Guid? ParentId { get; set; }         
+		public Guid Id { get; set; }         
 		public string Code { get; set; } = string.Empty; // ROBOT-DOG 
 		public string Name { get; set; } = string.Empty;
 		public string? Description { get; set; }
 		public bool IsActive { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
-		public virtual ProductCategory? Parent { get; set; } 
-		public virtual ICollection<ProductCategory> Children { get; set; } = new List<ProductCategory>();
 		public virtual ICollection<Product> Products { get; set; } = new List<Product>();
-
 		public virtual ICollection<CommissionItemCategory> CommissionItemCategories { get; set; } = new List<CommissionItemCategory>();
 	}
 }

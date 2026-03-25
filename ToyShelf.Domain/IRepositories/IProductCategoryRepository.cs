@@ -11,8 +11,6 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<ProductCategory?> GetByNameAsync(string name);
 		Task<IEnumerable<ProductCategory>> GetProductCategoriesAsync(bool? isActive);
-
-		Task<bool> HasChildAsync(Guid parentId);
-		Task<bool> ExistsCodeAsync(string code, Guid? parentId);
+		Task<bool> ExistsCodeAsync(string code);
 	}
 }
