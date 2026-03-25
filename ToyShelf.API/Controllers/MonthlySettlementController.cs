@@ -113,5 +113,37 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<MonthlySettlementResponse>.Ok(result, "Cập nhật số tiền hao trừ và tính lại tổng thành công");
 		}
 
+		/// <summary>
+		/// Xuất file Excel chốt sổ (Bắt buộc phải chọn Tháng và Năm)
+		/// GET: api/MonthlySettlement/export-excel?Month=3&Year=2026
+		/// </summary>
+		[HttpGet("export-excel")]
+		public async Task<IActionResult> ExportExcel([FromQuery] SettlementFilterRequest filter)
+		{
+			try
+			{
+			
+				var fileBytes = await _settlementService.ExportSettlementsToExcelAsync(filter);
+
+				// Đặt tên file động theo tháng/năm khách chọn (Lúc này chắc chắn Month và Year đã có giá trị)
+				string fileName = $"ChotSo_Thang{filter.Month}_Nam{filter.Year}_{DateTime.Now:ddMMyyyy_HHmm}.xlsx";
+
+				//  Khai báo định dạng chuẩn của file Excel để trình duyệt hiểu
+				string contentType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
+				return File(fileBytes, contentType, fileName);
+			}
+			catch (AppException ex) 
+			{
+				
+				return StatusCode(ex.StatusCode, new { message = ex.Message });
+			}
+			catch (Exception ex)
+			{
+				
+				return StatusCode(500, new { message = $"Error when export file: {ex.Message}" });
+			}
+		}
+
 	}
 }

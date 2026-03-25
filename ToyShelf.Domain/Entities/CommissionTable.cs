@@ -25,7 +25,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual PartnerTier? PartnerTier { get; set; }
 		// Danh sách các mức % chi tiết
 		public virtual ICollection<CommissionItem> CommissionItems { get; set; } = new List<CommissionItem>();
-		// Lịch sử áp dụng
+		//  áp dụng
 		public virtual ICollection<CommissionTableApply> CommissionTableApplies { get; set; } = new List<CommissionTableApply>();
 
 	}

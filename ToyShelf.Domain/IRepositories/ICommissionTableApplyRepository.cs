@@ -9,10 +9,12 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface ICommissionTableApplyRepository : IGenericRepository<CommissionTableApply>
 	{
-		Task<bool> HasOverlapAsync(Guid partnerId, DateTime startDate, DateTime? endDate);
+		Task<bool> HasOverlapAsync(Guid partnerId, CommissionTableType tableType, DateTime startDate, DateTime? endDate);
 
 		Task<IEnumerable<CommissionTableApply>> GetAllWithDetailsAsync(bool? isActive);
 
 		Task<CommissionTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now);
+
+		Task<List<CommissionTableApply>> GetActiveTierAppliesAsync(Guid partnerId);
 	}
 }

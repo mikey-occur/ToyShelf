@@ -12,6 +12,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<CommissionTableApplyResponse> CreateAsync(CommissionTableApply request);
 		Task<IEnumerable<CommissionTableApplyResponse>> GetAllAsync(bool? isActive);
+		Task<CommissionTableApplyResponse> UpgradePartnerTierAsync(Guid partnerId, Guid newTierId);
 		Task<bool> DeleteAsync(Guid id);
 		Task<bool> RestorePriceTableApplyAsync(Guid id);
 		Task<bool> DisablePriceTableApply(Guid id);

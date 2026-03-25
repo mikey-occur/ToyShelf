@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.PriceTable.Request;
 using ToyShelf.Application.Models.PriceTableApply.Request;
 using ToyShelf.Application.Models.PriceTableApply.Response;
 
@@ -69,6 +70,18 @@ namespace ToyShelf.API.Controllers
 		{
 			await _service.RestorePriceTableApplyAsync(id);
 			return ActionResponse.Ok("Price table apply restored successfully");
+		}
+
+		/// <summary>
+		/// Tự động Nâng hạng Đối tác và Áp dụng Bảng giá mới
+		/// </summary>
+		[HttpPost("upgrade-tier")]
+		public async Task<BaseResponse<CommissionTableApplyResponse>> UpgradeTier([FromBody] UpgradeTierRequest request)
+		{
+			// Gọi thẳng vào con Service "trùm cuối" mà anh em mình vừa viết
+			var result = await _service.UpgradePartnerTierAsync(request.PartnerId, request.NewTierId);
+
+			return BaseResponse<CommissionTableApplyResponse>.Ok(result, "Nâng hạng đối tác và chốt sổ bảng giá thành công!");
 		}
 	}
 }

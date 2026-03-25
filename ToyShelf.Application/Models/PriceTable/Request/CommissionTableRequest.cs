@@ -13,12 +13,12 @@ namespace ToyShelf.Application.Models.PriceTable.Request
 		public Guid? PartnerTierId { get; set; } 
 		public CommissionTableType Type { get; set; }
 
-		public List<PriceItemRequest> Items { get; set; } = new();
+		public List<CommissionItemRequest> Items { get; set; } = new();
 	}
 
-	public class PriceItemRequest
+	public class CommissionItemRequest
 	{
-		public Guid PriceSegmentId { get; set; }
+		public List<Guid> ProductCategoryIds { get; set; } = new();
 		public decimal CommissionRate { get; set; } // VD: 0.15 là 15%
 	}
 }

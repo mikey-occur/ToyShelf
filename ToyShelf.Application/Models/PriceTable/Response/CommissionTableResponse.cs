@@ -20,9 +20,16 @@ namespace ToyShelf.Application.Models.PriceTable.Response
 		public class CommissionItemResponse
 		{
 			public Guid Id { get; set; }
-			public Guid PriceSegmentId { get; set; }
-			public string PriceSegmentName { get; set; } 
-			public decimal CommissionRate { get; set; }
+			public List<AppliedCategoryResponse> AppliedCategories { get; set; } = new();
+		    public decimal CommissionRate { get; set; }
+
+		}
+
+		public class AppliedCategoryResponse
+		{
+			public Guid Id { get; set; }
+			public string Name { get; set; } = null!;
+			public string Code { get; set; } = null!; 
 		}
 	}
 }

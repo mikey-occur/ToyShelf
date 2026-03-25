@@ -26,7 +26,7 @@ namespace ToyShelf.Application.Services
 		public async Task<CommissionTableResponse> CreateAsync(CommissionTableRequest request)
 		{
 			if (request.Type == CommissionTableType.Tier && !request.PartnerTierId.HasValue)
-				throw new AppException("Partner tier is required for Tier price tables", 400);
+				throw new AppException("Partner tier is required for Tier Commission tables", 400);
 
 			if (request.PartnerTierId.HasValue)
 			{
@@ -39,12 +39,26 @@ namespace ToyShelf.Application.Services
 					throw new AppException("Partner tier not found", 404);
 			}
 
-			var priceTable = new CommissionTable
+			if (request.Items != null && request.Items.Any())
+			{
+				var allCategoryIds = request.Items
+					.Where(i => i.ProductCategoryIds != null)
+					.SelectMany(i => i.ProductCategoryIds)
+					.ToList();
+
+				if (allCategoryIds.Count != allCategoryIds.Distinct().Count())
+				{
+					throw new AppException("Một danh mục sản phẩm không thể nằm ở nhiều mức hoa hồng khác nhau trong cùng một bảng giá!", 400);
+				}
+			}
+
+			var commissionTable = new CommissionTable
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name,
 				PartnerTierId = request.PartnerTierId,
 				Type = request.Type,
+				CommissionItems = new List<CommissionItem>(),
 				IsActive = true
 			};
 
@@ -52,23 +66,36 @@ namespace ToyShelf.Application.Services
 			{
 				foreach (var itemReq in request.Items)
 				{
-					var priceItem = new CommissionItem
+					var commissionItem = new CommissionItem
 					{
 						Id = Guid.NewGuid(),
-						CommissionTableId = priceTable.Id,
-						PriceSegmentId = itemReq.PriceSegmentId,
-						CommissionRate = itemReq.CommissionRate
+						CommissionTableId = commissionTable.Id,
+						CommissionRate = itemReq.CommissionRate,
+						ItemCategories = new List<CommissionItemCategory>()
 					};
 
-					priceTable.CommissionItems.Add(priceItem);
+					if (itemReq.ProductCategoryIds != null && itemReq.ProductCategoryIds.Any())
+					{
+
+						foreach (var categoryId in itemReq.ProductCategoryIds)
+						{
+							commissionItem.ItemCategories.Add(new CommissionItemCategory
+							{
+								CommissionItemId = commissionItem.Id,
+								ProductCategoryId = categoryId
+							});
+						}
+					}
+
+					commissionTable.CommissionItems.Add(commissionItem);
 				}
 			}
 
 
-			await _repo.AddAsync(priceTable);
+			await _repo.AddAsync(commissionTable);
 			await _unitOfWork.SaveChangesAsync();
 
-			var fullTable = await _repo.GetByIdWithDetailsAsync(priceTable.Id);
+			var fullTable = await _repo.GetByIdWithDetailsAsync(commissionTable.Id);
 			return MapToResponse(fullTable!);
 		}
 
@@ -122,7 +149,7 @@ namespace ToyShelf.Application.Services
 			return tables.Select(MapToResponse);
 		}
 
-		public async Task<IEnumerable<CommissionTableResponse>> GetPriceTablesAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTableResponse>> GetCommissionTablesAsync(bool? isActive)
 		{
 			var priceTables = await _repo.GetPriceTablesAsync(isActive);
 			return priceTables.Select(MapToResponse);
@@ -137,8 +164,8 @@ namespace ToyShelf.Application.Services
 
 		public async Task<CommissionTableResponse> UpdateAsync(Guid id, CommissionTableUpdateRequest request)
 		{
-			var priceTable = await _repo.GetByIdWithDetailsAsync(id)
-	   ?? throw new AppException("Price Table not found", 404);
+			var commissionTable = await _repo.GetByIdWithDetailsAsync(id)
+		  ?? throw new AppException("Price Table not found", 404);
 
 			if (request.Type == CommissionTableType.Tier && !request.PartnerTierId.HasValue)
 				throw new AppException("Partner tier is required for Tier price tables", 400);
@@ -154,41 +181,67 @@ namespace ToyShelf.Application.Services
 					throw new AppException("Partner tier not found", 404);
 			}
 
+			if (request.Items != null && request.Items.Any())
+			{
+				var allCategoryIds = request.Items
+					.Where(i => i.ProductCategoryIds != null)
+					.SelectMany(i => i.ProductCategoryIds)
+					.ToList();
+
+				if (allCategoryIds.Count != allCategoryIds.Distinct().Count())
+				{
+					throw new AppException("Một danh mục sản phẩm không thể nằm ở nhiều mức hoa hồng khác nhau trong cùng một bảng giá!", 400);
+				}
+			}
+
+
 			// Cập nhật thông tin cha
-			priceTable.Name = request.Name;
-			priceTable.PartnerTierId = request.PartnerTierId;
-			priceTable.Type = request.Type;
-			priceTable.IsActive = request.IsActive;
+			commissionTable.Name = request.Name;
+			commissionTable.PartnerTierId = request.PartnerTierId;
+			commissionTable.Type = request.Type;
+			commissionTable.IsActive = request.IsActive;
 
 
 			// ===== Xử lý CommissionItems =====
-			if (request.Items != null && request.Items.Any())
+			if (request.Items != null)
 			{
 				// Xoá toàn bộ item cũ
-				if (priceTable.CommissionItems != null && priceTable.CommissionItems.Any())
+				if (commissionTable.CommissionItems != null && commissionTable.CommissionItems.Any())
 				{
 					_unitOfWork.Repository<CommissionItem>()
-						.DeleteRange(priceTable.CommissionItems);
+						.DeleteRange(commissionTable.CommissionItems);
 				}
 
+				// Reset lại list Items để chuẩn bị hứng đồ mới
 				// Thêm item mới
 				foreach (var itemReq in request.Items)
 				{
 					var newItem = new CommissionItem
 					{
 						Id = Guid.NewGuid(),
-						CommissionTableId = priceTable.Id,
-						PriceSegmentId = itemReq.PriceSegmentId,
-						CommissionRate = itemReq.CommissionRate
+						CommissionTableId = commissionTable.Id,
+						CommissionRate = itemReq.CommissionRate,
+						ItemCategories = new List<CommissionItemCategory>() 
 					};
 
-					await _unitOfWork.Repository<CommissionItem>()
-						.AddAsync(newItem);
+					if (itemReq.ProductCategoryIds != null && itemReq.ProductCategoryIds.Any())
+					{
+						foreach (var categoryId in itemReq.ProductCategoryIds)
+						{
+							newItem.ItemCategories.Add(new CommissionItemCategory
+							{
+								CommissionItemId = newItem.Id,
+								ProductCategoryId = categoryId
+							});
+						}
+					}
+
+					await _unitOfWork.Repository<CommissionItem>().AddAsync(newItem);
 				}
 			}
 
 			await _unitOfWork.SaveChangesAsync();
-			return MapToResponse(priceTable);
+			return MapToResponse(commissionTable);
 		}
 
 		// Mapping 
@@ -205,9 +258,16 @@ namespace ToyShelf.Application.Services
 				Items = entity.CommissionItems.Select(i => new CommissionItemResponse
 				{
 					Id = i.Id,
-					PriceSegmentId = i.PriceSegmentId,
-					PriceSegmentName = i.PriceSegment?.Name ?? "Unknown",
-					CommissionRate = i.CommissionRate
+					CommissionRate = i.CommissionRate,
+					AppliedCategories = i.ItemCategories
+					.Where(ic => ic.ProductCategory != null) 
+					.Select(ic => new AppliedCategoryResponse
+					{
+						Id = ic.ProductCategory.Id,
+						Name = ic.ProductCategory.Name,
+						Code = ic.ProductCategory.Code
+					}).ToList()
+
 				}).ToList()
 			};
 		}

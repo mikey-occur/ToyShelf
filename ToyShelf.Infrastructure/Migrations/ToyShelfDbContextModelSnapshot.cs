@@ -206,17 +206,26 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("CommissionTableId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("PriceSegmentId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("PriceSegmentId");
-
-                    b.HasIndex("CommissionTableId", "PriceSegmentId")
-                        .IsUnique();
+                    b.HasIndex("CommissionTableId");
 
                     b.ToTable("CommissionItems");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItemCategory", b =>
+                {
+                    b.Property<Guid>("CommissionItemId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ProductCategoryId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CommissionItemId", "ProductCategoryId");
+
+                    b.HasIndex("ProductCategoryId");
+
+                    b.ToTable("CommissionItemCategories");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
@@ -1743,16 +1752,26 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_CommissionItem_CommissionTable");
 
-                    b.HasOne("ToyShelf.Domain.Entities.PriceSegment", "PriceSegment")
-                        .WithMany("CommissionItems")
-                        .HasForeignKey("PriceSegmentId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_CommissionItem_PriceSegment");
-
                     b.Navigation("CommissionTable");
+                });
 
-                    b.Navigation("PriceSegment");
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItemCategory", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.CommissionItem", "CommissionItem")
+                        .WithMany("ItemCategories")
+                        .HasForeignKey("CommissionItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ToyShelf.Domain.Entities.ProductCategory", "ProductCategory")
+                        .WithMany("CommissionItemCategories")
+                        .HasForeignKey("ProductCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CommissionItem");
+
+                    b.Navigation("ProductCategory");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
@@ -2417,6 +2436,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductColors");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
+                {
+                    b.Navigation("ItemCategories");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
                 {
                     b.Navigation("CommissionItems");
@@ -2491,8 +2515,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.PriceSegment", b =>
                 {
-                    b.Navigation("CommissionItems");
-
                     b.Navigation("CommissionPolicies");
 
                     b.Navigation("ProductColors");
@@ -2506,6 +2528,8 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
                 {
                     b.Navigation("Children");
+
+                    b.Navigation("CommissionItemCategories");
 
                     b.Navigation("Products");
                 });

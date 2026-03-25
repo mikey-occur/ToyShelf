@@ -14,11 +14,11 @@ namespace ToyShelf.Infrastructure.Repositories
 		public PriceItemRepository(Context.ToyShelfDbContext context) : base(context) { }
 		
 		
-		public async Task<Domain.Entities.CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId)
-		{
-			return await _context.CommissionItems
-				.FirstOrDefaultAsync(pi => pi.CommissionTableId == priceTableId && pi.PriceSegmentId == segmentId);
-		}
+		//public async Task<Domain.Entities.CommissionItem?> GetItemAsync(Guid priceTableId, Guid segmentId)
+		//{
+		//	return await _context.CommissionItems
+		//		.FirstOrDefaultAsync(pi => pi.CommissionTableId == priceTableId && pi.PriceSegmentId == segmentId);
+		//}
 	
 
 	}

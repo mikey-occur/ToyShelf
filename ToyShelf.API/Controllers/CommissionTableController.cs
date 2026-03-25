@@ -3,6 +3,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.PriceTable.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
+using ToyShelf.Application.Models.PriceTableApply.Response;
 
 namespace ToyShelf.API.Controllers
 {
@@ -18,7 +19,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Create Price Table.
+		/// Create Commission Table.
 		/// </summary>
 		[HttpPost]
 		public async Task<BaseResponse<CommissionTableResponse>> Create(
@@ -35,7 +36,7 @@ namespace ToyShelf.API.Controllers
 		[HttpGet]
 		public async Task<BaseResponse<IEnumerable<CommissionTableResponse>>> GetPriceTables([FromQuery] bool? isActive)
 		{
-			var result = await _priceTableService.GetPriceTablesAsync(isActive);
+			var result = await _priceTableService.GetCommissionTablesAsync(isActive);
 			return BaseResponse<IEnumerable<CommissionTableResponse>>.Ok(result, "Price Tables retrieved successfully");
 		}
 
@@ -94,5 +95,6 @@ namespace ToyShelf.API.Controllers
 			await _priceTableService.RestorePriceTableAsync(id);
 			return ActionResponse.Ok("Price Table restored successfully");
 		}
+
 	}
 }

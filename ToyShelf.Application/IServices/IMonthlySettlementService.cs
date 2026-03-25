@@ -17,6 +17,9 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter);
 		Task GenerateLastMonthSettlementAutoAsync();
 		Task<MonthlySettlementResponse> UpdateDeductionAsync(Guid id, decimal deductionAmount, string note);
+		Task<byte[]> ExportSettlementsToExcelAsync(SettlementFilterRequest filter);
+
+
 	}
 }
 
