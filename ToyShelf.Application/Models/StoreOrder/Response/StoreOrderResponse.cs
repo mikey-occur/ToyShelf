@@ -15,6 +15,7 @@ namespace ToyShelf.Application.Models.StoreOrder.Response
 		public List<Guid> ShipmentAssignmentIds { get; set; } = new List<Guid>();
 		public List<Guid> ShipmentIds { get; set; } = new List<Guid>();
 		public string StoreName { get; set; } = string.Empty;
+		public string StoreAddress { get; set; } = string.Empty;
 		public Guid RequestedByUserId { get; set; }
 		public string RequestName { get; set; } = string.Empty;
 		public Guid? ApprovedByUserId { get; set; }
@@ -34,6 +35,7 @@ namespace ToyShelf.Application.Models.StoreOrder.Response
 		public Guid ProductColorId { get; set; }
 		public string ProductName { get; set; } = null!;
 		public string Color { get; set; } = null!;
+		public string? ImageUrl { get; set; }
 		public int Quantity { get; set; }
 		public int FulfilledQuantity { get; set; } = 0;
 	}
