@@ -214,6 +214,7 @@ namespace ToyShelf.Application.Services
 					ProductColorId = x.ProductColorId,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
+					ImageUrl = x.ProductColor.ImageUrl,
 					Quantity = x.Quantity,
 					FulfilledQuantity = x.FulfilledQuantity
 				}).ToList()

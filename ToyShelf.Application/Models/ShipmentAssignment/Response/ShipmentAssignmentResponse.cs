@@ -43,9 +43,8 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 	{
 		public Guid ProductColorId { get; set; }
 		public string ProductName { get; set; } = null!;
-
 		public string Color { get; set; } = null!;
-
+		public string? ImageUrl { get; set; }
 		public int Quantity { get; set; }
 		public int FulfilledQuantity { get; set; } = 0;
 	}
