@@ -70,6 +70,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				PartnerId = request.PartnerId,
+				CityId = request.CityId,
 				Code = finalCode,
 				Name = request.Name.Trim(),
 				StoreAddress = request.StoreAddress.Trim(),
@@ -94,20 +95,31 @@ namespace ToyShelf.Application.Services
 			await _inventoryLocationRepository.AddAsync(location);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(store);
+
+			var createdStore = await _storeRepository
+				.GetByIdWithDetailsAsync(store.Id);
+
+			return MapToResponse(createdStore!);
 		}
 
 
 		// ================= GET =================
-		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(bool? isActive)
+		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(
+				bool? isActive,
+				Guid? ownerId,
+				string? keyword,
+				Guid? cityId)
 		{
-			var stores = await _storeRepository.GetStoresAsync(isActive);
+			var stores = await _storeRepository
+				.GetStoresAsync(isActive, ownerId, keyword, cityId);
+
 			return stores.Select(MapToResponse);
 		}
 
+
 		public async Task<StoreResponse> GetByIdAsync(Guid id)
 		{
-			var store = await _storeRepository.GetByIdAsync(id);
+			var store = await _storeRepository.GetByIdWithDetailsAsync(id);
 			if (store == null)
 				throw new AppException($"Store not found. Id = {id}", 404);
 
@@ -123,6 +135,7 @@ namespace ToyShelf.Application.Services
 
 			store.Name = request.Name.Trim();
 			store.StoreAddress = request.StoreAddress.Trim();
+			store.CityId = request.CityId;
 			store.Latitude = request.Latitude;
 			store.Longitude = request.Longitude;
 			store.PhoneNumber = request.PhoneNumber;
@@ -213,16 +226,35 @@ namespace ToyShelf.Application.Services
 		// ================= MAPPER =================
 		private static StoreResponse MapToResponse(Store store)
 		{
+			var location = store.InventoryLocations
+				.FirstOrDefault(l => l.Type == InventoryLocationType.Store);
+
+			var owner = store.UserStores
+				.FirstOrDefault(us =>
+					us.StoreRole == StoreRole.Manager &&
+					us.IsActive);
+
 			return new StoreResponse
 			{
 				Id = store.Id,
 				PartnerId = store.PartnerId,
+
+				InventoryLocationId = location?.Id ?? Guid.Empty,
+
 				Code = store.Code,
 				Name = store.Name,
 				StoreAddress = store.StoreAddress,
+
+				CityId = store.CityId,
+				CityName = store.City?.Name ?? string.Empty,
+
+				OwnerId = owner?.UserId,
+				OwnerName = owner?.User?.FullName ?? string.Empty,
+
 				Latitude = store.Latitude,
 				Longitude = store.Longitude,
 				PhoneNumber = store.PhoneNumber,
+
 				IsActive = store.IsActive,
 				CreatedAt = store.CreatedAt,
 				UpdatedAt = store.UpdatedAt

@@ -10,6 +10,7 @@ namespace ToyShelf.Domain.Entities
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
+		public Guid CityId { get; set; }
 		public string Code { get; set; } = string.Empty; // STORE-HCM01
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
@@ -20,6 +21,7 @@ namespace ToyShelf.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
 		public virtual Partner Partner { get; set; } = null!;
+		public virtual City City { get; set; } = null!;
 		public virtual ICollection<UserStore> UserStores { get; set; } = new List<UserStore>();
 		public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
 		public virtual ICollection<StoreInvitation> StoreInvitations { get; set; }= new List<StoreInvitation>();

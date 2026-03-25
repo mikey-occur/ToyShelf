@@ -11,6 +11,8 @@ namespace ToyShelf.Application.Models.StoreCreationRequest.Response
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
+		public Guid CityId { get; set; }
+		public string CityName { get; set; } = string.Empty;
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
 		public double? Latitude { get; set; }
