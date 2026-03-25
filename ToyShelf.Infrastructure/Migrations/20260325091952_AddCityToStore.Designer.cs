@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325091952_AddCityToStore")]
+    partial class AddCityToStore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1331,9 +1334,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("CityId")
-                        .HasColumnType("uuid");
-
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1383,8 +1383,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("character varying(300)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("CityId");
 
                     b.HasIndex("CreatedAt");
 
@@ -2268,13 +2266,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreCreationRequest", b =>
                 {
-                    b.HasOne("ToyShelf.Domain.Entities.City", "City")
-                        .WithMany("StoreCreationRequests")
-                        .HasForeignKey("CityId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_StoreCreationRequest_City");
-
                     b.HasOne("ToyShelf.Domain.Entities.Partner", "Partner")
                         .WithMany("StoreCreationRequests")
                         .HasForeignKey("PartnerId")
@@ -2294,8 +2285,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasForeignKey("ReviewedByUserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_StoreCreationRequest_ReviewedByUser");
-
-                    b.Navigation("City");
 
                     b.Navigation("Partner");
 
@@ -2456,8 +2445,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
                 {
-                    b.Navigation("StoreCreationRequests");
-
                     b.Navigation("Stores");
 
                     b.Navigation("Warehouses");

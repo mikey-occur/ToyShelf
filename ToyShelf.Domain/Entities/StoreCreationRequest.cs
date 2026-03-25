@@ -17,6 +17,7 @@ namespace ToyShelf.Domain.Entities
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
+		public Guid CityId { get; set; }
 		public Guid RequestedByUserId { get; set; }
 		public Guid? ReviewedByUserId { get; set; }
 		public string Name { get; set; } = string.Empty;
@@ -32,5 +33,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual Partner Partner { get; set; } = null!;
 		public virtual User RequestedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
+		public virtual City City { get; set; } = null!;
 	}
 }

@@ -10,6 +10,7 @@ namespace ToyShelf.Application.Models.Store.Request
 	{
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
+		public Guid CityId { get; set; }
 		public double? Latitude { get; set; }
 		public double? Longitude { get; set; }
 		public string? PhoneNumber { get; set; }

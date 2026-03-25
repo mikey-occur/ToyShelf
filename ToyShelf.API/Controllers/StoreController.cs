@@ -30,12 +30,20 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<StoreResponse>>> GetStores([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<StoreResponse>>> GetStores(
+				[FromQuery] bool? isActive,
+				[FromQuery] Guid? ownerId,
+				[FromQuery] string? keyword,
+				[FromQuery] Guid? cityId)
 		{
-			var result = await _storeService.GetStoresAsync(isActive);
-			return BaseResponse<IEnumerable<StoreResponse>>
-				.Ok(result, "Stores retrieved successfully");
+			var result = await _storeService.GetStoresAsync(isActive, ownerId, keyword, cityId);
+
+			return BaseResponse<IEnumerable<StoreResponse>>.Ok(
+				result,
+				"Get stores successfully"
+			);
 		}
+
 
 		[HttpGet("{id}")]
 		public async Task<BaseResponse<StoreResponse>> GetById(Guid id)

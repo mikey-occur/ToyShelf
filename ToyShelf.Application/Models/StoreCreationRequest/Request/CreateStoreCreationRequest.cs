@@ -8,6 +8,7 @@ namespace ToyShelf.Application.Models.StoreCreationRequest.Request
 {
 	public class CreateStoreCreationRequest
 	{
+		public Guid CityId { get; set; }
 		public string Name { get; set; } = string.Empty;
 		public string StoreAddress { get; set; } = string.Empty;
 		public double? Latitude { get; set; }
