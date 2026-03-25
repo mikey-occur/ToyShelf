@@ -11,8 +11,6 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public Guid ColorId { get; set; }
 		public Guid ProductId { get; set; }
-		public Guid PriceSegmentId { get; set; } // để biết product phân khúc giá nào
-
 		public string Sku { get; set; } = null!;
 		public decimal Price { get; set; }
 
