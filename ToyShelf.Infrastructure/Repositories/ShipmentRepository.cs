@@ -98,5 +98,22 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(i => i.ProductColor)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
-	} 
+		public async Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId)
+		{
+			return await _context.Shipments
+				.Include(x => x.FromLocation)
+				.Include(x => x.ToLocation)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a.Shipper)
+				.Include(x => x.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Product)
+				.Include(x => x.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Color)
+				.Where(x => x.StoreOrderId == storeOrderId)
+				.OrderByDescending(x => x.CreatedAt)
+				.ToListAsync();
+		}
+	}
 }

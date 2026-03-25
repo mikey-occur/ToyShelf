@@ -11,6 +11,7 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public Guid ProductColorId { get; set; }
 		public string ProductName { get; set; } = null!;
 		public string Color { get; set; } = null!;
+		public string? ImageUrl { get; set; }
 		public int ExpectedQuantity { get; set; }
 		public int ReceivedQuantity { get; set; }
 	}

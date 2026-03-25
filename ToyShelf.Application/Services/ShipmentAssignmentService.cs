@@ -91,7 +91,7 @@ namespace ToyShelf.Application.Services
 			// Nếu Shipper thay đổi hoặc gán lại Shipper đã từ chối
 			if (oldShipperId != request.ShipperId || assignment.Status == AssignmentStatus.Rejected)
 			{
-				assignment.Status = AssignmentStatus.Pending;
+				assignment.Status = AssignmentStatus.Assigned;
 				assignment.RespondedAt = null;
 			}
 
@@ -214,6 +214,7 @@ namespace ToyShelf.Application.Services
 					ProductColorId = x.ProductColorId,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
+					ImageUrl = x.ProductColor.ImageUrl,
 					Quantity = x.Quantity,
 					FulfilledQuantity = x.FulfilledQuantity
 				}).ToList()
