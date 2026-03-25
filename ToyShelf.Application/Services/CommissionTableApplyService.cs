@@ -137,7 +137,7 @@ namespace ToyShelf.Application.Services
 
 			foreach (var oldApply in activeTierApplies)
 			{
-				// Theo chuẩn Rich Domain Model, lý tưởng nhất sếp nên viết hàm oldApply.Close(currentTime) trong file Entity
+			
 				oldApply.EndDate = currentTime;
 				_repo.Update(oldApply);
 			}
@@ -148,7 +148,7 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				PartnerId = partnerId,
 				CommissionTableId = newTierTable.Id,
-				Name = $"[Auto-Apply] Nâng cấp hạng - {newTierTable.Name}",
+				Name = $"[Auto-Apply] Nâng cấp hạng {newTierTable.PartnerTier.Name} - Áp dụng bảng {newTierTable.Name}",
 				StartDate = currentTime,
 				EndDate = null,
 				IsActive = true

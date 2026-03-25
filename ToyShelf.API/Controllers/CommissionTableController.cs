@@ -3,6 +3,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.PriceTable.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
+using ToyShelf.Application.Models.PriceTableApply.Response;
 
 namespace ToyShelf.API.Controllers
 {
@@ -94,5 +95,6 @@ namespace ToyShelf.API.Controllers
 			await _priceTableService.RestorePriceTableAsync(id);
 			return ActionResponse.Ok("Price Table restored successfully");
 		}
+
 	}
 }
