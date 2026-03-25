@@ -144,6 +144,11 @@ namespace ToyShelf.Application.Services
 				{
 					ProductId = productGroup.Key,
 					ProductName = productGroup.First().ProductColor.Product.Name,
+					Description = productGroup.First().ProductColor.Product.Description,
+					Brand = productGroup.First().ProductColor.Product.Brand,
+					Material = productGroup.First().ProductColor.Product.Material,
+					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
+					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
 
 					Colors = productGroup
 						.GroupBy(i => i.ProductColorId)
@@ -193,6 +198,11 @@ namespace ToyShelf.Application.Services
 				{
 					ProductId = productGroup.Key,
 					ProductName = productGroup.First().ProductColor.Product.Name,
+					Description = productGroup.First().ProductColor.Product.Description,
+					Brand = productGroup.First().ProductColor.Product.Brand,
+					Material = productGroup.First().ProductColor.Product.Material,
+					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
+					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
 					Colors = productGroup
 						.Where(i => i.ProductColor.Color != null)
 						.GroupBy(i => i.ProductColorId)
@@ -247,6 +257,11 @@ namespace ToyShelf.Application.Services
 								{
 									ProductId = product.Id,
 									ProductName = product.Name,
+									Description = product.Description,
+									Brand = product.Brand,
+									Material = product.Material,
+									OriginCountry = product.OriginCountry,
+									AgeRange = product.AgeRange,
 									Colors = productGroup
 										.Where(x => x.ProductColor.Color != null)
 										.GroupBy(i => i.ProductColorId)
