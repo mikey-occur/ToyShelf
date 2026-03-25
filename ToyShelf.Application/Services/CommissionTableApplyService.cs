@@ -118,6 +118,55 @@ namespace ToyShelf.Application.Services
 
 		}
 
+		public async Task<CommissionTableApplyResponse> UpgradePartnerTierAsync(Guid partnerId, Guid newTierId)
+		{
+			var partner = await _partnerRepo.GetByIdAsync(partnerId)
+		?? throw new AppException("Not Found Partner", 404);
+
+			if (partner.PartnerTierId == newTierId)
+				throw new AppException("Have already have Tier !", 400);
+
+			// 2. Lấy Bảng giá mặc định của Hạng mới (Gọi qua Interface, giấu nhẹm DB đi)
+			var newTierTable = await _priceTableRepo.GetActiveByTierTableAsync(newTierId)
+				?? throw new AppException("Not found commission table for this tier!", 404);
+
+			var currentTime = DateTime.UtcNow;
+
+			// 3. Lấy các Bảng giá Hạng CŨ đang chạy & "Chốt sổ" tụi nó
+			var activeTierApplies = await _repo.GetActiveTierAppliesAsync(partnerId);
+
+			foreach (var oldApply in activeTierApplies)
+			{
+				// Theo chuẩn Rich Domain Model, lý tưởng nhất sếp nên viết hàm oldApply.Close(currentTime) trong file Entity
+				oldApply.EndDate = currentTime;
+				_repo.Update(oldApply);
+			}
+
+			// 4. Tạo Apply mới
+			var newApply = new Domain.Entities.CommissionTableApply
+			{
+				Id = Guid.NewGuid(),
+				PartnerId = partnerId,
+				CommissionTableId = newTierTable.Id,
+				Name = $"[Auto-Apply] Nâng cấp hạng - {newTierTable.Name}",
+				StartDate = currentTime,
+				EndDate = null,
+				IsActive = true
+			};
+
+			await _repo.AddAsync(newApply);
+
+			// 5. Nâng cấp Partner
+			partner.PartnerTierId = newTierId;
+			_partnerRepo.Update(partner);
+
+			// 6. Lưu toàn bộ giao dịch
+			await _unitOfWork.SaveChangesAsync();
+
+			return MapToResponse(newApply, partner.CompanyName, newTierTable.Name);
+		}
+		
+
 		private static CommissionTableApplyResponse MapToResponse(Domain.Entities.CommissionTableApply entity, string? pName, string? tName)
 		{
 			
@@ -136,5 +185,7 @@ namespace ToyShelf.Application.Services
 
 			};
 		}
+
+	
 	}
 }

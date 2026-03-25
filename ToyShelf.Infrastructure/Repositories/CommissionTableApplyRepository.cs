@@ -57,5 +57,19 @@ namespace ToyShelf.Infrastructure.Repositories
 				(x.EndDate ?? DateTime.MaxValue) > startDate
 			);
 		}
+
+		public async Task<List<CommissionTableApply>> GetActiveTierAppliesAsync(Guid partnerId)
+		{
+			var currentTime = DateTime.UtcNow;
+
+			return await _context.CommissionTableApplies
+				.Include(a => a.CommissionTable) 
+				.Where(a => a.PartnerId == partnerId
+						 && a.IsActive
+						 && a.CommissionTable != null
+						 && a.CommissionTable.Type == CommissionTableType.Tier
+						 && (a.EndDate == null || a.EndDate > currentTime))
+				.ToListAsync();
+		}
 	}
 }
