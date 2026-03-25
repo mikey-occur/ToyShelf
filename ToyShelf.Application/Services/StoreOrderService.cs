@@ -160,6 +160,7 @@ namespace ToyShelf.Application.Services
 				ShipmentAssignmentIds = order.ShipmentAssignments?.Select(sa => sa.Id).ToList() ?? new List<Guid>(),
 				ShipmentIds = order.Shipments?.Select(s => s.Id).ToList() ?? new List<Guid>(),
 				StoreName = order.StoreLocation?.Store?.Name ?? string.Empty,
+				StoreAddress = order.StoreLocation?.Store?.StoreAddress ?? string.Empty,
 				RequestedByUserId = order.RequestedByUserId,
 				RequestName = order.RequestedByUser?.FullName ?? string.Empty,
 				ApprovedByUserId = order.ApprovedByUserId,
