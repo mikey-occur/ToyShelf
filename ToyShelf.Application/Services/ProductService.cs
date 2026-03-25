@@ -103,9 +103,9 @@ namespace ToyShelf.Application.Services
 						Id = Guid.NewGuid(),
 						ProductId = product.Id, 
 						ColorId = colorReq.ColorId,
-						PriceSegmentId = colorReq.PriceSegmentId,
 						Price = colorReq.Price,
 						Sku = variantSku,
+						Model3DUrl = colorReq.Model3DUrl,
 						QrCode = qrCode,
 						ImageUrl = colorReq.ImageUrl,
 						IsActive = true
@@ -233,11 +233,11 @@ namespace ToyShelf.Application.Services
 					if (existingColor != null)
 					{
 						// NẾU ĐÃ CÓ -> Chỉ cập nhật giá, hình ảnh, 3D... KHÔNG đổi Id, KHÔNG gen lại SKU
-						existingColor.PriceSegmentId = colorReq.PriceSegmentId;
 						existingColor.Price = colorReq.Price;
 						existingColor.ImageUrl = colorReq.ImageUrl;
+						existingColor.Model3DUrl = colorReq.Model3DUrl;
 
-						
+
 					}
 					else
 					{
@@ -259,7 +259,6 @@ namespace ToyShelf.Application.Services
 							Id = Guid.NewGuid(),
 							ColorId = colorReq.ColorId,
 							ProductId = product.Id,
-							PriceSegmentId = colorReq.PriceSegmentId,
 							Sku = generatedSku,
 							Price = colorReq.Price,
 							QrCode = qrCode,
@@ -321,10 +320,10 @@ namespace ToyShelf.Application.Services
 					ColorId = c.ColorId,
 					ColorName = c.Color.Name,
 					Hexcode = c.Color.HexCode,
-					PriceSegmentId = c.PriceSegmentId,
 					Price = c.Price,
 					QrCode = c.QrCode,
 					ImageUrl = c.ImageUrl,
+					Model3DUrl = c.Model3DUrl,
 					IsActive = c.IsActive
 				})
 				.ToList()

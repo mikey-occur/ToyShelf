@@ -37,11 +37,11 @@ namespace ToyShelf.Infrastructure.Repositories
 				.FirstOrDefaultAsync(c => c.Sku == sku);
 		}
 
-		public async Task<ProductColor?> GetByIdWithSegmentAsync(Guid productColorId)
+		public async Task<ProductColor?> GetByIdWithProductAsync(Guid id)
 		{
 			return await _context.ProductColors
-				.Include(pc => pc.PriceSegment)
-				.FirstOrDefaultAsync(pc => pc.Id == productColorId);
+				.Include(pc => pc.Product)
+				.FirstOrDefaultAsync(pc => pc.Id == id);
 		}
 	}
 }

@@ -15,16 +15,19 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<CommissionTableApply?> GetActiveByPartnerAsync(Guid partnerId, DateTime now)
+		public async Task<List<CommissionTableApply>> GetActiveAppliesByPartnerAsync(Guid partnerId, DateTime now)
 		{
-				return await _context.CommissionTableApplies
-			.Include(a => a.CommissionTable) // Load thông tin bảng giá để lấy tên/loại
-			.Where(a => a.PartnerId == partnerId &&
-						a.IsActive &&
-						a.StartDate <= now &&
-						(a.EndDate == null || a.EndDate >= now))
-			.OrderByDescending(a => a.StartDate) // Nếu có nhiều bảng giá trùng lặp, lấy bảng mới nhất
-			.FirstOrDefaultAsync();
+			return await _context.CommissionTableApplies
+				.Include(a => a.CommissionTable)
+					.ThenInclude(t => t.CommissionItems)
+						.ThenInclude(i => i.ItemCategories)
+				.Where(a => a.PartnerId == partnerId
+						 && a.IsActive
+						 && a.CommissionTable != null
+						 && a.CommissionTable.IsActive 
+						 && a.StartDate <= now
+						 && (a.EndDate == null || a.EndDate > now))
+				.ToListAsync(); 
 		}
 
 		public async Task<IEnumerable<CommissionTableApply>> GetAllWithDetailsAsync(bool? isActive)

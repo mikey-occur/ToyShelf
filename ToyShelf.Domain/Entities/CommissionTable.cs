@@ -8,11 +8,11 @@ namespace ToyShelf.Domain.Entities
 {
 	public enum CommissionTableType
 	{
-		Tier, // bảng giá thông thường
-		Campaign, // Xả kho hàng
-		Special // bảng giá độc quyền
+		Special = 1,  // Bảng giá độc quyền (Ưu tiên số 1)
+		Campaign = 2, // Xả kho hàng (Ưu tiên số 2)
+		Tier = 3
 	}
-
+	
 	public class CommissionTable
 	{
 		public Guid Id { get; set; }

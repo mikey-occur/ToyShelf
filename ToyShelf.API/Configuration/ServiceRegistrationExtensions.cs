@@ -80,15 +80,13 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IProductColorRepository, ProductColorRepository>();
 			services.AddScoped<IColorRepository, ColorRepository>();
          	services.AddScoped<IShelfRepository, ShelfRepository>();
-			services.AddScoped<IPriceSegmentRepository, PriceSegmentRepository>();
 			services.AddScoped<IPartnerTierRepository, PartnerTierRepository>();
 			services.AddScoped<ICommissionTableRepository, CommissionTableRepository>();
-			services.AddScoped<ICommissionPolicyRepository, CommissionPolicyRepository>();
 			services.AddScoped<ICityRepository, CityRepository>();
 			services.AddScoped<ICommissionTableApplyRepository, CommissionTableApplyRepository>();
 			services.AddScoped<IStoreCreationRequestRepository, StoreCreationRequestRepository>();
 			services.AddScoped<IOrderRepository, OrderRepository>();
-			services.AddScoped<ICommissionItemRepository, PriceItemRepository>();
+			services.AddScoped<ICommissionItemRepository, CommissiontemRepository>();
 			services.AddScoped<ICommissionHistoryRepsitory, CommissionHistoryRepsitory>();
 			services.AddScoped<IInventoryLocationRepository, InventoryLocationRepository>();
 			services.AddScoped<IInventoryRepository, InventoryRepository>();
@@ -115,10 +113,8 @@ namespace ToyShelf.API.Configuration
             services.AddScoped<IProductBroadcaster, SignalRService>();
 			services.AddScoped<IProductColorService, ProductColorService>();
 			services.AddScoped<IColorService, ColorService>();
-			services.AddScoped<IPriceSegmentService, PriceSegmentService>();
 			services.AddScoped<IPartnerTierService, PartnerTierService>();
 			services.AddScoped<ICommissionTableService, CommissionTableService>();
-			services.AddScoped<ICommissionPolicyService, CommissionPolicyService>();
 			services.AddScoped<IShelfService, ShelfService>();
 			services.AddScoped<IQrCodeService, QrCodeService>();
 			services.AddScoped<ICommissionTableApplyService, CommissionTableApplyService>();

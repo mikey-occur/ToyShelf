@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325160100_DeleteDbCommissionPolicyAndPriceSegment")]
+    partial class DeleteDbCommissionPolicyAndPriceSegment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -876,10 +879,15 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("ProductCategories");
                 });
@@ -1961,6 +1969,16 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductCategory");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.ProductCategory", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductColor", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.Color", "Color")
@@ -2446,6 +2464,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("CommissionItemCategories");
 
                     b.Navigation("Products");

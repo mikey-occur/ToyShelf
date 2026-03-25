@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260325150649_AddModel3dProductColor")]
+    partial class AddModel3dProductColor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -226,6 +229,35 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ProductCategoryId");
 
                     b.ToTable("CommissionItemCategories");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("CommissionRate")
+                        .HasPrecision(5, 4)
+                        .HasColumnType("numeric(5,4)");
+
+                    b.Property<DateTime?>("EffectiveDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("PartnerTierId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PriceSegmentId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PriceSegmentId");
+
+                    b.HasIndex("PartnerTierId", "PriceSegmentId")
+                        .IsUnique();
+
+                    b.ToTable("CommissionPolicies");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
@@ -757,6 +789,38 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("PasswordResetOtps");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.PriceSegment", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal?>("MaxPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("MinPrice")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.HasIndex("MinPrice", "MaxPrice");
+
+                    b.ToTable("PriceSegments");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -876,10 +940,15 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ParentId");
 
                     b.ToTable("ProductCategories");
                 });
@@ -926,6 +995,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ColorId");
+
+                    b.HasIndex("PriceSegmentId");
 
                     b.HasIndex("ProductId");
 
@@ -1720,6 +1791,27 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductCategory");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionPolicy", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.PartnerTier", "PartnerTier")
+                        .WithMany("CommissionPolicies")
+                        .HasForeignKey("PartnerTierId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionPolicy_PartnerTier");
+
+                    b.HasOne("ToyShelf.Domain.Entities.PriceSegment", "PriceSegment")
+                        .WithMany("CommissionPolicies")
+                        .HasForeignKey("PriceSegmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_CommissionPolicy_PriceSegment");
+
+                    b.Navigation("PartnerTier");
+
+                    b.Navigation("PriceSegment");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.PartnerTier", "PartnerTier")
@@ -1961,6 +2053,16 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ProductCategory");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.ProductCategory", "Parent")
+                        .WithMany("Children")
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Parent");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductColor", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.Color", "Color")
@@ -1970,6 +2072,13 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ProductColor_Color");
 
+                    b.HasOne("ToyShelf.Domain.Entities.PriceSegment", "PriceSegment")
+                        .WithMany("ProductColors")
+                        .HasForeignKey("PriceSegmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_ProductColor_PriceSegment");
+
                     b.HasOne("ToyShelf.Domain.Entities.Product", "Product")
                         .WithMany("ProductColors")
                         .HasForeignKey("ProductId")
@@ -1978,6 +2087,8 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasConstraintName("FK_ProductColor_Product");
 
                     b.Navigation("Color");
+
+                    b.Navigation("PriceSegment");
 
                     b.Navigation("Product");
                 });
@@ -2434,9 +2545,18 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.PartnerTier", b =>
                 {
+                    b.Navigation("CommissionPolicies");
+
                     b.Navigation("CommissionTables");
 
                     b.Navigation("Partners");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.PriceSegment", b =>
+                {
+                    b.Navigation("CommissionPolicies");
+
+                    b.Navigation("ProductColors");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
@@ -2446,6 +2566,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
                 {
+                    b.Navigation("Children");
+
                     b.Navigation("CommissionItemCategories");
 
                     b.Navigation("Products");

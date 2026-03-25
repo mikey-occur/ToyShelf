@@ -16,7 +16,5 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<CommissionTable> CommissionTables { get; set; }
 			= new List<CommissionTable>();
 
-		public virtual ICollection<CommissionPolicy> CommissionPolicies { get; set; }
-		= new List<CommissionPolicy>();
 	}
 }

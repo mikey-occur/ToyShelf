@@ -53,7 +53,6 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				ProductId = request.ProductId,
 				ColorId = request.ColorId,
-				PriceSegmentId = request.PriceSegmentId,
 				Price = request.Price,
 				Sku = sku,
 				QrCode = qrCode,
@@ -125,7 +124,6 @@ namespace ToyShelf.Application.Services
 			if (productColor == null)
 				throw new AppException($"ProductColor Id = {id} not found", 404);
 			// Update fields
-			productColor.PriceSegmentId = request.PriceSegmentId;
 			productColor.Price = request.Price;
 			productColor.QrCode = request.QrCode;
 			productColor.ImageUrl = request.ImageUrl;
@@ -169,7 +167,6 @@ namespace ToyShelf.Application.Services
 			return new ProductColorResponse
 			{
 				Id = productColor.Id,
-				PriceSegmentId = productColor.PriceSegmentId,
 				ProductId = productColor.ProductId,
 				Sku = productColor.Sku,
 				Price = productColor.Price,

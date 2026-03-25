@@ -38,9 +38,7 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<CommissionTable> CommissionTables { get; set; }
 		public DbSet<CommissionTableApply> CommissionTableApplies { get; set; }
 		public DbSet<CommissionItemCategory> CommissionItemCategories { get; set; }
-		public DbSet<PriceSegment> PriceSegments { get; set; }
 		public DbSet<CommissionItem> CommissionItems { get; set; }
-		public DbSet<CommissionPolicy> CommissionPolicies { get; set; }
 
 
 		public DbSet<Shipment> Shipments { get; set; }
@@ -711,7 +709,10 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.QrCode)
 					  .HasColumnType("text");
-				
+
+				entity.Property(e => e.Model3DUrl)
+					  .HasMaxLength(500);
+
 				entity.Property(e => e.ImageUrl)
 					  .HasMaxLength(500);
 
@@ -733,13 +734,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ColorId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ProductColor_Color");
-
-				// ProductColor → PriceSegment (N - 1)
-				entity.HasOne(e => e.PriceSegment)
-					  .WithMany(ps => ps.ProductColors)
-					  .HasForeignKey(e => e.PriceSegmentId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_ProductColor_PriceSegment");
 
 				// ================== CHILD COLLECTIONS ==================
 
@@ -775,46 +769,7 @@ namespace ToyShelf.Infrastructure.Context
 			});
 
 
-			// ================== PriceSegment ==================
-			modelBuilder.Entity<PriceSegment>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.Code)
-					  .IsRequired()
-					  .HasMaxLength(50);
-
-				entity.Property(e => e.Name)
-					  .IsRequired()
-					  .HasMaxLength(255);
-
-				entity.Property(e => e.MinPrice)
-					  .IsRequired()
-					  .HasColumnType("decimal(18,2)");
-
-				entity.Property(e => e.MaxPrice)
-					  .HasColumnType("decimal(18,2)");
-
-				// Quan hệ PriceSegment - ProductColor (1 - N)
-				entity.HasMany(e => e.ProductColors)
-					  .WithOne(pc => pc.PriceSegment)
-					  .HasForeignKey(pc => pc.PriceSegmentId)
-					  .OnDelete(DeleteBehavior.Restrict);
-
-				entity.HasMany(e => e.CommissionPolicies)
-					  .WithOne(pi => pi.PriceSegment)
-					  .HasForeignKey(pi => pi.PriceSegmentId);
-
-				// Indexes
-				entity.HasIndex(e => e.Code)
-					  .IsUnique();
-
-				entity.HasIndex(e => new { e.MinPrice, e.MaxPrice });
-			});
-
+			
 			// ================== CommissionItem ==================
 			modelBuilder.Entity<CommissionItem>(entity =>
 			{
@@ -932,40 +887,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(cic => cic.ProductCategoryId);
 			});
 
-
-			// ================== CommissionPolicy ==================
-			modelBuilder.Entity<CommissionPolicy>(entity =>
-			{
-				entity.HasKey(e => e.Id);
-
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
-
-				entity.Property(e => e.CommissionRate)
-					  .IsRequired()
-					  .HasPrecision(5, 4); // 0.1500 = 15%
-
-				entity.Property(e => e.EffectiveDate)
-					  .IsRequired(false);
-
-				entity.HasOne(e => e.PartnerTier)
-					  .WithMany(t => t.CommissionPolicies)
-					  .HasForeignKey(e => e.PartnerTierId)
-					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_CommissionPolicy_PartnerTier");
-
-				entity.HasOne(e => e.PriceSegment)
-					  .WithMany(ps => ps.CommissionPolicies)
-					  .HasForeignKey(e => e.PriceSegmentId)
-					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_CommissionPolicy_PriceSegment");
-
-				// RẤT QUAN TRỌNG: chặn trùng rule
-				entity.HasIndex(e => new { e.PartnerTierId, e.PriceSegmentId })
-					  .IsUnique();
-			});
-
-
 			// ================== ProductCategory ==================
 			modelBuilder.Entity<ProductCategory>(entity =>
 			{
@@ -989,13 +910,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
 				entity.Property(e => e.UpdatedAt);
-
-				// ===== Parent - Child (Self reference) =====
-				entity.HasOne(e => e.Parent)
-					  .WithMany(e => e.Children)
-					  .HasForeignKey(e => e.ParentId)
-					  .OnDelete(DeleteBehavior.Restrict);
-
 
 				// FK -> Product
 				entity.HasMany(e => e.Products)
@@ -1110,11 +1024,7 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(s => s.PartnerTier)
 					  .HasForeignKey(s => s.PartnerTierId);
 
-				entity.HasMany(e => e.CommissionPolicies)
-					  .WithOne(s => s.PartnerTier)
-					  .HasForeignKey(s => s.PartnerTierId);
 			});
-
 
 			// ================== UserStore ==================
 			modelBuilder.Entity<UserStore>(entity =>

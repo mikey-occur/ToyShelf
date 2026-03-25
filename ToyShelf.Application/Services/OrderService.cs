@@ -175,10 +175,9 @@ namespace ToyShelf.Application.Services
 				// Gọi CommissionService với logic ưu tiên Bảng giá -> Tier Policy
 				var result = await _commissionService.CalculateCommissionAsync(partnerId.Value, item.ProductColorId, item.Price);
 
-				if (result == null)
+				if (result.Rate == 0)
 				{
-					
-					throw new AppException($"Can't caculate commission {item.ProductColorId}", 500);
+					throw new Exception($"[BẮT ĐƯỢC LỖI TÍNH TIỀN]: {result.SourceDescription}");
 				}
 
 				// Tạo bản ghi vào bảng CommissionHistory (Sử dụng đúng Rate và SourceDescription từ record)

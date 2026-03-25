@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Models\CommissionPolicy\Request\" />
+    <Folder Include="Models\CommissionPolicy\Response\" />
     <Folder Include="Models\InventoryLocation\Request\" />
   </ItemGroup>
 

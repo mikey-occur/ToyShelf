@@ -16,9 +16,9 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<bool> ExistsCodeAsync(string code, Guid? parentId)
+		public async Task<bool> ExistsCodeAsync(string code)
 		{
-			return await _context.ProductCategories.AnyAsync(x =>x.Code == code && x.ParentId == parentId);
+			return await _context.ProductCategories.AnyAsync(x =>x.Code == code);
 		}
 
 		public async Task<ProductCategory?> GetByNameAsync(string name)
@@ -36,9 +36,6 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await query.ToListAsync();
 		}
 
-		public async Task<bool> HasChildAsync(Guid parentId)
-		{
-			return await _context.ProductCategories.AnyAsync(x => x.ParentId == parentId);
-		}
+		
 	}
 }
