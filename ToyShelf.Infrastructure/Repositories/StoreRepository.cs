@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DocumentFormat.OpenXml.Bibliography;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,12 +17,14 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<Store>> GetStoresAsync(
 			bool? isActive,
 			Guid? ownerId = null,
-			string? keyword = null)
+			string? keyword = null,
+			Guid? cityId = null)
 		{
 			var query = _context.Stores
 				.Include(s => s.InventoryLocations)
 				.Include(s => s.UserStores)
 					.ThenInclude(us => us.User)
+				.Include(s => s.City)
 				.AsQueryable();
 
 			if (isActive.HasValue)
@@ -45,9 +48,25 @@ namespace ToyShelf.Infrastructure.Repositories
 					s.StoreAddress.Contains(keyword));
 			}
 
+			// filter theo city
+			if (cityId.HasValue)
+			{
+				query = query.Where(s => s.CityId == cityId.Value);
+			}
+
 			return await query
 				.OrderByDescending(s => s.CreatedAt)
 				.ToListAsync();
+		}
+
+		public async Task<Store?> GetByIdWithDetailsAsync(Guid id)
+		{
+			return await _context.Stores
+				.Include(s => s.InventoryLocations)
+				.Include(s => s.UserStores)
+					.ThenInclude(us => us.User)
+				.Include(s => s.City) 
+				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
 		public async Task<int> GetMaxSequenceByPartnerAsync(Guid partnerId)

@@ -17,7 +17,8 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<StoreResponse>> GetStoresAsync(
 				bool? isActive,
 				Guid? ownerId,
-				string? keyword);
+				string? keyword,
+				Guid? cityId);
 		Task<StoreResponse> GetByIdAsync(Guid id);
 
 		// UPDATE

@@ -12,7 +12,9 @@ namespace ToyShelf.Domain.IRepositories
 		Task<IEnumerable<Store>> GetStoresAsync(
 			bool? isActive,
 			Guid? ownerId = null,
-			string? keyword = null);
+			string? keyword = null,
+			Guid? cityId = null);
+		Task<Store?> GetByIdWithDetailsAsync(Guid id);
 		Task<int> GetMaxSequenceByPartnerAsync(Guid partnerId);
 		Task<bool> ExistsByCodeInPartnerAsync(string code, Guid partnerId);
 	}
