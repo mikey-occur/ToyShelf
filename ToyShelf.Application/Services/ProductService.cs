@@ -91,7 +91,6 @@ namespace ToyShelf.Application.Services
 			{
 				foreach (var colorReq in request.Colors)
 				{
-					// Lấy thông tin Color để lấy SkuCode (ví dụ: "RED", "BLUE")
 
 					var color = await _colorRepository.GetByIdAsync(colorReq.ColorId)
 					?? throw new AppException("Color not found", 404);
@@ -185,16 +184,9 @@ namespace ToyShelf.Application.Services
 			var product = await _productRepository.GetByIdAsync(id);
 			if (product == null)
 				throw new AppException($"Product Id = {id} not found", 404);
-			if (!string.IsNullOrWhiteSpace(request.Barcode) && request.Barcode != product.Barcode)
-			{
-				bool isDuplicate = await _productRepository.IsBarcodeExistsAsync(request.Barcode, id);
-				if (isDuplicate)
-				{
-					throw new AppException($"Barcode '{request.Barcode}' Bar code is in use.", 400);
-				}
-				product.Barcode = request.Barcode.Trim();
-			}
+		
 			// Update fields
+			product.Name = request.Name ?? product.Name;
 			product.Description = request.Description ?? product.Description;
 			product.BasePrice = request.BasePrice != default ? request.BasePrice : product.BasePrice;
 			product.Brand = request.Brand ?? product.Brand;
