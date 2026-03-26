@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Models\CommissionPolicy\**" />
+    <EmbeddedResource Remove="Models\CommissionPolicy\**" />
+    <None Remove="Models\CommissionPolicy\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ToyShelf.Domain\ToyShelf.Domain.csproj" />
   </ItemGroup>
 
@@ -18,8 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\CommissionPolicy\Request\" />
-    <Folder Include="Models\CommissionPolicy\Response\" />
     <Folder Include="Models\InventoryLocation\Request\" />
   </ItemGroup>
 
