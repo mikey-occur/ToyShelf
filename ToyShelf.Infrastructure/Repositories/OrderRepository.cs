@@ -16,6 +16,30 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
+		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId)
+		{
+			var query = _context.Orders
+				.Include(o => o.Store)
+				.Include(o => o.Staff)
+				.Include(o => o.OrderItems) 
+				.AsQueryable();
+			
+			if (storeId.HasValue)
+			{
+				query = query.Where(o => o.StoreId == storeId.Value);
+			}
+
+		
+			if (partnerId.HasValue)
+			{
+			
+				query = query.Where(o => o.Store != null && o.Store.PartnerId == partnerId.Value);
+			}
+
+			
+			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+		}
+
 		public async Task<Order?> GetOrderWithDetailsByIdAsync(long orderCode)
 		{
 			return await _context.Orders

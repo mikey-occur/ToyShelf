@@ -148,6 +148,26 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
+		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId)
+		{
+			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId);
+
+			var responseList = orders.Select(o => new OrderResponse
+			{
+				Id = o.Id,
+				CustomerName = o.CustomerName,
+				CustomerPhone = o.CustomerPhone,
+				OrderCode = o.OrderCode,
+				TotalAmount = o.TotalAmount,
+				PaymentMethod = o.PaymentMethod,
+				Status = o.Status,
+				CreatedAt = o.CreatedAt,
+				StoreName = o.Store?.Name 
+			}).ToList();
+
+			return responseList;
+		}
+
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
