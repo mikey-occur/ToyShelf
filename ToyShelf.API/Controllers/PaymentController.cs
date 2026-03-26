@@ -157,5 +157,17 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
 		}
+
+		/// <summary>
+		/// Search Orders by Customer Phone.
+		/// </summary>
+		// ===== GET ORDERS BY PHONE =====
+		[HttpGet("search-by-phone")]
+		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrdersByPhone([FromQuery] string phone)
+		{
+			var result = await _orderService.GetOrdersByPhoneAsync(phone);
+
+			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
+		}
 	}
 }

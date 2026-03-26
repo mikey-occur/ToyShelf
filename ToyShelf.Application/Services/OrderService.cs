@@ -168,6 +168,31 @@ namespace ToyShelf.Application.Services
 			return responseList;
 		}
 
+		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string phone)
+		{
+			var cleanPhone = phone?.Trim();
+
+			if (string.IsNullOrEmpty(cleanPhone))
+				return new List<OrderResponse>();
+
+			var orders = await _orderRepository.GetOrdersByCustomerPhoneAsync(cleanPhone);
+
+			
+			var response = orders.Select(o => new OrderResponse
+			{
+				Id = o.Id,
+				OrderCode = o.OrderCode, 
+				CustomerName = o.CustomerName,
+				CustomerPhone = o.CustomerPhone,
+				Status = o.Status,
+				TotalAmount = o.TotalAmount,
+				CreatedAt = o.CreatedAt,
+				
+			});
+
+			return response;
+		}
+
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);

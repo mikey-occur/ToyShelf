@@ -13,5 +13,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Order?> GetOrderWithDetailsByIdAsync(long orderCode);
 
 		Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId);
+		Task<IEnumerable<Order>> GetOrdersByCustomerPhoneAsync(string phone);
 	}
 }

@@ -40,6 +40,17 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 		}
 
+		public async Task<IEnumerable<Order>> GetOrdersByCustomerPhoneAsync(string phone)
+		{
+			return await _context.Orders
+				.Include(o => o.OrderItems)
+				.ThenInclude(oi => oi.ProductColor) 
+				.Include(o => o.Store)
+				.Where(o => o.CustomerPhone.Contains(phone)) 
+				.OrderByDescending(o => o.CreatedAt) 
+				.ToListAsync();
+		}
+
 		public async Task<Order?> GetOrderWithDetailsByIdAsync(long orderCode)
 		{
 			return await _context.Orders
