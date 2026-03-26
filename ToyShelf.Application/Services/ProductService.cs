@@ -206,10 +206,6 @@ namespace ToyShelf.Application.Services
 			product.Height = request.Height ?? product.Height;
 			product.Width = request.Width ?? product.Width;
 			
-			if (request.IsConsignment.HasValue)
-			{
-				product.IsConsignment = request.IsConsignment.Value;
-			}
 			product.UpdatedAt = _dateTimeProvider.UtcNow;
 
 			if (request.Colors != null && request.Colors.Any())
