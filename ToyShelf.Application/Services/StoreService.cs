@@ -18,6 +18,7 @@ namespace ToyShelf.Application.Services
 	{
 		private readonly IStoreRepository _storeRepository;
 		private readonly IPartnerRepository _partnerRepository;
+		private readonly IUserRepository _userRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly IInventoryLocationRepository _inventoryLocationRepository;
@@ -28,12 +29,14 @@ namespace ToyShelf.Application.Services
 		public StoreService(
 			IStoreRepository storeRepository,
 			IPartnerRepository partnerRepository,
+			IUserRepository userRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime,
 			IInventoryLocationRepository inventoryLocationRepository)
 		{
 			_storeRepository = storeRepository;
 			_partnerRepository = partnerRepository;
+			_userRepository = userRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_inventoryLocationRepository = inventoryLocationRepository;
@@ -99,23 +102,35 @@ namespace ToyShelf.Application.Services
 			var createdStore = await _storeRepository
 				.GetByIdWithDetailsAsync(store.Id);
 
-			return MapToResponse(createdStore!);
+			var partnerAdmin = await _userRepository
+				.GetPartnerAdminByPartnerIdAsync(createdStore!.PartnerId);
+
+			return MapToResponse(createdStore!, partnerAdmin);
 		}
 
 
 		// ================= GET =================
 		public async Task<IEnumerable<StoreResponse>> GetStoresAsync(
-				bool? isActive,
-				Guid? ownerId,
-				string? keyword,
-				Guid? cityId)
+			bool? isActive,
+			Guid? companyId,
+			string? keyword,
+			Guid? cityId)
 		{
 			var stores = await _storeRepository
-				.GetStoresAsync(isActive, ownerId, keyword, cityId);
+				.GetStoresAsync(isActive, companyId, keyword, cityId);
 
-			return stores.Select(MapToResponse);
+			var result = new List<StoreResponse>();
+
+			foreach (var store in stores)
+			{
+				var partnerAdmin = await _userRepository
+					.GetPartnerAdminByPartnerIdAsync(store.PartnerId);
+
+				result.Add(MapToResponse(store, partnerAdmin));
+			}
+
+			return result;
 		}
-
 
 		public async Task<StoreResponse> GetByIdAsync(Guid id)
 		{
@@ -123,13 +138,17 @@ namespace ToyShelf.Application.Services
 			if (store == null)
 				throw new AppException($"Store not found. Id = {id}", 404);
 
-			return MapToResponse(store);
+			var partnerAdmin = await _userRepository
+				.GetPartnerAdminByPartnerIdAsync(store.PartnerId);
+
+			return MapToResponse(store, partnerAdmin);
 		}
+
 
 		// ================= UPDATE =================
 		public async Task<StoreResponse> UpdateAsync(Guid id, UpdateStoreRequest request)
 		{
-			var store = await _storeRepository.GetByIdAsync(id);
+			var store = await _storeRepository.GetByIdWithDetailsAsync(id);
 			if (store == null)
 				throw new AppException($"Store not found. Id = {id}", 404);
 
@@ -150,12 +169,15 @@ namespace ToyShelf.Application.Services
 				_inventoryLocationRepository.Update(location);
 			}
 
-
 			_storeRepository.Update(store);
 			await _unitOfWork.SaveChangesAsync();
 
-			return MapToResponse(store);
+			var partnerAdmin = await _userRepository
+				.GetPartnerAdminByPartnerIdAsync(store.PartnerId);
+
+			return MapToResponse(store, partnerAdmin);
 		}
+
 
 		// ================= DISABLE / RESTORE =================
 		public async Task DisableAsync(Guid id)
@@ -224,20 +246,16 @@ namespace ToyShelf.Application.Services
 		}
 
 		// ================= MAPPER =================
-		private static StoreResponse MapToResponse(Store store)
+		private static StoreResponse MapToResponse(Store store, User? partnerAdmin)
 		{
 			var location = store.InventoryLocations
 				.FirstOrDefault(l => l.Type == InventoryLocationType.Store);
-
-			var owner = store.UserStores
-				.FirstOrDefault(us =>
-					us.StoreRole == StoreRole.Manager &&
-					us.IsActive);
 
 			return new StoreResponse
 			{
 				Id = store.Id,
 				PartnerId = store.PartnerId,
+				PartnerName = store.Partner?.CompanyName ?? string.Empty,
 
 				InventoryLocationId = location?.Id ?? Guid.Empty,
 
@@ -248,8 +266,8 @@ namespace ToyShelf.Application.Services
 				CityId = store.CityId,
 				CityName = store.City?.Name ?? string.Empty,
 
-				OwnerId = owner?.UserId,
-				OwnerName = owner?.User?.FullName ?? string.Empty,
+				OwnerId = partnerAdmin?.Id,
+				OwnerName = partnerAdmin?.FullName ?? string.Empty,
 
 				Latitude = store.Latitude,
 				Longitude = store.Longitude,

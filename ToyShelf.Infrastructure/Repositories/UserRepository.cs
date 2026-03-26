@@ -49,5 +49,17 @@ namespace ToyShelf.Infrastructure.Repositories
 					x.Email == email &&
 					x.IsActive);
 		}
+		public async Task<User?> GetPartnerAdminByPartnerIdAsync(Guid partnerId)
+		{
+			return await _context.Users
+				.Include(u => u.Accounts)
+					.ThenInclude(a => a.AccountRoles)
+						.ThenInclude(ar => ar.Role)
+				.Where(u => u.PartnerId == partnerId)
+				.FirstOrDefaultAsync(u =>
+					u.Accounts.Any(a =>
+						a.AccountRoles.Any(ar =>
+							ar.Role.Name == "PartnerAdmin")));
+		}
 	}
 }

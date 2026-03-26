@@ -32,11 +32,11 @@ namespace ToyShelf.API.Controllers
 		[HttpGet]
 		public async Task<BaseResponse<IEnumerable<StoreResponse>>> GetStores(
 				[FromQuery] bool? isActive,
-				[FromQuery] Guid? ownerId,
+				[FromQuery] Guid? companyid,
 				[FromQuery] string? keyword,
 				[FromQuery] Guid? cityId)
 		{
-			var result = await _storeService.GetStoresAsync(isActive, ownerId, keyword, cityId);
+			var result = await _storeService.GetStoresAsync(isActive, companyid, keyword, cityId);
 
 			return BaseResponse<IEnumerable<StoreResponse>>.Ok(
 				result,

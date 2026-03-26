@@ -16,28 +16,27 @@ namespace ToyShelf.Infrastructure.Repositories
 		public StoreRepository(ToyShelfDbContext context) : base(context) { }
 		public async Task<IEnumerable<Store>> GetStoresAsync(
 			bool? isActive,
-			Guid? ownerId = null,
+			Guid? companyId = null,
 			string? keyword = null,
 			Guid? cityId = null)
 		{
 			var query = _context.Stores
 				.Include(s => s.InventoryLocations)
-				.Include(s => s.UserStores)
-					.ThenInclude(us => us.User)
 				.Include(s => s.City)
+				.Include(s => s.Partner)
+					.ThenInclude(p => p.Users)
+						.ThenInclude(u => u.Accounts)
+							.ThenInclude(a => a.AccountRoles)
+								.ThenInclude(ar => ar.Role)
 				.AsQueryable();
 
 			if (isActive.HasValue)
 				query = query.Where(s => s.IsActive == isActive.Value);
 
-			// filter theo owner (Manager)
-			if (ownerId.HasValue)
+
+			if (companyId.HasValue) // giờ nó là companyId
 			{
-				query = query.Where(s =>
-					s.UserStores.Any(us =>
-						us.UserId == ownerId &&
-						us.StoreRole == StoreRole.Manager &&
-						us.IsActive));
+				query = query.Where(s => s.PartnerId == companyId.Value);
 			}
 
 			// filter theo khu vực (address hoặc name)
@@ -63,9 +62,12 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.Stores
 				.Include(s => s.InventoryLocations)
-				.Include(s => s.UserStores)
-					.ThenInclude(us => us.User)
-				.Include(s => s.City) 
+				.Include(s => s.City)
+				.Include(s => s.Partner)
+					.ThenInclude(p => p.Users)
+						.ThenInclude(u => u.Accounts)
+							.ThenInclude(a => a.AccountRoles)
+								.ThenInclude(ar => ar.Role)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 

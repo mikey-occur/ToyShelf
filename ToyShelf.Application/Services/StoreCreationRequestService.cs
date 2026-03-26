@@ -189,6 +189,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = entity.Id,
 				PartnerId = entity.PartnerId,
+				PartnerName = entity.Partner?.CompanyName ?? string.Empty,
 				CityId = entity.CityId,
 				CityName = entity.City?.Name ?? string.Empty,
 				Name = entity.Name,
@@ -197,8 +198,15 @@ namespace ToyShelf.Application.Services
 				Longitude = entity.Longitude,
 				PhoneNumber = entity.PhoneNumber,
 				Status = entity.Status,
+
 				RequestedByUserId = entity.RequestedByUserId,
+				RequestedByUserName = entity.RequestedByUser?.FullName ?? string.Empty,
+				RequestedByUserEmail = entity.RequestedByUser?.Email ?? string.Empty,
+
 				ReviewedByUserId = entity.ReviewedByUserId,
+				ReviewedByUserName = entity.ReviewedByUser?.FullName ?? string.Empty,
+				ReviewedByUserEmail = entity.ReviewedByUser?.Email ?? string.Empty,
+
 				RejectReason = entity.RejectReason,
 				CreatedAt = entity.CreatedAt,
 				ReviewedAt = entity.ReviewedAt
