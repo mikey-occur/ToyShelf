@@ -11,8 +11,8 @@ namespace ToyShelf.Application.Models.PriceTableApply.Response
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
 		public string PartnerName { get; set; } 
-		public Guid PriceTableId { get; set; }
-		public string PriceTableName { get; set; }
+		public Guid CommissionTableId { get; set; }
+		public string CommissionTableName { get; set; }
 
 		public string? Name { get; set; } 
 		public bool IsActive { get; set; } = true;

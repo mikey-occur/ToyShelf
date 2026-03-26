@@ -40,7 +40,7 @@ namespace ToyShelf.Application.Services
 			var partner = await _partnerRepo.GetByIdAsync(request.PartnerId);
 			if (partner == null) throw new AppException("Partner not found", 404);
 
-			var table = await _priceTableRepo.GetByIdAsync(request.PriceTableId);
+			var table = await _priceTableRepo.GetByIdAsync(request.CommissionTableId);
 			if (table == null) throw new AppException("Price Table not found", 404);
 
 			// 3. CHECK TRÙNG LỊCH (QUAN TRỌNG NHẤT)
@@ -55,7 +55,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = Guid.NewGuid(),
 				PartnerId = request.PartnerId,
-				CommissionTableId = request.PriceTableId,
+				CommissionTableId = request.CommissionTableId,
 				Name = request.Name,
 				StartDate = request.StartDate,
 				EndDate = request.EndDate,
@@ -176,8 +176,8 @@ namespace ToyShelf.Application.Services
 				Id = entity.Id,
 				PartnerId = entity.PartnerId,
 				PartnerName = pName ?? "Unknown",
-				PriceTableId = entity.CommissionTableId,
-				PriceTableName = tName ?? "Unknown",
+				CommissionTableId = entity.CommissionTableId,
+				CommissionTableName = tName ?? "Unknown",
 				Name = entity.Name,
 				IsActive = entity.IsActive,
 				StartDate = entity.StartDate,
