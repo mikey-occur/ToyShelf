@@ -23,6 +23,6 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 		public string Color { get; set; } = string.Empty;
 
 		public int AvailableQuantity { get; set; }
-		public int RequestedQuantity { get; set; }
+		//public int RequestedQuantity { get; set; }
 	}
 }

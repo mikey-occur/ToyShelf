@@ -211,7 +211,7 @@ namespace ToyShelf.Application.Services
 							ProductName = i.ProductColor.Product.Name,
 							Color = i.ProductColor.Color.Name,
 							AvailableQuantity = i.Quantity,
-							RequestedQuantity = orderItems[i.ProductColorId]
+							//RequestedQuantity = orderItems[i.ProductColorId]
 						}).ToList()
 					};
 				})
