@@ -110,7 +110,7 @@ namespace ToyShelf.Application.Services
 			if (assignment.ShipperId != currentUser.UserId)
 				throw new AppException("You are not assigned to this shipment", 403);
 
-			if (assignment.Status != AssignmentStatus.Pending)
+			if (assignment.Status != AssignmentStatus.Assigned)
 				throw new AppException("Assignment already responded", 400);
 
 			assignment.Status = AssignmentStatus.Accepted;
@@ -132,7 +132,7 @@ namespace ToyShelf.Application.Services
 			if (assignment.ShipperId != currentUser.UserId)
 				throw new AppException("You are not assigned to this shipment", 403);
 
-			if (assignment.Status != AssignmentStatus.Pending)
+			if (assignment.Status != AssignmentStatus.Assigned)
 				throw new AppException("Assignment already responded", 400);
 
 			assignment.Status = AssignmentStatus.Rejected;
