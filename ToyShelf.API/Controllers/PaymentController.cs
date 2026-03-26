@@ -145,5 +145,17 @@ namespace ToyShelf.API.Controllers
 				});
 			}
 		}
+
+		/// <summary>
+		/// Get list of orders filtered by StoreId or PartnerId.
+		/// </summary>
+		// ===== GET ORDERS =====
+		[HttpGet]
+		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrders([FromQuery] Guid? storeId, [FromQuery] Guid? partnerId)
+		{
+			var result = await _orderService.GetOrdersAsync(storeId, partnerId);
+
+			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
+		}
 	}
 }
