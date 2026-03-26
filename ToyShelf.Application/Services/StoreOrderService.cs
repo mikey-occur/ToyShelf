@@ -8,6 +8,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
 using ToyShelf.Application.Models.StoreOrder.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -19,6 +20,7 @@ namespace ToyShelf.Application.Services
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IInventoryLocationRepository _locationRepository;
 		private readonly IUserStoreRepository _userStoreRepository;
+		private readonly IInventoryRepository _inventoryRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -28,12 +30,14 @@ namespace ToyShelf.Application.Services
 			IStoreOrderRepository storeOrderRepository,
 			IInventoryLocationRepository locationRepository,
 			IUserStoreRepository userStoreRepository,
+			IInventoryRepository inventoryRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
 			_storeOrderRepository = storeOrderRepository;
 			_locationRepository = locationRepository;
 			_userStoreRepository = userStoreRepository;
+			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -148,6 +152,72 @@ namespace ToyShelf.Application.Services
 			_storeOrderRepository.Update(order);
 
 			await _unitOfWork.SaveChangesAsync();
+		}
+
+		public async Task<List<WarehouseMatchResponse>> GetAvailableWarehousesAsync(Guid storeOrderId)
+		{
+			// 1. Lấy order
+			var order = await _storeOrderRepository.GetByIdWithItemsAsync(storeOrderId);
+
+			if (order == null)
+				throw new AppException("Store order not found", 404);
+
+			if (order.Status != StoreOrderStatus.Approved)
+				throw new AppException("Order must be approved", 400);
+
+			// 2. Lấy city của store
+			var cityId = order.StoreLocation.Store.CityId;
+
+			// 3. Lấy warehouse locations cùng city
+			var warehouseLocations = await _locationRepository
+				.GetWarehouseLocationsByCityAsync(cityId);
+
+			if (!warehouseLocations.Any())
+				return new List<WarehouseMatchResponse>();
+
+			var locationIds = warehouseLocations.Select(l => l.Id).ToList();
+
+			// 4. Lấy inventory
+			var inventories = await _inventoryRepository
+				.GetByLocationIdsAsync(locationIds);
+
+			// 5. Map product cần từ order
+			var orderItems = order.Items.ToDictionary(
+				x => x.ProductColorId,
+				x => x.Quantity
+			);
+
+			// 6. Filter + Group
+			var result = inventories
+				.Where(i =>
+					orderItems.ContainsKey(i.ProductColorId) &&
+					i.Quantity > 0 &&
+					i.Status == InventoryStatus.Available)
+				.GroupBy(i => i.InventoryLocation)
+				.Select(group =>
+				{
+					var warehouse = group.First().InventoryLocation.Warehouse;
+
+					return new WarehouseMatchResponse
+					{
+						WarehouseId = warehouse.Id,
+						WarehouseName = warehouse.Name,
+						WarehouseCode = warehouse.Code,
+
+						Items = group.Select(i => new WarehouseItemResponse
+						{
+							ProductColorId = i.ProductColorId,
+							SKU = i.ProductColor.Product.SKU,
+							ProductName = i.ProductColor.Product.Name,
+							Color = i.ProductColor.Color.Name,
+							AvailableQuantity = i.Quantity,
+							RequestedQuantity = orderItems[i.ProductColorId]
+						}).ToList()
+					};
+				})
+				.ToList();
+
+			return result;
 		}
 
 		private static StoreOrderResponse MapToResponse(StoreOrder order)

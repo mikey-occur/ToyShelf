@@ -6,6 +6,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.StoreOrder.Request;
 using ToyShelf.Application.Models.StoreOrder.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
@@ -71,6 +72,17 @@ namespace ToyShelf.API.Controllers
 			await _storeOrderService.RejectAsync(id, currentUser);
 
 			return ActionResponse.Ok("Store order rejected successfully");
+		}
+
+		// ================= MATCH WAREHOUSE =================
+		[HttpGet("{id}/available-warehouses")]
+		[Authorize(Roles = "Admin")]
+		public async Task<BaseResponse<List<WarehouseMatchResponse>>> GetAvailableWarehouses(Guid id)
+		{
+			var result = await _storeOrderService.GetAvailableWarehousesAsync(id);
+
+			return BaseResponse<List<WarehouseMatchResponse>>
+				.Ok(result, "Available warehouses retrieved successfully");
 		}
 	}
 }
