@@ -33,6 +33,7 @@ namespace ToyShelf.Application.Models.StoreOrder.Response
 	public class StoreOrderItemResponse
 	{
 		public Guid ProductColorId { get; set; }
+		public string SKU { get; set; } = string.Empty;
 		public string ProductName { get; set; } = null!;
 		public string Color { get; set; } = null!;
 		public string? ImageUrl { get; set; }

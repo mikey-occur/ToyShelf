@@ -465,6 +465,7 @@ namespace ToyShelf.Application.Services
 				Items = shipment.Items.Select(x => new ShipmentItemResponse
 				{
 					ProductColorId = x.ProductColorId,
+					SKU = x.ProductColor.Product.SKU,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
 					ImageUrl = x.ProductColor.ImageUrl,
