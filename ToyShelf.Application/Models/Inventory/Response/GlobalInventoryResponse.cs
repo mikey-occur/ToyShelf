@@ -31,6 +31,7 @@ namespace ToyShelf.Application.Models.Inventory.Response
 
 	public class GlobalColorInventoryItem
 	{
+		public Guid ProductColorId { get; set; }
 		public Guid ColorId { get; set; }
 		public string ColorName { get; set; } = null!;
 		public int Available { get; set; }

@@ -131,4 +131,16 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 			.Where(i => i.ProductColor != null && i.ProductColor.ProductId == productId)
 			.ToListAsync();
 	}
+	public async Task<List<Inventory>> GetByLocationIdsAsync(List<Guid> locationIds)
+	{
+		return await _context.Inventories
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Warehouse)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Product)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Color)
+			.Where(i => locationIds.Contains(i.InventoryLocationId))
+			.ToListAsync();
+	}
 }

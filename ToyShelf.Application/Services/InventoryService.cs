@@ -270,6 +270,7 @@ namespace ToyShelf.Application.Services
 											var color = colorGroup.First().ProductColor.Color!;
 											return new GlobalColorInventoryItem
 											{
+												ProductColorId = colorGroup.Key,
 												ColorId = color.Id,
 												ColorName = color.Name,
 												Available = colorGroup
