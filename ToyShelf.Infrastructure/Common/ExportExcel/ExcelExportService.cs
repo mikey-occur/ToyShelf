@@ -17,7 +17,7 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			var worksheet = workbook.Worksheets.Add("Chốt Sổ Tháng");
 
 			// 1. Đổ màu và ghi Tiêu đề
-			var headers = new string[] { "ID Đối Tác", "Tên Đối Tác", "Tháng", "Năm", "Tổng Số Đơn", "Tổng Hoa Hồng", "Khấu Trừ", "Thực Nhận", "Trạng Thái", "Ngày Tạo" };
+			var headers = new string[] { "Mã Đối Tác", "Tên Đối Tác", "Tháng", "Năm", "Tổng Số Đơn", "Tổng Hoa Hồng", "Khấu Trừ", "Thực Nhận", "Trạng Thái", "Ngày Tạo" };
 			for (int i = 0; i < headers.Length; i++)
 			{
 				var cell = worksheet.Cell(1, i + 1);
@@ -30,7 +30,7 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			int currentRow = 2;
 			foreach (var item in settlements)
 			{
-				worksheet.Cell(currentRow, 1).Value = item.PartnerId.ToString();
+				worksheet.Cell(currentRow, 1).Value = item.PartnerCode;
 				worksheet.Cell(currentRow, 2).Value = item.PartnerName;
 				worksheet.Cell(currentRow, 3).Value = item.Month;
 				worksheet.Cell(currentRow, 4).Value = item.Year;

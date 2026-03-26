@@ -11,7 +11,8 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
 	{
 		public Guid Id { get; set; }
 		public Guid PartnerId { get; set; }
-		public string? PartnerName { get; set; } 	
+		public string? PartnerName { get; set; }
+		public string PartnerCode { get; set; } = string.Empty;
 		public int Month { get; set; }
 		public int Year { get; set; }
 		public int TotalItems { get; set; }
