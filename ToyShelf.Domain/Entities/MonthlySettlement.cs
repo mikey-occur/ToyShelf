@@ -18,7 +18,8 @@ namespace ToyShelf.Domain.Entities
 		public int Year { get; set; }
 
 		// Tổng hợp số liệu
-		public int TotalItems { get; set; } 
+		public int TotalItems { get; set; }
+		public decimal TotalSalesAmount { get; set; }
 		public decimal TotalCommissionAmount { get; set; }
 		public decimal DeductionAmount { get; set; } = 0;
 		public string? Note { get; set; }

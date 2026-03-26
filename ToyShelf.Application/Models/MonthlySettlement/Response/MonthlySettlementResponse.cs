@@ -16,6 +16,7 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
 		public int Month { get; set; }
 		public int Year { get; set; }
 		public int TotalItems { get; set; }
+		public decimal TotalSalesAmount { get; set; }
 		public decimal TotalCommissionAmount { get; set; }
 		public decimal DeductionAmount { get; set; } = 0;
 		public decimal FinalAmount { get; set; }

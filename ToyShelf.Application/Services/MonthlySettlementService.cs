@@ -49,6 +49,7 @@ namespace ToyShelf.Application.Services
 			{
 				var totalCommission = group.Sum(ch => ch.CommissionAmount);
 				var totalItems = group.Sum(ch => ch.OrderItem.Quantity);
+				var totalSales = group.Sum(ch => ch.OrderItem.Price * ch.OrderItem.Quantity);
 				var settlement = new MonthlySettlement
 				{
 					Id = Guid.NewGuid(),
@@ -58,6 +59,7 @@ namespace ToyShelf.Application.Services
 					DeductionAmount = 0,                  
 					Note = null,
 					TotalItems = totalItems,
+					TotalSalesAmount = totalSales,
 					TotalCommissionAmount = totalCommission,
 					FinalAmount = totalCommission,
 					Status = "PENDING",
@@ -182,6 +184,7 @@ namespace ToyShelf.Application.Services
 				Month = settlement.Month,
 				Year = settlement.Year,
 				TotalItems = settlement.TotalItems,
+				TotalSalesAmount = settlement.TotalSalesAmount,
 				TotalCommissionAmount = settlement.TotalCommissionAmount,
 				DeductionAmount = settlement.DeductionAmount,
 				FinalAmount = settlement.FinalAmount,

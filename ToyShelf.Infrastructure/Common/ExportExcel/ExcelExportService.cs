@@ -17,7 +17,7 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			var worksheet = workbook.Worksheets.Add("Chốt Sổ Tháng");
 
 			// 1. Đổ màu và ghi Tiêu đề
-			var headers = new string[] { "Mã Đối Tác", "Tên Đối Tác", "Tháng", "Năm", "Tổng Số Đơn", "Tổng Hoa Hồng", "Khấu Trừ", "Thực Nhận", "Trạng Thái", "Ngày Tạo" };
+			var headers = new string[] { "Mã Đối Tác", "Tên Đối Tác", "Tháng", "Năm", "Tổng Số hàng bán được", "Tổng Tiền Bán", "Tổng Hoa Hồng", "Khấu Trừ", "Thực Nhận", "Trạng Thái", "Ngày Tạo" };
 			for (int i = 0; i < headers.Length; i++)
 			{
 				var cell = worksheet.Cell(1, i + 1);
@@ -35,11 +35,12 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 				worksheet.Cell(currentRow, 3).Value = item.Month;
 				worksheet.Cell(currentRow, 4).Value = item.Year;
 				worksheet.Cell(currentRow, 5).Value = item.TotalItems;
-				worksheet.Cell(currentRow, 6).Value = item.TotalCommissionAmount;
-				worksheet.Cell(currentRow, 7).Value = item.DeductionAmount;
-				worksheet.Cell(currentRow, 8).Value = item.FinalAmount;
-				worksheet.Cell(currentRow, 9).Value = item.Status;
-				worksheet.Cell(currentRow, 10).Value = item.CreatedAt.ToString("dd/MM/yyyy HH:mm");
+				worksheet.Cell(currentRow, 6).Value = item.TotalSalesAmount;
+				worksheet.Cell(currentRow, 7).Value = item.TotalCommissionAmount;
+				worksheet.Cell(currentRow, 8).Value = item.DeductionAmount;
+				worksheet.Cell(currentRow, 9).Value = item.FinalAmount;
+				worksheet.Cell(currentRow, 10).Value = item.Status;
+				worksheet.Cell(currentRow, 11).Value = item.CreatedAt.ToString("dd/MM/yyyy HH:mm");
 				currentRow++;
 			}
 

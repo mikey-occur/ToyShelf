@@ -1813,12 +1813,14 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasKey(e => e.Id);
 				entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
+				entity.Property(e => e.TotalSalesAmount)
+					.HasColumnType("decimal(18,2)");
+
 				entity.Property(e => e.TotalCommissionAmount)
 					.HasColumnType("decimal(18,2)");
 
 				entity.Property(e => e.DeductionAmount)
 				     .HasColumnType("decimal(18,2)");
-
 
 				entity.Property(e => e.FinalAmount)
 				      .HasColumnType("decimal(18,2)");
