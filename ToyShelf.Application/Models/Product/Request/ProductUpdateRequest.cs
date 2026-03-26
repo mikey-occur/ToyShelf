@@ -14,7 +14,6 @@ namespace ToyShelf.Application.Models.Product.Request
 		public decimal BasePrice { get; set; }
 		public string? Description { get; set; }
 		public string? Barcode { get; set; }
-		public bool? IsConsignment { get; set; }
 		public string? Brand { get; set; }
 		public string? Material { get; set; }
 		public string? OriginCountry { get; set; }
