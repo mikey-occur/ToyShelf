@@ -11,7 +11,7 @@ namespace ToyShelf.Application.IServices
 	public interface IPartnerService
 	{
 		// ===== CREATE =====
-		Task<PartnerResponse> CreateAsync(CreatePartnerRequest request);
+		Task<PartnerCreateResponse> CreateAsync(CreatePartnerRequest request);
 
 		// ===== GET =====
 		Task<IEnumerable<PartnerResponse>> GetPartnersAsync(bool? isActive);

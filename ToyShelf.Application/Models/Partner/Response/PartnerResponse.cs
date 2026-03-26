@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.PriceTableApply.Response;
 
 namespace ToyShelf.Application.Models.Partner.Response
 {
@@ -39,5 +40,18 @@ namespace ToyShelf.Application.Models.Partner.Response
 		public string? AvatarUrl { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime? LastLoginAt { get; set; }
+	}
+
+	public class AppliedCommissionTableResponse
+	{
+		public Guid CommissionTableId { get; set; }
+		public string Name { get; set; } = string.Empty;
+		public DateTime StartDate { get; set; }
+		public DateTime? EndDate { get; set; }
+	}
+
+	public class PartnerCreateResponse : PartnerResponse
+	{
+		public AppliedCommissionTableResponse? AppliedCommission { get; set; }
 	}
 }

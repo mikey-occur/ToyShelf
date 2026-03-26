@@ -20,15 +20,23 @@ namespace ToyShelf.Application.Services
 		private readonly IPartnerRepository _partnerRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
-
+		private readonly ICommissionTableRepository _CommissiontableRepo;
+		private readonly ICommissionTableApplyRepository _commissionTableApplyRepo;
+		private readonly ICommissionTableApplyService _commissionTableApplyService;
 		public PartnerService(
 			IPartnerRepository partnerRepository,
 			IUnitOfWork unitOfWork,
-			IDateTimeProvider dateTime)
+			IDateTimeProvider dateTime,
+			ICommissionTableRepository commissiontableRepo,
+			ICommissionTableApplyRepository commissionTableApplyRepo,
+			ICommissionTableApplyService commissionTableApplyService)
 		{
 			_partnerRepository = partnerRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+			_CommissiontableRepo = commissiontableRepo;
+			_commissionTableApplyRepo = commissionTableApplyRepo;
+			_commissionTableApplyService = commissionTableApplyService;
 		}
 
 		private async Task<string> GeneratePartnerCode(string companyName)
@@ -60,8 +68,19 @@ namespace ToyShelf.Application.Services
 
 
 		// ===== CREATE =====
-		public async Task<PartnerResponse> CreateAsync(CreatePartnerRequest request)
+		public async Task<PartnerCreateResponse> CreateAsync(CreatePartnerRequest request)
 		{
+			if (request.CommissionTableId.HasValue)
+			{
+				if (request.TableEndDate.HasValue && request.TableStartDate >= request.TableEndDate.Value)
+				{
+					throw new ArgumentException("Ngày bắt đầu phải trước ngày kết thúc.");
+				}
+
+				var table = await _CommissiontableRepo.GetByIdAsync(request.CommissionTableId.Value);
+				if (table == null) throw new AppException("Không tìm thấy Bảng giá này!", 404);
+			}
+
 			var code = await GeneratePartnerCode(request.CompanyName);
 
 			var partner = new Partner
@@ -78,11 +97,28 @@ namespace ToyShelf.Application.Services
 			};
 
 			await _partnerRepository.AddAsync(partner);
+			CommissionTableApply? apply = null;
+			if (request.CommissionTableId.HasValue)
+			{
+			    apply = new CommissionTableApply
+				{
+					Id = Guid.NewGuid(),
+					PartnerId = partner.Id, 
+					CommissionTableId = request.CommissionTableId.Value,
+					Name = $"Áp dụng Bảng giá đợt đầu cho {partner.CompanyName}", 
+					StartDate = request.TableStartDate ?? _dateTime.UtcNow,
+					EndDate = request.TableEndDate,
+					IsActive = true
+				};
+
+				await _commissionTableApplyRepo.AddAsync(apply);
+			}
+
 			await _unitOfWork.SaveChangesAsync();
 
 			var createdPartner = await _partnerRepository.GetByIdWithTierAsync(partner.Id);
 
-			return MapToResponse(createdPartner!);
+			return MapToCreateResponse(createdPartner!, apply);
 		}
 
 
@@ -196,7 +232,8 @@ namespace ToyShelf.Application.Services
 				IsActive = partner.IsActive,
 
 				CreatedAt = partner.CreatedAt,
-				UpdatedAt = partner.UpdatedAt
+				UpdatedAt = partner.UpdatedAt,
+
 			};
 		}
 
@@ -227,6 +264,34 @@ namespace ToyShelf.Application.Services
 					AvatarUrl = mainUser.AvatarUrl,
 					IsActive = mainUser.IsActive,
 					LastLoginAt = mainAccount?.LastLoginAt
+				} : null
+			};
+		}
+
+		private static PartnerCreateResponse MapToCreateResponse(Partner partner, Domain.Entities.CommissionTableApply? apply)
+		{
+			return new PartnerCreateResponse
+			{
+				Id = partner.Id,
+				Code = partner.Code,
+				CompanyName = partner.CompanyName,
+				Address = partner.Address,
+				Latitude = partner.Latitude,
+				Longitude = partner.Longitude,
+				PartnerTierId = partner.PartnerTierId,
+				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
+				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
+				IsActive = partner.IsActive,
+				CreatedAt = partner.CreatedAt,
+				UpdatedAt = partner.UpdatedAt,
+
+				// Ánh xạ bảng giá nếu có
+				AppliedCommission = apply != null ? new AppliedCommissionTableResponse
+				{
+					CommissionTableId = apply.CommissionTableId,
+					Name = apply.Name,
+					StartDate = apply.StartDate,
+					EndDate = apply.EndDate
 				} : null
 			};
 		}
