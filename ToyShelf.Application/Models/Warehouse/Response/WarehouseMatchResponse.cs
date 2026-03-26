@@ -9,6 +9,7 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 	public class WarehouseMatchResponse
 	{
 		public Guid WarehouseId { get; set; }
+		public Guid WarehouseLocationId { get; set; }
 		public string WarehouseName { get; set; } = string.Empty;
 		public string WarehouseCode { get; set; } = string.Empty;
 
@@ -21,6 +22,7 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 		public string SKU { get; set; } = string.Empty;
 		public string ProductName { get; set; } = string.Empty;
 		public string Color { get; set; } = string.Empty;
+		public string? ImageUrl { get; set; }
 
 		public int AvailableQuantity { get; set; }
 		//public int RequestedQuantity { get; set; }

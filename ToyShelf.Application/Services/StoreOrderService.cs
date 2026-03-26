@@ -201,6 +201,7 @@ namespace ToyShelf.Application.Services
 					return new WarehouseMatchResponse
 					{
 						WarehouseId = warehouse.Id,
+						WarehouseLocationId = group.Key.Id,
 						WarehouseName = warehouse.Name,
 						WarehouseCode = warehouse.Code,
 
@@ -210,6 +211,7 @@ namespace ToyShelf.Application.Services
 							SKU = i.ProductColor.Product.SKU,
 							ProductName = i.ProductColor.Product.Name,
 							Color = i.ProductColor.Color.Name,
+							ImageUrl = i.ProductColor.ImageUrl,
 							AvailableQuantity = i.Quantity,
 							//RequestedQuantity = orderItems[i.ProductColorId]
 						}).ToList()
