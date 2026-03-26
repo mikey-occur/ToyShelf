@@ -168,6 +168,31 @@ namespace ToyShelf.Application.Services
 			return responseList;
 		}
 
+		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string phone)
+		{
+			var cleanPhone = phone?.Trim();
+
+			if (string.IsNullOrEmpty(cleanPhone))
+				return new List<OrderResponse>();
+
+			var orders = await _orderRepository.GetOrdersByCustomerPhoneAsync(cleanPhone);
+
+			
+			var response = orders.Select(o => new OrderResponse
+			{
+				Id = o.Id,
+				OrderCode = o.OrderCode, 
+				CustomerName = o.CustomerName,
+				CustomerPhone = o.CustomerPhone,
+				Status = o.Status,
+				TotalAmount = o.TotalAmount,
+				CreatedAt = o.CreatedAt,
+				
+			});
+
+			return response;
+		}
+
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
@@ -199,14 +224,15 @@ namespace ToyShelf.Application.Services
 				{
 					throw new Exception($"[BẮT ĐƯỢC LỖI TÍNH TIỀN]: {result.SourceDescription}");
 				}
-
+				var baseSalesAmount = item.Price * item.Quantity;
 				// Tạo bản ghi vào bảng CommissionHistory (Sử dụng đúng Rate và SourceDescription từ record)
 				var commissionHistory = new CommissionHistory
 				{
 					Id = Guid.NewGuid(),
 					OrderItemId = item.Id,
 					PartnerId = partnerId.Value,
-					AppliedRate = result.Rate, 
+					AppliedRate = result.Rate,
+					SalesAmount = baseSalesAmount,
 					CommissionAmount = (item.Price * item.Quantity) * result.Rate,
 					CreatedAt = _dateTime.UtcNow,
 				};

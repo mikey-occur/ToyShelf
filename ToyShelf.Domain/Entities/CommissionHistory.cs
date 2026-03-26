@@ -12,6 +12,7 @@ namespace ToyShelf.Domain.Entities
 		public Guid OrderItemId { get; set; }
 		public Guid PartnerId { get; set; }
 		public Guid? MonthlySettlementId { get; set; }
+		public decimal SalesAmount { get; set; }  // Giá bán của món đồ chơi lúc đó (VD: 100.000)
 		public decimal AppliedRate { get; set; }  // % hoa hồng lúc tính (VD: 0.1)
 		public decimal CommissionAmount { get; set; }  
 		public DateTime CreatedAt { get; set; }

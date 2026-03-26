@@ -20,6 +20,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.CommissionHistories
 				.Include(ch => ch.Partner)
+				.Include(ch => ch.OrderItem)
 				.Where(ch => ch.MonthlySettlementId == null && ch.CreatedAt < endOfMonth)
 				.ToListAsync();
 		}
