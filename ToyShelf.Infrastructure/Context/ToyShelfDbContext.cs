@@ -1777,6 +1777,9 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					 .ValueGeneratedOnAdd();
 
+				entity.Property(e => e.SalesAmount)
+					.HasColumnType("decimal(18,2)");
+
 				entity.Property(e => e.CommissionAmount)
 					.HasColumnType("decimal(18,2)"); // VD: 100.000,50
 

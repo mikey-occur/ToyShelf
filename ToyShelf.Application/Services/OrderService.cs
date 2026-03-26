@@ -199,14 +199,15 @@ namespace ToyShelf.Application.Services
 				{
 					throw new Exception($"[BẮT ĐƯỢC LỖI TÍNH TIỀN]: {result.SourceDescription}");
 				}
-
+				var baseSalesAmount = item.Price * item.Quantity;
 				// Tạo bản ghi vào bảng CommissionHistory (Sử dụng đúng Rate và SourceDescription từ record)
 				var commissionHistory = new CommissionHistory
 				{
 					Id = Guid.NewGuid(),
 					OrderItemId = item.Id,
 					PartnerId = partnerId.Value,
-					AppliedRate = result.Rate, 
+					AppliedRate = result.Rate,
+					SalesAmount = baseSalesAmount,
 					CommissionAmount = (item.Price * item.Quantity) * result.Rate,
 					CreatedAt = _dateTime.UtcNow,
 				};
