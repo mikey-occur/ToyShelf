@@ -212,6 +212,7 @@ namespace ToyShelf.Application.Services
 				Items = assignment.StoreOrder.Items.Select(x => new ShipmentAssignmentItemResponse
 				{
 					ProductColorId = x.ProductColorId,
+					SKU = x.ProductColor.Product.SKU,
 					ProductName = x.ProductColor.Product.Name,
 					Color = x.ProductColor.Color.Name,
 					ImageUrl = x.ProductColor.ImageUrl,
