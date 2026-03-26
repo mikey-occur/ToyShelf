@@ -17,6 +17,9 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			var query = _context.StoreCreationRequests
 				.Include(x => x.City)
+				.Include(x => x.Partner)
+				.Include(x => x.RequestedByUser)
+				.Include(x => x.ReviewedByUser)
 				.AsQueryable();
 
 			if (status.HasValue)
@@ -28,11 +31,13 @@ namespace ToyShelf.Infrastructure.Repositories
 				.OrderByDescending(x => x.CreatedAt)
 				.ToListAsync();
 		}
-
 		public async Task<StoreCreationRequest?> GetByIdWithCityAsync(Guid id)
 		{
 			return await _context.StoreCreationRequests
-				.Include(x => x.City) 
+				.Include(x => x.City)
+				.Include(x => x.Partner)
+				.Include(x => x.RequestedByUser)
+				.Include(x => x.ReviewedByUser)
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 	}
