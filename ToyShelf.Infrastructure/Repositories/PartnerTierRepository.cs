@@ -16,14 +16,16 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 
 		}
-		public async Task<bool> ExistsByNameAsync(string name)
+		public async Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null)
 		{
-			return await _context.PartnerTiers.AnyAsync(x => x.Name == name);
+			return await _context.PartnerTiers
+				.AnyAsync(x => x.Name == name && x.Id != excludeId);
 		}
 
-		public async Task<bool> ExistsByPriorityAsync(int priority)
+		public async Task<bool> ExistsByPriorityAsync(int priority, Guid? excludeId = null)
 		{
-			return await _context.PartnerTiers.AnyAsync(x => x.Priority == priority);
+			return await _context.PartnerTiers
+				.AnyAsync(x => x.Priority == priority && x.Id != excludeId);
 		}
 
 		public async Task<bool> IsTierInUseAsync(Guid id)

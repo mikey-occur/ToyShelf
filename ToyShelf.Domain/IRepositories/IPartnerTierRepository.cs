@@ -9,8 +9,8 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IPartnerTierRepository : IGenericRepository<PartnerTier>
 	{
-		Task<bool> ExistsByNameAsync(string name);
-		Task<bool> ExistsByPriorityAsync(int priority);
+		Task<bool> ExistsByNameAsync(string name, Guid? excludeId = null);
+		Task<bool> ExistsByPriorityAsync(int priority, Guid? excludeId = null);
 		Task<bool> IsTierInUseAsync(Guid id);
 	}
 }
