@@ -162,7 +162,6 @@ namespace ToyShelf.Application.Services
 		}
 
 
-		// ================= SHIPPER REJECT =================
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
 			// 1. Lấy assignment 

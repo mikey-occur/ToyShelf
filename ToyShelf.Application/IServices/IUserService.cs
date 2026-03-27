@@ -19,6 +19,9 @@ namespace ToyShelf.Application.IServices
 		Task<PartnerDetailByUserResponse> GetPartnerDetailByUserAsync(
 			GetPartnerDetailByUserRequest request);
 
+		Task<List<WarehouseDetailByUserResponse>> GetWarehouseUsersAsync(
+			GetWarehouseUsersRequest request);
+
 		Task<List<WarehouseDetailByUserResponse>> GetWarehouseDetailByUserAsync(Guid userId);
 
 		Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId);

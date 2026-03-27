@@ -127,6 +127,52 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<List<WarehouseDetailByUserResponse>> GetWarehouseUsersAsync(
+			GetWarehouseUsersRequest request)
+		{
+			var users = await _userRepository.GetUsersWithWarehousesAsync();
+
+			var query = users.AsQueryable();
+
+			// Filter theo Warehouse
+			if (request.WarehouseId.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserWarehouses.Any(uw => uw.WarehouseId == request.WarehouseId.Value));
+			}
+
+			// Filter theo Role
+			if (request.Role.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserWarehouses.Any(uw => uw.Role == request.Role.Value));
+			}
+
+			return query
+				.AsEnumerable()
+				.SelectMany(u =>
+				{
+					if (u.UserWarehouses.Any())
+					{
+						return u.UserWarehouses.Select(uw => new WarehouseDetailByUserResponse
+						{
+							UserId = u.Id,
+							Email = u.Email,
+							FullName = u.FullName,
+							WarehouseId = uw.WarehouseId,
+							WarehouseName = uw.Warehouse.Name,
+							WarehouseRole = uw.Role,
+							WarehouseLocationIds = uw.Warehouse.InventoryLocations
+								.Select(x => x.Id)
+								.ToList()
+						});
+					}
+
+					return new List<WarehouseDetailByUserResponse>();
+				})
+				.ToList();
+		}
+
 		public async Task<List<WarehouseDetailByUserResponse>> GetWarehouseDetailByUserAsync(Guid userId)
 		{
 			var user = await _userRepository.GetUserWithWarehousesAsync(userId);

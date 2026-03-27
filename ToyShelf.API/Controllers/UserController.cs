@@ -55,6 +55,16 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<PartnerDetailByUserResponse>.Ok(result);
 		}
 
+		[HttpGet("warehouse-users")]
+		[Authorize(Roles = "Admin")] 
+		public async Task<BaseResponse<List<WarehouseDetailByUserResponse>>> GetWarehouseUsers(
+			[FromQuery] GetWarehouseUsersRequest request)
+		{
+			var result = await _userService.GetWarehouseUsersAsync(request);
+			return BaseResponse<List<WarehouseDetailByUserResponse>>.Ok(result, "Get warehouse users successfully");
+		}
+
+
 		[HttpGet("warehouse-detail")]
 		public async Task<BaseResponse<List<WarehouseDetailByUserResponse>>> GetWarehouseDetailByUser(
 			[FromQuery] Guid userId)

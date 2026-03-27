@@ -82,5 +82,13 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(ar => ar.Role)
 				.FirstOrDefaultAsync(u => u.Id == userId);
 		}
+		public async Task<List<User>> GetUsersWithWarehousesAsync()
+		{
+			return await _context.Users
+				.Include(u => u.UserWarehouses)
+					.ThenInclude(uw => uw.Warehouse)
+						.ThenInclude(w => w.InventoryLocations)
+				.ToListAsync();
+		}
 	}
 }
