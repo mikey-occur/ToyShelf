@@ -121,7 +121,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode)
 		{
-			var order = await _orderRepository.GetOrderWithDetailsByIdAsync(orderCode);
+			var order = await _orderRepository.GetOrderWithDetailsByCodeAsync(orderCode);
 			if (order == null) throw new AppException($"Order not Exist.",404); ;
 			var response = new OrderDetailResponse
 			{
@@ -148,16 +148,18 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId)
+		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone)
 		{
-			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId);
+			
+			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, phone);
 
+			
 			var responseList = orders.Select(o => new OrderResponse
 			{
 				Id = o.Id,
+				OrderCode = o.OrderCode,
 				CustomerName = o.CustomerName,
 				CustomerPhone = o.CustomerPhone,
-				OrderCode = o.OrderCode,
 				TotalAmount = o.TotalAmount,
 				PaymentMethod = o.PaymentMethod,
 				Status = o.Status,

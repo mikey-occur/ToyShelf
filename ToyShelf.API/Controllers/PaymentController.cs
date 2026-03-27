@@ -78,17 +78,7 @@ namespace ToyShelf.API.Controllers
 				return StatusCode(500, new { message = "Internal server error. Please retry." });
 			}
 		}
-		/// <summary>
-		/// lấy detail order 
-		/// </summary>
-		[HttpGet("{ordercode}")]
-		public async Task<BaseResponse<OrderDetailResponse?>> GetById(long ordercode)
-		{
-			var result = await _orderService.GetOrderDetailsAsync(ordercode);
-
-			return BaseResponse<OrderDetailResponse?>
-				.Ok(result, "Order retrieved successfully");
-		}
+		
 
 		/// <summary>
 		/// Dành cho hàm checkPayment trên Frontend: Kiểm tra trạng thái thanh toán từ Database
@@ -146,28 +136,6 @@ namespace ToyShelf.API.Controllers
 			}
 		}
 
-		/// <summary>
-		/// Get list of orders filtered by StoreId or PartnerId.
-		/// </summary>
-		// ===== GET ORDERS =====
-		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrders([FromQuery] Guid? storeId, [FromQuery] Guid? partnerId)
-		{
-			var result = await _orderService.GetOrdersAsync(storeId, partnerId);
-
-			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
-		}
-
-		/// <summary>
-		/// Search Orders by Customer Phone.
-		/// </summary>
-		// ===== GET ORDERS BY PHONE =====
-		[HttpGet("search-by-phone")]
-		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrdersByPhone([FromQuery] string phone)
-		{
-			var result = await _orderService.GetOrdersByPhoneAsync(phone);
-
-			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
-		}
+	
 	}
 }

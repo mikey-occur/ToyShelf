@@ -10,9 +10,9 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IOrderRepository : IGenericRepository<Order>
 	{
 		Task<Order?> GetOrderWithItemsAndStoreAsync(long orderCode);
-		Task<Order?> GetOrderWithDetailsByIdAsync(long orderCode);
+		Task<Order?> GetOrderWithDetailsByCodeAsync(long orderCode);
 
-		Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId);
+		Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone);
 		Task<IEnumerable<Order>> GetOrdersByCustomerPhoneAsync(string phone);
 	}
 }
