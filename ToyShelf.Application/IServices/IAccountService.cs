@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Models.Account.Request;
 using ToyShelf.Application.Models.Account.Response;
+using ToyShelf.Application.Models.UserWarehouse.Request;
 
 namespace ToyShelf.Application.IServices
 {
@@ -13,6 +15,9 @@ namespace ToyShelf.Application.IServices
 		// ===== FLOW ACTIVATE =====
 		Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request);
 	    Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request, Guid partnerId, bool isPartnerAdmin);
+		Task<CreateAccountResponse> CreateWarehouseUserAsync(
+			CreateWarehouseUserRequest request,
+			ICurrentUser currentUser);
 		Task<ActivationOtpResponse> RequestActivateAccountAsync(string email);
 		Task<ActivateAccountResponse> ActivateAccountAndSetPasswordAsync(ActivateAccountRequest request);
 

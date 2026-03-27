@@ -9,6 +9,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Account.Request;
 using ToyShelf.Application.Models.Account.Response;
+using ToyShelf.Application.Models.UserWarehouse.Request;
 using ToyShelf.Application.Notifications;
 using ToyShelf.Application.Security;
 using ToyShelf.Domain.Entities;
@@ -140,6 +141,75 @@ namespace ToyShelf.Application.Services
 				FullName = user.FullName
 			};
 		}
+		public async Task<CreateAccountResponse> CreateWarehouseUserAsync(
+			CreateWarehouseUserRequest request,
+			ICurrentUser currentUser)
+		{
+			if (!currentUser.IsAdmin())
+				throw new ForbiddenException();
+
+			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
+				throw new AppException("Email already exists", 409);
+
+			var warehouse = await _unitOfWork.Repository<Warehouse>()
+				.GetByIdAsync(request.WarehouseId);
+
+			if (warehouse == null)
+				throw new AppException("Warehouse not found", 404);
+
+			// Create User
+			var user = new User
+			{
+				Id = Guid.NewGuid(),
+				Email = request.Email,
+				FullName = request.FullName,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _userRepository.AddAsync(user);
+
+			// Create Account
+			var account = new Account
+			{
+				UserId = user.Id,
+				Provider = AuthProvider.LOCAL,
+				IsFirstLogin = true,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			await _accountRepository.AddAsync(account);
+
+			// SYSTEM ROLE (Warehouse)
+			var warehouseRole = await _roleRepository.GetByNameAsync("Warehouse")
+				?? throw new AppException("Role Warehouse not found", 404);
+
+			await _unitOfWork.Repository<AccountRole>()
+				.AddAsync(new AccountRole
+				{
+					AccountId = account.Id,
+					RoleId = warehouseRole.Id
+				});
+
+			// BUSINESS ROLE (Manager / Shipper)
+			await _unitOfWork.Repository<UserWarehouse>()
+				.AddAsync(new UserWarehouse
+				{
+					Id = Guid.NewGuid(),
+					UserId = user.Id,
+					WarehouseId = request.WarehouseId,
+					Role = request.Role,
+					CreatedAt = DateTime.UtcNow
+				});
+
+			await _unitOfWork.SaveChangesAsync();
+
+			return new CreateAccountResponse
+			{
+				Email = user.Email,
+				FullName = user.FullName
+			};
+		}
+
 		public async Task<ActivationOtpResponse> RequestActivateAccountAsync(string email)
 		{
 			var account = await _accountRepository
