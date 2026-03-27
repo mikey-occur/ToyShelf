@@ -7,6 +7,7 @@ using ToyShelf.Application.Common.Extensions;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Account.Request;
 using ToyShelf.Application.Models.Account.Response;
+using ToyShelf.Application.Models.UserWarehouse.Request;
 
 namespace ToyShelf.API.Controllers
 {
@@ -44,6 +45,19 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<CreateAccountResponse>
 				.Ok(rs, "Account created successfully");
 		}
+
+		[HttpPost("activate/internal/warehouse")]
+		[Authorize(Roles = "Admin")]
+		public async Task<BaseResponse<CreateAccountResponse>> CreateWarehouseUser(
+			[FromBody] CreateWarehouseUserRequest request,
+			[FromServices] ICurrentUser currentUser)
+		{
+			var rs = await _accountService.CreateWarehouseUserAsync(request, currentUser);
+
+			return BaseResponse<CreateAccountResponse>
+				.Ok(rs, "Warehouse user created successfully");
+		}
+
 
 		[HttpPost("activate/request")]
 		public async Task<BaseResponse<ActivationOtpResponse>> RequestActivateAccount([FromQuery] string email)
