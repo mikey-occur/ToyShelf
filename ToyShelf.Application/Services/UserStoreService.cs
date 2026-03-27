@@ -26,6 +26,7 @@ namespace ToyShelf.Application.Services
 			return userStores.Select(x => new MyStoreResponse
 			{
 				StoreId = x.StoreId,
+				StoreLocationId = x.Store.InventoryLocations.FirstOrDefault()?.Id ?? Guid.Empty,
 				StoreName = x.Store.Name,
 				StoreCode = x.Store.Code,
 				StoreRole = x.StoreRole

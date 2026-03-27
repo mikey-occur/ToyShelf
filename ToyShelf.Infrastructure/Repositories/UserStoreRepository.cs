@@ -18,6 +18,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.UserStores
 				.Include(x => x.Store)
+					.ThenInclude(x => x.InventoryLocations)
 				.Where(x => x.UserId == userId && x.IsActive)
 				.ToListAsync();
 		}
