@@ -16,27 +16,32 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId)
+		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone)
 		{
+			
 			var query = _context.Orders
 				.Include(o => o.Store)
 				.Include(o => o.Staff)
-				.Include(o => o.OrderItems) 
+				.Include(o => o.OrderItems)
+					.ThenInclude(oi => oi.ProductColor) 
 				.AsQueryable();
-			
+
 			if (storeId.HasValue)
 			{
 				query = query.Where(o => o.StoreId == storeId.Value);
 			}
 
-		
 			if (partnerId.HasValue)
 			{
-			
 				query = query.Where(o => o.Store != null && o.Store.PartnerId == partnerId.Value);
 			}
 
-			
+			if (!string.IsNullOrWhiteSpace(phone))
+			{
+				var cleanPhone = phone.Trim();
+				query = query.Where(o => o.CustomerPhone.Contains(cleanPhone));
+			}
+
 			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 		}
 
@@ -51,7 +56,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
-		public async Task<Order?> GetOrderWithDetailsByIdAsync(long orderCode)
+		public async Task<Order?> GetOrderWithDetailsByCodeAsync(long orderCode)
 		{
 			return await _context.Orders
 				.Include(o => o.Store)
