@@ -28,5 +28,14 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.UserStores
 				.FirstOrDefaultAsync(x => x.UserId == userId && x.IsActive);
 		}
+
+		public async Task<UserStore?> GetActiveAsync(Guid userId, Guid storeId)
+		{
+			return await _context.UserStores
+				.FirstOrDefaultAsync(x =>
+					x.UserId == userId &&
+					x.StoreId == storeId &&
+					x.IsActive);
+		}
 	}
 }
