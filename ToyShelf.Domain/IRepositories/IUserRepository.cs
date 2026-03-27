@@ -15,5 +15,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<User?> GetUserWithWarehousesAsync(Guid userId);
 		Task<User?> GetByEmailAsync(string email);
 		Task<User?> GetPartnerAdminByPartnerIdAsync(Guid partnerId);
+		Task<User?> GetUserWithRolesAsync(Guid userId);
 	}
 }

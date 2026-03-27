@@ -170,7 +170,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			return MapToProfile(user);
@@ -180,7 +180,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<UserProfileResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			user.FullName = request.FullName;
@@ -197,7 +197,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task DisableUserAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			if (!user.IsActive)
@@ -212,7 +212,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task RestoreUserAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			if (user.IsActive)
@@ -235,7 +235,12 @@ namespace ToyShelf.Application.Services
 				FullName = user.FullName,
 				AvatarUrl = user.AvatarUrl,
 				IsActive = user.IsActive,
-				CreatedAt = user.CreatedAt
+				CreatedAt = user.CreatedAt,
+				Roles = user.Accounts
+					.SelectMany(a => a.AccountRoles)     //  flatten accounts
+					.Select(ar => ar.Role.Name)          //  lấy role name
+					.Distinct()                          // tránh duplicate
+					.ToList()
 			};
 		}
 	}
