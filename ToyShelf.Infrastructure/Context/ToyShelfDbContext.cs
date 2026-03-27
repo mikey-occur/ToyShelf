@@ -1008,13 +1008,16 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Priority)
 					  .IsRequired();
 
-				// Mỗi Tier có Priority duy nhất
+				
 				entity.HasIndex(e => e.Priority)
 					  .IsUnique();
 
-				// Tên Tier cũng nên unique
+				
 				entity.HasIndex(e => e.Name)
 					  .IsUnique();
+
+				entity.Property(e => e.MaxShelvesPerStore)
+		               .IsRequired(false);
 
 				entity.HasMany(e => e.Partners)
 					  .WithOne(s => s.PartnerTier)
