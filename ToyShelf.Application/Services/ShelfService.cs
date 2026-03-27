@@ -20,23 +20,25 @@ namespace ToyShelf.Application.Services
         private readonly IPartnerRepository _partnerRepository;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTime;
-
-        public ShelfService(
+		private readonly IStoreRepository _storeRepo;
+		public ShelfService(
             IShelfRepository shelfRepository,
-            IStoreRepository storeRepository,
-            IPartnerRepository partnerRepository,
-            IUnitOfWork unitOfWork,
-            IDateTimeProvider dateTime)
-        {
-            _shelfRepository = shelfRepository;
-            _storeRepository = storeRepository;
-            _partnerRepository = partnerRepository;
-            _unitOfWork = unitOfWork;
-            _dateTime = dateTime;
-        }
+			IStoreRepository storeRepository,
+			IPartnerRepository partnerRepository,
+			IUnitOfWork unitOfWork,
+			IDateTimeProvider dateTime,
+			IStoreRepository storeRepo)
+		{
+			_shelfRepository = shelfRepository;
+			_storeRepository = storeRepository;
+			_partnerRepository = partnerRepository;
+			_unitOfWork = unitOfWork;
+			_dateTime = dateTime;
+			_storeRepo = storeRepo;
+		}
 
-        // ===== CREATE =====
-        public async Task<ShelfResponse> CreateAsync(CreateShelfRequest request)
+		// ===== CREATE =====
+		public async Task<ShelfResponse> CreateAsync(CreateShelfRequest request)
         {
             if (request.PartnerId.HasValue)
             {
@@ -176,8 +178,39 @@ namespace ToyShelf.Application.Services
             return MapToResponse(shelf);
         }
 
-        // ===== MAPPER =====
-        private static ShelfResponse MapToResponse(Shelf shelf)
+		/// <summary>
+		/// Hàm kiểm tra xem cửa hàng đã đạt giới hạn số lượng tủ theo hạng đối tác hay chưa. Nếu đã đạt, sẽ ném ra lỗi yêu cầu nâng cấp hạng đối tác.
+		/// </summary>
+		/// <param name="storeId"></param>
+		/// <returns></returns>
+		/// <exception cref="AppException"></exception>
+		private async Task ValidateStoreCapacityAsync(Guid storeId)
+		{
+			
+			var store = await _storeRepo.GetStoreWithTierAsync(storeId)
+				?? throw new AppException("Không tìm thấy Cửa hàng", 404);
+
+			var maxLimit = store.Partner?.PartnerTier?.MaxShelvesPerStore;
+
+			
+			if (!maxLimit.HasValue) return;
+
+			
+			var currentCount = await _shelfRepository.CountActiveShelvesByStoreAsync(storeId);
+
+			
+			if (currentCount >= maxLimit.Value)
+			{
+				var tierName = store.Partner?.PartnerTier?.Name ?? "N/A";
+				throw new AppException(
+					$"Store shelf '{store.Name}' have reach limit ({maxLimit.Value} shelf) for tier [{tierName}]. " +
+					$"Please Updeate partnertier !", 400);
+			}
+		}
+
+
+		// ===== MAPPER =====
+		private static ShelfResponse MapToResponse(Shelf shelf)
         {
             return new ShelfResponse
             {
