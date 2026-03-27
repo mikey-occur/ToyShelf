@@ -48,7 +48,7 @@ namespace ToyShelf.API.Controllers
 
 
 		[HttpPatch("{id}/accept")]
-		[Authorize(Roles = "Shipper")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<ActionResponse> Accept(Guid id, [FromServices] ICurrentUser currentUser)
 		{
 			await _service.AcceptAsync(id, currentUser);
@@ -57,7 +57,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPatch("{id}/reject")]
-		[Authorize(Roles = "Shipper")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<ActionResponse> Reject(Guid id, [FromServices] ICurrentUser currentUser)
 		{
 			await _service.RejectAsync(id, currentUser);
@@ -66,7 +66,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("my")]
-		[Authorize(Roles = "Shipper")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetMy(
 			[FromServices] ICurrentUser currentUser)
 		{

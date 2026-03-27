@@ -14,5 +14,6 @@ namespace ToyShelf.Application.Models.User.Response
 		public string? AvatarUrl { get; set; }
 		public bool IsActive { get; set; }
 		public DateTime CreatedAt { get; set; }
+		public List<string> Roles { get; set; } = new();
 	}
 }

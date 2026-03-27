@@ -127,9 +127,96 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<List<WarehouseDetailByUserResponse>> GetWarehouseUsersAsync(
+			GetWarehouseUsersRequest request)
+		{
+			var users = await _userRepository.GetUsersWithWarehousesAsync();
+
+			var query = users.AsQueryable();
+
+			// Filter theo Warehouse
+			if (request.WarehouseId.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserWarehouses.Any(uw => uw.WarehouseId == request.WarehouseId.Value));
+			}
+
+			// Filter theo Role
+			if (request.Role.HasValue)
+			{
+				query = query.Where(u =>
+					u.UserWarehouses.Any(uw => uw.Role == request.Role.Value));
+			}
+
+			return query
+				.AsEnumerable()
+				.SelectMany(u =>
+				{
+					if (u.UserWarehouses.Any())
+					{
+						return u.UserWarehouses.Select(uw => new WarehouseDetailByUserResponse
+						{
+							UserId = u.Id,
+							Email = u.Email,
+							FullName = u.FullName,
+							WarehouseId = uw.WarehouseId,
+							WarehouseName = uw.Warehouse.Name,
+							WarehouseRole = uw.Role,
+							WarehouseLocationIds = uw.Warehouse.InventoryLocations
+								.Select(x => x.Id)
+								.ToList()
+						});
+					}
+
+					return new List<WarehouseDetailByUserResponse>();
+				})
+				.ToList();
+		}
+
+		public async Task<List<WarehouseDetailByUserResponse>> GetWarehouseDetailByUserAsync(Guid userId)
+		{
+			var user = await _userRepository.GetUserWithWarehousesAsync(userId);
+
+			if (user == null)
+				throw new Exception("User not found");
+
+			// Không có warehouse
+			if (!user.UserWarehouses.Any())
+			{
+				return new List<WarehouseDetailByUserResponse>
+		{
+			new WarehouseDetailByUserResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				WarehouseId = null,
+				WarehouseLocationIds = new List<Guid>(),
+				WarehouseName = null,
+				WarehouseRole = null
+			}
+		};
+			}
+
+			return user.UserWarehouses.Select(uw => new WarehouseDetailByUserResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				WarehouseId = uw.WarehouseId,
+				WarehouseLocationIds = uw.Warehouse.InventoryLocations
+					.Select(x => x.Id)
+					.ToList(),
+				WarehouseName = uw.Warehouse.Name,
+				WarehouseRole = uw.Role
+
+			}).ToList();
+		}
+
+
 		public async Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			return MapToProfile(user);
@@ -139,7 +226,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<UserProfileResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			user.FullName = request.FullName;
@@ -156,7 +243,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task DisableUserAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			if (!user.IsActive)
@@ -171,7 +258,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task RestoreUserAsync(Guid userId)
 		{
-			var user = await _userRepository.GetByIdAsync(userId)
+			var user = await _userRepository.GetUserWithRolesAsync(userId)
 				?? throw new Exception("User not found");
 
 			if (user.IsActive)
@@ -194,7 +281,12 @@ namespace ToyShelf.Application.Services
 				FullName = user.FullName,
 				AvatarUrl = user.AvatarUrl,
 				IsActive = user.IsActive,
-				CreatedAt = user.CreatedAt
+				CreatedAt = user.CreatedAt,
+				Roles = user.Accounts
+					.SelectMany(a => a.AccountRoles)     //  flatten accounts
+					.Select(ar => ar.Role.Name)          //  lấy role name
+					.Distinct()                          // tránh duplicate
+					.ToList()
 			};
 		}
 	}

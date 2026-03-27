@@ -31,15 +31,15 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPost("activate/internal/partner")]
-		[Authorize(Roles = "PartnerAdmin")]
-		public async Task<BaseResponse<CreateAccountResponse>>CreateAccountPartner(
-		[FromBody] CreatePartnerUserRequest request,
-		[FromServices] ICurrentUser currentUser)
+		[Authorize(Roles = "PartnerAdmin,Partner")]
+		public async Task<BaseResponse<CreateAccountResponse>> CreateAccountPartner(
+			[FromBody] CreatePartnerUserRequest request,
+			[FromServices] ICurrentUser currentUser)
 		{
 			var rs = await _accountService.CreatePartnerUserAsync(
 				request,
 				currentUser.PartnerId!.Value,
-				currentUser.IsPartnerAdmin()
+				currentUser
 			);
 
 			return BaseResponse<CreateAccountResponse>

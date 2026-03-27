@@ -27,6 +27,7 @@ namespace ToyShelf.Application.Services
 		private readonly IPasswordResetOtpRepository _otpRepo;
 		private readonly IEmailService _emailService;
 		private readonly IRoleRepository _roleRepository;
+		private readonly IUserStoreRepository _userStoreRepository;
 		public AccountService(IAccountRepository accountRepository, 
 							  IUserRepository userRepository, 
 							  IPasswordHasher passwordHasher, 
@@ -34,7 +35,8 @@ namespace ToyShelf.Application.Services
 							  IUnitOfWork unitOfWork,
 							  IPasswordResetOtpRepository otpRepo,
 							  IEmailService emailService,
-							  IRoleRepository roleRepository)
+							  IRoleRepository roleRepository,
+							  IUserStoreRepository userStoreRepository)
 		{ 
 			_accountRepository = accountRepository;
 			_userRepository = userRepository;
@@ -44,6 +46,7 @@ namespace ToyShelf.Application.Services
 			_otpRepo = otpRepo;
 			_emailService = emailService;
 			_roleRepository = roleRepository;
+			_userStoreRepository = userStoreRepository;
 		}
 
 		// ================= FLOW ACTIVATE =================
@@ -91,13 +94,24 @@ namespace ToyShelf.Application.Services
 				FullName = user.FullName
 			};
 		}
+
 		public async Task<CreateAccountResponse> CreatePartnerUserAsync(
 			CreatePartnerUserRequest request,
 			Guid partnerId,
-			bool isPartnerAdmin)
+			ICurrentUser currentUser)
 		{
+			var isPartnerAdmin = currentUser.IsPartnerAdmin();
+
+			UserStore? managerStore = null;
+
 			if (!isPartnerAdmin)
-				throw new ForbiddenException();
+			{
+				managerStore = await _userStoreRepository
+					.GetByUserIdAsync(currentUser.UserId);
+
+				if (managerStore == null || managerStore.StoreRole != StoreRole.Manager)
+					throw new ForbiddenException();
+			}
 
 			if (await _accountRepository.ExistsLocalAccountByEmailAsync(request.Email))
 				throw new AppException("Email already exists", 409);
@@ -133,6 +147,17 @@ namespace ToyShelf.Application.Services
 					RoleId = partnerRoleId.Id,
 				});
 
+			if (!isPartnerAdmin && managerStore != null)
+			{
+				await _userStoreRepository.AddAsync(new UserStore
+				{
+					UserId = user.Id,
+					StoreId = managerStore.StoreId,
+					StoreRole = StoreRole.Staff, // default
+					IsActive = true
+				});
+			}
+
 			await _unitOfWork.SaveChangesAsync();
 
 			return new CreateAccountResponse
@@ -141,6 +166,8 @@ namespace ToyShelf.Application.Services
 				FullName = user.FullName
 			};
 		}
+
+
 		public async Task<CreateAccountResponse> CreateWarehouseUserAsync(
 			CreateWarehouseUserRequest request,
 			ICurrentUser currentUser)

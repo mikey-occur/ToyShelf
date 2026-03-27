@@ -11,5 +11,6 @@ namespace ToyShelf.Domain.IRepositories
 	{
 		Task<IEnumerable<UserStore>> GetUserStoresWithStoreAsync(Guid userId);
 		Task<UserStore?> GetByUserIdAsync(Guid userId);
+		Task<UserStore?> GetActiveAsync(Guid userId, Guid storeId);
 	}
 }
