@@ -46,6 +46,7 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 				  .Where(x => x.InventoryLocationId == locationId)
 					.Include(x => x.ProductColor)
 						.ThenInclude(pc => pc.Product)
+							.ThenInclude(p => p.ProductCategory)
 					.Include(x => x.ProductColor)
 						.ThenInclude(pc => pc.Color)
 					.Include(x => x.InventoryLocation)
@@ -68,6 +69,7 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 		return await _context.Inventories
 			.Include(i => i.ProductColor)
 				.ThenInclude(pc => pc.Product)
+					.ThenInclude(p => p.ProductCategory)
 			.Include(i => i.ProductColor)
 				.ThenInclude(pc => pc.Color)
 			.Include(i => i.InventoryLocation)
@@ -94,6 +96,7 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 		var query = _context.Inventories
 			.Include(i => i.ProductColor)
 				.ThenInclude(pc => pc.Product)
+					.ThenInclude(p => p.ProductCategory)
 			.Include(i => i.ProductColor)
 				.ThenInclude(pc => pc.Color)
 			.Include(i => i.InventoryLocation)
