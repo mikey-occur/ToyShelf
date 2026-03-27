@@ -37,5 +37,10 @@ namespace ToyShelf.Infrastructure.Repositories
             return (items, totalCount);
         }
 
-    }
+		public async Task<int> CountActiveShelvesByStoreAsync(Guid storeId)
+		{
+			return await _context.Shelves
+				.CountAsync(s => s.StoreId == storeId && s.Status == ShelfStatus.InUse);
+		}
+	}
 }

@@ -10,5 +10,7 @@ namespace ToyShelf.Application.Models.PartnerTier.Request
 	{
 		public string Name { get; set; } = null!;
 		public int Priority { get; set; }
+
+		public int? MaxShelvesPerStore { get; set; }
 	}
 }

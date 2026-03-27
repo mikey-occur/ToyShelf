@@ -17,5 +17,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Store?> GetByIdWithDetailsAsync(Guid id);
 		Task<int> GetMaxSequenceByPartnerAsync(Guid partnerId);
 		Task<bool> ExistsByCodeInPartnerAsync(string code, Guid partnerId);
+		Task<Store?> GetStoreWithTierAsync(Guid storeId);
 	}
 }

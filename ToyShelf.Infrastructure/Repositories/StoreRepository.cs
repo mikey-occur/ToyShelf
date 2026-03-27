@@ -91,5 +91,13 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Stores
 				.AnyAsync(s => s.Code == code && s.PartnerId == partnerId);
 		}
+
+		public async Task<Store?> GetStoreWithTierAsync(Guid storeId)
+		{
+			return await _context.Stores
+				.Include(s => s.Partner)
+					.ThenInclude(p => p.PartnerTier)
+				.FirstOrDefaultAsync(s => s.Id == storeId);
+		}
 	}
 }

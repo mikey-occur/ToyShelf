@@ -13,5 +13,8 @@ namespace ToyShelf.Domain.IRepositories
        int pageNumber = 1,
        int pageSize = 10,
        ShelfStatus? status = null);
-    }
+
+        Task<int> CountActiveShelvesByStoreAsync(Guid storeId);
+
+	}
 }

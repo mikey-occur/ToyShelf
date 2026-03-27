@@ -26,16 +26,17 @@ namespace ToyShelf.Application.Services
 		{
 		
 			if (await _repo.ExistsByNameAsync(request.Name))
-				throw new InvalidOperationException($"Tier Name '{request.Name}' already exists.");
+				throw new AppException($"Tier Name '{request.Name}' already exists.", 400);
 
 			if (await _repo.ExistsByPriorityAsync(request.Priority))
-				throw new InvalidOperationException($"Priority '{request.Priority}' is already assigned to another tier.");
+				throw new AppException($"Priority '{request.Priority}' is already assigned to another tier.", 400);
 
 			var tier = new PartnerTier
 			{
 				Id = Guid.NewGuid(),
 				Name = request.Name.Trim(),
-				Priority = request.Priority
+				Priority = request.Priority,
+				MaxShelvesPerStore = request.MaxShelvesPerStore
 			};
 
 			await _repo.AddAsync(tier);
@@ -50,7 +51,7 @@ namespace ToyShelf.Application.Services
 		
 			bool inUse = await _repo.IsTierInUseAsync(id);
 			if (inUse)
-				throw new InvalidOperationException("Cannot delete this Tier because it is assigned to existing Partners.");
+				throw new AppException("Cannot delete this Tier because it is assigned to existing Partners.", 400);
 
 			_repo.Remove(tier);
 			await _unitOfWork.SaveChangesAsync();
@@ -73,14 +74,17 @@ namespace ToyShelf.Application.Services
 		{
 			var tier = await _repo.GetByIdAsync(id) ?? throw new AppException("Partner Tier not found", 404);
 
-			if (tier.Name != request.Name && await _repo.ExistsByNameAsync(request.Name))
-				throw new InvalidOperationException($"Tier Name '{request.Name}' already exists.");
+			if (tier.Name != request.Name && await _repo.ExistsByNameAsync(request.Name, id))
+				throw new AppException($"Tier Name '{request.Name}' already exists.", 400);
 
-			if (tier.Priority != request.Priority && await _repo.ExistsByPriorityAsync(request.Priority))
-				throw new InvalidOperationException($"Priority '{request.Priority}' is already assigned.");
+			if (tier.Priority != request.Priority && await _repo.ExistsByPriorityAsync(request.Priority, id))
+				throw new AppException($"Priority '{request.Priority}' is already assigned.", 400);
+
+			tier.MaxShelvesPerStore = request.MaxShelvesPerStore;
 
 			tier.Name = request.Name.Trim();
 			tier.Priority = request.Priority;
+			tier.MaxShelvesPerStore = request.MaxShelvesPerStore;
 
 			_repo.Update(tier);
 			await _unitOfWork.SaveChangesAsync();
@@ -93,7 +97,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = tier.Id,
 				Name = tier.Name,
-				Priority = tier.Priority
+				Priority = tier.Priority,
+				MaxShelvesPerStore = tier.MaxShelvesPerStore
 			};
 		}
 	}
