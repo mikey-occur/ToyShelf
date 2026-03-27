@@ -282,8 +282,8 @@ namespace ToyShelf.Application.Services
 			if (shipment == null)
 				throw new AppException("Shipment not found", 404);
 
-			if (shipment.Status != ShipmentStatus.Shipping)
-				throw new AppException("Shipment not shipping", 400);
+			if (shipment.Status != ShipmentStatus.Delivered)
+				throw new AppException("Shipment is not delivered yet", 400);
 
 			if (request.Items == null || !request.Items.Any())
 				throw new AppException("Invalid request items", 400);
