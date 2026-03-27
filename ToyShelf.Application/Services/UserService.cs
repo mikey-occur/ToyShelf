@@ -127,6 +127,47 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<List<WarehouseDetailByUserResponse>> GetWarehouseDetailByUserAsync(Guid userId)
+		{
+			var user = await _userRepository.GetUserWithWarehousesAsync(userId);
+
+			if (user == null)
+				throw new Exception("User not found");
+
+			// Không có warehouse
+			if (!user.UserWarehouses.Any())
+			{
+				return new List<WarehouseDetailByUserResponse>
+		{
+			new WarehouseDetailByUserResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				WarehouseId = null,
+				WarehouseLocationIds = new List<Guid>(),
+				WarehouseName = null,
+				WarehouseRole = null
+			}
+		};
+			}
+
+			return user.UserWarehouses.Select(uw => new WarehouseDetailByUserResponse
+			{
+				UserId = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				WarehouseId = uw.WarehouseId,
+				WarehouseLocationIds = uw.Warehouse.InventoryLocations
+					.Select(x => x.Id)
+					.ToList(),
+				WarehouseName = uw.Warehouse.Name,
+				WarehouseRole = uw.Role
+
+			}).ToList();
+		}
+
+
 		public async Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId)
 		{
 			var user = await _userRepository.GetByIdAsync(userId)

@@ -55,6 +55,14 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<PartnerDetailByUserResponse>.Ok(result);
 		}
 
+		[HttpGet("warehouse-detail")]
+		public async Task<BaseResponse<List<WarehouseDetailByUserResponse>>> GetWarehouseDetailByUser(
+			[FromQuery] Guid userId)
+		{
+			var result = await _userService.GetWarehouseDetailByUserAsync(userId);
+			return BaseResponse<List<WarehouseDetailByUserResponse>>.Ok(result);
+		}
+
 		[HttpGet("profile")]
 		[Authorize]
 		public async Task<BaseResponse<UserProfileResponse>> GetProfile([FromServices] ICurrentUser currentUser)
