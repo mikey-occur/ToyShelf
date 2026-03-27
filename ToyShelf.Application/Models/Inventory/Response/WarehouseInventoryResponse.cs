@@ -18,6 +18,10 @@ namespace ToyShelf.Application.Models.Inventory.Response
 		public Guid ProductId { get; set; }
 		public string ProductSKU { get; set; } = string.Empty;
 		public string ProductName { get; set; } = null!;
+
+		public Guid ProductCategoryId { get; set; }
+		public string ProductCategoryName { get; set; } = string.Empty;
+
 		public string? Description { get; set; }
 		public string? Brand { get; set; }
 		public string? Material { get; set; }
@@ -32,6 +36,7 @@ namespace ToyShelf.Application.Models.Inventory.Response
 		public Guid ProductColorId { get; set; }
 		public string ProductColorSku { get; set; } = null!;
 		public string ColorName { get; set; } = null!;
+		public string HexCode { get; set; } = null!;
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }
 		public decimal ProductColorPrice { get; set; }
