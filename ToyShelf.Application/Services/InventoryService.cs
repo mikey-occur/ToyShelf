@@ -143,19 +143,25 @@ namespace ToyShelf.Application.Services
 				.Select(productGroup => new ProductInventoryItem
 				{
 					ProductId = productGroup.Key,
+					ProductSKU = productGroup.First().ProductColor.Product.SKU,
 					ProductName = productGroup.First().ProductColor.Product.Name,
 					Description = productGroup.First().ProductColor.Product.Description,
 					Brand = productGroup.First().ProductColor.Product.Brand,
 					Material = productGroup.First().ProductColor.Product.Material,
 					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
 					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
+					BasePrice = productGroup.First().ProductColor.Product.BasePrice,
 
 					Colors = productGroup
 						.GroupBy(i => i.ProductColorId)
 						.Select(colorGroup => new ColorInventoryItem
 						{
 							ProductColorId = colorGroup.Key,
+							ProductColorSku = colorGroup.First().ProductColor.Sku,
 							ColorName = colorGroup.First().ProductColor.Color.Name,
+							ImageUrl = colorGroup.First().ProductColor.ImageUrl,
+							Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
+							ProductColorPrice = colorGroup.First().ProductColor.Price,
 							Quantity = colorGroup.Sum(x => x.Quantity)
 						})
 						.ToList()
@@ -197,19 +203,25 @@ namespace ToyShelf.Application.Services
 				.Select(productGroup => new ProductInventoryOverviewItem
 				{
 					ProductId = productGroup.Key,
+					ProductSKU = productGroup.First().ProductColor.Product.SKU,
 					ProductName = productGroup.First().ProductColor.Product.Name,
 					Description = productGroup.First().ProductColor.Product.Description,
 					Brand = productGroup.First().ProductColor.Product.Brand,
 					Material = productGroup.First().ProductColor.Product.Material,
 					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
 					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
+					BasePrice = productGroup.First().ProductColor.Product.BasePrice,
 					Colors = productGroup
 						.Where(i => i.ProductColor.Color != null)
 						.GroupBy(i => i.ProductColorId)
 						.Select(colorGroup => new ColorInventoryOverviewItem
 						{
 							ProductColorId = colorGroup.Key,
+							ProductColorSku = colorGroup.First().ProductColor.Sku,
 							ColorName = colorGroup.First().ProductColor.Color.Name,
+							ImageUrl = colorGroup.First().ProductColor.ImageUrl,
+							Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
+							ProductColorPrice = colorGroup.First().ProductColor.Price,
 							Available = colorGroup.Where(x => x.Status == InventoryStatus.Available).Sum(x => x.Quantity),
 							InTransit = colorGroup.Where(x => x.Status == InventoryStatus.InTransit).Sum(x => x.Quantity),
 							Damaged = colorGroup.Where(x => x.Status == InventoryStatus.Damaged).Sum(x => x.Quantity),
@@ -256,12 +268,14 @@ namespace ToyShelf.Application.Services
 								return new GlobalProductInventoryItem
 								{
 									ProductId = product.Id,
+									ProductSKU = product.SKU,
 									ProductName = product.Name,
 									Description = product.Description,
 									Brand = product.Brand,
 									Material = product.Material,
 									OriginCountry = product.OriginCountry,
 									AgeRange = product.AgeRange,
+									BasePrice = product.BasePrice,
 									Colors = productGroup
 										.Where(x => x.ProductColor.Color != null)
 										.GroupBy(i => i.ProductColorId)
@@ -271,8 +285,12 @@ namespace ToyShelf.Application.Services
 											return new GlobalColorInventoryItem
 											{
 												ProductColorId = colorGroup.Key,
+												ProductColorSku = colorGroup.First().ProductColor.Sku,
 												ColorId = color.Id,
 												ColorName = color.Name,
+												ImageUrl = colorGroup.First().ProductColor.ImageUrl,
+												Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
+												ProductColorPrice = colorGroup.First().ProductColor.Price,
 												Available = colorGroup
 													.Where(x => x.Status == InventoryStatus.Available)
 													.Sum(x => x.Quantity),
