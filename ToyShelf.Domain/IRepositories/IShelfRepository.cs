@@ -9,12 +9,9 @@ namespace ToyShelf.Domain.IRepositories
 {
     public interface IShelfRepository : IGenericRepository<Shelf>
     {
-        Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
-       int pageNumber = 1,
-       int pageSize = 10,
-       ShelfStatus? status = null);
-
-        Task<int> CountActiveShelvesByStoreAsync(Guid storeId);
+		Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(int pageNumber = 1,int pageSize = 10,ShelfStatus? status = null,Guid? partnerId = null, Guid? storeId = null);
+    	Task<int> CountActiveShelvesByStoreAsync(Guid storeId);
+	    Task<Shelf?> GetByIdWithDetailsAsync(Guid id);
 
 	}
 }

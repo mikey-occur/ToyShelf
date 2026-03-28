@@ -19,25 +19,29 @@ namespace ToyShelf.API.Controllers
             _shelfService = shelfService;
         }
 
-        // ===== GET PAGINATED =====
-        /// <summary>
-        /// Get shelves with pagination and optional status filter.
-        /// </summary>
-        [HttpGet]
-        public async Task<BaseResponse<PaginatedResult<ShelfResponse>>> GetPaginated(
-            [FromQuery] int pageNumber = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? status = null)
-        {
-            var result = await _shelfService.GetPaginatedAsync(pageNumber, pageSize, status);
-            return BaseResponse<PaginatedResult<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
-        }
+		// ===== GET PAGINATED =====
+		/// <summary>
+		/// Get shelves with pagination and filters (status, partner, store).
+		/// </summary>
+		[HttpGet]
+		public async Task<BaseResponse<PaginatedResult<ShelfResponse>>> GetPaginated(
+			[FromQuery] int pageNumber = 1,
+			[FromQuery] int pageSize = 10,
+			[FromQuery] string? status = null,
+			[FromQuery] Guid? partnerId = null, 
+			[FromQuery] Guid? storeId = null)   
+		{
+			// Truyền tất cả tham số xuống Service xử lý
+			var result = await _shelfService.GetPaginatedAsync(pageNumber, pageSize, status, partnerId, storeId);
 
-        // ===== CREATE =====
-        /// <summary>
-        /// Create a new shelf.
-        /// </summary>
-        [HttpPost]
+			return BaseResponse<PaginatedResult<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
+		}
+
+		// ===== CREATE =====
+		/// <summary>
+		/// Create a new shelf.
+		/// </summary>
+		[HttpPost]
         public async Task<BaseResponse<ShelfResponse>> Create([FromBody] CreateShelfRequest request)
         {
             var result = await _shelfService.CreateAsync(request);
