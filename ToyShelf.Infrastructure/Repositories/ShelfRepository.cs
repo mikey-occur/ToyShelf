@@ -16,31 +16,52 @@ namespace ToyShelf.Infrastructure.Repositories
         {
         }
 
-        public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
-       int pageNumber = 1,
-       int pageSize = 10,
-       ShelfStatus? status = null)
-        {
-            var query = _context.Shelves.AsQueryable();
+		public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
+		 int pageNumber = 1,
+		 int pageSize = 10,
+		 ShelfStatus? status = null,
+		 Guid? partnerId = null,    
+		 Guid? storeId = null)      
+		{
+			
+			var query = _context.Shelves
+				.Include(s => s.ShelfType)
+					.ThenInclude(st => st.ShelfTypeLevels)
+				.AsQueryable();
 
-            if (status.HasValue)
-                query = query.Where(p => p.Status == status);
+		
+			if (status.HasValue)
+				query = query.Where(s => s.Status == status.Value);
+			if (partnerId.HasValue && partnerId != Guid.Empty)
+				query = query.Where(s => s.PartnerId == partnerId.Value);
+			if (storeId.HasValue && storeId != Guid.Empty)
+				query = query.Where(s => s.StoreId == storeId.Value);
 
-            var totalCount = await query.CountAsync();
-       
-            var items = await query
-                .OrderByDescending(p => p.AssignedAt)
-                .Skip((pageNumber - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
+			
+			var totalCount = await query.CountAsync();
 
-            return (items, totalCount);
-        }
+		
+			var items = await query
+				.OrderByDescending(s => s.AssignedAt) 
+				.Skip((pageNumber - 1) * pageSize)
+				.Take(pageSize)
+				.ToListAsync();
+
+			return (items, totalCount);
+		}
 
 		public async Task<int> CountActiveShelvesByStoreAsync(Guid storeId)
 		{
 			return await _context.Shelves
 				.CountAsync(s => s.StoreId == storeId && s.Status == ShelfStatus.InUse);
+		}
+
+		public async Task<Shelf?> GetByIdWithDetailsAsync(Guid id)
+		{
+			return await _context.Shelves
+				.Include(s => s.ShelfType) 
+					.ThenInclude(st => st.ShelfTypeLevels) 
+				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 	}
 }

@@ -30,11 +30,14 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<Warehouse> Warehouses { get; set; }
 
 		public DbSet<Shelf> Shelves { get; set; }
+		public DbSet<ShelfType> ShelfTypes { get; set; }
+		public DbSet<ShelfTypeLevel> shelfTypeLevels { get; set; }
 
 		public DbSet<Product> Products { get; set; }
 		public DbSet<ProductCategory> ProductCategories { get; set; }
 		public DbSet<ProductColor> ProductColors { get; set; }
 		public DbSet<Color> Colors { get; set; }
+
 		public DbSet<CommissionTable> CommissionTables { get; set; }
 		public DbSet<CommissionTableApply> CommissionTableApplies { get; set; }
 		public DbSet<CommissionItemCategory> CommissionItemCategories { get; set; }
@@ -1114,9 +1117,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(50);
 
-				entity.Property(e => e.Level)
-					  .IsRequired();
-
 				entity.Property(e => e.Status)
 					  .IsRequired()
 					  .HasConversion<string>() 
@@ -1139,8 +1139,67 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.PartnerId)
 					  .HasConstraintName("FK_Shelf_Partner");
 
+				entity.HasOne(e => e.ShelfType)
+					  .WithMany(st => st.Shelves)
+					  .HasForeignKey(e => e.ShelfTypeId)
+					  .HasConstraintName("FK_Shelf_ShelfType");
+
 				entity.HasIndex(e => e.Code)
 					  .IsUnique();
+			});
+
+			// ================== ShelfType ==================
+			modelBuilder.Entity<ShelfType>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(255); 
+
+				entity.Property(e => e.Description)
+					  .HasMaxLength(1000);
+
+				entity.Property(e => e.ImageUrl)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.SuitableProductCategoryTypes)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.DisplayGuideline)
+					  .HasMaxLength(1000);
+
+				entity.Property(e => e.IsActive)
+					  .IsRequired()
+					  .HasDefaultValue(true);
+			});
+
+			// ================== ShelfTypeLevel ==================
+			modelBuilder.Entity<ShelfTypeLevel>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Name)
+					  .IsRequired()
+					  .HasMaxLength(100);
+
+				entity.Property(e => e.SuitableProductCategoryTypes)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.DisplayGuideline)
+					  .HasMaxLength(1000);
+
+				entity.HasOne(e => e.ShelfType)
+					  .WithMany(st => st.ShelfTypeLevels)
+					  .HasForeignKey(e => e.ShelfTypeId)
+					  .HasConstraintName("FK_ShelfTypeLevel_ShelfType")
+					  .OnDelete(DeleteBehavior.Cascade);
 			});
 
 			// ================== DamageReport ==================

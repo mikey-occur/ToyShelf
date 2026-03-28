@@ -7,6 +7,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Shelf.Request;
 using ToyShelf.Application.Models.Shelf.Response;
+using ToyShelf.Application.Models.ShelfType.Response;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -60,8 +61,8 @@ namespace ToyShelf.Application.Services
                 PartnerId = request.PartnerId,
                 StoreId = request.StoreId,
                 Code = request.Code.Trim(),
-                Level = request.Level,
-                Status = ShelfStatus.Available,
+                ShelfTypeId = request.ShelfTypeId,
+				Status = ShelfStatus.Available,
                 AssignedAt = request.StoreId.HasValue ? _dateTime.UtcNow : null
             };
 
@@ -81,7 +82,7 @@ namespace ToyShelf.Application.Services
         // ===== GET BY ID =====
         public async Task<ShelfResponse> GetByIdAsync(Guid id)
         {
-            var shelf = await _shelfRepository.GetByIdAsync(id);
+            var shelf = await _shelfRepository.GetByIdWithDetailsAsync(id);
             if (shelf == null)
                 throw new AppException($"Shelf not found. Id = {id}", 404);
 
@@ -112,8 +113,8 @@ namespace ToyShelf.Application.Services
             shelf.PartnerId = request.PartnerId;
             shelf.StoreId = request.StoreId;
             shelf.Code = request.Code.Trim();
-            shelf.Level = request.Level;
-            shelf.Status = request.Status;
+            shelf.ShelfTypeId = request.ShelfTypeId;
+			shelf.Status = request.Status;
 
             _shelfRepository.Update(shelf);
             await _unitOfWork.SaveChangesAsync();
@@ -121,34 +122,45 @@ namespace ToyShelf.Application.Services
             return MapToResponse(shelf);
         }
 
-        // ===== GET PAGINATED =====
-        public async Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(
-            int pageNumber = 1,
-            int pageSize = 10,
-            string? status = null)
-        {
-            if (pageNumber < 1) pageNumber = 1;
-            if (pageSize < 1) pageSize = 10;
+		// ===== GET PAGINATED =====
+		public async Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(
+	     int pageNumber = 1,
+	     int pageSize = 10,
+	     string? status = null,
+	     Guid? partnerId = null, 
+	     Guid? storeId = null)   
+		{
+			
+			if (pageNumber < 1) pageNumber = 1;
+			if (pageSize < 1) pageSize = 10;
 
-            ShelfStatus? shelfStatus = null;
-            if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShelfStatus>(status, ignoreCase: true, out var parsedStatus))
-            {
-                shelfStatus = parsedStatus;
-            }
+			
+			ShelfStatus? shelfStatus = null;
+			if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShelfStatus>(status, ignoreCase: true, out var parsedStatus))
+			{
+				shelfStatus = parsedStatus;
+			}
 
-            var (items, totalCount) = await _shelfRepository.GetShelvesPaginatedAsync(pageNumber, pageSize, shelfStatus);
+			
+			var (items, totalCount) = await _shelfRepository.GetShelvesPaginatedAsync(
+				pageNumber,
+				pageSize,
+				shelfStatus,
+				partnerId,
+				storeId);
 
-            return new PaginatedResult<ShelfResponse>
-            {
-                Items = items.Select(MapToResponse),
-                TotalCount = totalCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize
-            };
-        }
+		
+			return new PaginatedResult<ShelfResponse>
+			{
+				Items = items.Select(MapToResponse),
+				TotalCount = totalCount,
+				PageNumber = pageNumber,
+				PageSize = pageSize
+			};
+		}
 
-        // ===== DELETE =====
-        public async Task DeleteAsync(Guid id)
+		// ===== DELETE =====
+		public async Task DeleteAsync(Guid id)
         {
             var shelf = await _shelfRepository.GetByIdAsync(id);
             if (shelf == null)
@@ -218,11 +230,40 @@ namespace ToyShelf.Application.Services
                 PartnerId = shelf.PartnerId,
                 StoreId = shelf.StoreId,
                 Code = shelf.Code,
-                Level = shelf.Level,
-                Status = shelf.Status,
+                ShelfTypeId = shelf.ShelfTypeId,
+				Status = shelf.Status,
                 AssignedAt = shelf.AssignedAt,
-                UnassignedAt = shelf.UnassignedAt
-            };
+                UnassignedAt = shelf.UnassignedAt,
+				ShelfType = shelf.ShelfType != null ? MapToShelfTypeResponse(shelf.ShelfType) : null
+			};
+
         }
-    }
+
+		private static ShelfTypeResponse MapToShelfTypeResponse(ShelfType shelfType)
+		{
+			return new ShelfTypeResponse
+			{
+				Id = shelfType.Id,
+				Name = shelfType.Name,
+				ImageUrl = shelfType.ImageUrl,
+				Width = shelfType.Width,
+				Height = shelfType.Height,
+				Depth = shelfType.Depth,
+				TotalLevels = shelfType.TotalLevels,
+				SuitableProductCategoryTypes = shelfType.SuitableProductCategoryTypes,
+				DisplayGuideline = shelfType.DisplayGuideline,
+				IsActive = shelfType.IsActive,
+
+				Levels = shelfType.ShelfTypeLevels?.Select(l => new ShelfTypeResponse.ShelfTypeLevelResponse
+				{
+					Level = l.Level,
+					Name = l.Name,
+					ClearanceHeight = l.ClearanceHeight,
+					RecommendedCapacity = l.RecommendedCapacity,
+					SuitableProductCategoryTypes = l.SuitableProductCategoryTypes,
+					DisplayGuideline = l.DisplayGuideline
+				}).ToList() ?? new List<ShelfTypeResponse.ShelfTypeLevelResponse>()
+			};
+		}
+	}
 }
