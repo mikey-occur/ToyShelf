@@ -18,6 +18,12 @@ namespace ToyShelf.Application.IServices
 			ICurrentUser currentUser);
 		Task<PartnerDetailByUserResponse> GetPartnerDetailByUserAsync(
 			GetPartnerDetailByUserRequest request);
+
+		Task<List<WarehouseDetailByUserResponse>> GetWarehouseUsersAsync(
+			GetWarehouseUsersRequest request);
+
+		Task<List<WarehouseDetailByUserResponse>> GetWarehouseDetailByUserAsync(Guid userId);
+
 		Task<UserProfileResponse> GetProfileByUserIdAsync(Guid userId);
 		Task<UserProfileResponse> UpdateUserAsync(Guid userId, UpdateUserRequest request);
 		Task DisableUserAsync(Guid userId);   

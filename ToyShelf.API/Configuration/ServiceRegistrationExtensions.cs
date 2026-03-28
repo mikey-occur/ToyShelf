@@ -97,6 +97,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IShipmentMediaRepository, ShipmentMediaRepository>();
 			services.AddScoped<IShipmentRepository, ShipmentRepository>();
 			services.AddScoped<IInventoryTransactionRepository, InventoryTransactionRepository>();
+			services.AddScoped<IUserWarehouseRepository, UserWarehouseRepository>();
 			services.AddScoped<IShelfTypeRepository, ShelfTypeRepository>();
 			
 			// ===== Services =====

@@ -14,7 +14,10 @@ namespace ToyShelf.Application.IServices
 	{
 		// ===== FLOW ACTIVATE =====
 		Task<CreateAccountResponse> CreateAccountAsync(CreateAccountRequest request);
-	    Task<CreateAccountResponse> CreatePartnerUserAsync(CreatePartnerUserRequest request, Guid partnerId, bool isPartnerAdmin);
+		Task<CreateAccountResponse> CreatePartnerUserAsync(
+			CreatePartnerUserRequest request,
+			Guid partnerId,
+			ICurrentUser currentUser);
 		Task<CreateAccountResponse> CreateWarehouseUserAsync(
 			CreateWarehouseUserRequest request,
 			ICurrentUser currentUser);

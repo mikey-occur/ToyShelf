@@ -4,16 +4,15 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ToyShelf.Application.Models.User.Response
+namespace ToyShelf.Application.Models.UserWarehouse.Response
 {
-	public class UserProfileResponse
+	public class WarehouseUserResponse
 	{
-		public Guid Id { get; set; }
+		public Guid UserId { get; set; }
 		public string Email { get; set; } = string.Empty;
 		public string FullName { get; set; } = string.Empty;
 		public string? AvatarUrl { get; set; }
-		public bool IsActive { get; set; }
-		public DateTime CreatedAt { get; set; }
-		public List<string> Roles { get; set; } = new();
+		public bool IsActive { get; set; } = true;
+		public string Role { get; set; } = string.Empty;
 	}
 }

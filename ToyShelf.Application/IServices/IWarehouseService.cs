@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Models.Warehouse.Request;
 using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
 {
@@ -14,6 +15,9 @@ namespace ToyShelf.Application.IServices
 
 		Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(bool? isActive);
 		Task<WarehouseResponse> GetByIdAsync(Guid id);
+		Task<WarehouseDetailResponse> GetWarehouseDetailAsync(
+			Guid warehouseId,
+			WarehouseRole? role);
 
 		Task<WarehouseResponse> UpdateAsync(Guid id, UpdateWarehouseRequest request);
 

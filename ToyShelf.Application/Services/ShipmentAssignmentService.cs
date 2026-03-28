@@ -19,17 +19,20 @@ namespace ToyShelf.Application.Services
 	{
 		private readonly IShipmentAssignmentRepository _assignmentRepository;
 		private readonly IStoreOrderRepository _storeOrderRepository;
+		private readonly IUserWarehouseRepository _userWarehouseRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
 		public ShipmentAssignmentService(
 			IShipmentAssignmentRepository assignmentRepository,
 			IStoreOrderRepository storeOrderRepository,
+			IUserWarehouseRepository userWarehouseRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
 			_assignmentRepository = assignmentRepository;
 			_storeOrderRepository = storeOrderRepository;
+			_userWarehouseRepository = userWarehouseRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -71,24 +74,46 @@ namespace ToyShelf.Application.Services
 		// ================= ASSIGN SHIPPER (WAREHOUSE) =================
 		public async Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser)
 		{
-			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
+			// 1. Lấy assignment 
+			var assignment = await _assignmentRepository
+				.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
 
 			if (assignment == null)
 				throw new AppException("Assignment not found", 404);
 
-			// Kiểm tra trạng thái các Shipment liên quan
+			// 2. Lấy WarehouseId thật (QUAN TRỌNG)
+			var warehouseId = assignment.WarehouseLocation?.WarehouseId
+				?? throw new AppException("Warehouse not found", 500);
+
+			// 3. Check Manager 
+			var userWarehouse = await _userWarehouseRepository
+				.GetActiveAsync(currentUser.UserId, warehouseId);
+
+			if (userWarehouse == null || userWarehouse.Role != WarehouseRole.Manager)
+				throw new AppException("Only Manager can assign shipper", 403);
+
+			//  4. Check shipper hợp lệ 
+			var shipperWarehouse = await _userWarehouseRepository
+				.GetActiveAsync(request.ShipperId, warehouseId);
+
+			if (shipperWarehouse == null || shipperWarehouse.Role != WarehouseRole.Shipper)
+				throw new AppException("User is not a shipper in this warehouse", 400);
+
+			// 5. Check shipment đang chạy 
 			var activeShipment = assignment.Shipments
-				.FirstOrDefault(s => s.Status == ShipmentStatus.Draft || s.Status == ShipmentStatus.Shipping);
+				.FirstOrDefault(s => s.Status == ShipmentStatus.Draft
+								  || s.Status == ShipmentStatus.Shipping);
 
 			if (activeShipment != null)
 				throw new AppException("Cannot change Shipper, shipment is in progress", 400);
 
-			// Nếu có Shipment nhưng đã Delivery -> cho phép đổi
+			//  6. Assign 
 			var oldShipperId = assignment.ShipperId;
+
 			assignment.ShipperId = request.ShipperId;
 			assignment.AssignedByUserId = currentUser.UserId;
 
-			// Nếu Shipper thay đổi hoặc gán lại Shipper đã từ chối
+			//  7. Update status 
 			if (oldShipperId != request.ShipperId || assignment.Status == AssignmentStatus.Rejected)
 			{
 				assignment.Status = AssignmentStatus.Assigned;
@@ -99,49 +124,79 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-		// ================= SHIPPER ACCEPT =================
+
+
 		public async Task AcceptAsync(Guid id, ICurrentUser currentUser)
 		{
-			var assignment = await _assignmentRepository.GetByIdAsync(id);
+			// 1. Lấy assignment 
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(id);
 
 			if (assignment == null)
 				throw new AppException("Assignment not found", 404);
 
+			// 2. Lấy WarehouseId chuẩn 
+			var warehouseId = assignment.WarehouseLocation?.WarehouseId
+				?? throw new AppException("Warehouse not found", 500);
+
+			// 3. Check role Shipper 
+			var userWarehouse = await _userWarehouseRepository
+				.GetActiveAsync(currentUser.UserId, warehouseId);
+
+			if (userWarehouse == null || userWarehouse.Role != WarehouseRole.Shipper)
+				throw new AppException("Only Shipper can accept assignment", 403);
+
+			// 4. Check đúng người được assign 
 			if (assignment.ShipperId != currentUser.UserId)
 				throw new AppException("You are not assigned to this shipment", 403);
 
+			// 5. Check trạng thái 
 			if (assignment.Status != AssignmentStatus.Assigned)
 				throw new AppException("Assignment already responded", 400);
 
+			// 6. Update 
 			assignment.Status = AssignmentStatus.Accepted;
 			assignment.RespondedAt = _dateTime.UtcNow;
 
 			_assignmentRepository.Update(assignment);
-
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-		// ================= SHIPPER REJECT =================
+
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
-			var assignment = await _assignmentRepository.GetByIdAsync(id);
+			// 1. Lấy assignment 
+			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(id);
 
 			if (assignment == null)
 				throw new AppException("Assignment not found", 404);
 
+			// 2. Lấy WarehouseId 
+			var warehouseId = assignment.WarehouseLocation?.WarehouseId
+				?? throw new AppException("Warehouse not found", 500);
+
+			// 3. Check role Shipper 
+			var userWarehouse = await _userWarehouseRepository
+				.GetActiveAsync(currentUser.UserId, warehouseId);
+
+			if (userWarehouse == null || userWarehouse.Role != WarehouseRole.Shipper)
+				throw new AppException("Only Shipper can reject assignment", 403);
+
+			// 4. Check đúng người
 			if (assignment.ShipperId != currentUser.UserId)
 				throw new AppException("You are not assigned to this shipment", 403);
 
+			// 5. Check trạng thái
 			if (assignment.Status != AssignmentStatus.Assigned)
 				throw new AppException("Assignment already responded", 400);
 
+			// 6. Update
 			assignment.Status = AssignmentStatus.Rejected;
 			assignment.RespondedAt = _dateTime.UtcNow;
 
 			_assignmentRepository.Update(assignment);
-
 			await _unitOfWork.SaveChangesAsync();
 		}
+
 
 		// ================= GET MY ASSIGNMENTS =================
 		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(ICurrentUser currentUser)

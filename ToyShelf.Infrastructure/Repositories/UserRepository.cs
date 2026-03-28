@@ -15,17 +15,20 @@ namespace ToyShelf.Infrastructure.Repositories
 		public UserRepository(ToyShelfDbContext context) : base(context){}
 		public async Task<List<User>> GetUsersAsync(bool? isActive)
 		{
-			var query = _context.Users.AsQueryable();
+			var query = _context.Users
+				.Include(u => u.Accounts)
+					.ThenInclude(a => a.AccountRoles)
+						.ThenInclude(ar => ar.Role)
+				.AsQueryable();
 
 			if (isActive.HasValue)
 			{
 				query = query.Where(u => u.IsActive == isActive.Value);
 			}
 
-			return await query
-					.OrderByDescending(w => w.CreatedAt)
-					.ToListAsync();
+			return await query.ToListAsync();
 		}
+
 		public async Task<List<User>> GetUsersByStoreOrPartnerAsync()
 		{
 			return await _context.Users
@@ -41,6 +44,16 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Partner)
 				.FirstOrDefaultAsync(x => x.Id == userId);
 		}
+
+		public async Task<User?> GetUserWithWarehousesAsync(Guid userId)
+		{
+			return await _context.Users
+				.Include(u => u.UserWarehouses)
+					.ThenInclude(uw => uw.Warehouse)
+						.ThenInclude(w => w.InventoryLocations)
+				.FirstOrDefaultAsync(u => u.Id == userId);
+		}
+
 
 		public async Task<User?> GetByEmailAsync(string email)
 		{
@@ -60,6 +73,22 @@ namespace ToyShelf.Infrastructure.Repositories
 					u.Accounts.Any(a =>
 						a.AccountRoles.Any(ar =>
 							ar.Role.Name == "PartnerAdmin")));
+		}
+		public async Task<User?> GetUserWithRolesAsync(Guid userId)
+		{
+			return await _context.Users
+				.Include(u => u.Accounts)
+					.ThenInclude(a => a.AccountRoles)
+						.ThenInclude(ar => ar.Role)
+				.FirstOrDefaultAsync(u => u.Id == userId);
+		}
+		public async Task<List<User>> GetUsersWithWarehousesAsync()
+		{
+			return await _context.Users
+				.Include(u => u.UserWarehouses)
+					.ThenInclude(uw => uw.Warehouse)
+						.ThenInclude(w => w.InventoryLocations)
+				.ToListAsync();
 		}
 	}
 }
