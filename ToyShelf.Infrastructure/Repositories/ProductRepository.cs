@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ToyShelf.Application.Common.Queries;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Context;
@@ -172,5 +173,35 @@ namespace ToyShelf.Infrastructure.Repositories
 										
 			return product;
         }
+		public async Task<(List<Guid> ProductIds, int TotalCount)>GetFilteredProductIdsAsync(
+				int? pageNumber,
+				int? pageSize,
+				bool? isActive,
+				Guid? categoryId,
+				string? searchItem)
+		{
+			var query = _context.Products.AsQueryable();
+
+			query = ProductQueryHelper.ApplyFilter(
+				query,
+				isActive,
+				categoryId,
+				searchItem
+			);
+
+			var totalCount = await query.CountAsync();
+
+			if (pageNumber.HasValue && pageSize.HasValue)
+			{
+				var skip = (pageNumber.Value - 1) * pageSize.Value;
+				query = query.Skip(skip).Take(pageSize.Value);
+			}
+
+			var productIds = await query
+				.Select(p => p.Id)
+				.ToListAsync();
+
+			return (productIds, totalCount);
+		}
 	}
 }

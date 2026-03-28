@@ -54,17 +54,28 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể. Xài cho khi tạo Shipment
+		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể.
 		/// </summary>
 		[HttpGet("warehouse/{warehouseId}/inventory")]
-		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(Guid warehouseId)
+		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(
+			Guid warehouseId,
+			[FromQuery] int? pageNumber,
+			[FromQuery] int? pageSize,
+			[FromQuery] bool? isActive,
+			[FromQuery] Guid? categoryId,
+			[FromQuery] string? searchItem)
 		{
-			var result = await _inventoryService.GetWarehouseInventoryAsync(warehouseId);
+			var result = await _inventoryService.GetWarehouseInventoryAsync(
+				warehouseId,
+				pageNumber,
+				pageSize,
+				isActive,
+				categoryId,
+				searchItem);
 
 			return BaseResponse<WarehouseInventoryResponse>
 				.Ok(result, "Get warehouse inventory successfully");
 		}
-
 
 		/// <summary>
 		/// Admin có thể xem tổng quan về hàng tồn kho của một location (Warehouse hoặc Store),
@@ -72,13 +83,26 @@ namespace ToyShelf.API.Controllers
 		/// Dùng cho báo cáo và quản lý.
 		/// </summary>
 		[HttpGet("location/{locationId}/inventory-overview")]
-		public async Task<BaseResponse<LocationInventoryOverviewResponse>> GetLocationOverview(Guid locationId)
+		public async Task<BaseResponse<LocationInventoryOverviewResponse>> GetLocationOverview(
+				Guid locationId,
+				[FromQuery] int? pageNumber,
+				[FromQuery] int? pageSize,
+				[FromQuery] bool? isActive,
+				[FromQuery] Guid? categoryId,
+				[FromQuery] string? searchItem)
 		{
-			var result = await _inventoryService.GetLocationInventoryOverviewAsync(locationId);
+			var result = await _inventoryService.GetLocationInventoryOverviewAsync(
+				locationId,
+				pageNumber,
+				pageSize,
+				isActive,
+				categoryId,
+				searchItem);
 
 			return BaseResponse<LocationInventoryOverviewResponse>
 				.Ok(result, "Get location inventory overview successfully");
 		}
+
 
 
 		/// <summary>
@@ -86,16 +110,24 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 		/// <returns>Danh sách inventory theo location → product → color + trạng thái</returns>
 		[HttpGet("global")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<GlobalInventoryResponse>>>> GetGlobalInventory(InventoryLocationType? type)
+		public async Task<ActionResult<BaseResponse<IEnumerable<GlobalInventoryResponse>>>> GetGlobalInventory(
+			[FromQuery] InventoryLocationType? type,
+			[FromQuery] int? pageNumber,
+			[FromQuery] int? pageSize,
+			[FromQuery] bool? isActive,
+			[FromQuery] Guid? categoryId,
+			[FromQuery] string? searchItem)
 		{
-
-			var globalInventory = await _inventoryService.GetGlobalInventoryAsync(type);
+			var globalInventory = await _inventoryService.GetGlobalInventoryAsync(
+				type, pageNumber, pageSize, isActive, categoryId, searchItem
+			);
 
 			return BaseResponse<IEnumerable<GlobalInventoryResponse>>.Ok(
 				globalInventory,
 				"Get global inventory successfully"
 			);
 		}
+
 
 		/// <summary>
 		/// Lấy tồn kho chi tiết theo sản phẩm

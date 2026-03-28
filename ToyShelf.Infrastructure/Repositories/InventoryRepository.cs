@@ -146,4 +146,25 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 			.Where(i => locationIds.Contains(i.InventoryLocationId))
 			.ToListAsync();
 	}
+	public async Task<List<Inventory>> GetByWarehouseAndProductIdsAsync(
+	Guid warehouseId,
+	List<Guid> productIds)
+	{
+		if (productIds == null || !productIds.Any())
+			return new List<Inventory>();
+
+		return await _context.Inventories
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Product)
+					.ThenInclude(p => p.ProductCategory)
+			.Include(i => i.ProductColor)
+				.ThenInclude(pc => pc.Color)
+			.Include(i => i.InventoryLocation)
+				.ThenInclude(l => l.Warehouse)
+			.Where(i =>
+				i.InventoryLocation.WarehouseId == warehouseId &&
+				productIds.Contains(i.ProductColor.ProductId)
+			)
+			.ToListAsync();
+	}
 }

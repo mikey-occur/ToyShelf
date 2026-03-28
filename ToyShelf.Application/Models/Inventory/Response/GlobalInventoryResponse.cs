@@ -14,6 +14,10 @@ namespace ToyShelf.Application.Models.Inventory.Response
 		public string Name { get; set; } = null!; // LocationName
 		public InventoryLocationType Type { get; set; }
 		public List<GlobalProductInventoryItem> Products { get; set; } = new();
+
+		public int? PageNumber { get; set; }
+		public int? PageSize { get; set; }
+		public int TotalCount { get; set; }
 	}
 
 	public class GlobalProductInventoryItem

@@ -16,6 +16,11 @@ namespace ToyShelf.Domain.IRepositories
 		Task<IEnumerable<Product>> SearchAsync(string keyword, bool? isActive);
 		Task<bool> IsBarcodeExistsAsync(string barcode, Guid? excludeProductId = null );
 		Task<Product?> GetByBarCode(string barCode);
-
-    }
+		Task<(List<Guid> ProductIds, int TotalCount)>GetFilteredProductIdsAsync(
+			int? pageNumber,
+			int? pageSize,
+			bool? isActive,
+			Guid? categoryId,
+			string? searchItem);
+	}
 }
