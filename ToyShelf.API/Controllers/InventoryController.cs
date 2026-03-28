@@ -110,16 +110,24 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 		/// <returns>Danh sách inventory theo location → product → color + trạng thái</returns>
 		[HttpGet("global")]
-		public async Task<ActionResult<BaseResponse<IEnumerable<GlobalInventoryResponse>>>> GetGlobalInventory(InventoryLocationType? type)
+		public async Task<ActionResult<BaseResponse<IEnumerable<GlobalInventoryResponse>>>> GetGlobalInventory(
+			[FromQuery] InventoryLocationType? type,
+			[FromQuery] int? pageNumber,
+			[FromQuery] int? pageSize,
+			[FromQuery] bool? isActive,
+			[FromQuery] Guid? categoryId,
+			[FromQuery] string? searchItem)
 		{
-
-			var globalInventory = await _inventoryService.GetGlobalInventoryAsync(type);
+			var globalInventory = await _inventoryService.GetGlobalInventoryAsync(
+				type, pageNumber, pageSize, isActive, categoryId, searchItem
+			);
 
 			return BaseResponse<IEnumerable<GlobalInventoryResponse>>.Ok(
 				globalInventory,
 				"Get global inventory successfully"
 			);
 		}
+
 
 		/// <summary>
 		/// Lấy tồn kho chi tiết theo sản phẩm

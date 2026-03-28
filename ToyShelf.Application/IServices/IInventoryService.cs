@@ -32,7 +32,13 @@ namespace ToyShelf.Application.IServices
 				bool? isActive,
 				Guid? categoryId,
 				string? searchItem);
-		Task<IEnumerable<GlobalInventoryResponse>> GetGlobalInventoryAsync(InventoryLocationType? type);
+		Task<List<GlobalInventoryResponse>> GetGlobalInventoryAsync(
+				InventoryLocationType? type,
+				int? pageNumber,
+				int? pageSize,
+				bool? isActive,
+				Guid? categoryId,
+				string? searchItem);
 		Task<GlobalProductInventoryByProductResponse> GetInventoryByProductAsync(Guid productId);
 		Task<IEnumerable<InventoryTransactionResponse>> GetAllTransactionsAsync(
 			Guid? productId = null,
