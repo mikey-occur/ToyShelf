@@ -21,5 +21,23 @@ namespace ToyShelf.Infrastructure.Repositories
 					x.WarehouseId == warehouseId &&
 					x.IsActive);
 		}
+		public async Task<List<UserWarehouse>> GetUsersByWarehouseIdAsync(
+			Guid warehouseId,
+			WarehouseRole? role)
+		{
+			var query = _context.UserWarehouses
+				.Include(x => x.User)
+				.Where(x => x.WarehouseId == warehouseId &&
+					   (x.Role == WarehouseRole.Manager ||
+						x.Role == WarehouseRole.Shipper));
+
+			// filter động
+			if (role.HasValue)
+			{
+				query = query.Where(x => x.Role == role.Value);
+			}
+
+			return await query.ToListAsync();
+		}
 	}
 }

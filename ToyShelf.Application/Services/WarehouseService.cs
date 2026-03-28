@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.UserWarehouse.Response;
 using ToyShelf.Application.Models.Warehouse.Request;
 using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Common.Time;
@@ -20,6 +21,7 @@ namespace ToyShelf.Application.Services
 		private readonly IDateTimeProvider _dateTime;
 		private readonly ICityRepository _cityRepository;
 		private readonly IInventoryLocationRepository _inventoryLocationRepository;
+		private readonly IUserWarehouseRepository _userWarehouseRepository;
 
 
 		private const string Prefix = "WH";
@@ -29,13 +31,15 @@ namespace ToyShelf.Application.Services
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime,
 			ICityRepository cityRepository,
-			IInventoryLocationRepository inventoryLocationRepository)
+			IInventoryLocationRepository inventoryLocationRepository,
+			IUserWarehouseRepository userWarehouseRepository)
 		{
 			_warehouseRepository = warehouseRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 			_cityRepository = cityRepository;
 			_inventoryLocationRepository = inventoryLocationRepository;
+			_userWarehouseRepository = userWarehouseRepository;
 		}
 		// ================= CREATE =================
 		public async Task<WarehouseResponse> CreateAsync(CreateWarehouseRequest request)
@@ -130,6 +134,40 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(warehouse, location);
 		}
 
+		public async Task<WarehouseDetailResponse> GetWarehouseDetailAsync(
+			Guid warehouseId,
+			WarehouseRole? role)
+		{
+			var warehouse = await _warehouseRepository.GetByIdWithCityAsync(warehouseId);
+			if (warehouse == null)
+				throw new AppException("Warehouse not found", 404);
+
+			var location = await _inventoryLocationRepository
+				.GetByWarehouseIdAsync(warehouse.Id);
+
+			// reuse mapper cũ (KHÔNG đụng)
+			var warehouseResponse = MapToResponse(warehouse, location);
+
+			// lấy users
+			var userWarehouses = await _userWarehouseRepository
+				.GetUsersByWarehouseIdAsync(warehouseId, role);
+
+			var users = userWarehouses.Select(x => new WarehouseUserResponse
+			{
+				UserId = x.UserId,
+				Email = x.User.Email,
+				FullName = x.User.FullName,
+				AvatarUrl = x.User.AvatarUrl,
+				IsActive = x.User.IsActive,
+				Role = x.Role.ToString()
+			});
+
+			return new WarehouseDetailResponse
+			{
+				Warehouse = warehouseResponse,
+				Users = users
+			};
+		}
 
 		// ================= UPDATE =================
 		public async Task<WarehouseResponse> UpdateAsync(Guid id, UpdateWarehouseRequest request)
