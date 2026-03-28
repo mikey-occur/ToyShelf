@@ -18,14 +18,16 @@ namespace ToyShelf.Application.Services
 		private readonly IInventoryRepository _inventoryRepository;
 		private readonly IWarehouseRepository _warehouseRepository;
 		private readonly IInventoryTransactionRepository _transactionRepository;
+		private readonly IProductRepository _productRepository;
 		private readonly IUnitOfWork _unitOfWork;
 
-		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IWarehouseRepository warehouseRepository, IInventoryTransactionRepository transactionRepository)
+		public InventoryService(IInventoryRepository inventoryRepository, IUnitOfWork unitOfWork, IWarehouseRepository warehouseRepository, IInventoryTransactionRepository transactionRepository, IProductRepository productRepository)
 		{
 			_inventoryRepository = inventoryRepository;
 			_unitOfWork = unitOfWork;
 			_warehouseRepository = warehouseRepository;
 			_transactionRepository = transactionRepository;
+			_productRepository = productRepository;
 		}
 		public async Task<InventoryResponse> RefillAsync(RefillInventoryRequest request)
 		{
@@ -115,59 +117,104 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-		public async Task<WarehouseInventoryResponse> GetWarehouseInventoryAsync(Guid warehouseId)
+		public async Task<WarehouseInventoryResponse> GetWarehouseInventoryAsync(
+			Guid warehouseId,
+			int? pageNumber,
+			int? pageSize,
+			bool? isActive,
+			Guid? categoryId,
+			string? searchItem)
 		{
-			// 1. Lấy warehouse trước
+			// 1. Lấy warehouse
 			var warehouse = await _warehouseRepository.GetByIdAsync(warehouseId);
-
 			if (warehouse == null)
 				throw new AppException("Warehouse not found", 404);
 
 			// 2. Lấy inventory
 			var inventories = await _inventoryRepository.GetByWarehouseIdAsync(warehouseId);
 
-			// 3. Nếu chưa có hàng → vẫn trả warehouse bình thường
+			// 3. Không có hàng
 			if (!inventories.Any())
 			{
 				return new WarehouseInventoryResponse
 				{
 					WarehouseId = warehouse.Id,
 					WarehouseName = warehouse.Name,
-					Products = new List<ProductInventoryItem>()
+					Products = new List<ProductInventoryItem>(),
+					PageNumber = pageNumber,
+					PageSize = pageSize,
+					TotalCount = 0
 				};
 			}
 
-			// 4. Group như bình thường
-			var groupedProducts = inventories
-				.GroupBy(i => i.ProductColor.ProductId)
-				.Select(productGroup => new ProductInventoryItem
-				{
-					ProductId = productGroup.Key,
-					ProductSKU = productGroup.First().ProductColor.Product.SKU,
-					ProductName = productGroup.First().ProductColor.Product.Name,
-					ProductCategoryId = productGroup.First().ProductColor.Product.ProductCategoryId,
-					ProductCategoryName = productGroup.First().ProductColor.Product.ProductCategory.Name,
-					Description = productGroup.First().ProductColor.Product.Description,
-					Brand = productGroup.First().ProductColor.Product.Brand,
-					Material = productGroup.First().ProductColor.Product.Material,
-					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
-					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
-					BasePrice = productGroup.First().ProductColor.Product.BasePrice,
+			// Filter
+			var filtered = inventories
+				.Where(i => i.ProductColor != null && i.ProductColor.Product != null);
 
-					Colors = productGroup
-						.GroupBy(i => i.ProductColorId)
-						.Select(colorGroup => new ColorInventoryItem
-						{
-							ProductColorId = colorGroup.Key,
-							ProductColorSku = colorGroup.First().ProductColor.Sku,
-							ColorName = colorGroup.First().ProductColor.Color.Name,
-							HexCode = colorGroup.First().ProductColor.Color.HexCode,
-							ImageUrl = colorGroup.First().ProductColor.ImageUrl,
-							Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
-							ProductColorPrice = colorGroup.First().ProductColor.Price,
-							Quantity = colorGroup.Sum(x => x.Quantity)
-						})
-						.ToList()
+			if (isActive.HasValue)
+				filtered = filtered.Where(i => i.ProductColor.Product.IsActive == isActive.Value);
+
+			if (categoryId.HasValue)
+				filtered = filtered.Where(i => i.ProductColor.Product.ProductCategoryId == categoryId.Value);
+
+			if (!string.IsNullOrWhiteSpace(searchItem))
+			{
+				var keyword = searchItem.Trim().ToLower();
+
+				filtered = filtered.Where(i =>
+					i.ProductColor.Product.Name.ToLower().Contains(keyword) ||
+					i.ProductColor.Product.SKU.ToLower().Contains(keyword) ||
+					(i.ProductColor.Product.Barcode != null &&
+					 i.ProductColor.Product.Barcode.ToLower().Contains(keyword))
+				);
+			}
+
+			var grouped = filtered
+				.GroupBy(i => i.ProductColor.ProductId)
+				.ToList(); // tránh lỗi lambda
+
+			var totalCount = grouped.Count; // tổng số product trước khi phân trang
+
+			if (pageNumber.HasValue && pageSize.HasValue)
+			{
+				var skip = (pageNumber.Value - 1) * pageSize.Value;
+				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
+			}
+
+			var groupedProducts = grouped
+				.Select(productGroup =>
+				{
+					var product = productGroup.First().ProductColor.Product;
+
+					return new ProductInventoryItem
+					{
+						ProductId = product.Id,
+						ProductSKU = product.SKU,
+						ProductName = product.Name,
+						ProductCategoryId = product.ProductCategoryId,
+						ProductCategoryName = product.ProductCategory.Name,
+						Description = product.Description,
+						Brand = product.Brand,
+						Material = product.Material,
+						OriginCountry = product.OriginCountry,
+						AgeRange = product.AgeRange,
+						BasePrice = product.BasePrice,
+
+						Colors = productGroup
+							.GroupBy(i => i.ProductColorId)
+							.Select(colorGroup => new ColorInventoryItem
+							{
+								ProductColorId = colorGroup.Key,
+								ProductColorSku = colorGroup.First().ProductColor.Sku,
+								ColorName = colorGroup.First().ProductColor.Color.Name,
+								HexCode = colorGroup.First().ProductColor.Color.HexCode,
+								ImageUrl = colorGroup.First().ProductColor.ImageUrl,
+								Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
+								ProductColorPrice = colorGroup.First().ProductColor.Price,
+								Quantity = colorGroup.Sum(x => x.Quantity)
+							})
+							.ToList()
+					};
 				})
 				.ToList();
 
@@ -175,7 +222,10 @@ namespace ToyShelf.Application.Services
 			{
 				WarehouseId = warehouse.Id,
 				WarehouseName = warehouse.Name,
-				Products = groupedProducts
+				Products = groupedProducts,
+				PageNumber = pageNumber,
+				PageSize = pageSize,
+				TotalCount = totalCount
 			};
 		}
 

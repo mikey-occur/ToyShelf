@@ -54,17 +54,28 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể. Xài cho khi tạo Shipment
+		/// Lấy danh sách hàng tồn kho của một kho hàng cụ thể.
 		/// </summary>
 		[HttpGet("warehouse/{warehouseId}/inventory")]
-		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(Guid warehouseId)
+		public async Task<BaseResponse<WarehouseInventoryResponse>> GetWarehouseInventory(
+			Guid warehouseId,
+			[FromQuery] int? pageNumber,
+			[FromQuery] int? pageSize,
+			[FromQuery] bool? isActive,
+			[FromQuery] Guid? categoryId,
+			[FromQuery] string? searchItem)
 		{
-			var result = await _inventoryService.GetWarehouseInventoryAsync(warehouseId);
+			var result = await _inventoryService.GetWarehouseInventoryAsync(
+				warehouseId,
+				pageNumber,
+				pageSize,
+				isActive,
+				categoryId,
+				searchItem);
 
 			return BaseResponse<WarehouseInventoryResponse>
 				.Ok(result, "Get warehouse inventory successfully");
 		}
-
 
 		/// <summary>
 		/// Admin có thể xem tổng quan về hàng tồn kho của một location (Warehouse hoặc Store),
