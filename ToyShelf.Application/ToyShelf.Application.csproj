@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <Folder Include="Models\InventoryLocation\Request\" />
-    <Folder Include="Models\UserWarehouse\Response\" />
   </ItemGroup>
 
 </Project>

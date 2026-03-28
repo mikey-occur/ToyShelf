@@ -10,5 +10,8 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IUserWarehouseRepository : IGenericRepository<UserWarehouse>
 	{
 		Task<UserWarehouse?> GetActiveAsync(Guid userId, Guid warehouseId);
+		Task<List<UserWarehouse>> GetUsersByWarehouseIdAsync(
+		Guid warehouseId,
+		WarehouseRole? role);
 	}
 }

@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.UserWarehouse.Response;
 using ToyShelf.Application.Models.Warehouse.Request;
 using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -44,6 +46,18 @@ namespace ToyShelf.API.Controllers
 			var result = await _warehouseService.GetByIdAsync(id);
 			return BaseResponse<WarehouseResponse>
 				.Ok(result, "Warehouse retrieved successfully");
+		}
+
+		[HttpGet("{id}/detail")]
+		public async Task<BaseResponse<WarehouseDetailResponse>> GetDetail(
+			Guid id,
+			[FromQuery] WarehouseRole? role)
+		{
+			var result = await _warehouseService
+				.GetWarehouseDetailAsync(id, role);
+
+			return BaseResponse<WarehouseDetailResponse>
+				.Ok(result, "Warehouse detail retrieved successfully");
 		}
 
 		// ================= UPDATE =================
