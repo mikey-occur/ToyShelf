@@ -56,7 +56,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet("warehouse-users")]
-		[Authorize(Roles = "Admin")] 
+		[Authorize(Roles = "Admin, Warehouse")] 
 		public async Task<BaseResponse<List<WarehouseDetailByUserResponse>>> GetWarehouseUsers(
 			[FromQuery] GetWarehouseUsersRequest request)
 		{
