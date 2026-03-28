@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260328104541_InitShelfSystem")]
+    partial class InitShelfSystem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1044,11 +1047,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()

@@ -19,12 +19,13 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public Guid? PartnerId { get; set; }
 		public Guid? StoreId { get; set; }
+		public Guid ShelfTypeId { get; set; }
 		public string Code { get; set; } = null!;
-		public int Level { get; set; }
 		public ShelfStatus Status { get; set; }
 		public DateTime? AssignedAt { get; set; }
 		public DateTime? UnassignedAt { get; set; }
 		public virtual Store? Store { get; set; }
 		public virtual Partner? Partner { get; set; }
+		public virtual ShelfType ShelfType { get; set; } = null!;
 	}
 }
