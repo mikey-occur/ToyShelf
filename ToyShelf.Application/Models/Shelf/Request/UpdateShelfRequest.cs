@@ -6,7 +6,8 @@ namespace ToyShelf.Application.Models.Shelf.Request
     {
         public Guid? PartnerId { get; set; }
         public Guid? StoreId { get; set; }
-        public string Code { get; set; } = string.Empty;
+		public Guid ShelfTypeId { get; set; }
+		public string Code { get; set; } = string.Empty;
         public int Level { get; set; }
         public ShelfStatus Status { get; set; }
     }

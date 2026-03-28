@@ -16,14 +16,17 @@ namespace ToyShelf.Infrastructure.Repositories
         {
         }
 
-        public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
+       public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
        int pageNumber = 1,
        int pageSize = 10,
        ShelfStatus? status = null)
         {
-            var query = _context.Shelves.AsQueryable();
+            var query = _context.Shelves
+				 .Include(s => s.ShelfType)
+			    .ThenInclude(st => st.ShelfTypeLevels)
+		        .AsQueryable();
 
-            if (status.HasValue)
+			if (status.HasValue)
                 query = query.Where(p => p.Status == status);
 
             var totalCount = await query.CountAsync();
