@@ -229,14 +229,20 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		public async Task<LocationInventoryOverviewResponse> GetLocationInventoryOverviewAsync(Guid locationId)
+		public async Task<LocationInventoryOverviewResponse> GetLocationInventoryOverviewAsync(
+				Guid locationId,
+				int? pageNumber,
+				int? pageSize,
+				bool? isActive,
+				Guid? categoryId,
+				string? searchItem)
 		{
-			// Lấy location (Warehouse hoặc Store)
+			// 1. Lấy location (Warehouse hoặc Store)
 			var location = await _inventoryRepository.GetLocationByIdAsync(locationId);
 			if (location == null)
 				throw new AppException("Location not found", 404);
 
-			// Lấy tất cả inventory trong location này
+			// 2. Lấy tất cả inventory trong location này
 			var inventories = await _inventoryRepository.GetByLocationAsync(locationId);
 
 			if (!inventories.Any())
@@ -250,40 +256,79 @@ namespace ToyShelf.Application.Services
 				};
 			}
 
-			var groupedProducts = inventories
-				.Where(i => i.ProductColor != null && i.ProductColor.Product != null)
+			// 3. Filter: loại bỏ inventory không có ProductColor/Product
+			var filtered = inventories
+				.Where(i => i.ProductColor != null && i.ProductColor.Product != null);
+
+			if (isActive.HasValue)
+				filtered = filtered.Where(i => i.ProductColor.Product.IsActive == isActive.Value);
+
+			if (categoryId.HasValue)
+				filtered = filtered.Where(i => i.ProductColor.Product.ProductCategoryId == categoryId.Value);
+
+			if (!string.IsNullOrWhiteSpace(searchItem))
+			{
+				var keyword = searchItem.Trim().ToLower();
+				filtered = filtered.Where(i =>
+					i.ProductColor.Product.Name.ToLower().Contains(keyword) ||
+					i.ProductColor.Product.SKU.ToLower().Contains(keyword) ||
+					(i.ProductColor.Product.Barcode != null &&
+					 i.ProductColor.Product.Barcode.ToLower().Contains(keyword))
+				);
+			}
+
+			// 4. Nhóm theo ProductId
+			var grouped = filtered
 				.GroupBy(i => i.ProductColor.ProductId)
-				.Select(productGroup => new ProductInventoryOverviewItem
+				.ToList(); // tránh lỗi lambda
+
+			var totalCount = grouped.Count; // tổng số product trước khi phân trang
+
+			// 5. Phân trang nếu có
+			if (pageNumber.HasValue && pageSize.HasValue)
+			{
+				var skip = (pageNumber.Value - 1) * pageSize.Value;
+				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
+			}
+
+			// 6. Map ra ProductInventoryOverviewItem
+			var groupedProducts = grouped
+				.Select(productGroup =>
 				{
-					ProductId = productGroup.Key,
-					ProductSKU = productGroup.First().ProductColor.Product.SKU,
-					ProductName = productGroup.First().ProductColor.Product.Name,
-					ProductCategoryId = productGroup.First().ProductColor.Product.ProductCategoryId,
-					ProductCategoryName = productGroup.First().ProductColor.Product.ProductCategory.Name,
-					Description = productGroup.First().ProductColor.Product.Description,
-					Brand = productGroup.First().ProductColor.Product.Brand,
-					Material = productGroup.First().ProductColor.Product.Material,
-					OriginCountry = productGroup.First().ProductColor.Product.OriginCountry,
-					AgeRange = productGroup.First().ProductColor.Product.AgeRange,
-					BasePrice = productGroup.First().ProductColor.Product.BasePrice,
-					Colors = productGroup
-						.Where(i => i.ProductColor.Color != null)
-						.GroupBy(i => i.ProductColorId)
-						.Select(colorGroup => new ColorInventoryOverviewItem
-						{
-							ProductColorId = colorGroup.Key,
-							ProductColorSku = colorGroup.First().ProductColor.Sku,
-							ColorName = colorGroup.First().ProductColor.Color.Name,
-							HexCode = colorGroup.First().ProductColor.Color.HexCode,
-							ImageUrl = colorGroup.First().ProductColor.ImageUrl,
-							Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
-							ProductColorPrice = colorGroup.First().ProductColor.Price,
-							Available = colorGroup.Where(x => x.Status == InventoryStatus.Available).Sum(x => x.Quantity),
-							InTransit = colorGroup.Where(x => x.Status == InventoryStatus.InTransit).Sum(x => x.Quantity),
-							Damaged = colorGroup.Where(x => x.Status == InventoryStatus.Damaged).Sum(x => x.Quantity),
-							Sold = colorGroup.Where(x => x.Status == InventoryStatus.Sold).Sum(x => x.Quantity)
-						})
-						.ToList()
+					var product = productGroup.First().ProductColor.Product;
+
+					return new ProductInventoryOverviewItem
+					{
+						ProductId = product.Id,
+						ProductSKU = product.SKU,
+						ProductName = product.Name,
+						ProductCategoryId = product.ProductCategoryId,
+						ProductCategoryName = product.ProductCategory.Name,
+						Description = product.Description,
+						Brand = product.Brand,
+						Material = product.Material,
+						OriginCountry = product.OriginCountry,
+						AgeRange = product.AgeRange,
+						BasePrice = product.BasePrice,
+						Colors = productGroup
+							.Where(i => i.ProductColor.Color != null)
+							.GroupBy(i => i.ProductColorId)
+							.Select(colorGroup => new ColorInventoryOverviewItem
+							{
+								ProductColorId = colorGroup.Key,
+								ProductColorSku = colorGroup.First().ProductColor.Sku,
+								ColorName = colorGroup.First().ProductColor.Color.Name,
+								HexCode = colorGroup.First().ProductColor.Color.HexCode,
+								ImageUrl = colorGroup.First().ProductColor.ImageUrl,
+								Model3DUrl = colorGroup.First().ProductColor.Model3DUrl,
+								ProductColorPrice = colorGroup.First().ProductColor.Price,
+								Available = colorGroup.Where(x => x.Status == InventoryStatus.Available).Sum(x => x.Quantity),
+								InTransit = colorGroup.Where(x => x.Status == InventoryStatus.InTransit).Sum(x => x.Quantity),
+								Damaged = colorGroup.Where(x => x.Status == InventoryStatus.Damaged).Sum(x => x.Quantity),
+								Sold = colorGroup.Where(x => x.Status == InventoryStatus.Sold).Sum(x => x.Quantity)
+							})
+							.ToList()
+					};
 				})
 				.ToList();
 
@@ -292,9 +337,13 @@ namespace ToyShelf.Application.Services
 				LocationId = location.Id,
 				LocationName = location.Name,
 				Type = location.Type,
-				Products = groupedProducts
+				Products = groupedProducts,
+				PageNumber = pageNumber,
+				PageSize = pageSize,
+				TotalCount = totalCount
 			};
 		}
+
 
 		public async Task<IEnumerable<GlobalInventoryResponse>> GetGlobalInventoryAsync(InventoryLocationType? type)
 		{

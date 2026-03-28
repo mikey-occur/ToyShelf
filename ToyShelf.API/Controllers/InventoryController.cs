@@ -83,13 +83,26 @@ namespace ToyShelf.API.Controllers
 		/// Dùng cho báo cáo và quản lý.
 		/// </summary>
 		[HttpGet("location/{locationId}/inventory-overview")]
-		public async Task<BaseResponse<LocationInventoryOverviewResponse>> GetLocationOverview(Guid locationId)
+		public async Task<BaseResponse<LocationInventoryOverviewResponse>> GetLocationOverview(
+				Guid locationId,
+				[FromQuery] int? pageNumber,
+				[FromQuery] int? pageSize,
+				[FromQuery] bool? isActive,
+				[FromQuery] Guid? categoryId,
+				[FromQuery] string? searchItem)
 		{
-			var result = await _inventoryService.GetLocationInventoryOverviewAsync(locationId);
+			var result = await _inventoryService.GetLocationInventoryOverviewAsync(
+				locationId,
+				pageNumber,
+				pageSize,
+				isActive,
+				categoryId,
+				searchItem);
 
 			return BaseResponse<LocationInventoryOverviewResponse>
 				.Ok(result, "Get location inventory overview successfully");
 		}
+
 
 
 		/// <summary>
