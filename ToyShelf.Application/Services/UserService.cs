@@ -159,8 +159,13 @@ namespace ToyShelf.Application.Services
 							UserId = u.Id,
 							Email = u.Email,
 							FullName = u.FullName,
+							UserIsActive = u.IsActive,
+							UserCreatedAt = u.CreatedAt,
+
 							WarehouseId = uw.WarehouseId,
 							WarehouseName = uw.Warehouse.Name,
+							WarehouseIsActive = uw.Warehouse.IsActive,
+							WarehouseCreatedAt = uw.Warehouse.CreatedAt,
 							WarehouseRole = uw.Role,
 							WarehouseLocationIds = uw.Warehouse.InventoryLocations
 								.Select(x => x.Id)
