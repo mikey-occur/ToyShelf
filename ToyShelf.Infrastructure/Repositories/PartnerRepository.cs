@@ -33,6 +33,8 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return await _context.Partners
 				.Include(p => p.PartnerTier)
+				.Include(p => p.CommissionTableApplies)
+			    .ThenInclude(c => c.CommissionTable)
 				.Include(p => p.Users.Where(u =>
 					u.Accounts.Any(a => a.AccountRoles.Any(ar =>
 						ar.Role.Name.ToLower().Trim() == mainRoleName))))
