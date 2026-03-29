@@ -29,6 +29,8 @@ namespace ToyShelf.Application.Models.Partner.Response
 	public class PartnerDetailResponse : PartnerResponse
 	{
 		// Kế thừa toàn bộ trường ở trên, chỉ nhét thêm tài khoản vào đây
+		public AppliedCommissionTableResponse? CurrentCommission { get; set; }
+		public List<AppliedCommissionTableResponse> CommissionHistories { get; set; } = new();
 		public PartnerAdminResponse? PartnerAccount { get; set; }
 	}
 

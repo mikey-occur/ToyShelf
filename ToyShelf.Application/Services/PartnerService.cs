@@ -239,9 +239,21 @@ namespace ToyShelf.Application.Services
 
 		private static PartnerDetailResponse MapToDetailResponse(Partner partner, User? mainUser, Account? mainAccount)
 		{
+			// 1. Xử lý danh sách Bảng hoa hồng (Nếu Repo có Include thì mới có data nhé sếp)
+			var commissionApplies = partner.CommissionTableApplies?
+				.OrderByDescending(c => c.StartDate) // Đưa cái mới nhất lên đầu
+				.Select(c => new AppliedCommissionTableResponse
+				{
+					CommissionTableId = c.CommissionTableId,
+					Name = c.CommissionTable?.Name ?? "Không rõ tên bảng giá", // Lấy tên từ bảng gốc
+					StartDate = c.StartDate,
+					EndDate = c.EndDate
+				}).ToList() ?? new List<AppliedCommissionTableResponse>();
+
+			// 2. Map dữ liệu trả về
 			return new PartnerDetailResponse
 			{
-				
+				// --- Thông tin Partner ---
 				Id = partner.Id,
 				Code = partner.Code,
 				CompanyName = partner.CompanyName,
@@ -255,7 +267,7 @@ namespace ToyShelf.Application.Services
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt,
 
-			
+				// --- Thông tin Account Admin ---
 				PartnerAccount = mainUser != null ? new PartnerAdminResponse
 				{
 					Id = mainUser.Id,
@@ -264,7 +276,14 @@ namespace ToyShelf.Application.Services
 					AvatarUrl = mainUser.AvatarUrl,
 					IsActive = mainUser.IsActive,
 					LastLoginAt = mainAccount?.LastLoginAt
-				} : null
+				} : null,
+
+				// 🚀 --- Bổ sung thông tin Commission cho Dashboard ---
+				// Bảng đang áp dụng: Là bảng chưa có ngày kết thúc, hoặc ngày kết thúc vẫn còn ở tương lai
+				CurrentCommission = commissionApplies.FirstOrDefault(c => c.EndDate == null || c.EndDate >= DateTime.UtcNow),
+
+				// Toàn bộ lịch sử các bảng đã áp dụng
+				CommissionHistories = commissionApplies
 			};
 		}
 
