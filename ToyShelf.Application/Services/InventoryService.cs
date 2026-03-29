@@ -301,6 +301,14 @@ namespace ToyShelf.Application.Services
 				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
 			}
 
+			int? totalPages = null;
+
+			if (pageSize.HasValue && pageSize.Value > 0)
+			{
+				totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+			}
+
+
 			// 6. Map ra ProductInventoryOverviewItem
 			var groupedProducts = grouped
 				.Select(productGroup =>
@@ -350,7 +358,8 @@ namespace ToyShelf.Application.Services
 				Products = groupedProducts,
 				PageNumber = pageNumber,
 				PageSize = pageSize,
-				TotalCount = totalCount
+				TotalCount = totalCount,
+				TotalPages = totalPages
 			};
 		}
 
