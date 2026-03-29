@@ -17,139 +17,109 @@ namespace ToyShelf.Application.Services
     public class ShelfService : IShelfService
     {
         private readonly IShelfRepository _shelfRepository;
-        private readonly IStoreRepository _storeRepository;
-        private readonly IPartnerRepository _partnerRepository;
-        private readonly IUnitOfWork _unitOfWork;
+        private readonly IInventoryLocationRepository _inventoryLocationRepository; 
+		private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTime;
-		private readonly IStoreRepository _storeRepo;
-		public ShelfService(
+        public ShelfService(
             IShelfRepository shelfRepository,
-			IStoreRepository storeRepository,
-			IPartnerRepository partnerRepository,
+            IInventoryLocationRepository inventoryLocationRepository,
 			IUnitOfWork unitOfWork,
-			IDateTimeProvider dateTime,
-			IStoreRepository storeRepo)
-		{
-			_shelfRepository = shelfRepository;
-			_storeRepository = storeRepository;
-			_partnerRepository = partnerRepository;
+            IDateTimeProvider dateTime)
+        {
+            _shelfRepository = shelfRepository;
+            _inventoryLocationRepository = inventoryLocationRepository;
 			_unitOfWork = unitOfWork;
-			_dateTime = dateTime;
-			_storeRepo = storeRepo;
-		}
+            _dateTime = dateTime;
+        }
 
 		// ===== CREATE =====
 		public async Task<ShelfResponse> CreateAsync(CreateShelfRequest request)
-        {
-            if (request.PartnerId.HasValue)
-            {
-                var partner = await _partnerRepository.GetByIdAsync(request.PartnerId.Value);
-                if (partner == null)
-                    throw new AppException("Partner not found", 404);
-            }
+		{
+			var location = await _inventoryLocationRepository.GetByIdAsync(request.InventoryLocationId);
+			if (location == null)
+				throw new AppException("Inventory location not found", 404);
 
-            if (request.StoreId.HasValue)
-            {
-                var store = await _storeRepository.GetByIdAsync(request.StoreId.Value);
-                if (store == null)
-                    throw new AppException("Store not found", 404);
-            }
-
-            var shelf = new Shelf
-            {
-                Id = Guid.NewGuid(),
-                PartnerId = request.PartnerId,
-                StoreId = request.StoreId,
-                Code = request.Code.Trim(),
-                ShelfTypeId = request.ShelfTypeId,
+			var shelf = new Shelf
+			{
+				Id = Guid.NewGuid(),
+				InventoryLocationId = request.InventoryLocationId,
+				ShelfTypeId = request.ShelfTypeId,
+				Code = request.Code.Trim(),
 				Status = ShelfStatus.Available,
-                AssignedAt = request.StoreId.HasValue ? _dateTime.UtcNow : null
-            };
+				AssignedAt = location.Type == InventoryLocationType.Store ? _dateTime.UtcNow : null
+			};
 
-            await _shelfRepository.AddAsync(shelf);
-            await _unitOfWork.SaveChangesAsync();
+			await _shelfRepository.AddAsync(shelf);
+			await _unitOfWork.SaveChangesAsync();
 
-            return MapToResponse(shelf);
-        }
+			return MapToResponse(shelf);
+		}
 
-        // ===== GET ALL =====
-        public async Task<IEnumerable<ShelfResponse>> GetAllAsync()
-        {
-            var shelves = await _shelfRepository.GetAllAsync();
-            return shelves.Select(MapToResponse);
-        }
+		// ===== GET ALL =====
+		public async Task<IEnumerable<ShelfResponse>> GetAllAsync()
+		{
+			var shelves = await _shelfRepository.GetAllAsync();
+			return shelves.Select(MapToResponse);
+		}
 
-        // ===== GET BY ID =====
-        public async Task<ShelfResponse> GetByIdAsync(Guid id)
-        {
-            var shelf = await _shelfRepository.GetByIdWithDetailsAsync(id);
-            if (shelf == null)
-                throw new AppException($"Shelf not found. Id = {id}", 404);
+		// ===== GET BY ID =====
+		public async Task<ShelfResponse> GetByIdAsync(Guid id)
+		{
+			var shelf = await _shelfRepository.GetByIdWithDetailsAsync(id);
+			if (shelf == null)
+				throw new AppException($"Shelf not found. Id = {id}", 404);
 
-            return MapToResponse(shelf);
-        }
+			return MapToResponse(shelf);
+		}
 
-        // ===== UPDATE =====
-        public async Task<ShelfResponse> UpdateAsync(Guid id, UpdateShelfRequest request)
-        {
-            var shelf = await _shelfRepository.GetByIdAsync(id);
-            if (shelf == null)
-                throw new AppException($"Shelf not found. Id = {id}", 404);
+		// ===== UPDATE =====
+		public async Task<ShelfResponse> UpdateAsync(Guid id, UpdateShelfRequest request)
+		{
+			var shelf = await _shelfRepository.GetByIdAsync(id);
+			if (shelf == null)
+				throw new AppException($"Shelf not found. Id = {id}", 404);
 
-            if (request.PartnerId.HasValue && request.PartnerId != shelf.PartnerId)
-            {
-                var partner = await _partnerRepository.GetByIdAsync(request.PartnerId.Value);
-                if (partner == null)
-                    throw new AppException("Partner not found", 404);
-            }
+			if (request.InventoryLocationId != shelf.InventoryLocationId)
+			{
+				var location = await _inventoryLocationRepository.GetByIdAsync(request.InventoryLocationId);
+				if (location == null)
+					throw new AppException("Inventory location not found", 404);
+			}
 
-            if (request.StoreId.HasValue && request.StoreId != shelf.StoreId)
-            {
-                var store = await _storeRepository.GetByIdAsync(request.StoreId.Value);
-                if (store == null)
-                    throw new AppException("Store not found", 404);
-            }
-
-            shelf.PartnerId = request.PartnerId;
-            shelf.StoreId = request.StoreId;
-            shelf.Code = request.Code.Trim();
-            shelf.ShelfTypeId = request.ShelfTypeId;
+			shelf.InventoryLocationId = request.InventoryLocationId;
+			shelf.Code = request.Code.Trim();
+			shelf.ShelfTypeId = request.ShelfTypeId;
 			shelf.Status = request.Status;
 
-            _shelfRepository.Update(shelf);
-            await _unitOfWork.SaveChangesAsync();
+			_shelfRepository.Update(shelf);
+			await _unitOfWork.SaveChangesAsync();
 
-            return MapToResponse(shelf);
-        }
+			return MapToResponse(shelf);
+		}
 
 		// ===== GET PAGINATED =====
 		public async Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(
-	     int pageNumber = 1,
-	     int pageSize = 10,
-	     string? status = null,
-	     Guid? partnerId = null, 
-	     Guid? storeId = null)   
+			int pageNumber = 1,
+			int pageSize = 10,
+			string? status = null,
+			Guid? inventoryLocationId = null)
 		{
-			
 			if (pageNumber < 1) pageNumber = 1;
 			if (pageSize < 1) pageSize = 10;
 
-			
 			ShelfStatus? shelfStatus = null;
-			if (!string.IsNullOrEmpty(status) && Enum.TryParse<ShelfStatus>(status, ignoreCase: true, out var parsedStatus))
+			if (!string.IsNullOrEmpty(status) &&
+				Enum.TryParse<ShelfStatus>(status, true, out var parsed))
 			{
-				shelfStatus = parsedStatus;
+				shelfStatus = parsed;
 			}
 
-			
 			var (items, totalCount) = await _shelfRepository.GetShelvesPaginatedAsync(
 				pageNumber,
 				pageSize,
 				shelfStatus,
-				partnerId,
-				storeId);
+				inventoryLocationId);
 
-		
 			return new PaginatedResult<ShelfResponse>
 			{
 				Items = items.Select(MapToResponse),
@@ -176,8 +146,8 @@ namespace ToyShelf.Application.Services
             if (shelf == null)
                 throw new AppException($"Shelf not found. Id = {id}", 404);
             shelf.Status = newStatus;
-           
-             if (newStatus == ShelfStatus.Recalled)
+
+            if (newStatus == ShelfStatus.Recalled)
             {
                 shelf.UnassignedAt = _dateTime.UtcNow;
             }
@@ -190,80 +160,79 @@ namespace ToyShelf.Application.Services
             return MapToResponse(shelf);
         }
 
-		/// <summary>
-		/// Hàm kiểm tra xem cửa hàng đã đạt giới hạn số lượng tủ theo hạng đối tác hay chưa. Nếu đã đạt, sẽ ném ra lỗi yêu cầu nâng cấp hạng đối tác.
-		/// </summary>
-		/// <param name="storeId"></param>
-		/// <returns></returns>
-		/// <exception cref="AppException"></exception>
-		private async Task ValidateStoreCapacityAsync(Guid storeId)
-		{
-			
-			var store = await _storeRepo.GetStoreWithTierAsync(storeId)
-				?? throw new AppException("Không tìm thấy Cửa hàng", 404);
+        ///// <summary>
+        ///// Hàm kiểm tra xem cửa hàng đã đạt giới hạn số lượng tủ theo hạng đối tác hay chưa. Nếu đã đạt, sẽ ném ra lỗi yêu cầu nâng cấp hạng đối tác.
+        ///// </summary>
+        ///// <param name="storeId"></param>
+        ///// <returns></returns>
+        ///// <exception cref="AppException"></exception>
+        //private async Task ValidateStoreCapacityAsync(Guid storeId)
+        //{
 
-			var maxLimit = store.Partner?.PartnerTier?.MaxShelvesPerStore;
+        //    var store = await _storeRepo.GetStoreWithTierAsync(storeId)
+        //        ?? throw new AppException("Không tìm thấy Cửa hàng", 404);
 
-			
-			if (!maxLimit.HasValue) return;
-
-			
-			var currentCount = await _shelfRepository.CountActiveShelvesByStoreAsync(storeId);
-
-			
-			if (currentCount >= maxLimit.Value)
-			{
-				var tierName = store.Partner?.PartnerTier?.Name ?? "N/A";
-				throw new AppException(
-					$"Store shelf '{store.Name}' have reach limit ({maxLimit.Value} shelf) for tier [{tierName}]. " +
-					$"Please Updeate partnertier !", 400);
-			}
-		}
+        //    var maxLimit = store.Partner?.PartnerTier?.MaxShelvesPerStore;
 
 
-		// ===== MAPPER =====
-		private static ShelfResponse MapToResponse(Shelf shelf)
+        //    if (!maxLimit.HasValue) return;
+
+
+        //    var currentCount = await _shelfRepository.CountActiveShelvesByStoreAsync(storeId);
+
+
+        //    if (currentCount >= maxLimit.Value)
+        //    {
+        //        var tierName = store.Partner?.PartnerTier?.Name ?? "N/A";
+        //        throw new AppException(
+        //            $"Store shelf '{store.Name}' have reach limit ({maxLimit.Value} shelf) for tier [{tierName}]. " +
+        //            $"Please Updeate partnertier !", 400);
+        //    }
+        //}
+
+
+        // ===== MAPPER =====
+        private static ShelfResponse MapToResponse(Shelf shelf)
         {
             return new ShelfResponse
             {
                 Id = shelf.Id,
-                PartnerId = shelf.PartnerId,
-                StoreId = shelf.StoreId,
-                Code = shelf.Code,
+				InventoryLocationId = shelf.InventoryLocationId,
+				Code = shelf.Code,
                 ShelfTypeId = shelf.ShelfTypeId,
-				Status = shelf.Status,
+                Status = shelf.Status,
                 AssignedAt = shelf.AssignedAt,
                 UnassignedAt = shelf.UnassignedAt,
-				ShelfType = shelf.ShelfType != null ? MapToShelfTypeResponse(shelf.ShelfType) : null
-			};
+                ShelfType = shelf.ShelfType != null ? MapToShelfTypeResponse(shelf.ShelfType) : null
+            };
 
         }
 
-		private static ShelfTypeResponse MapToShelfTypeResponse(ShelfType shelfType)
-		{
-			return new ShelfTypeResponse
-			{
-				Id = shelfType.Id,
-				Name = shelfType.Name,
-				ImageUrl = shelfType.ImageUrl,
-				Width = shelfType.Width,
-				Height = shelfType.Height,
-				Depth = shelfType.Depth,
-				TotalLevels = shelfType.TotalLevels,
-				SuitableProductCategoryTypes = shelfType.SuitableProductCategoryTypes,
-				DisplayGuideline = shelfType.DisplayGuideline,
-				IsActive = shelfType.IsActive,
+        private static ShelfTypeResponse MapToShelfTypeResponse(ShelfType shelfType)
+        {
+            return new ShelfTypeResponse
+            {
+                Id = shelfType.Id,
+                Name = shelfType.Name,
+                ImageUrl = shelfType.ImageUrl,
+                Width = shelfType.Width,
+                Height = shelfType.Height,
+                Depth = shelfType.Depth,
+                TotalLevels = shelfType.TotalLevels,
+                SuitableProductCategoryTypes = shelfType.SuitableProductCategoryTypes,
+                DisplayGuideline = shelfType.DisplayGuideline,
+                IsActive = shelfType.IsActive,
 
-				Levels = shelfType.ShelfTypeLevels?.Select(l => new ShelfTypeResponse.ShelfTypeLevelResponse
-				{
-					Level = l.Level,
-					Name = l.Name,
-					ClearanceHeight = l.ClearanceHeight,
-					RecommendedCapacity = l.RecommendedCapacity,
-					SuitableProductCategoryTypes = l.SuitableProductCategoryTypes,
-					DisplayGuideline = l.DisplayGuideline
-				}).ToList() ?? new List<ShelfTypeResponse.ShelfTypeLevelResponse>()
-			};
-		}
-	}
+                Levels = shelfType.ShelfTypeLevels?.Select(l => new ShelfTypeResponse.ShelfTypeLevelResponse
+                {
+                    Level = l.Level,
+                    Name = l.Name,
+                    ClearanceHeight = l.ClearanceHeight,
+                    RecommendedCapacity = l.RecommendedCapacity,
+                    SuitableProductCategoryTypes = l.SuitableProductCategoryTypes,
+                    DisplayGuideline = l.DisplayGuideline
+                }).ToList() ?? new List<ShelfTypeResponse.ShelfTypeLevelResponse>()
+            };
+        }
+    }
 }

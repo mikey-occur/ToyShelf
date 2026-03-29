@@ -16,7 +16,11 @@ namespace ToyShelf.Application.IServices
         Task<IEnumerable<ShelfResponse>> GetAllAsync();
         Task<ShelfResponse> GetByIdAsync(Guid id);
         Task<ShelfResponse> UpdateAsync(Guid id, UpdateShelfRequest request);
-        Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(int pageNumber = 1,int pageSize = 10,string? status = null,Guid? partnerId = null, Guid? storeId = null);
+        Task<PaginatedResult<ShelfResponse>> GetPaginatedAsync(
+            int pageNumber = 1,
+            int pageSize = 10,
+            string? status = null,
+            Guid? inventoryLocationId = null);
 
 		Task DeleteAsync(Guid id);
         Task<ShelfResponse> UpdateShelftStatus(Guid id, ShelfStatus newStatus);
