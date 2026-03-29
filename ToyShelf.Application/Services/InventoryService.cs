@@ -413,6 +413,14 @@ namespace ToyShelf.Application.Services
 					.Take(pageSize ?? int.MaxValue)
 					.ToList();
 
+				int? totalPages = null;
+
+				if (pageSize.HasValue && pageSize.Value > 0)
+				{
+					totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+				}
+
+
 				var productItems = pagedProducts
 					.Select(productGroup =>
 					{
@@ -466,7 +474,8 @@ namespace ToyShelf.Application.Services
 					Products = productItems,
 					PageNumber = pageNumber,
 					PageSize = pageSize,
-					TotalCount = totalCount
+					TotalCount = totalCount,
+					TotalPages = totalPages
 				});
 			}
 
