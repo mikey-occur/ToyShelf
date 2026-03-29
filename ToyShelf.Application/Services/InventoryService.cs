@@ -143,7 +143,8 @@ namespace ToyShelf.Application.Services
 					Products = new List<ProductInventoryItem>(),
 					PageNumber = pageNumber,
 					PageSize = pageSize,
-					TotalCount = 0
+					TotalCount = 0,
+					TotalPages = 0 
 				};
 			}
 
@@ -180,6 +181,14 @@ namespace ToyShelf.Application.Services
 				var skip = (pageNumber.Value - 1) * pageSize.Value;
 				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
 			}
+
+			int? totalPages = null;
+
+			if (pageSize.HasValue && pageSize.Value > 0)
+			{
+				totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+			}
+
 
 			var groupedProducts = grouped
 				.Select(productGroup =>
@@ -225,7 +234,8 @@ namespace ToyShelf.Application.Services
 				Products = groupedProducts,
 				PageNumber = pageNumber,
 				PageSize = pageSize,
-				TotalCount = totalCount
+				TotalCount = totalCount,
+				TotalPages = totalPages
 			};
 		}
 
@@ -291,6 +301,14 @@ namespace ToyShelf.Application.Services
 				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
 			}
 
+			int? totalPages = null;
+
+			if (pageSize.HasValue && pageSize.Value > 0)
+			{
+				totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+			}
+
+
 			// 6. Map ra ProductInventoryOverviewItem
 			var groupedProducts = grouped
 				.Select(productGroup =>
@@ -340,7 +358,8 @@ namespace ToyShelf.Application.Services
 				Products = groupedProducts,
 				PageNumber = pageNumber,
 				PageSize = pageSize,
-				TotalCount = totalCount
+				TotalCount = totalCount,
+				TotalPages = totalPages
 			};
 		}
 
@@ -393,6 +412,14 @@ namespace ToyShelf.Application.Services
 					.Skip(pageNumber.HasValue && pageSize.HasValue ? (pageNumber.Value - 1) * pageSize.Value : 0)
 					.Take(pageSize ?? int.MaxValue)
 					.ToList();
+
+				int? totalPages = null;
+
+				if (pageSize.HasValue && pageSize.Value > 0)
+				{
+					totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+				}
+
 
 				var productItems = pagedProducts
 					.Select(productGroup =>
@@ -447,7 +474,8 @@ namespace ToyShelf.Application.Services
 					Products = productItems,
 					PageNumber = pageNumber,
 					PageSize = pageSize,
-					TotalCount = totalCount
+					TotalCount = totalCount,
+					TotalPages = totalPages
 				});
 			}
 
