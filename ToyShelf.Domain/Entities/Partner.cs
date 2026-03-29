@@ -21,7 +21,7 @@ namespace ToyShelf.Domain.Entities
 		public PartnerTier PartnerTier { get; set; } = null!;
 		public virtual ICollection<User> Users { get; set; } = new List<User>();
 		public virtual ICollection<Store> Stores { get; set; } = new List<Store>();
-		public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
+		//public virtual ICollection<Shelf> Shelves { get; set; } = new List<Shelf>();
 		public virtual ICollection<CommissionTableApply> CommissionTableApplies { get; set; } = new List<CommissionTableApply>();
 		public virtual ICollection<CommissionHistory> CommissionHistories { get; set; } = new List<CommissionHistory>();
 		public virtual ICollection<StoreCreationRequest> StoreCreationRequests { get; set; } = new List<StoreCreationRequest>();

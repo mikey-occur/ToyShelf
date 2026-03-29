@@ -28,13 +28,16 @@ namespace ToyShelf.API.Controllers
 			[FromQuery] int pageNumber = 1,
 			[FromQuery] int pageSize = 10,
 			[FromQuery] string? status = null,
-			[FromQuery] Guid? partnerId = null, 
-			[FromQuery] Guid? storeId = null)   
+			[FromQuery] Guid? inventoryLocationId = null)
 		{
-			// Truyền tất cả tham số xuống Service xử lý
-			var result = await _shelfService.GetPaginatedAsync(pageNumber, pageSize, status, partnerId, storeId);
+			var result = await _shelfService.GetPaginatedAsync(
+				pageNumber,
+				pageSize,
+				status,
+				inventoryLocationId);
 
-			return BaseResponse<PaginatedResult<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
+			return BaseResponse<PaginatedResult<ShelfResponse>>
+				.Ok(result, "Shelves retrieved successfully");
 		}
 
 		// ===== CREATE =====

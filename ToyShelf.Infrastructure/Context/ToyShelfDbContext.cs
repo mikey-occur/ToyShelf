@@ -380,9 +380,9 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.UpdatedAt);
 
 				// FK 
-				entity.HasMany(e => e.Shelves)
-					  .WithOne(a => a.Store)
-					  .HasForeignKey(a => a.StoreId);
+				//entity.HasMany(e => e.Shelves)
+				//	  .WithOne(a => a.Store)
+				//	  .HasForeignKey(a => a.StoreId);
 
 				entity.HasMany(e => e.StoreInvitations)
 				      .WithOne(s => s.Store)
@@ -973,9 +973,9 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(s => s.Partner)
 					  .HasForeignKey(s => s.PartnerId);
 
-				entity.HasMany(e => e.Shelves)
-					  .WithOne(s => s.Partner)
-					  .HasForeignKey(s => s.PartnerId);
+				//entity.HasMany(e => e.Shelves)
+				//	  .WithOne(s => s.Partner)
+				//	  .HasForeignKey(s => s.PartnerId);
 
 				entity.HasMany(e => e.CommissionTableApplies)
 					  .WithOne(s => s.Partner)
@@ -1129,15 +1129,20 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired(false);
 
 				// ===== Relationships =====
-				entity.HasOne(e => e.Store)
-					  .WithMany(c => c.Shelves)
-					  .HasForeignKey(e => e.StoreId)
-					  .HasConstraintName("FK_Shelf_Store");
+				//entity.HasOne(e => e.Store)
+				//	  .WithMany(c => c.Shelves)
+				//	  .HasForeignKey(e => e.StoreId)
+				//	  .HasConstraintName("FK_Shelf_Store");
 
-				entity.HasOne(e => e.Partner)
+				//entity.HasOne(e => e.Partner)
+				//	  .WithMany(c => c.Shelves)
+				//	  .HasForeignKey(e => e.PartnerId)
+				//	  .HasConstraintName("FK_Shelf_Partner");
+
+				entity.HasOne(e => e.InventoryLocation)
 					  .WithMany(c => c.Shelves)
-					  .HasForeignKey(e => e.PartnerId)
-					  .HasConstraintName("FK_Shelf_Partner");
+					  .HasForeignKey(e => e.InventoryLocationId)
+					  .HasConstraintName("FK_Shelf_InventoryLocation");
 
 				entity.HasOne(e => e.ShelfType)
 					  .WithMany(st => st.Shelves)
@@ -1503,6 +1508,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.ShipmentAssignments)
 					  .WithOne(a => a.WarehouseLocation)
 					  .HasForeignKey(a => a.WarehouseLocationId);
+
+				entity.HasMany(e => e.Shelves)
+					  .WithOne(l => l.InventoryLocation)
+					  .HasForeignKey(l => l.InventoryLocationId);
 
 				// ===== Unique =====
 				entity.HasIndex(e => e.WarehouseId)

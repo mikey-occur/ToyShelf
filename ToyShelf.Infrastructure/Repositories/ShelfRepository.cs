@@ -10,39 +10,36 @@ using ToyShelf.Infrastructure.Context;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
-    public class ShelfRepository : GenericRepository<Shelf>  , IShelfRepository
-    {
-        public ShelfRepository(ToyShelfDbContext context) : base(context)
-        {
-        }
-
-		public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
-		 int pageNumber = 1,
-		 int pageSize = 10,
-		 ShelfStatus? status = null,
-		 Guid? partnerId = null,    
-		 Guid? storeId = null)      
+	public class ShelfRepository : GenericRepository<Shelf>, IShelfRepository
+	{
+		public ShelfRepository(ToyShelfDbContext context) : base(context)
 		{
-			
+		}
+
+		// ===== PAGINATION =====
+		public async Task<(IEnumerable<Shelf> Items, int TotalCount)> GetShelvesPaginatedAsync(
+			int pageNumber = 1,
+			int pageSize = 10,
+			ShelfStatus? status = null,
+			Guid? inventoryLocationId = null)
+		{
 			var query = _context.Shelves
 				.Include(s => s.ShelfType)
 					.ThenInclude(st => st.ShelfTypeLevels)
+				.Include(s => s.InventoryLocation)
 				.AsQueryable();
 
-		
+			// Filter
 			if (status.HasValue)
 				query = query.Where(s => s.Status == status.Value);
-			if (partnerId.HasValue && partnerId != Guid.Empty)
-				query = query.Where(s => s.PartnerId == partnerId.Value);
-			if (storeId.HasValue && storeId != Guid.Empty)
-				query = query.Where(s => s.StoreId == storeId.Value);
 
-			
+			if (inventoryLocationId.HasValue && inventoryLocationId != Guid.Empty)
+				query = query.Where(s => s.InventoryLocationId == inventoryLocationId.Value);
+
 			var totalCount = await query.CountAsync();
 
-		
 			var items = await query
-				.OrderByDescending(s => s.AssignedAt) 
+				.OrderByDescending(s => s.AssignedAt)
 				.Skip((pageNumber - 1) * pageSize)
 				.Take(pageSize)
 				.ToListAsync();
@@ -50,17 +47,22 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (items, totalCount);
 		}
 
-		public async Task<int> CountActiveShelvesByStoreAsync(Guid storeId)
+		// ===== COUNT ACTIVE IN LOCATION =====
+		public async Task<int> CountActiveShelvesByLocationAsync(Guid inventoryLocationId)
 		{
 			return await _context.Shelves
-				.CountAsync(s => s.StoreId == storeId && s.Status == ShelfStatus.InUse);
+				.CountAsync(s =>
+					s.InventoryLocationId == inventoryLocationId &&
+					s.Status == ShelfStatus.InUse);
 		}
 
+		// ===== GET DETAIL =====
 		public async Task<Shelf?> GetByIdWithDetailsAsync(Guid id)
 		{
 			return await _context.Shelves
-				.Include(s => s.ShelfType) 
-					.ThenInclude(st => st.ShelfTypeLevels) 
+				.Include(s => s.ShelfType)
+					.ThenInclude(st => st.ShelfTypeLevels)
+				.Include(s => s.InventoryLocation)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 	}
