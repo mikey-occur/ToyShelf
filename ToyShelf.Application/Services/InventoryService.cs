@@ -143,7 +143,8 @@ namespace ToyShelf.Application.Services
 					Products = new List<ProductInventoryItem>(),
 					PageNumber = pageNumber,
 					PageSize = pageSize,
-					TotalCount = 0
+					TotalCount = 0,
+					TotalPages = 0 
 				};
 			}
 
@@ -180,6 +181,14 @@ namespace ToyShelf.Application.Services
 				var skip = (pageNumber.Value - 1) * pageSize.Value;
 				grouped = grouped.Skip(skip).Take(pageSize.Value).ToList();
 			}
+
+			int? totalPages = null;
+
+			if (pageSize.HasValue && pageSize.Value > 0)
+			{
+				totalPages = (int)Math.Ceiling((double)totalCount / pageSize.Value);
+			}
+
 
 			var groupedProducts = grouped
 				.Select(productGroup =>
@@ -225,7 +234,8 @@ namespace ToyShelf.Application.Services
 				Products = groupedProducts,
 				PageNumber = pageNumber,
 				PageSize = pageSize,
-				TotalCount = totalCount
+				TotalCount = totalCount,
+				TotalPages = totalPages
 			};
 		}
 
