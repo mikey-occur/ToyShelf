@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Order;
 
 namespace ToyShelf.Application.IServices
@@ -14,5 +15,6 @@ namespace ToyShelf.Application.IServices
 		Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode);
 		Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone);
 		Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string phone);
+		Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null);
 	}
 }

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Order;
 using ToyShelf.Application.Payment;
 using ToyShelf.Domain.Common.Commission;
@@ -193,6 +194,22 @@ namespace ToyShelf.Application.Services
 			});
 
 			return response;
+		}
+
+		public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
+		{
+			
+
+			var (totalOrders, totalRevenue) = await _orderRepository.GetStoreStatsAsync(storeId, fromDate, toDate);
+
+			return new StoreDashboardResponse
+			{
+				StoreId = storeId,
+				TotalOrders = totalOrders,
+				TotalRevenue = totalRevenue,
+				FromDate = fromDate,
+				ToDate = toDate
+			};
 		}
 
 		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
