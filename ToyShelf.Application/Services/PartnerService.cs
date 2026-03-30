@@ -278,7 +278,6 @@ namespace ToyShelf.Application.Services
 					LastLoginAt = mainAccount?.LastLoginAt
 				} : null,
 
-				// 🚀 --- Bổ sung thông tin Commission cho Dashboard ---
 				// Bảng đang áp dụng: Là bảng chưa có ngày kết thúc, hoặc ngày kết thúc vẫn còn ở tương lai
 				CurrentCommission = commissionApplies.FirstOrDefault(c => c.EndDate == null || c.EndDate >= DateTime.UtcNow),
 

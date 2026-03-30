@@ -79,7 +79,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IWarehouseRepository, WarehouseRepository>();
 			services.AddScoped<IProductColorRepository, ProductColorRepository>();
 			services.AddScoped<IColorRepository, ColorRepository>();
-         	//services.AddScoped<IShelfRepository, ShelfRepository>();
+			services.AddScoped<IShelfRepository, ShelfRepository>();
 			services.AddScoped<IPartnerTierRepository, PartnerTierRepository>();
 			services.AddScoped<ICommissionTableRepository, CommissionTableRepository>();
 			services.AddScoped<ICityRepository, CityRepository>();
@@ -118,7 +118,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IColorService, ColorService>();
 			services.AddScoped<IPartnerTierService, PartnerTierService>();
 			services.AddScoped<ICommissionTableService, CommissionTableService>();
-			//services.AddScoped<IShelfService, ShelfService>();
+			services.AddScoped<IShelfService, ShelfService>();
 			services.AddScoped<IQrCodeService, QrCodeService>();
 			services.AddScoped<ICommissionTableApplyService, CommissionTableApplyService>();
 			services.AddScoped<ICityService, CityService>();
