@@ -45,7 +45,7 @@ namespace ToyShelf.Application.Services
 			var totalShelves = await _shelfRepository.GetQueryable()
 				.CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
 
-			// 2. Total Inventory (SUM quantity)
+			// 2. Total Inventory
 			var totalInventory = await _inventoryRepository.GetQueryable()
 				.Where(x => x.InventoryLocation.WarehouseId == warehouseId)
 				.SumAsync(x => (int?)x.Quantity) ?? 0;
@@ -54,20 +54,28 @@ namespace ToyShelf.Application.Services
 			var totalEmployees = await _userWarehouseRepository.GetQueryable()
 				.CountAsync(x => x.WarehouseId == warehouseId);
 
-			// 4. Total Orders (StoreOrder)
-			var totalOrders = await _storeOrderRepository.GetQueryable()
-				.CountAsync(x => x.StoreLocation.WarehouseId == warehouseId);
-
-			// ===== SHIPMENT =====
+			// ===== SHIPMENT BASE =====
 
 			var shipmentQuery = _shipmentRepository.GetQueryable()
 				.Where(x => x.FromLocation.WarehouseId == warehouseId);
 
+			// ===== ORDER=====
+
+			// 4. Total Orders (distinct từ shipment)
+			var totalOrders = await shipmentQuery
+				.Select(x => x.StoreOrderId)
+				.Distinct()
+				.CountAsync();
+
+			// ===== SHIPMENT =====
+
 			// 5. In Progress
 			var totalInProgress = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Approved ||
-				x.Status == ShipmentStatus.Shipping
-			);
+					x.Status == ShipmentStatus.Draft ||
+					x.Status == ShipmentStatus.Shipping ||
+					x.Status == ShipmentStatus.Delivered
+				);
+
 
 			// 6. Completed
 			var totalCompleted = await shipmentQuery.CountAsync(x =>
@@ -87,7 +95,7 @@ namespace ToyShelf.Application.Services
 			// ===== STORE ORDER CHART =====
 
 			var orderChart = await _storeOrderRepository.GetQueryable()
-				.Where(x => x.StoreLocation.WarehouseId == warehouseId)
+				.Where(x => x.Shipments.Any(s => s.FromLocation.WarehouseId == warehouseId))
 				.GroupBy(x => x.Status)
 				.Select(g => new ChartItem
 				{
