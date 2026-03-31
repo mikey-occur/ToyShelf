@@ -13,6 +13,5 @@ namespace ToyShelf.API.Configuration
 			services.AddDbContext<ToyShelfDbContext>(options =>
 				options.UseNpgsql(connectionString));
 		}
-
 	}
 }

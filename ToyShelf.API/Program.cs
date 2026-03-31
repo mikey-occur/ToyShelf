@@ -14,7 +14,7 @@ using ToyShelf.Infrastructure.Context;
 var builder = WebApplication.CreateBuilder(args);
 
 // ===== Modular DI =====
-builder.Services.AddDbContexts(builder.Configuration.GetConnectionString("PostgreSql"));
+builder.Services.AddDbContexts(builder.Configuration.GetConnectionString("DefaultConnection"));
 builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
 builder.Services.AddAppServices(builder.Configuration);

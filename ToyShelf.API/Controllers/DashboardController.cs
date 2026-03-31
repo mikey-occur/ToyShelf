@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Application.Models.Dashboard.Response;
-
 namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]

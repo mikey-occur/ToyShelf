@@ -1,0 +1,38 @@
+services:
+  toyshelf.api:
+    image: ${DOCKER_REGISTRY-}toyshelfapi
+    build:
+      context: .
+      dockerfile: ToyShelf.API/Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Host=postgrestoyshelf;Port=5432;Database=ToyShelfDb;Username=postgres;Password=12345
+    networks:
+      - toyshelfnetwork
+    restart: on-failure
+
+  postgres:
+    image: postgres:15
+    container_name: postgrestoyshelf
+    environment:
+      - POSTGRES_DB=ToyShelfDb
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=12345
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgvolume:/var/lib/postgresql/data
+    networks:
+      - toyshelfnetwork
+    restart: on-failure
+
+networks:
+  toyshelfnetwork:
+
+volumes:
+  pgvolume:

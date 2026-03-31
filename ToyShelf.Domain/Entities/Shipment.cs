@@ -9,7 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public enum ShipmentStatus
 	{
 		Draft,
-		Approved,
+		//Approved,
 		Shipping,
 		Delivered,
 		Received,
