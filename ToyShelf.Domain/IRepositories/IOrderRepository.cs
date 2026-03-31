@@ -14,5 +14,6 @@ namespace ToyShelf.Domain.IRepositories
 
 		Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone);
 		Task<IEnumerable<Order>> GetOrdersByCustomerPhoneAsync(string phone);
+		Task<(int TotalOrders, decimal TotalRevenue)> GetStoreStatsAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null);
 	}
 }

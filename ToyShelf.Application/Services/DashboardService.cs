@@ -1,10 +1,11 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -19,14 +20,17 @@ namespace ToyShelf.Application.Services
 		private readonly IUserWarehouseRepository _userWarehouseRepository;
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IShipmentRepository _shipmentRepository;
-
+		private readonly IOrderRepository _orderRepository;
+		private readonly IPartnerRepository _partnerRepository;
 		public DashboardService(
 			IInventoryLocationRepository inventoryLocationRepository,
 			IShelfRepository shelfRepository,
 			IInventoryRepository inventoryRepository,
 			IUserWarehouseRepository userWarehouseRepository,
 			IStoreOrderRepository storeOrderRepository,
-			IShipmentRepository shipmentRepository)
+			IShipmentRepository shipmentRepository,
+			IOrderRepository orderRepository,
+			IPartnerRepository partnerRepository)
 		{
 			_inventoryLocationRepository = inventoryLocationRepository;
 			_shelfRepository = shelfRepository;
@@ -34,6 +38,8 @@ namespace ToyShelf.Application.Services
 			_userWarehouseRepository = userWarehouseRepository;
 			_storeOrderRepository = storeOrderRepository;
 			_shipmentRepository = shipmentRepository;
+			_orderRepository = orderRepository;
+			_partnerRepository = partnerRepository;
 		}
 
 
@@ -117,6 +123,104 @@ namespace ToyShelf.Application.Services
 				ShipmentChart = shipmentChart,
 				OrderChart = orderChart
 			};
+		}
+
+		public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
+		{
+
+
+			var (totalOrders, totalRevenue) = await _orderRepository.GetStoreStatsAsync(storeId, fromDate, toDate);
+
+			return new StoreDashboardResponse
+			{
+				StoreId = storeId,
+				TotalOrders = totalOrders,
+				TotalRevenue = totalRevenue,
+				FromDate = fromDate,
+				ToDate = toDate
+			};
+		}
+
+		public async Task<PartnerStatCardResponse> GetPartnerStatCardAsync(Guid partnerId, DateTime? startDate, DateTime? endDate)
+		{
+			var now = DateTime.UtcNow;
+
+
+			var currentEndDate = endDate ?? now;
+			var currentStartDate = startDate ?? new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+
+			if (currentStartDate > currentEndDate)
+			{
+				(currentStartDate, currentEndDate) = (currentEndDate, currentStartDate);
+			}
+
+
+			var stats = await _partnerRepository.GetPartnerStatsByDateAsync(partnerId, currentStartDate, currentEndDate);
+
+
+			return new PartnerStatCardResponse
+			{
+				PartnerId = partnerId,
+				Revenue = stats.Revenue,
+				Orders = stats.Orders,
+				Commission = stats.Commission,
+				Stores = stats.Stores
+			};
+		}
+
+		public async Task<List<PartnerChartItemResponse>> GetPartnerChartAsync(Guid partnerId, DateTime? startDate, DateTime? endDate)
+		{
+			var now = DateTime.UtcNow;
+
+			
+			var actualEndDate = endDate ?? now;
+			var actualStartDate = startDate ?? now.AddMonths(-5);
+
+			if (actualStartDate > actualEndDate)
+				(actualStartDate, actualEndDate) = (actualEndDate, actualStartDate);
+
+			
+			var dbData = await _partnerRepository.GetPartnerChartDataAsync(partnerId, actualStartDate, actualEndDate);
+
+			
+			var dbDict = dbData.ToDictionary(x => x.MonthDate.ToString("MM/yyyy"), x => x);
+
+			var chartData = new List<PartnerChartItemResponse>();
+
+		
+			var loopStart = new DateTime(actualStartDate.Year, actualStartDate.Month, 1);
+			var loopEnd = new DateTime(actualEndDate.Year, actualEndDate.Month, 1);
+
+		
+			for (var date = loopStart; date <= loopEnd; date = date.AddMonths(1))
+			{
+				var monthLabel = date.ToString("MM/yyyy"); 
+
+				if (dbDict.TryGetValue(monthLabel, out var stat))
+				{
+				
+					chartData.Add(new PartnerChartItemResponse
+					{
+						DateLabel = monthLabel,
+						Revenue = stat.Revenue,
+						Commission = stat.Commission,
+						Orders = stat.Orders
+					});
+				}
+				else
+				{
+					
+					chartData.Add(new PartnerChartItemResponse
+					{
+						DateLabel = monthLabel,
+						Revenue = 0,
+						Commission = 0,
+						Orders = 0
+					});
+				}
+			}
+
+			return chartData;
 		}
 	}
 }

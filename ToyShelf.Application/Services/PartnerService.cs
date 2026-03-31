@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Partner.Request;
 using ToyShelf.Application.Models.Partner.Response;
 using ToyShelf.Application.Models.Store.Response;
@@ -313,5 +314,7 @@ namespace ToyShelf.Application.Services
 				} : null
 			};
 		}
+
+		
 	}
 }

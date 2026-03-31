@@ -75,6 +75,31 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.OrderItems)
 				.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
 		}
+
+		public async Task<(int TotalOrders, decimal TotalRevenue)> GetStoreStatsAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
+		{
+			var query = _context.Orders
+		.Where(o => o.StoreId == storeId && o.Status.ToUpper() == "PAID")
+		.AsQueryable();
+
+		
+			if (fromDate.HasValue)
+			{
+				query = query.Where(o => o.CreatedAt >= fromDate.Value);
+			}
+
+			
+			if (toDate.HasValue)
+			{
+				query = query.Where(o => o.CreatedAt <= toDate.Value);
+			}
+
+			
+			var totalOrders = await query.CountAsync();
+			var totalRevenue = await query.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+
+			return (totalOrders, totalRevenue);
+		}
 	}
 }
 

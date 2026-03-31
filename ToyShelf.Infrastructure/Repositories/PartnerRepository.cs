@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Context;
+using static ToyShelf.Domain.IRepositories.IPartnerRepository;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
@@ -49,6 +50,60 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Partners
 				.Where(p => p.Code.StartsWith(prefix + "-"))
 				.ToListAsync();
+		}
+
+		public async Task<(decimal Revenue, int Orders, decimal Commission, int Stores)> GetPartnerStatsByDateAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null)
+		{
+			var query = _context.CommissionHistories
+				.Include(c => c.OrderItem)     
+					.ThenInclude(oi => oi.Order)
+				.Where(c => c.PartnerId == partnerId)
+				.AsQueryable();
+
+			if (startDate.HasValue)
+			{
+				query = query.Where(c => c.CreatedAt >= startDate.Value);
+			}
+
+			if (endDate.HasValue)
+			{
+				query = query.Where(c => c.CreatedAt <= endDate.Value);
+			}
+
+			var revenue = await query.SumAsync(c => (decimal?)c.SalesAmount) ?? 0m;
+			var commission = await query.SumAsync(c => (decimal?)c.CommissionAmount) ?? 0m;
+
+			var ordersCount = await query.Select(c => c.OrderItem.OrderId).Distinct().CountAsync();
+
+			var storesCount = await query.Select(c => c.OrderItem.Order.StoreId).Distinct().CountAsync();
+
+			return (revenue, ordersCount, commission, storesCount);
+		}
+
+		public async Task<List<MonthlyStatResult>> GetPartnerChartDataAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null)
+		{
+			var query = _context.CommissionHistories
+			.Include(c => c.OrderItem)
+			.Where(c => c.PartnerId == partnerId);
+
+				if (startDate.HasValue) query = query.Where(c => c.CreatedAt >= startDate.Value);
+				if (endDate.HasValue) query = query.Where(c => c.CreatedAt <= endDate.Value);
+
+				
+				var groupedData = await query
+					.GroupBy(c => new { c.CreatedAt.Year, c.CreatedAt.Month })
+					.Select(g => new MonthlyStatResult
+					{
+						
+						MonthDate = new DateTime(g.Key.Year, g.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc),
+						Revenue = g.Sum(c => (decimal?)c.SalesAmount) ?? 0m,
+						Commission = g.Sum(c => (decimal?)c.CommissionAmount) ?? 0m,
+						Orders = g.Select(c => c.OrderItem.OrderId).Distinct().Count()
+					})
+					.OrderBy(x => x.MonthDate) 
+					.ToListAsync();
+
+				return groupedData;
 		}
 	}
 }
