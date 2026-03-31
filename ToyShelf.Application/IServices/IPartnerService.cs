@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Partner.Request;
 using ToyShelf.Application.Models.Partner.Response;
 
@@ -26,5 +27,6 @@ namespace ToyShelf.Application.IServices
 
 		// ===== DELETE (hard) =====
 		Task DeleteAsync(Guid id);
+
 	}
 }
