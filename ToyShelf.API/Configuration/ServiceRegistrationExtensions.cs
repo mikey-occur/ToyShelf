@@ -49,7 +49,7 @@ namespace ToyShelf.API.Configuration
 				.UseRecommendedSerializerSettings()
 				.UsePostgreSqlStorage(options =>
 				{
-					options.UseNpgsqlConnection(configuration.GetConnectionString("PostgreSql"));
+					options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
 				}));
 			services.AddHangfireServer();
 			
