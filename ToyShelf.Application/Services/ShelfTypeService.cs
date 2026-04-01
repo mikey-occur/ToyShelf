@@ -38,7 +38,9 @@ namespace ToyShelf.Application.Services
 				Height = request.Height,
 				Depth = request.Depth,
 				TotalLevels = request.Levels?.Count ?? request.TotalLevels,
-				SuitableProductCategoryTypes = request.SuitableProductCategoryTypes,
+				SuitableProductCategoryTypes = request.SuitableProductCategoryTypes != null && request.SuitableProductCategoryTypes.Any()
+						 ? string.Join(",", request.SuitableProductCategoryTypes)
+						 : string.Empty,
 				DisplayGuideline = request.DisplayGuideline,
 				IsActive = true,
 
@@ -50,7 +52,9 @@ namespace ToyShelf.Application.Services
 					Name = l.Name.Trim(),
 					ClearanceHeight = l.ClearanceHeight,
 					RecommendedCapacity = l.RecommendedCapacity,
-					SuitableProductCategoryTypes = l.SuitableProductCategoryTypes,
+					SuitableProductCategoryTypes = l.SuitableProductCategoryTypes != null && l.SuitableProductCategoryTypes.Any()
+							 ? string.Join(",", l.SuitableProductCategoryTypes)
+							 : string.Empty,
 					DisplayGuideline = l.DisplayGuideline
 				}).ToList() ?? new List<ShelfTypeLevel>()
 			};
@@ -140,8 +144,14 @@ namespace ToyShelf.Application.Services
 			shelfType.Height = request.Height != default ? request.Height : shelfType.Height;
 			shelfType.Depth = request.Depth != default ? request.Depth : shelfType.Depth;
 			shelfType.TotalLevels = request.TotalLevels != default ? request.TotalLevels : shelfType.TotalLevels;
-			shelfType.SuitableProductCategoryTypes = request.SuitableProductCategoryTypes ?? shelfType.SuitableProductCategoryTypes;
 			shelfType.DisplayGuideline = request.DisplayGuideline ?? shelfType.DisplayGuideline;
+
+			if (request.SuitableProductCategoryTypes != null)
+			{
+				shelfType.SuitableProductCategoryTypes = request.SuitableProductCategoryTypes.Any()
+					? string.Join(",", request.SuitableProductCategoryTypes)
+					: string.Empty;
+			}
 
 			if (request.Levels != null && request.Levels.Any())
 			{
@@ -167,7 +177,12 @@ namespace ToyShelf.Application.Services
 						existingLevel.Name = !string.IsNullOrWhiteSpace(levelReq.Name) ? levelReq.Name.Trim() : existingLevel.Name;
 						existingLevel.ClearanceHeight = levelReq.ClearanceHeight != default ? levelReq.ClearanceHeight : existingLevel.ClearanceHeight;
 						existingLevel.RecommendedCapacity = levelReq.RecommendedCapacity != default ? levelReq.RecommendedCapacity : existingLevel.RecommendedCapacity;
-						existingLevel.SuitableProductCategoryTypes = levelReq.SuitableProductCategoryTypes ?? existingLevel.SuitableProductCategoryTypes;
+						if (levelReq.SuitableProductCategoryTypes != null)
+						{
+							existingLevel.SuitableProductCategoryTypes = levelReq.SuitableProductCategoryTypes.Any()
+								? string.Join(", ", levelReq.SuitableProductCategoryTypes)
+								: string.Empty;
+						}
 						existingLevel.DisplayGuideline = levelReq.DisplayGuideline ?? existingLevel.DisplayGuideline;
 					}
 					else
@@ -180,7 +195,9 @@ namespace ToyShelf.Application.Services
 							Name = levelReq.Name.Trim(),
 							ClearanceHeight = levelReq.ClearanceHeight,
 							RecommendedCapacity = levelReq.RecommendedCapacity,
-							SuitableProductCategoryTypes = levelReq.SuitableProductCategoryTypes ?? string.Empty,
+							SuitableProductCategoryTypes = levelReq.SuitableProductCategoryTypes != null && levelReq.SuitableProductCategoryTypes.Any()
+									? string.Join(", ", levelReq.SuitableProductCategoryTypes)
+									: string.Empty,
 							DisplayGuideline = levelReq.DisplayGuideline
 						};
 

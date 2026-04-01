@@ -59,6 +59,12 @@ namespace ToyShelf.API.Controllers
 				if (verifiedData != null)
 				{
 					// 2. Chạy logic xử lý đơn hàng
+
+					if (verifiedData.OrderCode == 123 || verifiedData.Description == "Ma test")
+					{
+						Console.WriteLine("[PAYOS] Đã chặn thành công cái request test ping!");
+						return Ok(new { message = "Test webhook success" });
+					}
 					await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
 				}
 

@@ -225,7 +225,7 @@ namespace ToyShelf.Application.Services
 
 				if (result.Rate == 0)
 				{
-					throw new Exception($"[BẮT ĐƯỢC LỖI TÍNH TIỀN]: {result.SourceDescription}");
+					Console.WriteLine($"[CẢNH BÁO TÍNH TIỀN]: Đơn {orderCode} - Mã SP {item.ProductColorId} - {result.SourceDescription}");
 				}
 				var baseSalesAmount = item.Price * item.Quantity;
 				// Tạo bản ghi vào bảng CommissionHistory (Sử dụng đúng Rate và SourceDescription từ record)
