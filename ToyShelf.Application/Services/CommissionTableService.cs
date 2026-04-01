@@ -41,6 +41,12 @@ namespace ToyShelf.Application.Services
 
 			if (request.Items != null && request.Items.Any())
 			{
+
+				if (request.Items.Any(i => i.ProductCategoryIds == null || !i.ProductCategoryIds.Any()))
+				{
+					throw new AppException("Mỗi mức hoa hồng phải được gán ít nhất 1 danh mục sản phẩm!", 400);
+				}
+
 				var allCategoryIds = request.Items
 					.Where(i => i.ProductCategoryIds != null)
 					.SelectMany(i => i.ProductCategoryIds)
