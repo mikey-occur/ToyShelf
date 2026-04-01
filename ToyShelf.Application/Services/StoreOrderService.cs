@@ -166,7 +166,11 @@ namespace ToyShelf.Application.Services
 				throw new AppException("Order must be approved", 400);
 
 			// 2. Lấy city của store
+			if (order.StoreLocation?.Store == null)
+				throw new AppException("Store location or store not found", 500);
+
 			var cityId = order.StoreLocation.Store.CityId;
+
 
 			// 3. Lấy warehouse locations cùng city
 			var warehouseLocations = await _locationRepository
@@ -194,9 +198,11 @@ namespace ToyShelf.Application.Services
 					i.Quantity > 0 &&
 					i.Status == InventoryStatus.Available)
 				.GroupBy(i => i.InventoryLocation)
+				.Where(g => g.FirstOrDefault()?.InventoryLocation?.Warehouse != null)
 				.Select(group =>
 				{
-					var warehouse = group.First().InventoryLocation.Warehouse;
+					var first = group.First();
+					var warehouse = first.InventoryLocation!.Warehouse!;
 
 					return new WarehouseMatchResponse
 					{
