@@ -160,35 +160,7 @@ namespace ToyShelf.Application.Services
             return MapToResponse(shelf);
         }
 
-        ///// <summary>
-        ///// Hàm kiểm tra xem cửa hàng đã đạt giới hạn số lượng tủ theo hạng đối tác hay chưa. Nếu đã đạt, sẽ ném ra lỗi yêu cầu nâng cấp hạng đối tác.
-        ///// </summary>
-        ///// <param name="storeId"></param>
-        ///// <returns></returns>
-        ///// <exception cref="AppException"></exception>
-        //private async Task ValidateStoreCapacityAsync(Guid storeId)
-        //{
-
-        //    var store = await _storeRepo.GetStoreWithTierAsync(storeId)
-        //        ?? throw new AppException("Không tìm thấy Cửa hàng", 404);
-
-        //    var maxLimit = store.Partner?.PartnerTier?.MaxShelvesPerStore;
-
-
-        //    if (!maxLimit.HasValue) return;
-
-
-        //    var currentCount = await _shelfRepository.CountActiveShelvesByStoreAsync(storeId);
-
-
-        //    if (currentCount >= maxLimit.Value)
-        //    {
-        //        var tierName = store.Partner?.PartnerTier?.Name ?? "N/A";
-        //        throw new AppException(
-        //            $"Store shelf '{store.Name}' have reach limit ({maxLimit.Value} shelf) for tier [{tierName}]. " +
-        //            $"Please Updeate partnertier !", 400);
-        //    }
-        //}
+      
 
 
         // ===== MAPPER =====
