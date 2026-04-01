@@ -450,7 +450,7 @@ namespace ToyShelf.Application.Services
 			return new ShipmentResponse
 			{
 				Id = shipment.Id,
-				Code = shipment.Code,
+				Code = shipment.Code,	
 				StoreOrderId = shipment.StoreOrderId ?? Guid.Empty,
 				FromLocationId = shipment.FromLocationId,
 				FromLocationName = shipment.FromLocation.Name,
