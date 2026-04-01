@@ -451,7 +451,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = shipment.Id,
 				Code = shipment.Code,
-				StoreOrderId = shipment.StoreOrderId,
+				StoreOrderId = shipment.StoreOrderId ?? Guid.Empty,
 				FromLocationId = shipment.FromLocationId,
 				FromLocationName = shipment.FromLocation.Name,
 				ToLocationId = shipment.ToLocationId,

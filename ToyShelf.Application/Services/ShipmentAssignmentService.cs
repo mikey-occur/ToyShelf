@@ -238,7 +238,7 @@ namespace ToyShelf.Application.Services
 			{
 				Id = assignment.Id,
 
-				StoreOrderId = assignment.StoreOrderId,
+				StoreOrderId = assignment.StoreOrderId ?? Guid.Empty,
 
 				StoreOrderCode = assignment.StoreOrder.Code,
 

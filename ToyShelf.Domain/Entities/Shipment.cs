@@ -21,7 +21,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid Id { get; set; }
 		public string Code { get; set; } = null!;
 
-		public Guid StoreOrderId { get; set; }
+		public Guid? StoreOrderId { get; set; }
+		public Guid? ShelfOrderId { get; set; }
+
 		public Guid? ShipperId { get; set; }
 
 		public Guid FromLocationId { get; set; }
@@ -37,7 +39,9 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? DeliveredAt { get; set; }
 		public DateTime? ReceivedAt { get; set; }
 
-		public virtual StoreOrder StoreOrder { get; set; } = null!;
+		public virtual StoreOrder? StoreOrder { get; set; }
+		public virtual ShelfOrder? ShelfOrder { get; set; }
+
 		public virtual User? Shipper { get; set; }
 
 		public virtual InventoryLocation FromLocation { get; set; } = null!;
@@ -48,6 +52,8 @@ namespace ToyShelf.Domain.Entities
 
 
 		public virtual ICollection<ShipmentItem> Items { get; set; } = new List<ShipmentItem>();
+		public virtual ICollection<ShelfShipmentItem> ShelfShipmentItems { get; set; } = new List<ShelfShipmentItem>();
+
 		public virtual ICollection<ShipmentMedia> Media { get; set; } = new List<ShipmentMedia>();
 	}
 }

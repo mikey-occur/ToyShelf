@@ -29,6 +29,11 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<StoreInvitation> StoreInvitations { get; set; }
 		public DbSet<Warehouse> Warehouses { get; set; }
 
+		public DbSet<ShelfOrder> ShelfOrders { get; set; }
+		public DbSet<ShelfOrderItem> ShelfOrderItems { get; set; }
+		public DbSet<ShelfShipmentItem> ShelfShipmentItems { get; set; }
+
+
 		public DbSet<Shelf> Shelves { get; set; }
 		public DbSet<ShelfType> ShelfTypes { get; set; }
 		public DbSet<ShelfTypeLevel> shelfTypeLevels { get; set; }
@@ -1105,6 +1110,152 @@ namespace ToyShelf.Infrastructure.Context
 			});
 
 
+			// ================== ShelfOrder ==================
+			modelBuilder.Entity<ShelfOrder>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(30);
+
+				entity.HasIndex(e => e.Code)
+					  .IsUnique();
+
+				entity.Property(e => e.Status)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				entity.Property(e => e.ApprovedAt);
+
+				entity.Property(e => e.RejectedAt);
+
+				entity.Property(e => e.Note)
+					  .HasMaxLength(500);
+
+				entity.Property(e => e.AdminNote)
+					  .HasMaxLength(500);
+
+				// ================= FK =================
+
+				entity.HasOne(e => e.StoreLocation)
+					  .WithMany(a => a.ShelfOrders) 
+					  .HasForeignKey(e => e.StoreLocationId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_StoreLocation");
+
+				entity.HasOne(e => e.RequestedByUser)
+					  .WithMany(a => a.RequestShelfOrders)
+					  .HasForeignKey(e => e.RequestedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_RequestedByUser");
+
+				entity.HasOne(e => e.ApprovedByUser)
+					  .WithMany(a => a.ApprovedShelfOrders)
+					  .HasForeignKey(e => e.ApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_ApprovedByUser");
+
+				entity.HasOne(e => e.RejectedByUser)
+					  .WithMany(a => a.RejectedShelfOrders)
+					  .HasForeignKey(e => e.RejectedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_RejectedByUser");
+
+				// ================= RELATION =================
+
+				entity.HasMany(e => e.Items)
+					  .WithOne(a => a.ShelfOrder)
+					  .HasForeignKey(a => a.ShelfOrderId)
+					  .OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(e => e.Shipments)
+					  .WithOne(a => a.ShelfOrder) 
+					  .HasForeignKey(a => a.ShelfOrderId)
+					  .OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasMany(e => e.ShipmentAssignments)
+					  .WithOne(a => a.ShelfOrder) 
+					  .HasForeignKey(a => a.ShelfOrderId)
+					  .OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// ================== ShelfOrderItem ==================
+			modelBuilder.Entity<ShelfOrderItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.Quantity)
+					  .IsRequired();
+
+				entity.Property(e => e.FulfilledQuantity)
+					  .IsRequired()
+					  .HasDefaultValue(0);
+
+				entity.Property(e => e.ShelfTypeName)
+					  .IsRequired()
+					  .HasMaxLength(200);
+
+				entity.Property(e => e.ImageUrl)
+					  .HasMaxLength(500);
+
+				// ================= FK =================
+
+				entity.HasOne(e => e.ShelfOrder)
+					  .WithMany(a => a.Items)
+					  .HasForeignKey(e => e.ShelfOrderId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_ShelfOrderItem_ShelfOrder");
+
+				entity.HasOne(e => e.ShelfType)
+					  .WithMany(a => a.ShelfOrderItems) 
+					  .HasForeignKey(e => e.ShelfTypeId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrderItem_ShelfType");
+			});
+
+			// ================== ShelfShipmentItem ==================
+			modelBuilder.Entity<ShelfShipmentItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.ExpectedQuantity)
+					  .IsRequired();
+
+				entity.Property(e => e.ReceivedQuantity)
+					  .IsRequired()
+					  .HasDefaultValue(0);
+
+				// ================= FK =================
+
+				entity.HasOne(e => e.Shipment)
+					  .WithMany(s => s.ShelfShipmentItems)
+					  .HasForeignKey(e => e.ShipmentId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_ShelfShipmentItem_Shipment");
+
+				entity.HasOne(e => e.ShelfType)
+					  .WithMany(st => st.ShelfShipmentItems)
+					  .HasForeignKey(e => e.ShelfTypeId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfShipmentItem_ShelfType");
+			});
+
+
 			// ================== Shelf ==================
 			modelBuilder.Entity<Shelf>(entity =>
 			{
@@ -1584,6 +1735,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(s => s.StoreOrderId)
 					  .HasConstraintName("FK_Shipment_StoreOrder");
 
+				entity.HasOne(s => s.ShelfOrder)
+					  .WithMany(o => o.Shipments)
+					  .HasForeignKey(s => s.ShelfOrderId)
+					  .HasConstraintName("FK_Shipment_ShelfOrder");
 
 				entity.HasOne(e => e.Shipper)
 					  .WithMany(u => u.Shipments)
@@ -1718,6 +1873,11 @@ namespace ToyShelf.Infrastructure.Context
 				  .WithMany(s => s.ShipmentAssignments)
 				  .HasForeignKey(e => e.StoreOrderId)
 				  .HasConstraintName("FK_ShipmentAssignment_StoreOrder");
+
+				entity.HasOne(e => e.ShelfOrder)
+				  .WithMany(s => s.ShipmentAssignments)
+				  .HasForeignKey(e => e.ShelfOrderId)
+				  .HasConstraintName("FK_ShipmentAssignment_ShelfOrder");
 
 				entity.HasOne(e => e.Shipper)
 				  .WithMany(s => s.Shippers)
