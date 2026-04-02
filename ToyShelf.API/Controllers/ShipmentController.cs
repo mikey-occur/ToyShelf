@@ -75,7 +75,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPatch("{id}/pickup")]
-		[Authorize(Roles = "Shipper")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<ActionResult<ActionResponse>> Pickup(
 			Guid id,
 			[FromBody] UploadShipmentMediaRequest request,
@@ -87,7 +87,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPatch("{id}/delivery")]
-		[Authorize(Roles = "Shipper")]
+		[Authorize(Roles = "Warehouse")]
 		public async Task<ActionResult<ActionResponse>> Delivery(
 			Guid id,
 			[FromBody] UploadShipmentMediaRequest request,
