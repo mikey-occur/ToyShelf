@@ -22,16 +22,26 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.StoreLocation)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.Items)
+
 				.Where(x => x.ShipperId == shipperId)
 				.ToListAsync();
 		}
@@ -44,17 +54,26 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
-				.Include(x => x.Shipments)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.StoreLocation)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc.Color)  
+							.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.Items)
+
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
@@ -80,6 +99,12 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Color)
 
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.Items)
+
 				.Where(x => x.StoreOrderId == storeOrderId)
 				.ToListAsync();
 		}
@@ -92,16 +117,26 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Shipments)
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.StoreLocation)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
 							.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShelfOrder)
+					.ThenInclude(o => o.Items)
+
 				.ToListAsync();
 		}
 	}
