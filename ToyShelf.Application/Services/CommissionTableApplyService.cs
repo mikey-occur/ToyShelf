@@ -126,13 +126,13 @@ namespace ToyShelf.Application.Services
 			if (partner.PartnerTierId == newTierId)
 				throw new AppException("Have already have Tier !", 400);
 
-			// 2. Lấy Bảng giá mặc định của Hạng mới (Gọi qua Interface, giấu nhẹm DB đi)
+			// 2. Lấy Bảng giá mặc định của Hạng mới 
 			var newTierTable = await _priceTableRepo.GetActiveByTierTableAsync(newTierId)
 				?? throw new AppException("Not found commission table for this tier!", 404);
 
 			var currentTime = DateTime.UtcNow;
 
-			// 3. Lấy các Bảng giá Hạng CŨ đang chạy & "Chốt sổ" tụi nó
+			// 3. Lấy các Bảng giá Hạng CŨ đang chạy 
 			var activeTierApplies = await _repo.GetActiveTierAppliesAsync(partnerId);
 
 			foreach (var oldApply in activeTierApplies)
@@ -148,7 +148,7 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				PartnerId = partnerId,
 				CommissionTableId = newTierTable.Id,
-				Name = $"[Auto-Apply] Nâng cấp hạng {newTierTable.PartnerTier.Name} - Áp dụng bảng {newTierTable.Name}",
+				Name = $"[Auto-Apply] Nâng cấp hạng {newTierTable.PartnerTier?.Name ?? "Mới"} - Áp dụng bảng {newTierTable.Name}",
 				StartDate = currentTime,
 				EndDate = null,
 				IsActive = true
