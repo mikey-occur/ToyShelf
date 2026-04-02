@@ -35,6 +35,7 @@ namespace ToyShelf.Infrastructure.Context
 
 
 		public DbSet<Shelf> Shelves { get; set; }
+		public DbSet<ShelfTransaction> ShelfTransactions { get; set; }
 		public DbSet<ShelfType> ShelfTypes { get; set; }
 		public DbSet<ShelfTypeLevel> shelfTypeLevels { get; set; }
 
@@ -1253,6 +1254,54 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShelfTypeId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShelfShipmentItem_ShelfType");
+			});
+
+			// ================== ShelfTransaction ==================
+			modelBuilder.Entity<ShelfTransaction>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.FromStatus)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.ToStatus)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.ReferenceType)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired()
+					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+				// ===== Relationships =====
+
+				entity.HasOne(e => e.Shelf)
+					  .WithMany(st => st.ShelfTransactions) 
+					  .HasForeignKey(e => e.ShelfId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfTransaction_Shelf");
+
+				entity.HasOne(e => e.FromLocation)
+					  .WithMany(il => il.OutgoingShelfTransactions) 
+					  .HasForeignKey(e => e.FromLocationId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfTransaction_FromLocation");
+
+				entity.HasOne(e => e.ToLocation)
+					  .WithMany(il => il.IncomingShelfTransactions)
+					  .HasForeignKey(e => e.ToLocationId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfTransaction_ToLocation");
 			});
 
 

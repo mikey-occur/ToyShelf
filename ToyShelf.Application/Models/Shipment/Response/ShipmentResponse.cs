@@ -12,9 +12,15 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public Guid Id { get; set; }
 		public string Code { get; set; } = null!;
 
-		public Guid StoreOrderId { get; set; }
+
+		public Guid? StoreOrderId { get; set; }
+		public Guid? ShelfOrderId { get; set; }
+
+		public string OrderType { get; set; } = null!;
+
 		public Guid ToLocationId { get; set; }
 		public string ToLocationName { get; set; } = null!;
+
 		public Guid FromLocationId { get; set; }
 		public string FromLocationName { get; set; } = null!;
 
@@ -27,6 +33,7 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public DateTime? DeliveredAt { get; set; }
 		public DateTime? ReceivedAt { get; set; }
 
-		public List<ShipmentItemResponse> Items { get; set; } = new();
+		public List<ShipmentProductItemResponse>? ProductItems { get; set; }
+		public List<ShipmentShelfItemResponse>? ShelfItems { get; set; }
 	}
 }

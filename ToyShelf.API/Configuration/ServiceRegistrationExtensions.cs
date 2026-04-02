@@ -102,6 +102,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IShelfRepository, ShelfRepository>();
 			services.AddScoped<IShelfOrderRepository, ShelfOrderRepository>();
 			services.AddScoped<IShelfOrderItemRepository, ShelfOrderItemRepository>();
+			services.AddScoped<IShelfShipmentItemRepository, ShelfShipmentItemRepository>();
 			
 			
 			// ===== Services =====
