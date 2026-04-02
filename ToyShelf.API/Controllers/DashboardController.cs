@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
-using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]
@@ -34,21 +35,23 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<StoreDashboardResponse>.Ok(result, "Stat card data retrieved successfully");
 		}
 
-
 		// ===== GET STAT CARD =====
 		/// <summary>
-		/// Get  (Orders, Revenue) for Dashboard Card.
+		/// Get store revenue for chart.
 		/// </summary>
-		[HttpGet("Dash-board")]
-		public async Task<BaseResponse<StoreDashboardResponse>> GetRevenueDashBoard(
-			[FromQuery] Guid storeId,
-			[FromQuery] DateTime? fromDate,
-			[FromQuery] DateTime? toDate)
-		{
-			
-			var result = await _dashboardService.GetStoreRevenueAsync(storeId, fromDate, toDate);
 
-			return BaseResponse<StoreDashboardResponse>.Ok(result, "DashBoard data retrieved successfully");
+		[HttpGet("store/{storeId:guid}/revenue-chart")]
+		public async Task<IActionResult> GetStoreRevenueChart(
+		[FromRoute] Guid storeId,
+		[FromQuery] StoreChartRequest request) 
+		{
+			var chartData = await _dashboardService.GetStoreRevenueChartAsync(storeId, request);
+
+			return Ok(new
+			{
+				success = true,
+				data = chartData
+			});
 		}
 
 

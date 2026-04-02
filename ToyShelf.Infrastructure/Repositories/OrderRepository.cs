@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Context;
+using static ToyShelf.Domain.IRepositories.IOrderRepository;
 
 namespace ToyShelf.Infrastructure.Repositories
 {
@@ -74,6 +75,24 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(p => p.PartnerTier)
 				.Include(o => o.OrderItems)
 				.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+		}
+
+		public async Task<List<DailyStatResult>> GetStoreChartDataAsync(Guid storeId, DateTime startDate, DateTime endDate)
+		{
+			return await _context.Orders
+				.Where(o => o.StoreId == storeId
+						 && o.Status.ToUpper() == "PAID"
+						 && o.CreatedAt >= startDate
+						 && o.CreatedAt <= endDate)
+			
+				.GroupBy(o => new { o.CreatedAt.Year, o.CreatedAt.Month, o.CreatedAt.Day })
+				.Select(g => new DailyStatResult
+				{
+					Date = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day),
+					TotalOrders = g.Count(),
+					TotalRevenue = g.Sum(o => (decimal?)o.TotalAmount) ?? 0m
+				})
+				.ToListAsync();
 		}
 
 		public async Task<(int TotalOrders, decimal TotalRevenue)> GetStoreStatsAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)

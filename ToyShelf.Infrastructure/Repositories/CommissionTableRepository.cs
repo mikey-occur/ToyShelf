@@ -19,6 +19,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<CommissionTable?> GetActiveByTierTableAsync(Guid tierId)
 		{
 			return await _context.CommissionTables
+			.Include(t => t.PartnerTier)
 		.FirstOrDefaultAsync(t => t.Type == CommissionTableType.Tier
 							   && t.PartnerTierId == tierId
 							   && t.IsActive);
