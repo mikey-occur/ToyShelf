@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
@@ -216,6 +217,104 @@ namespace ToyShelf.Application.Services
 						Revenue = 0,
 						Commission = 0,
 						Orders = 0
+					});
+				}
+			}
+
+			return chartData;
+		}
+
+		public async Task<List<StoreChartItemResponse>> GetStoreRevenueChartAsync(Guid storeId, StoreChartRequest request)
+		{
+			var now = DateTime.UtcNow.Date;
+			DateTime startDate;
+			DateTime endDate;
+			var viewType = request.ViewType.ToLower();
+
+			// Nếu ViewType là Year mà FE lại truyền kèm Month -> Mình tự bẻ lái nó thành ViewType = Month luôn
+			if (viewType == "year" && request.Month.HasValue)
+			{
+				viewType = "month";
+			}
+
+			// 1. TÍNH TOÁN NGÀY BẮT ĐẦU VÀ KẾT THÚC DỰA VÀO FILTER
+			switch (viewType)
+			{
+				case "week":
+					// Mặc định lấy tuần hiện tại (Tính từ Thứ 2 đến Chủ Nhật)
+					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+					startDate = now.AddDays(-1 * diff).Date;
+					endDate = startDate.AddDays(7).AddTicks(-1);
+					break;
+
+				case "month":
+					// Lấy tháng/năm truyền vào, nếu không có thì lấy hiện tại
+					int m = request.Month ?? now.Month;
+					int y = request.Year ?? now.Year;
+					startDate = new DateTime(y, m, 1);
+					endDate = startDate.AddMonths(1).AddTicks(-1);
+					break;
+
+				case "year":
+				default:
+					// Chỉ truyền năm -> Lấy nguyên năm
+					int year = request.Year ?? now.Year;
+					startDate = new DateTime(year, 1, 1);
+					endDate = new DateTime(year, 12, 31, 23, 59, 59);
+					break;
+			}
+
+			// 2. KÉO DATA TỪ DB LÊN (Đã được gom theo ngày)
+			var dbData = await _orderRepository.GetStoreChartDataAsync(storeId, startDate, endDate);
+			var chartData = new List<StoreChartItemResponse>();
+
+			// 3. VÒNG LẶP ĐIỀN DATA (TRÁNH BỊ GÃY BIỂU ĐỒ)
+			if (viewType == "year")
+			{
+				// Vòng lặp 12 tháng
+				for (int i = 1; i <= 12; i++)
+				{
+					// Lọc ra các ngày thuộc tháng i và tính tổng
+					var monthData = dbData.Where(d => d.Date.Month == i).ToList();
+					chartData.Add(new StoreChartItemResponse
+					{
+						DateLabel = $"Tháng {i}", // Trục X
+						TotalOrders = monthData.Sum(x => x.TotalOrders),
+						TotalRevenue = monthData.Sum(x => x.TotalRevenue)
+					});
+				}
+			}
+			else if (viewType == "week")
+			{
+				// Vòng lặp 7 ngày trong tuần
+				var daysOfWeek = new[] { "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN" };
+				for (int i = 0; i < 7; i++)
+				{
+					var loopDate = startDate.AddDays(i);
+					var dayData = dbData.FirstOrDefault(d => d.Date == loopDate);
+
+					chartData.Add(new StoreChartItemResponse
+					{
+						DateLabel = daysOfWeek[i], 
+						TotalOrders = dayData?.TotalOrders ?? 0,
+						TotalRevenue = dayData?.TotalRevenue ?? 0m
+					});
+				}
+			}
+			else // month
+			{
+				// Vòng lặp từ mùng 1 đến mùng 28/29/30/31 của tháng đó
+				int daysInMonth = DateTime.DaysInMonth(startDate.Year, startDate.Month);
+				for (int i = 1; i <= daysInMonth; i++)
+				{
+					var loopDate = new DateTime(startDate.Year, startDate.Month, i);
+					var dayData = dbData.FirstOrDefault(d => d.Date == loopDate);
+
+					chartData.Add(new StoreChartItemResponse
+					{
+						DateLabel = loopDate.ToString("dd/MM"), // Nhãn trục X: 01/03, 02/03...
+						TotalOrders = dayData?.TotalOrders ?? 0,
+						TotalRevenue = dayData?.TotalRevenue ?? 0m
 					});
 				}
 			}
