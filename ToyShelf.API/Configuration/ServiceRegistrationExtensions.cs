@@ -103,7 +103,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IShelfOrderRepository, ShelfOrderRepository>();
 			services.AddScoped<IShelfOrderItemRepository, ShelfOrderItemRepository>();
 			services.AddScoped<IShelfShipmentItemRepository, ShelfShipmentItemRepository>();
-			
+			services.AddScoped<IShelfTransactionRepository, ShelfTransactionRepository>();
 			
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();

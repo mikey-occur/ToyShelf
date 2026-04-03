@@ -9,6 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public enum ShelfStatus
 	{
 		Available,     // đang nằm ở warehouse
+		InTransit,
 		InUse,         // đang ở store và sử dụng
 		Recalled,      // bị thu hồi
 		Maintenance,   // bảo trì
