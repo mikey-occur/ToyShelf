@@ -80,30 +80,27 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (revenue, ordersCount, commission, storesCount);
 		}
 
-		public async Task<List<MonthlyStatResult>> GetPartnerChartDataAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null)
+
+		public async Task<List<PartnerDailyStatResult>> GetPartnerChartDataAsync(Guid partnerId, DateTime startDate, DateTime endDate)
 		{
 			var query = _context.CommissionHistories
 			.Include(c => c.OrderItem)
-			.Where(c => c.PartnerId == partnerId);
+			.Where(c => c.PartnerId == partnerId
+					 && c.CreatedAt >= startDate
+					 && c.CreatedAt <= endDate);
 
-				if (startDate.HasValue) query = query.Where(c => c.CreatedAt >= startDate.Value);
-				if (endDate.HasValue) query = query.Where(c => c.CreatedAt <= endDate.Value);
-
-				
 				var groupedData = await query
-					.GroupBy(c => new { c.CreatedAt.Year, c.CreatedAt.Month })
-					.Select(g => new MonthlyStatResult
+					.GroupBy(c => new { c.CreatedAt.Year, c.CreatedAt.Month, c.CreatedAt.Day })
+					.Select(g => new PartnerDailyStatResult
 					{
-						
-						MonthDate = new DateTime(g.Key.Year, g.Key.Month, 1, 0, 0, 0, DateTimeKind.Utc),
-						Revenue = g.Sum(c => (decimal?)c.SalesAmount) ?? 0m,
-						Commission = g.Sum(c => (decimal?)c.CommissionAmount) ?? 0m,
-						Orders = g.Select(c => c.OrderItem.OrderId).Distinct().Count()
+						Date = new DateTime(g.Key.Year, g.Key.Month, g.Key.Day), 
+						TotalRevenue = g.Sum(c => (decimal?)c.SalesAmount) ?? 0m,
+						TotalCommission = g.Sum(c => (decimal?)c.CommissionAmount) ?? 0m,
+						TotalOrders = g.Select(c => c.OrderItem.OrderId).Distinct().Count()
 					})
-					.OrderBy(x => x.MonthDate) 
 					.ToListAsync();
 
-				return groupedData;
+			return groupedData;
 		}
 	}
 }
