@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Application.Models.Dashboard.Response
 {
-	public class PartnerChartItemResponse
+	public class PartnerDailyStatResult
 	{
-		public string DateLabel { get; set; } = string.Empty;
+		public DateTime Date { get; set; }
 		public int TotalOrders { get; set; }
 		public decimal TotalRevenue { get; set; }
 		public decimal TotalCommission { get; set; }
