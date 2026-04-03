@@ -33,16 +33,24 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
+
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o.StoreLocation)
+
 				.Include(x => x.ShipmentAssignment)
 					.ThenInclude(a => a.Shipper)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfType)
+
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 
@@ -51,31 +59,46 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
+
 				.Include(x => x.ShipmentAssignment)
 					.ThenInclude(a => a.Shipper)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfType)
+
 				.Where(x => x.ShipmentAssignmentId == assignmentId)
 				.ToListAsync();
 		}
+
 
 		public async Task<IEnumerable<Shipment>> GetAllWithDetailsAsync(ShipmentStatus? shipmentStatus)
 		{
 			var query = _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
+
 				.Include(x => x.ShipmentAssignment)
 					.ThenInclude(a => a.Shipper)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Color)
+
+				.Include(x => x.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfType)
+
 				.AsQueryable();
 
 			if (shipmentStatus.HasValue)
@@ -85,19 +108,29 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return await query.ToListAsync();
 		}
+
 		public async Task<Shipment?> GetByIdWithItemsAsync(Guid id)
 		{
 			return await _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
-				.Include(s => s.Items)
-				.Include(s => s.StoreOrder)
-					.ThenInclude(o => o.Items)
+				
 				.Include(s => s.StoreOrder)
 					.ThenInclude(o => o.Items)
 						.ThenInclude(i => i.ProductColor)
+
+				.Include(s => s.ShelfOrder)
+					.ThenInclude(o => o.Items)
+
+				.Include(s => s.Items)
+
+				.Include(s => s.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfType)
+
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
+
 		public async Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId)
 		{
 			return await _context.Shipments

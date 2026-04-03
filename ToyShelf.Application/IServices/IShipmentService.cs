@@ -20,5 +20,6 @@ namespace ToyShelf.Application.IServices
 		Task DeliveryAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser);
 		Task ReceiveAsync(Guid shipmentId, ReceiveShipmentRequest request);
 		Task<IEnumerable<ShipmentResponse>> GetByStoreOrderIdAsync(Guid storeOrderId);
+		Task<IEnumerable<ShelfSimpleResponse>> GetShelvesByShipmentAsync(Guid shipmentId);
 	}
 }

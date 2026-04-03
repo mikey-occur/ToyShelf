@@ -65,5 +65,20 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(s => s.InventoryLocation)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
+		public async Task<List<Shelf>> GetAvailableShelvesByType(
+			Guid locationId,
+			Guid shelfTypeId,
+			int quantity)
+		{
+			return await _context.Shelves
+				.Where(s =>
+					s.InventoryLocationId == locationId &&
+					s.ShelfTypeId == shelfTypeId &&
+					s.Status == ShelfStatus.Available)
+				.OrderBy(s => s.Code)
+				.Take(quantity)
+				.ToListAsync();
+		}
 	}
 }
