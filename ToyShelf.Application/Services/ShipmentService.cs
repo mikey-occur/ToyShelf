@@ -22,6 +22,7 @@ namespace ToyShelf.Application.Services
 		private readonly IShipmentMediaRepository _shipmentMediaRepository;
 		private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
 		private readonly IInventoryRepository _inventoryRepository;
+		private readonly IShelfShipmentItemRepository _shelfShipmentItemRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -34,6 +35,7 @@ namespace ToyShelf.Application.Services
 			IShipmentMediaRepository shipmentMediaRepository,
 			IInventoryTransactionRepository inventoryTransactionRepository,
 			IInventoryRepository inventoryRepository,
+			IShelfShipmentItemRepository shelfShipmentItemRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -43,6 +45,7 @@ namespace ToyShelf.Application.Services
 			_shipmentMediaRepository = shipmentMediaRepository;
 			_inventoryTransactionRepository = inventoryTransactionRepository;
 			_inventoryRepository = inventoryRepository;
+			_shelfShipmentItemRepository = shelfShipmentItemRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -84,6 +87,9 @@ namespace ToyShelf.Application.Services
 
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
+			if (request.Items == null || !request.Items.Any())
+				throw new AppException("Shipment items are required", 400);
+
 			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
 
 			if (assignment == null)
@@ -95,6 +101,11 @@ namespace ToyShelf.Application.Services
 			if (assignment.Status != AssignmentStatus.Accepted)
 				throw new AppException("Shipper must accept assignment first", 400);
 
+			if (assignment.ShipperId == null)
+				throw new AppException("Shipper not assigned", 400);
+
+			var isStoreOrder = assignment.StoreOrderId != null;
+
 			var code = await GenerateCode();
 
 			var shipment = new Shipment
@@ -102,9 +113,12 @@ namespace ToyShelf.Application.Services
 				Id = Guid.NewGuid(),
 				Code = code,
 				StoreOrderId = assignment.StoreOrderId,
+				ShelfOrderId = assignment.ShelfOrderId,
 				ShipmentAssignmentId = assignment.Id,
 				FromLocationId = assignment.WarehouseLocationId,
-				ToLocationId = assignment.StoreOrder.StoreLocationId,
+				ToLocationId = isStoreOrder
+					? assignment.StoreOrder!.StoreLocationId
+					: assignment.ShelfOrder!.StoreLocationId,
 				RequestedByUserId = currentUser.UserId,
 				ShipperId = assignment.ShipperId,
 				Status = ShipmentStatus.Draft,
@@ -113,38 +127,75 @@ namespace ToyShelf.Application.Services
 
 			await _shipmentRepository.AddAsync(shipment);
 
-			foreach (var reqItem in request.Items)
+			// ================= STORE ORDER =================
+			if (isStoreOrder)
 			{
-				var orderItem = assignment.StoreOrder.Items
-					.FirstOrDefault(x => x.ProductColorId == reqItem.ProductColorId);
+				foreach (var reqItem in request.Items)
+				{
+					if (reqItem.ProductColorId == null)
+						throw new AppException("ProductColorId is required", 400);
 
-				if (orderItem == null)
-					throw new AppException("Invalid product", 400);
+					var orderItem = assignment.StoreOrder!.Items
+						.FirstOrDefault(x => x.ProductColorId == reqItem.ProductColorId);
 
-				var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+					if (orderItem == null)
+						throw new AppException("Invalid product", 400);
 
-				if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
-					throw new AppException("Invalid or exceeding quantity", 400);
+					var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
 
-				// Check tồn kho
-				var inventory = await _inventoryRepository.GetByLocationAndProductAsync(
+					if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
+						throw new AppException("Invalid or exceeding quantity", 400);
+
+					var inventory = await _inventoryRepository.GetByLocationAndProductAsync(
 						assignment.WarehouseLocationId,
 						orderItem.ProductColorId
 					);
 
-				if (inventory == null || inventory.Quantity < reqItem.ExpectedQuantity)
-					throw new AppException($"Not enough inventory in warehouse '{assignment.WarehouseLocation.Name}' for product '{orderItem.ProductColor.Product.Name}'", 400);
+					if (inventory == null || inventory.Quantity < reqItem.ExpectedQuantity)
+						throw new AppException($"Not enough inventory in warehouse '{assignment.WarehouseLocation.Name}'", 400);
 
-				var shipmentItem = new ShipmentItem
+					var shipmentItem = new ShipmentItem
+					{
+						Id = Guid.NewGuid(),
+						ShipmentId = shipment.Id,
+						ProductColorId = orderItem.ProductColorId,
+						ExpectedQuantity = reqItem.ExpectedQuantity,
+						ReceivedQuantity = 0
+					};
+
+					await _shipmentItemRepository.AddAsync(shipmentItem);
+				}
+			}
+			// ================= SHELF ORDER =================
+			else
+			{
+				foreach (var reqItem in request.Items)
 				{
-					Id = Guid.NewGuid(),
-					ShipmentId = shipment.Id,
-					ProductColorId = orderItem.ProductColorId,
-					ExpectedQuantity = reqItem.ExpectedQuantity,
-					ReceivedQuantity = 0
-				};
+					if (reqItem.ShelfTypeId == null)
+						throw new AppException("ShelfTypeId is required", 400);
 
-				await _shipmentItemRepository.AddAsync(shipmentItem);
+					var orderItem = assignment.ShelfOrder!.Items
+						.FirstOrDefault(x => x.ShelfTypeId == reqItem.ShelfTypeId);
+
+					if (orderItem == null)
+						throw new AppException("Invalid shelf item", 400);
+
+					var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+
+					if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
+						throw new AppException("Invalid or exceeding quantity", 400);
+
+					var shelfItem = new ShelfShipmentItem
+					{
+						Id = Guid.NewGuid(),
+						ShipmentId = shipment.Id,
+						ShelfTypeId = orderItem.ShelfTypeId,
+						ExpectedQuantity = reqItem.ExpectedQuantity,
+						ReceivedQuantity = 0
+					};
+
+					await _shelfShipmentItemRepository.AddAsync(shelfItem);
+				}
 			}
 
 			await _unitOfWork.SaveChangesAsync();
@@ -156,7 +207,6 @@ namespace ToyShelf.Application.Services
 
 			return MapToResponse(result);
 		}
-
 
 		public async Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
@@ -447,22 +497,37 @@ namespace ToyShelf.Application.Services
 
 		private static ShipmentResponse MapToResponse(Shipment shipment)
 		{
-			return new ShipmentResponse
+			var isStoreOrder = shipment.StoreOrderId != null;
+
+			var response = new ShipmentResponse
 			{
 				Id = shipment.Id,
-				Code = shipment.Code,	
-				StoreOrderId = shipment.StoreOrderId ?? Guid.Empty,
+				Code = shipment.Code,
+
+				StoreOrderId = shipment.StoreOrderId,
+				ShelfOrderId = shipment.ShelfOrderId,
+
+				OrderType = isStoreOrder ? "STORE" : "SHELF",
+
 				FromLocationId = shipment.FromLocationId,
 				FromLocationName = shipment.FromLocation.Name,
+
 				ToLocationId = shipment.ToLocationId,
 				ToLocationName = shipment.ToLocation.Name,
-				ShipperName = shipment.ShipmentAssignment.Shipper?.FullName,
+
+				ShipperName = shipment.ShipmentAssignment?.Shipper?.FullName,
+
 				Status = shipment.Status,
 				CreatedAt = shipment.CreatedAt,
 				PickedUpAt = shipment.PickedUpAt,
 				DeliveredAt = shipment.DeliveredAt,
-				ReceivedAt = shipment.ReceivedAt,
-				Items = shipment.Items.Select(x => new ShipmentItemResponse
+				ReceivedAt = shipment.ReceivedAt
+			};
+
+			// ================= STORE ORDER =================
+			if (isStoreOrder)
+			{
+				response.ProductItems = shipment.Items.Select(x => new ShipmentProductItemResponse
 				{
 					ProductColorId = x.ProductColorId,
 					SKU = x.ProductColor.Product.SKU,
@@ -471,8 +536,22 @@ namespace ToyShelf.Application.Services
 					ImageUrl = x.ProductColor.ImageUrl,
 					ExpectedQuantity = x.ExpectedQuantity,
 					ReceivedQuantity = x.ReceivedQuantity
-				}).ToList()
-			};
+				}).ToList();
+			}
+			// ================= SHELF ORDER =================
+			else
+			{
+				response.ShelfItems = shipment.ShelfShipmentItems.Select(x => new ShipmentShelfItemResponse
+				{
+					ShelfTypeId = x.ShelfTypeId,
+					ShelfTypeName = x.ShelfType.Name,
+					ImageUrl = x.ShelfType.ImageUrl,
+					ExpectedQuantity = x.ExpectedQuantity,
+					ReceivedQuantity = x.ReceivedQuantity
+				}).ToList();
+			}
+
+			return response;
 		}
 	}
 }

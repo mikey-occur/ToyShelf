@@ -6,20 +6,13 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Application.Models.Shipment.Response
 {
-	public class ShipmentItemResponse
+	public class ShipmentProductItemResponse
 	{
-		// Product
 		public Guid ProductColorId { get; set; }
-		public string SKU { get; set; } = string.Empty;
+		public string SKU { get; set; } = null!;
 		public string ProductName { get; set; } = null!;
 		public string Color { get; set; } = null!;
 		public string? ImageUrl { get; set; }
-
-		// Shelf
-		public Guid? ShelfTypeId { get; set; }
-		public string? ShelfTypeName { get; set; }
-
-		// Common
 		public int ExpectedQuantity { get; set; }
 		public int ReceivedQuantity { get; set; }
 	}

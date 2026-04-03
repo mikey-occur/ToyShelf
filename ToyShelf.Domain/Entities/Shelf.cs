@@ -25,5 +25,6 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? UnassignedAt { get; set; }
 		public virtual ShelfType ShelfType { get; set; } = null!;
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
+		public virtual ICollection<ShelfTransaction> ShelfTransactions { get; set; } = new List<ShelfTransaction>();
 	}
 }

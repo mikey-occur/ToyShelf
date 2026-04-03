@@ -20,6 +20,7 @@ namespace ToyShelf.Application.Services
 		private readonly IShipmentAssignmentRepository _assignmentRepository;
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IUserWarehouseRepository _userWarehouseRepository;
+		private readonly IShelfOrderRepository _repositoryShelfOrder;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -27,12 +28,14 @@ namespace ToyShelf.Application.Services
 			IShipmentAssignmentRepository assignmentRepository,
 			IStoreOrderRepository storeOrderRepository,
 			IUserWarehouseRepository userWarehouseRepository,
+			IShelfOrderRepository repositoryShelfOrder,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
 			_assignmentRepository = assignmentRepository;
 			_storeOrderRepository = storeOrderRepository;
 			_userWarehouseRepository = userWarehouseRepository;
+			_repositoryShelfOrder = repositoryShelfOrder;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -42,22 +45,45 @@ namespace ToyShelf.Application.Services
 			CreateShipmentAssignmentRequest request,
 			ICurrentUser currentUser)
 		{
-			var order = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId);
+			if (request.StoreOrderId == null && request.ShelfOrderId == null)
+				throw new AppException("Order is required", 400);
 
-			if (order == null)
-				throw new AppException("Store order not found", 404);
+			if (request.StoreOrderId != null && request.ShelfOrderId != null)
+				throw new AppException("Only one order type is allowed", 400);
 
-			if (order.Status != StoreOrderStatus.Approved)
-				throw new AppException("Store order must be approved before assigning shipper", 400);
+			// ================= STORE ORDER =================
+			if (request.StoreOrderId != null)
+			{
+				var order = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId.Value);
+
+				if (order == null)
+					throw new AppException("Store order not found", 404);
+
+				if (order.Status != StoreOrderStatus.Approved)
+					throw new AppException("Store order must be approved", 400);
+			}
+
+			// ================= SHELF ORDER =================
+			if (request.ShelfOrderId != null)
+			{
+				var order = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId.Value);
+
+				if (order == null)
+					throw new AppException("Shelf order not found", 404);
+
+				if (order.Status != ShelfOrderStatus.Approved)
+					throw new AppException("Shelf order must be approved", 400);
+			}
 
 			var assignment = new ShipmentAssignment
 			{
 				Id = Guid.NewGuid(),
 				StoreOrderId = request.StoreOrderId,
+				ShelfOrderId = request.ShelfOrderId,
 				WarehouseLocationId = request.WarehouseLocationId,
 				Status = AssignmentStatus.Pending,
 				CreatedAt = _dateTime.UtcNow,
-				CreatedByUserId = currentUser.UserId,	
+				CreatedByUserId = currentUser.UserId
 			};
 
 			await _assignmentRepository.AddAsync(assignment);
@@ -70,6 +96,7 @@ namespace ToyShelf.Application.Services
 
 			return MapToResponse(result);
 		}
+
 
 		// ================= ASSIGN SHIPPER (WAREHOUSE) =================
 		public async Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser)
@@ -234,48 +261,74 @@ namespace ToyShelf.Application.Services
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
+			var isStoreOrder = assignment.StoreOrderId != null;
+
+			var shipment = assignment.Shipments?
+				.OrderByDescending(s => s.CreatedAt)
+				.FirstOrDefault();
+
 			return new ShipmentAssignmentResponse
 			{
 				Id = assignment.Id,
 
-				StoreOrderId = assignment.StoreOrderId ?? Guid.Empty,
+				// ===== ORDER INFO =====
+				StoreOrderId = assignment.StoreOrderId,
+				StoreOrderCode = isStoreOrder ? assignment.StoreOrder?.Code : null,
 
-				StoreOrderCode = assignment.StoreOrder.Code,
+				ShelfOrderId = assignment.ShelfOrderId,
+				ShelfOrderCode = !isStoreOrder ? assignment.ShelfOrder?.Code : null,
 
+				OrderType = isStoreOrder ? "STORE" : "SHELF",
+
+				// ===== LOCATION =====
 				WarehouseLocationId = assignment.WarehouseLocationId,
+				WarehouseLocationName = assignment.WarehouseLocation?.Name ?? "",
 
-				WarehouseLocationName = assignment.WarehouseLocation.Name,
+				StoreLocationId = isStoreOrder
+					? assignment.StoreOrder?.StoreLocationId ?? Guid.Empty
+					: assignment.ShelfOrder?.StoreLocationId ?? Guid.Empty,
 
-				StoreLocationId = assignment.StoreOrder.StoreLocationId,
+				StoreLocationName = isStoreOrder
+					? assignment.StoreOrder?.StoreLocation?.Name ?? ""
+					: assignment.ShelfOrder?.StoreLocation?.Name ?? "",
 
-				StoreLocationName = assignment.StoreOrder.StoreLocation.Name,
-
+				// ===== USER =====
 				ShipperName = assignment.Shipper?.FullName,
 
-				CreatedByName = assignment.CreatedByUser != null
-					? assignment.CreatedByUser.FullName
-					: throw new Exception("CreatedByUser not loaded"),
+				CreatedByName = assignment.CreatedByUser?.FullName
+					?? throw new Exception("CreatedByUser not loaded"),
 
 				AssignedByName = assignment.AssignedByUser?.FullName,
 
+				// ===== STATUS =====
 				Status = assignment.Status,
-				ShipmentStatus = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault()?.Status ?? ShipmentStatus.Draft,
-				CreatedAt = assignment.CreatedAt,
+				ShipmentStatus = shipment?.Status ?? ShipmentStatus.Draft,
 
+				CreatedAt = assignment.CreatedAt,
 				RespondedAt = assignment.RespondedAt,
 
-				Items = assignment.StoreOrder.Items.Select(x => new ShipmentAssignmentItemResponse
-				{
-					ProductColorId = x.ProductColorId,
-					SKU = x.ProductColor.Product.SKU,
-					ProductName = x.ProductColor.Product.Name,
-					Color = x.ProductColor.Color.Name,
-					ImageUrl = x.ProductColor.ImageUrl,
-					Quantity = x.Quantity,
-					FulfilledQuantity = x.FulfilledQuantity
-				}).ToList()
+				// ===== ITEMS =====
+				Items = isStoreOrder
+					? assignment.StoreOrder?.Items.Select(x => new ShipmentAssignmentItemResponse
+					{
+						ProductColorId = x.ProductColorId,
+						SKU = x.ProductColor?.Product?.SKU,
+						ProductName = x.ProductColor?.Product?.Name,
+						Color = x.ProductColor?.Color?.Name,
+						ImageUrl = x.ProductColor?.ImageUrl,
+						Quantity = x.Quantity,
+						FulfilledQuantity = x.FulfilledQuantity
+					}).ToList() ?? new List<ShipmentAssignmentItemResponse>()
+
+					: assignment.ShelfOrder?.Items.Select(x => new ShipmentAssignmentItemResponse
+					{
+						ShelfTypeId = x.ShelfTypeId,
+						ShelfTypeName = x.ShelfTypeName,
+						ImageUrl = x.ImageUrl,
+						Quantity = x.Quantity,
+						FulfilledQuantity = x.FulfilledQuantity
+					}).ToList() ?? new List<ShipmentAssignmentItemResponse>()
 			};
 		}
 	}
-
 }
