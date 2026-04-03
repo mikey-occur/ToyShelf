@@ -18,14 +18,14 @@ namespace ToyShelf.Domain.IRepositories
 			DateTime? startDate = null,
 			DateTime? endDate = null);
 
-		Task<List<MonthlyStatResult>> GetPartnerChartDataAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null);
+		Task<List<PartnerDailyStatResult>> GetPartnerChartDataAsync(Guid partnerId, DateTime startDate, DateTime endDate);
 
-		public class MonthlyStatResult
+		public class PartnerDailyStatResult
 		{
-			public DateTime MonthDate { get; set; }
-			public decimal Revenue { get; set; }
-			public decimal Commission { get; set; }
-			public int Orders { get; set; }
+			public DateTime Date { get; set; }
+			public int TotalOrders { get; set; }
+			public decimal TotalRevenue { get; set; }
+			public decimal TotalCommission { get; set; }
 		}
 	}
 }

@@ -23,9 +23,9 @@ namespace ToyShelf.API.Controllers
 		/// <summary>
 		/// Get  (Orders, Revenue) for Stat Card.
 		/// </summary>
-		[HttpGet("stat-card")] 
+		[HttpGet("stat-card/store/{storeId:guid}")] 
 		public async Task<BaseResponse<StoreDashboardResponse>> GetRevenueStatCard(
-			[FromQuery] Guid storeId,
+			[FromRoute] Guid storeId,
 			[FromQuery] DateTime? fromDate,
 			[FromQuery] DateTime? toDate)
 		{
@@ -37,7 +37,7 @@ namespace ToyShelf.API.Controllers
 
 		// ===== GET STAT CARD =====
 		/// <summary>
-		/// Get store revenue for chart.
+		/// Get store revenue for chart. Nếu Truyền week thì chỉ lấy week hiện tại
 		/// </summary>
 
 		[HttpGet("store/{storeId:guid}/revenue-chart")]
@@ -76,23 +76,21 @@ namespace ToyShelf.API.Controllers
 			});
 		}
 
-
 		/// <summary>
-		/// Get Chart data for Partner Dashboard (Revenue, Orders, Commission grouped by month).
+		/// Get Chart data for Partner Dashboard (Revenue, Orders, Commission grouped by day/month).
 		/// </summary>
 		[HttpGet("partner/{partnerId:guid}/chart")]
 		public async Task<IActionResult> GetPartnerChart(
 			[FromRoute] Guid partnerId,
-			[FromQuery] DateTime? startDate,
-			[FromQuery] DateTime? endDate)
+			[FromQuery] PartnerChartRequest request)
 		{
-			var result = await _dashboardService.GetPartnerChartAsync(partnerId, startDate, endDate);
+			var chartData = await _dashboardService.GetPartnerChartAsync(partnerId, request);
 
 			return Ok(new
 			{
 				success = true,
 				message = "Partner chart data retrieved successfully",
-				data = result
+				data = chartData
 			});
 		}
 
