@@ -15,7 +15,7 @@ namespace ToyShelf.Application.Models.ShelfType.Response
 		public double Height { get; set; }
 		public double Depth { get; set; }
 		public int TotalLevels { get; set; }
-		public string SuitableProductCategoryTypes { get; set; } = string.Empty;
+		public List<string> SuitableProductCategoryTypes { get; set; } = new();
 		public string? DisplayGuideline { get; set; }
 		public bool IsActive { get; set; }
 		public List<ShelfTypeLevelResponse> Levels { get; set; } = new();
@@ -26,7 +26,7 @@ namespace ToyShelf.Application.Models.ShelfType.Response
 			public string Name { get; set; } = null!;
 			public double ClearanceHeight { get; set; }
 			public int RecommendedCapacity { get; set; }
-			public string SuitableProductCategoryTypes { get; set; } = string.Empty; 
+			public List<string> SuitableProductCategoryTypes { get; set; } = new (); 
 			public string? DisplayGuideline { get; set; } 
 		}
 	}
