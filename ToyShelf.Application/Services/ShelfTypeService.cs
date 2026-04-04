@@ -224,7 +224,9 @@ namespace ToyShelf.Application.Services
 				Height = shelfType.Height,
 				Depth = shelfType.Depth,
 				TotalLevels = shelfType.TotalLevels,
-				SuitableProductCategoryTypes = shelfType.SuitableProductCategoryTypes, 
+				SuitableProductCategoryTypes = string.IsNullOrWhiteSpace(shelfType.SuitableProductCategoryTypes)
+						? new List<string>()
+						: shelfType.SuitableProductCategoryTypes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
 				DisplayGuideline = shelfType.DisplayGuideline, 
 				IsActive = shelfType.IsActive,
 
@@ -234,7 +236,9 @@ namespace ToyShelf.Application.Services
 					Name = l.Name,
 					ClearanceHeight = l.ClearanceHeight,
 					RecommendedCapacity = l.RecommendedCapacity,
-					SuitableProductCategoryTypes = l.SuitableProductCategoryTypes, 
+					SuitableProductCategoryTypes = string.IsNullOrWhiteSpace(l.SuitableProductCategoryTypes)
+						? new List<string>()
+						: l.SuitableProductCategoryTypes.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
 					DisplayGuideline = l.DisplayGuideline 
 				}).ToList() ?? new List<ShelfTypeResponse.ShelfTypeLevelResponse>()
 			};
