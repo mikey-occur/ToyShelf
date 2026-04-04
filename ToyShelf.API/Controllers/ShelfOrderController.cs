@@ -6,6 +6,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
@@ -78,6 +79,16 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Shelf order rejected successfully");
 		}
 
+		// ================= AVAILABLE WAREHOUSES =================
+		[HttpGet("{id}/available-warehouses")]
+		[Authorize(Roles = "Admin,Partner")]
+		public async Task<BaseResponse<List<WarehouseMatchShelfResponse>>> GetAvailableWarehouses(Guid id)
+		{
+			var result = await _shelfOrderService.GetAvailableWarehousesForShelfOrder(id);
+
+			return BaseResponse<List<WarehouseMatchShelfResponse>>
+				.Ok(result, "Available warehouses retrieved successfully");
+		}
 		// ================= FULFILL =================
 		//[HttpPatch("{id}/fulfill")]
 		//[Authorize(Roles = "Admin")]

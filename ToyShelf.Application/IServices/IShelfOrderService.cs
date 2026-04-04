@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
@@ -18,5 +19,6 @@ namespace ToyShelf.Application.IServices
 		Task ApproveAsync(Guid id, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, string? adminNote, ICurrentUser currentUser);
 		//Task FulfillAsync(Guid orderId);
+		Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrder(Guid shelfOrderId);
 	}
 }
