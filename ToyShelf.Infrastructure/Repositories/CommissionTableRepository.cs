@@ -48,7 +48,9 @@ namespace ToyShelf.Infrastructure.Repositories
 			{
 				query = query.Where(pt => pt.IsActive == isActive.Value);
 			}
-			return await query.ToListAsync();
+			return await query
+			.OrderBy(pt => pt.Type)
+			.ToListAsync();
 		}
 
 		public async Task<bool> IsPriceTableInUseAsync(Guid id)

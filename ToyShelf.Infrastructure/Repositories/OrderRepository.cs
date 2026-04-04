@@ -57,6 +57,24 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
+		public async Task<Order?> GetOrderWithCommissionHistoryAsync(Guid orderId)
+		{
+			return await _context.Orders
+				.Include(o => o.Store)
+				.Include(o => o.Staff)
+
+				.Include(o => o.OrderItems)
+					.ThenInclude(oi => oi.ProductColor)
+						.ThenInclude(pc => pc.Product) 
+
+				
+				.Include(o => o.OrderItems)
+					.ThenInclude(oi => oi.CommissionHistories)
+						.ThenInclude(ch => ch.Partner) 
+
+				.FirstOrDefaultAsync(o => o.Id == orderId);
+		}
+
 		public async Task<Order?> GetOrderWithDetailsByCodeAsync(long orderCode)
 		{
 			return await _context.Orders
