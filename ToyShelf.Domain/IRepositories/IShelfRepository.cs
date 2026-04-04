@@ -16,8 +16,7 @@ namespace ToyShelf.Domain.IRepositories
 			Guid? inventoryLocationId = null);
 
 		Task<int> CountActiveShelvesByLocationAsync(Guid inventoryLocationId);
-
 		Task<Shelf?> GetByIdWithDetailsAsync(Guid id);
-
+		Task<List<Shelf>> GetAvailableShelvesByType(Guid locationId, Guid shelfTypeId, int quantity);
 	}
 }

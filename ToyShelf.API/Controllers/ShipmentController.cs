@@ -106,5 +106,15 @@ namespace ToyShelf.API.Controllers
 
 			return ActionResponse.Ok("Shipment received successfully");
 		}
+
+		[HttpGet("{shipmentId}/shelves")]
+		[Authorize(Roles = "Partner,Warehouse")]
+		public async Task<BaseResponse<IEnumerable<ShelfSimpleResponse>>> GetShelvesByShipment(Guid shipmentId)
+		{
+			var result = await _shipmentService.GetShelvesByShipmentAsync(shipmentId);
+
+			return BaseResponse<IEnumerable<ShelfSimpleResponse>>
+				.Ok(result, "Get shelves by shipment successfully");
+		}
 	}
 }

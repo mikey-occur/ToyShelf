@@ -41,6 +41,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 				.Include(x => x.ShelfOrder)
 					.ThenInclude(o => o.Items)
+						.ThenInclude(i => i.ShelfType)
 
 				.Where(x => x.ShipperId == shipperId)
 				.ToListAsync();
@@ -73,6 +74,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 				.Include(x => x.ShelfOrder)
 					.ThenInclude(o => o.Items)
+						.ThenInclude(i => i.ShelfType)
 
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
@@ -104,6 +106,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 				.Include(x => x.ShelfOrder)
 					.ThenInclude(o => o.Items)
+						.ThenInclude(i => i.ShelfType)
 
 				.Where(x => x.StoreOrderId == storeOrderId)
 				.ToListAsync();
@@ -136,6 +139,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 				.Include(x => x.ShelfOrder)
 					.ThenInclude(o => o.Items)
+						.ThenInclude(i => i.ShelfType)
 
 				.ToListAsync();
 		}

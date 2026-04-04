@@ -37,21 +37,26 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public DateTime CreatedAt { get; set; }
 		public DateTime? RespondedAt { get; set; }
 
-		public List<ShipmentAssignmentItemResponse> Items { get; set; } = new();
+		public List<ShipmentAssignmentProductItemResponse>? ProductItems { get; set; }
+		public List<ShipmentAssignmentShelfItemResponse>? ShelfItems { get; set; }
 	}
 
-	public class ShipmentAssignmentItemResponse
+	public class ShipmentAssignmentProductItemResponse
 	{
-		// ===== STORE ORDER =====
-		public Guid? ProductColorId { get; set; }
-		public string? SKU { get; set; }
-		public string? ProductName { get; set; }
-		public string? Color { get; set; }
+		public Guid ProductColorId { get; set; }
+		public string SKU { get; set; } = null!;
+		public string ProductName { get; set; } = null!;
+		public string Color { get; set; } = null!;
+		public string? ImageUrl { get; set; }
 
-		// ===== SHELF ORDER =====
-		public Guid? ShelfTypeId { get; set; }
-		public string? ShelfTypeName { get; set; }
+		public int Quantity { get; set; }
+		public int FulfilledQuantity { get; set; }
+	}
 
+	public class ShipmentAssignmentShelfItemResponse
+	{
+		public Guid ShelfTypeId { get; set; }
+		public string ShelfTypeName { get; set; } = null!;
 		public string? ImageUrl { get; set; }
 
 		public int Quantity { get; set; }

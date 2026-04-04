@@ -267,7 +267,7 @@ namespace ToyShelf.Application.Services
 				.OrderByDescending(s => s.CreatedAt)
 				.FirstOrDefault();
 
-			return new ShipmentAssignmentResponse
+			var response = new ShipmentAssignmentResponse
 			{
 				Id = assignment.Id,
 
@@ -305,30 +305,39 @@ namespace ToyShelf.Application.Services
 				ShipmentStatus = shipment?.Status ?? ShipmentStatus.Draft,
 
 				CreatedAt = assignment.CreatedAt,
-				RespondedAt = assignment.RespondedAt,
+				RespondedAt = assignment.RespondedAt
+			};
 
-				// ===== ITEMS =====
-				Items = isStoreOrder
-					? assignment.StoreOrder?.Items.Select(x => new ShipmentAssignmentItemResponse
+			// ================= STORE ORDER =================
+			if (isStoreOrder)
+			{
+				response.ProductItems = assignment.StoreOrder?.Items
+					.Select(x => new ShipmentAssignmentProductItemResponse
 					{
 						ProductColorId = x.ProductColorId,
-						SKU = x.ProductColor?.Product?.SKU,
-						ProductName = x.ProductColor?.Product?.Name,
-						Color = x.ProductColor?.Color?.Name,
+						SKU = x.ProductColor?.Product?.SKU!,
+						ProductName = x.ProductColor?.Product?.Name!,
+						Color = x.ProductColor?.Color?.Name!,
 						ImageUrl = x.ProductColor?.ImageUrl,
 						Quantity = x.Quantity,
 						FulfilledQuantity = x.FulfilledQuantity
-					}).ToList() ?? new List<ShipmentAssignmentItemResponse>()
-
-					: assignment.ShelfOrder?.Items.Select(x => new ShipmentAssignmentItemResponse
+					}).ToList();
+			}
+			// ================= SHELF ORDER =================
+			else
+			{
+				response.ShelfItems = assignment.ShelfOrder?.Items
+					.Select(x => new ShipmentAssignmentShelfItemResponse
 					{
 						ShelfTypeId = x.ShelfTypeId,
 						ShelfTypeName = x.ShelfTypeName,
 						ImageUrl = x.ImageUrl,
 						Quantity = x.Quantity,
 						FulfilledQuantity = x.FulfilledQuantity
-					}).ToList() ?? new List<ShipmentAssignmentItemResponse>()
-			};
+					}).ToList();
+			}
+
+			return response;
 		}
 	}
 }
