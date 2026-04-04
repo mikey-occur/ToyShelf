@@ -112,6 +112,12 @@ namespace ToyShelf.Application.Services
 
 			var isStoreOrder = assignment.StoreOrderId != null;
 
+			if (isStoreOrder && assignment.StoreOrder!.Status == StoreOrderStatus.Fulfilled)
+				throw new AppException("Order already fulfilled", 400);
+
+			if (!isStoreOrder && assignment.ShelfOrder!.Status == ShelfOrderStatus.Fulfilled)
+				throw new AppException("Order already fulfilled", 400);
+
 			var code = await GenerateCode();
 
 			var shipment = new Shipment
@@ -201,6 +207,25 @@ namespace ToyShelf.Application.Services
 					};
 
 					await _shelfShipmentItemRepository.AddAsync(shelfItem);
+				}
+			}
+
+			if (isStoreOrder)
+			{
+				var order = assignment.StoreOrder!;
+
+				if (order.Status == StoreOrderStatus.Approved)
+				{
+					order.Status = StoreOrderStatus.Processing;
+				}
+			}
+			else
+			{
+				var order = assignment.ShelfOrder!;
+
+				if (order.Status == ShelfOrderStatus.Approved)
+				{
+					order.Status = ShelfOrderStatus.Processing;
 				}
 			}
 
