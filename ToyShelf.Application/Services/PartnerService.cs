@@ -229,7 +229,8 @@ namespace ToyShelf.Application.Services
 				PartnerTierId = partner.PartnerTierId,
 				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
 				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
-				
+				MaxShelvesPerStore = partner.PartnerTier?.MaxShelvesPerStore,
+
 				IsActive = partner.IsActive,
 
 				CreatedAt = partner.CreatedAt,
@@ -264,6 +265,7 @@ namespace ToyShelf.Application.Services
 				PartnerTierId = partner.PartnerTierId,
 				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
 				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
+				MaxShelvesPerStore = partner.PartnerTier?.MaxShelvesPerStore,
 				IsActive = partner.IsActive,
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt,
@@ -300,6 +302,7 @@ namespace ToyShelf.Application.Services
 				PartnerTierId = partner.PartnerTierId,
 				PartnerTierName = partner.PartnerTier?.Name ?? string.Empty,
 				PartnerTierPriority = partner.PartnerTier?.Priority ?? 0,
+				MaxShelvesPerStore = partner.PartnerTier?.MaxShelvesPerStore,
 				IsActive = partner.IsActive,
 				CreatedAt = partner.CreatedAt,
 				UpdatedAt = partner.UpdatedAt,

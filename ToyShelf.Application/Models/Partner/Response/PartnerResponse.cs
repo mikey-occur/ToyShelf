@@ -19,6 +19,7 @@ namespace ToyShelf.Application.Models.Partner.Response
 		public Guid PartnerTierId { get; set; }
 		public string PartnerTierName { get; set; } = string.Empty;
 		public int PartnerTierPriority { get; set; }
+		public int? MaxShelvesPerStore { get; set; }
 		public bool IsActive { get; set; }
 
 		public DateTime CreatedAt { get; set; }
@@ -28,7 +29,6 @@ namespace ToyShelf.Application.Models.Partner.Response
 
 	public class PartnerDetailResponse : PartnerResponse
 	{
-		// Kế thừa toàn bộ trường ở trên, chỉ nhét thêm tài khoản vào đây
 		public AppliedCommissionTableResponse? CurrentCommission { get; set; }
 		public List<AppliedCommissionTableResponse> CommissionHistories { get; set; } = new();
 		public PartnerAdminResponse? PartnerAccount { get; set; }
