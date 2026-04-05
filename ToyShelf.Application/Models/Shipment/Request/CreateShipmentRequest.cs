@@ -17,6 +17,9 @@ namespace ToyShelf.Application.Models.Shipment.Request
 		public Guid? ProductColorId { get; set; }
 		public Guid? ShelfTypeId { get; set; }
 
-		public int ExpectedQuantity { get; set; }
+		public int? ExpectedQuantity { get; set; }
+
+		// Phục vụ Auto
+		public List<Guid>? ShelfIds { get; set; }
 	}
 }
