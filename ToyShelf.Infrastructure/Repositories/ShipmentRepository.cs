@@ -49,7 +49,8 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(pc => pc.Color)
 
 				.Include(x => x.ShelfShipmentItems)
-					.ThenInclude(x => x.ShelfType)
+					.ThenInclude(x => x.Shelf)
+						.ThenInclude(sh => sh.ShelfType)
 
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
@@ -72,7 +73,8 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(pc => pc.Color)
 
 				.Include(x => x.ShelfShipmentItems)
-					.ThenInclude(x => x.ShelfType)
+					.ThenInclude(x => x.Shelf)
+						.ThenInclude(sh => sh.ShelfType)
 
 				.Where(x => x.ShipmentAssignmentId == assignmentId)
 				.ToListAsync();
@@ -97,7 +99,8 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(pc => pc.Color)
 
 				.Include(x => x.ShelfShipmentItems)
-					.ThenInclude(x => x.ShelfType)
+					.ThenInclude(x => x.Shelf)
+						.ThenInclude(sh => sh.ShelfType)
 
 				.AsQueryable();
 
@@ -125,7 +128,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(s => s.Items)
 
 				.Include(s => s.ShelfShipmentItems)
-					.ThenInclude(x => x.ShelfType)
+					.ThenInclude(x => x.Shelf)
+						.ThenInclude(sh => sh.ShelfType)
 
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
@@ -147,6 +151,15 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Where(x => x.StoreOrderId == storeOrderId)
 				.OrderByDescending(x => x.CreatedAt)
 				.ToListAsync();
+		}
+
+		public async Task<Shipment?> GetByIdWithShelfItemsAsync(Guid id)
+		{
+			return await _context.Shipments
+				.Include(s => s.ShelfShipmentItems)
+					.ThenInclude(si => si.Shelf)
+						.ThenInclude(sh => sh.ShelfType)
+				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 	}
 }

@@ -327,13 +327,24 @@ namespace ToyShelf.Application.Services
 			else
 			{
 				response.ShelfItems = assignment.ShelfOrder?.Items
-					.Select(x => new ShipmentAssignmentShelfItemResponse
+					.Select(x =>
 					{
-						ShelfTypeId = x.ShelfTypeId,
-						ShelfTypeName = x.ShelfTypeName,
-						ImageUrl = x.ImageUrl,
-						Quantity = x.Quantity,
-						FulfilledQuantity = x.FulfilledQuantity
+						var shelfType = x.ShelfType;
+
+						return new ShipmentAssignmentShelfItemResponse
+						{
+							ShelfTypeId = x.ShelfTypeId,
+							ShelfTypeName = x.ShelfTypeName,
+							ImageUrl = x.ImageUrl,
+
+							Width = shelfType?.Width ?? 0,
+							Height = shelfType?.Height ?? 0,
+							Depth = shelfType?.Depth ?? 0,
+							TotalLevels = shelfType?.TotalLevels ?? 0,
+
+							Quantity = x.Quantity,
+							FulfilledQuantity = x.FulfilledQuantity,
+						};
 					}).ToList();
 			}
 

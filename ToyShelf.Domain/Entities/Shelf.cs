@@ -9,6 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public enum ShelfStatus
 	{
 		Available,     // đang nằm ở warehouse
+		Reserved,      // Hàng đã được đặt trước nhưng chưa vận chuyển
 		InTransit,
 		InUse,         // đang ở store và sử dụng
 		Recalled,      // bị thu hồi
@@ -27,5 +28,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ShelfType ShelfType { get; set; } = null!;
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
 		public virtual ICollection<ShelfTransaction> ShelfTransactions { get; set; } = new List<ShelfTransaction>();
+		public virtual ICollection<ShelfShipmentItem> ShelfShipmentItems { get; set; } = new List<ShelfShipmentItem>();
 	}
 }
