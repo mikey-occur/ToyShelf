@@ -153,7 +153,7 @@ namespace ToyShelf.Application.Services
 					: string.Empty;
 			}
 
-			// XỬ LÝ ENTITY CON (Levels) GIỐNG HỆT BÊN PRODUCT
+			
 			if (request.Levels != null && request.Levels.Any())
 			{
 				var requestedLevels = request.Levels.Select(l => l.Level).ToList();
