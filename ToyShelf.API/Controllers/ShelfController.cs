@@ -21,7 +21,7 @@ namespace ToyShelf.API.Controllers
 
 		// ===== GET PAGINATED =====
 		/// <summary>
-		/// Get shelves with pagination and filters (status, partner, store).
+		/// Get shelves with pagination and filters (status, id location).
 		/// </summary>
 		[HttpGet]
 		public async Task<BaseResponse<PaginatedResult<ShelfResponse>>> GetPaginated(
