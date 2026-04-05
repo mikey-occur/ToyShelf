@@ -8,6 +8,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
+using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -163,6 +164,78 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
+		public async Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrder(Guid shelfOrderId)
+		{
+			// 1. Lấy order
+			var order = await _repository.GetByIdWithItemsAsync(shelfOrderId);
+
+			if (order == null)
+				throw new AppException("Shelf order not found", 404);
+
+			if (order.Status != ShelfOrderStatus.Approved)
+				throw new AppException("Order must be approved", 400);
+
+			// 2. Lấy city của store
+			if (order.StoreLocation?.Store == null)
+				throw new AppException("Store not found", 500);
+
+			var cityId = order.StoreLocation.Store.CityId;
+
+			// 3. Lấy warehouse locations cùng city
+			var warehouseLocations = await _locationRepository
+				.GetWarehouseLocationsByCityAsync(cityId);
+
+			if (!warehouseLocations.Any())
+				return new List<WarehouseMatchShelfResponse>();
+
+			var locationIds = warehouseLocations.Select(x => x.Id).ToList();
+
+			// 4. Lấy shelves
+			var shelves = _shelfRepository.GetQueryable()
+				.Where(s =>
+					locationIds.Contains(s.InventoryLocationId) &&
+					s.Status == ShelfStatus.Available)
+				.ToList();
+
+			// 5. Map order items
+			var orderItems = order.Items.ToDictionary(
+				x => x.ShelfTypeId,
+				x => x.Quantity
+			);
+
+			// 6. Group theo warehouse
+			var result = shelves
+				.Where(s => orderItems.ContainsKey(s.ShelfTypeId))
+				.GroupBy(s => s.InventoryLocation)
+				.Select(group =>
+				{
+					var first = group.First();
+					var warehouse = first.InventoryLocation.Warehouse!;
+
+					return new WarehouseMatchShelfResponse
+					{
+						WarehouseId = warehouse.Id,
+						WarehouseLocationId = group.Key.Id,
+						WarehouseName = warehouse.Name,
+						WarehouseCode = warehouse.Code,
+
+						Items = group
+							.GroupBy(s => s.ShelfTypeId)
+							.Select(g => new WarehouseShelfItemResponse
+							{
+								ShelfTypeId = g.Key,
+								ShelfTypeName = g.First().ShelfType.Name,
+								ImageUrl = g.First().ShelfType.ImageUrl,
+								AvailableQuantity = g.Count()
+							})
+							.ToList()
+					};
+				})
+				.ToList();
+
+			return result;
+		}
+
 		// ================= FULFILL=================
 		//public async Task FulfillAsync(Guid orderId)
 		//{
@@ -237,8 +310,14 @@ namespace ToyShelf.Application.Services
 				Items = order.Items.Select(i => new ShelfOrderItemResponse
 				{
 					ShelfTypeId = i.ShelfTypeId,
-					ShelfTypeName = i.ShelfType.Name,
+					ShelfTypeName = i.ShelfType?.Name ?? "Unknown",
 					ImageUrl = i.ImageUrl,
+
+					Width = i.ShelfType?.Width ?? 0,
+					Height = i.ShelfType?.Height ?? 0,
+					Depth = i.ShelfType?.Depth ?? 0,
+					TotalLevels = i.ShelfType?.TotalLevels ?? 0,
+
 					Quantity = i.Quantity,
 					FulfilledQuantity = i.FulfilledQuantity
 				}).ToList()

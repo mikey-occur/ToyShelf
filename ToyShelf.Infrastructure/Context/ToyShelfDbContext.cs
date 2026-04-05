@@ -1234,12 +1234,10 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
 
-				entity.Property(e => e.ExpectedQuantity)
-					  .IsRequired();
-
-				entity.Property(e => e.ReceivedQuantity)
+				entity.Property(e => e.Status)
 					  .IsRequired()
-					  .HasDefaultValue(0);
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
 
 				// ================= FK =================
 
@@ -1249,11 +1247,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Cascade)
 					  .HasConstraintName("FK_ShelfShipmentItem_Shipment");
 
-				entity.HasOne(e => e.ShelfType)
+				entity.HasOne(e => e.Shelf)
 					  .WithMany(st => st.ShelfShipmentItems)
-					  .HasForeignKey(e => e.ShelfTypeId)
+					  .HasForeignKey(e => e.ShelfId)
 					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_ShelfShipmentItem_ShelfType");
+					  .HasConstraintName("FK_ShelfShipmentItem_Shelf");
 			});
 
 			// ================== ShelfTransaction ==================

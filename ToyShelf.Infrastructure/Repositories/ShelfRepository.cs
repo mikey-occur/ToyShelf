@@ -80,5 +80,17 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Take(quantity)
 				.ToListAsync();
 		}
+
+		public async Task<List<Shelf>> GetByIds(List<Guid> ids)
+		{
+			if (ids == null || !ids.Any())
+				return new List<Shelf>();
+
+			return await _context.Shelves
+				.Include(s => s.ShelfType)
+				.Include(s => s.InventoryLocation)
+				.Where(s => ids.Contains(s.Id))
+				.ToListAsync();
+		}
 	}
 }
