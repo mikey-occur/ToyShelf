@@ -128,7 +128,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<ShelfTypeResponse> UpdateAsync(Guid id, ShelfTypeRequest request)
 		{
-			var shelfType = await _shelfTypeRepository.GetByIdAsync(id);
+			var shelfType = await _shelfTypeRepository.GetByIdWithLevelsAsync(id);
 			if (shelfType == null)
 				throw new AppException($"ShelfType Id = {id} not found", 404);
 
@@ -153,27 +153,28 @@ namespace ToyShelf.Application.Services
 					: string.Empty;
 			}
 
+			// XỬ LÝ ENTITY CON (Levels) GIỐNG HỆT BÊN PRODUCT
 			if (request.Levels != null && request.Levels.Any())
 			{
-			
 				var requestedLevels = request.Levels.Select(l => l.Level).ToList();
 
-				 
 				var levelsToRemove = shelfType.ShelfTypeLevels.Where(l => !requestedLevels.Contains(l.Level)).ToList();
 				if (levelsToRemove.Any())
 				{
-				
+					// Xóa dưới DB
 					_unitOfWork.Repository<ShelfTypeLevel>().DeleteRange(levelsToRemove);
-				}
 
+					foreach (var item in levelsToRemove)
+					{
+						shelfType.ShelfTypeLevels.Remove(item);
+					}
+				}
 				foreach (var levelReq in request.Levels)
 				{
-					
 					var existingLevel = shelfType.ShelfTypeLevels.FirstOrDefault(l => l.Level == levelReq.Level);
 
 					if (existingLevel != null)
 					{
-						
 						existingLevel.Name = !string.IsNullOrWhiteSpace(levelReq.Name) ? levelReq.Name.Trim() : existingLevel.Name;
 						existingLevel.ClearanceHeight = levelReq.ClearanceHeight != default ? levelReq.ClearanceHeight : existingLevel.ClearanceHeight;
 						existingLevel.RecommendedCapacity = levelReq.RecommendedCapacity != default ? levelReq.RecommendedCapacity : existingLevel.RecommendedCapacity;
@@ -186,7 +187,7 @@ namespace ToyShelf.Application.Services
 						existingLevel.DisplayGuideline = levelReq.DisplayGuideline ?? existingLevel.DisplayGuideline;
 					}
 					else
-					{
+					{						
 						var newLevel = new ShelfTypeLevel
 						{
 							Id = Guid.NewGuid(),
@@ -201,14 +202,13 @@ namespace ToyShelf.Application.Services
 							DisplayGuideline = levelReq.DisplayGuideline
 						};
 
-						await _unitOfWork.Repository<ShelfTypeLevel>().AddAsync(newLevel);
+						shelfType.ShelfTypeLevels.Add(newLevel);
 					}
 				}
 			}
 
 			_shelfTypeRepository.Update(shelfType);
 			await _unitOfWork.SaveChangesAsync();
-
 			return MapToResponse(shelfType);
 		}
 
