@@ -310,8 +310,14 @@ namespace ToyShelf.Application.Services
 				Items = order.Items.Select(i => new ShelfOrderItemResponse
 				{
 					ShelfTypeId = i.ShelfTypeId,
-					ShelfTypeName = i.ShelfType.Name,
+					ShelfTypeName = i.ShelfType?.Name ?? "Unknown",
 					ImageUrl = i.ImageUrl,
+
+					Width = i.ShelfType?.Width ?? 0,
+					Height = i.ShelfType?.Height ?? 0,
+					Depth = i.ShelfType?.Depth ?? 0,
+					TotalLevels = i.ShelfType?.TotalLevels ?? 0,
+
 					Quantity = i.Quantity,
 					FulfilledQuantity = i.FulfilledQuantity
 				}).ToList()
