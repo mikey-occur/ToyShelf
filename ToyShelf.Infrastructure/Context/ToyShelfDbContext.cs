@@ -68,6 +68,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<DamageReport> DamageReports { get; set; }
 		public DbSet<DamageMedia> DamageMedia { get; set; }
 
+		public DbSet<Notification> Notifications { get; set; }
+
 		public DbSet<City> Cities { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -2169,6 +2171,14 @@ namespace ToyShelf.Infrastructure.Context
 					 .WithOne(w => w.City)
 					 .HasForeignKey(w => w.CityId)
 					 .OnDelete(DeleteBehavior.Restrict); // hoặc Cascade tùy business
+			});
+
+			modelBuilder.Entity<Notification>(entity =>
+			{
+				entity.HasKey(n => n.Id); 
+				entity.Property(n => n.Title).IsRequired().HasMaxLength(255);
+				entity.Property(n => n.Content).IsRequired();
+				entity.HasIndex(n => new { n.UserId, n.CreatedAt }).IsDescending(false, true);
 			});
 		}
 	}
