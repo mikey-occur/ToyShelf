@@ -55,5 +55,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<ShelfShipmentItem> ShelfShipmentItems { get; set; } = new List<ShelfShipmentItem>();
 
 		public virtual ICollection<ShipmentMedia> Media { get; set; } = new List<ShipmentMedia>();
+		public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
 	}
 }

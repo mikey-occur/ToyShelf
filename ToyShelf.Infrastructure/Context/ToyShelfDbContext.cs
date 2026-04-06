@@ -1412,43 +1412,70 @@ namespace ToyShelf.Infrastructure.Context
 			{
 				entity.HasKey(e => e.Id);
 
-				entity.Property(e => e.Id)
-					  .ValueGeneratedOnAdd();
+				entity.Property(e => e.Id).ValueGeneratedOnAdd();
 
-				entity.Property(e => e.Quantity)
-					  .IsRequired();
+				entity.Property(e => e.Code)
+					  .IsRequired()
+					  .HasMaxLength(50);
+
+				entity.Property(e => e.Type)
+						.IsRequired()
+						.HasConversion<string>()
+						.HasMaxLength(20); 
+				entity.Property(e => e.Source)
+						.IsRequired()
+						.HasConversion<string>()
+						.HasMaxLength(20);
+				entity.Property(e => e.Status)
+						.IsRequired()
+						.HasConversion<string>()
+						.HasMaxLength(20);
+
+				entity.Property(e => e.Quantity).IsRequired();
 
 				entity.Property(e => e.Description);
+				entity.Property(e => e.AdminNote);
 
-				entity.Property(e => e.Status)
-					  .IsRequired()
-					  .HasMaxLength(20);
-
-				entity.Property(e => e.ReportedByUserId)
-					  .IsRequired();
+				entity.Property(e => e.IsWarrantyClaim)
+					  .HasDefaultValue(false);
 
 				entity.Property(e => e.CreatedAt)
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-				entity.Property(e => e.ReviewedByUserId);
-
 				entity.Property(e => e.ReviewedAt);
+				entity.Property(e => e.WarrantyExpirationDate);
 
 				// ===== Relationships =====
 
+				// Liên kết với Kho/Cửa hàng
 				entity.HasOne(e => e.InventoryLocation)
 					  .WithMany(l => l.DamageReports)
 					  .HasForeignKey(e => e.InventoryLocationId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_InventoryLocation");
 
+				// Liên kết với Sản phẩm (Nullable)
 				entity.HasOne(e => e.ProductColor)
 					  .WithMany(p => p.DamageReports)
-					  .HasForeignKey(e => e.ProductColorId)	
+					  .HasForeignKey(e => e.ProductColorId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_ProductColor");
 
+				// Liên kết với Kệ (Nullable)
+				entity.HasOne(e => e.Shelf)
+					  .WithMany(d => d.DamageReports) 
+					  .HasForeignKey(e => e.ShelfId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_DamageReport_Shelf");
+
+				// Liên kết với Vận đơn thu hồi (Nullable)
+				entity.HasOne(e => e.ReturnShipment)
+					  .WithMany(s => s.DamageReports)
+					  .HasForeignKey(e => e.ReturnShipmentId)
+					  .HasConstraintName("FK_DamageReport_Shipment");
+
+				// Nhân sự
 				entity.HasOne(e => e.ReportedByUser)
 					  .WithMany(u => u.ReportedDamageReports)
 					  .HasForeignKey(e => e.ReportedByUserId)
@@ -1461,9 +1488,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_ReviewedByUser");
 
+				// Media đính kèm
 				entity.HasMany(e => e.DamageMedia)
 					  .WithOne(m => m.DamageReport)
-					  .HasForeignKey(m => m.DamageReportId);
+					  .HasForeignKey(m => m.DamageReportId)
+					  .OnDelete(DeleteBehavior.Cascade);
 			});
 
 			// ==================== DamageMedia ==================
