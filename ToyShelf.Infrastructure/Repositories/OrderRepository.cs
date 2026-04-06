@@ -137,6 +137,46 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return (totalOrders, totalRevenue);
 		}
+
+		public async Task<(int TotalOrders, decimal TotalRevenue)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+		{
+			var query = _context.Orders
+				.Where(o => o.Status.ToUpper() == "PAID")
+				.AsQueryable();
+
+			if (fromDate.HasValue)
+			{
+				query = query.Where(o => o.CreatedAt >= fromDate.Value);
+			}
+
+			if (toDate.HasValue)
+			{
+				query = query.Where(o => o.CreatedAt <= toDate.Value);
+			}
+
+			var totalOrders = await query.CountAsync();
+
+			var totalRevenue = await query.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+
+			return (totalOrders, totalRevenue);
+		}
+
+		public async Task<List<IOrderRepository.DailyStatResult>> GetSystemChartDataAsync(DateTime startDate, DateTime endDate)
+		{
+			return await _context.Orders
+			.Where(o => o.CreatedAt >= startDate
+					 && o.CreatedAt <= endDate
+					 && o.Status.ToUpper() == "PAID")
+			.GroupBy(o => o.CreatedAt.Date)
+			.Select(g => new IOrderRepository.DailyStatResult
+			{
+				Date = g.Key,
+				TotalOrders = g.Count(),
+
+				TotalRevenue = g.Sum(o => (decimal?)o.TotalAmount) ?? 0m
+			})
+			.ToListAsync();
+			}
 	}
 }
 

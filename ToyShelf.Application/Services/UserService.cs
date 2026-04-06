@@ -287,12 +287,41 @@ namespace ToyShelf.Application.Services
 				AvatarUrl = user.AvatarUrl,
 				IsActive = user.IsActive,
 				CreatedAt = user.CreatedAt,
-				Roles = user.Accounts
-					.SelectMany(a => a.AccountRoles)     //  flatten accounts
-					.Select(ar => ar.Role.Name)          //  lấy role name
-					.Distinct()                          // tránh duplicate
-					.ToList()
+				Roles = user.Accounts != null ? user.Accounts
+				.SelectMany(a => a.AccountRoles)
+				.Select(ar => ar.Role?.Name ?? "")
+				.Where(name => !string.IsNullOrEmpty(name))
+				.Distinct()
+				.ToList() : new List<string>(),
+
+				
+				BusinessRole = DetermineBusinessRole(user)
 			};
+		}
+
+		private static string DetermineBusinessRole(User user)
+		{
+		
+			var warehouseAssignment = user.UserWarehouses?.FirstOrDefault();
+			if (warehouseAssignment != null)
+			{
+				return $"warehouse_{warehouseAssignment.Role.ToString().ToLower()}";
+			}
+
+			var storeAssignment = user.UserStores?.FirstOrDefault();
+			if (storeAssignment != null)
+			{
+				return storeAssignment.StoreRole == StoreRole.Manager
+					? "partner_manager"
+					: "partner_staff";
+			}
+
+			if (user.PartnerId != null)
+			{
+				return "partner_admin";
+			}
+
+			return "customer";
 		}
 	}
 }

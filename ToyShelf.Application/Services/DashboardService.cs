@@ -367,5 +367,108 @@ namespace ToyShelf.Application.Services
 
 			return chartData;
 		}
+
+		public async Task<SystemStatsResponse> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+		{
+			var stats = await _orderRepository.GetSystemStatsAsync(fromDate, toDate);
+
+			return new SystemStatsResponse
+			{
+				TotalOrders = stats.TotalOrders,
+				TotalRevenue = stats.TotalRevenue
+			};
+		}
+
+		public async Task<List<SystemChartItemResponse>> GetSystemRevenueChartAsync(StoreChartRequest request)
+		{
+			var now = DateTime.UtcNow.Date;
+			DateTime startDate;
+			DateTime endDate;
+			var viewType = request.ViewType.ToLower();
+
+			// Bẻ lái logic nếu gửi sai
+			if (viewType == "year" && request.Month.HasValue)
+			{
+				viewType = "month";
+			}
+
+			switch (viewType)
+			{
+				case "week":
+					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+					startDate = now.AddDays(-1 * diff).Date;
+					startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+					endDate = startDate.AddDays(7).AddTicks(-1);
+					endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+					break;
+
+				case "month":
+					int m = request.Month ?? now.Month;
+					int y = request.Year ?? now.Year;
+					startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
+					endDate = startDate.AddMonths(1).AddTicks(-1);
+					break;
+
+				case "year":
+				default:
+					int year = request.Year ?? now.Year;
+					startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+					endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+					break;
+			}
+
+			
+			var dbData = await _orderRepository.GetSystemChartDataAsync(startDate, endDate);
+			var chartData = new List<SystemChartItemResponse>();
+
+		
+			if (viewType == "year")
+			{
+				for (int i = 1; i <= 12; i++)
+				{
+					var monthData = dbData.Where(d => d.Date.Month == i).ToList();
+					chartData.Add(new SystemChartItemResponse
+					{
+						DateLabel = $"Tháng {i}",
+						TotalOrders = monthData.Sum(x => x.TotalOrders),
+						TotalRevenue = monthData.Sum(x => x.TotalRevenue)
+					});
+				}
+			}
+			else if (viewType == "week")
+			{
+				var daysOfWeek = new[] { "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7", "CN" };
+				for (int i = 0; i < 7; i++)
+				{
+					var loopDate = startDate.AddDays(i);
+					var dayData = dbData.FirstOrDefault(d => d.Date == loopDate);
+
+					chartData.Add(new SystemChartItemResponse
+					{
+						DateLabel = daysOfWeek[i],
+						TotalOrders = dayData?.TotalOrders ?? 0,
+						TotalRevenue = dayData?.TotalRevenue ?? 0m
+					});
+				}
+			}
+			else // month
+			{
+				int daysInMonth = DateTime.DaysInMonth(startDate.Year, startDate.Month);
+				for (int i = 1; i <= daysInMonth; i++)
+				{
+					var loopDate = new DateTime(startDate.Year, startDate.Month, i);
+					var dayData = dbData.FirstOrDefault(d => d.Date == loopDate);
+
+					chartData.Add(new SystemChartItemResponse
+					{
+						DateLabel = loopDate.ToString("dd/MM"),
+						TotalOrders = dayData?.TotalOrders ?? 0,
+						TotalRevenue = dayData?.TotalRevenue ?? 0m
+					});
+				}
+			}
+
+			return chartData;
+		}
 	}
 }

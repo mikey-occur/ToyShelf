@@ -19,6 +19,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(u => u.Accounts)
 					.ThenInclude(a => a.AccountRoles)
 						.ThenInclude(ar => ar.Role)
+				.Include(u => u.UserStores)
+		        .Include(u => u.UserWarehouses)
 				.AsQueryable();
 
 			if (isActive.HasValue)

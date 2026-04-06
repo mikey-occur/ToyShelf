@@ -95,7 +95,40 @@ namespace ToyShelf.API.Controllers
 		}
 
 
+		/// <summary>
+		/// Get statistics (Total Orders, Total Revenue) for the entire system (Admin).
+		/// </summary>
+		[HttpGet("admin/stat-card")]
+		public async Task<IActionResult> GetSystemStatCard(
+			[FromQuery] DateTime? fromDate,
+			[FromQuery] DateTime? toDate)
+		{
+			var result = await _dashboardService.GetSystemStatsAsync(fromDate, toDate);
 
+			return Ok(new
+			{
+				success = true,
+				message = "System stat card retrieved successfully",
+				data = result
+			});
+		}
+
+		/// <summary>
+		/// Get system revenue for chart (Admin). Nếu truyền week thì lấy theo tuần.
+		/// </summary>
+		[HttpGet("admin/revenue-chart")]
+		public async Task<IActionResult> GetSystemRevenueChart(
+			[FromQuery] StoreChartRequest request)
+		{
+			var chartData = await _dashboardService.GetSystemRevenueChartAsync(request);
+
+			return Ok(new
+			{
+				success = true,
+				message = "System chart data retrieved successfully",
+				data = chartData
+			});
+		}
 
 
 
