@@ -1936,6 +1936,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.Id)
 					  .ValueGeneratedOnAdd();
 
+				entity.Property(e => e.Type)
+					  .IsRequired()
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
 				entity.Property(e => e.Status)
 					  .IsRequired()
 					  .HasConversion<string>()
@@ -1976,6 +1981,11 @@ namespace ToyShelf.Infrastructure.Context
 				  .WithMany(s => s.ShipmentAssignments)
 				  .HasForeignKey(e => e.WarehouseLocationId)
 				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
+
+				entity.HasOne(e => e.DamageReport)
+				  .WithMany(s => s.ShipmentAssignments)
+				  .HasForeignKey(e => e.DamageReportId)
+				  .HasConstraintName("FK_ShipmentAssignment_DamageReport");
 			});
 
 				// ================== Order ==================

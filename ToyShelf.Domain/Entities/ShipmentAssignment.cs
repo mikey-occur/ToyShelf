@@ -8,10 +8,20 @@ namespace ToyShelf.Domain.Entities
 {
 	public enum AssignmentStatus
 	{
-		Pending,
-		Assigned,
-		Accepted,
-		Rejected
+		Pending,    // Mới tạo (Admin duyệt đơn xong), đang đợi gom đơn hoặc đợi Manager chỉ định.
+		Assigned,   // Manager đã chọn Shipper, nhưng Shipper chưa bấm xác nhận trên App.
+		Accepted,   // Shipper đã đồng ý nhận nhiệm vụ.
+		Rejected,   // Shipper từ chối nhiệm vụ (Manager phải chọn người khác).
+		InProgress, // Shipper đã bắt đầu đi thực hiện (đã Pickup kiện hàng đầu tiên).
+		Completed,  // Toàn bộ các Shipment con (Giao/Thu hồi) đã hoàn thành (Delivered/Received).
+		Cancelled   // Admin hoặc Manager hủy nhiệm vụ này do thay đổi kế hoạch.
+	}
+
+	public enum AssignmentType
+	{
+		Delivery,    // Chỉ giao (StoreOrder/ShelfOrder)
+		Return,      // Chỉ thu hồi (DamageReport)
+		Combined     // Vừa giao vừa thu hồi
 	}
 
 	public class ShipmentAssignment
@@ -20,10 +30,12 @@ namespace ToyShelf.Domain.Entities
 
 		public Guid? StoreOrderId { get; set; }
 		public Guid? ShelfOrderId { get; set; }
+		public Guid? DamageReportId { get; set; }
 		public Guid WarehouseLocationId { get; set; }
 
 		public Guid? ShipperId { get; set; }
 
+		public AssignmentType Type { get; set; }
 		public AssignmentStatus Status { get; set; }
 
 		public DateTime CreatedAt { get; set; }
@@ -39,5 +51,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual User? AssignedByUser { get; set; } 
 		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 		public virtual InventoryLocation WarehouseLocation { get; set; } = null!;
+		public virtual DamageReport? DamageReport { get; set; }
 	}
 }
