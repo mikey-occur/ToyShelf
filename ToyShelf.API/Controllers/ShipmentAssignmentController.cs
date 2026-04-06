@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.DamageReport.Request;
 using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
@@ -33,6 +34,22 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<ShipmentAssignmentResponse>
 				.Ok(result, "Shipment assignment created");
 		}
+
+		// Create from damage report - Gôm đơn thông minh từ báo cáo hư hại
+		//[HttpPost("from-damage-report")]
+		//[Authorize(Roles = "Admin")] 
+		//public async Task<ActionResponse> CreateFromDamageReport(
+		//	[FromBody] CreateFromDamageRequest request, 
+		//	[FromServices] ICurrentUser currentUser)
+		//{
+		//	// Gọi hàm xử lý gôm đơn thông minh trong Service
+		//	await _service.CreateFromDamageReportAsync(
+		//		request.DamageReportId,
+		//		request.WarehouseLocationId,
+		//		currentUser);
+
+		//	return ActionResponse.Ok("Shipment assignment created or updated from damage report");
+		//}
 
 		// ================= ASSIGN SHIPPER =================
 		[HttpPatch("assign-shipper")]
