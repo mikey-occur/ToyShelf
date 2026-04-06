@@ -13,6 +13,7 @@ namespace ToyShelf.Application.IServices
 	public interface IShipmentAssignmentService
 	{
 		Task<ShipmentAssignmentResponse> CreateAsync(CreateShipmentAssignmentRequest request, ICurrentUser currentUser);
+		Task CreateFromDamageReportAsync(Guid damageReportId, Guid warehouseLocationId, ICurrentUser currentUser);
 		Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser);
 		Task AcceptAsync(Guid id, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, ICurrentUser currentUser);
