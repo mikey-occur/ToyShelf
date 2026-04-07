@@ -44,6 +44,7 @@ namespace ToyShelf.Domain.Entities
 		// 2. ĐỐI TƯỢNG BỊ HƯ HẠI
 		public Guid? ProductColorId { get; set; }
 		public Guid? ShelfId { get; set; }
+		public Guid? ShipmentId { get; set; }
 		public int Quantity { get; set; }
 
 
