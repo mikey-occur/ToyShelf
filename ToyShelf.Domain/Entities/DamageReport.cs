@@ -76,7 +76,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual Shelf? Shelf { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
-		public virtual Shipment? ReturnShipment { get; set; }
+		public virtual Shipment? Shipment { get; set; }
 		public virtual ICollection<DamageMedia> DamageMedia { get; set; } = new List<DamageMedia>();
 		public virtual ICollection<ShipmentAssignment> ShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 	}

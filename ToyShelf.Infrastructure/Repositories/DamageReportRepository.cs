@@ -46,7 +46,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.ReportedByUser)
 				.Include(x => x.ReviewedByUser)
 				.Include(x => x.DamageMedia)
-				.Include(x => x.ReturnShipment)
+				.Include(x => x.Shipment)
 				.AsQueryable();
 
 			if (status.HasValue)
@@ -68,7 +68,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.ReportedByUser)
 				.Include(x => x.ReviewedByUser)
 				.Include(x => x.DamageMedia)
-				.Include(x => x.ReturnShipment)
+				.Include(x => x.Shipment)
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
 	}

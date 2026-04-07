@@ -67,7 +67,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("UserId", "Provider")
                         .IsUnique();
 
-                    b.ToTable("Accounts");
+                    b.ToTable("Accounts", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.AccountRole", b =>
@@ -82,7 +82,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("AccountRoles");
+                    b.ToTable("AccountRoles", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
@@ -119,7 +119,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Cities");
+                    b.ToTable("Cities", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Color", b =>
@@ -154,7 +154,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("SkuCode")
                         .IsUnique();
 
-                    b.ToTable("Colors");
+                    b.ToTable("Colors", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionHistory", b =>
@@ -194,7 +194,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("CommissionHistories");
+                    b.ToTable("CommissionHistories", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItem", b =>
@@ -213,7 +213,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("CommissionTableId");
 
-                    b.ToTable("CommissionItems");
+                    b.ToTable("CommissionItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionItemCategory", b =>
@@ -228,7 +228,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ProductCategoryId");
 
-                    b.ToTable("CommissionItemCategories");
+                    b.ToTable("CommissionItemCategories", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTable", b =>
@@ -259,7 +259,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerTierId");
 
-                    b.ToTable("CommissionTables");
+                    b.ToTable("CommissionTables", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionTableApply", b =>
@@ -295,7 +295,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("CommissionTableApplies");
+                    b.ToTable("CommissionTableApplies", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
@@ -326,7 +326,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("DamageReportId");
 
-                    b.ToTable("DamageMedia");
+                    b.ToTable("DamageMedia", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
@@ -412,7 +412,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ShelfId");
 
-                    b.ToTable("DamageReports");
+                    b.ToTable("DamageReports", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Inventory", b =>
@@ -442,7 +442,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("InventoryLocationId", "ProductColorId", "Status")
                         .IsUnique();
 
-                    b.ToTable("Inventories");
+                    b.ToTable("Inventories", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryLocation", b =>
@@ -482,7 +482,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsUnique()
                         .HasFilter("\"WarehouseId\" IS NOT NULL");
 
-                    b.ToTable("InventoryLocations", t =>
+                    b.ToTable("InventoryLocations", null, t =>
                         {
                             t.HasCheckConstraint("CK_InventoryLocation_OnlyOneOwner", "(\"WarehouseId\" IS NOT NULL AND \"StoreId\" IS NULL) OR (\"WarehouseId\" IS NULL AND \"StoreId\" IS NOT NULL)");
                         });
@@ -537,7 +537,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ToLocationId");
 
-                    b.ToTable("InventoryTransactions");
+                    b.ToTable("InventoryTransactions", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.MonthlySettlement", b =>
@@ -591,7 +591,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("MonthlySettlements");
+                    b.ToTable("MonthlySettlements", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Notification", b =>
@@ -623,7 +623,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("UserId", "CreatedAt")
                         .IsDescending(false, true);
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
@@ -682,7 +682,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.OrderItem", b =>
@@ -711,7 +711,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("OrderId", "ProductColorId")
                         .IsUnique();
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Partner", b =>
@@ -764,7 +764,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerTierId");
 
-                    b.ToTable("Partners");
+                    b.ToTable("Partners", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.PartnerTier", b =>
@@ -792,7 +792,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("Priority")
                         .IsUnique();
 
-                    b.ToTable("PartnerTiers");
+                    b.ToTable("PartnerTiers", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.PasswordResetOtp", b =>
@@ -831,7 +831,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("AccountId");
 
-                    b.ToTable("PasswordResetOtps");
+                    b.ToTable("PasswordResetOtps", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Product", b =>
@@ -921,7 +921,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("SKU")
                         .IsUnique();
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductCategory", b =>
@@ -958,7 +958,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductCategories");
+                    b.ToTable("ProductCategories", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ProductColor", b =>
@@ -1006,7 +1006,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("Sku")
                         .IsUnique();
 
-                    b.ToTable("ProductColors");
+                    b.ToTable("ProductColors", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Role", b =>
@@ -1041,7 +1041,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Roles");
+                    b.ToTable("Roles", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Shelf", b =>
@@ -1081,7 +1081,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ShelfTypeId");
 
-                    b.ToTable("Shelves");
+                    b.ToTable("Shelves", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfOrder", b =>
@@ -1144,7 +1144,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("StoreLocationId");
 
-                    b.ToTable("ShelfOrders");
+                    b.ToTable("ShelfOrders", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfOrderItem", b =>
@@ -1182,7 +1182,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ShelfTypeId");
 
-                    b.ToTable("ShelfOrderItems");
+                    b.ToTable("ShelfOrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfShipmentItem", b =>
@@ -1208,7 +1208,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ShipmentId");
 
-                    b.ToTable("ShelfShipmentItems");
+                    b.ToTable("ShelfShipmentItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfTransaction", b =>
@@ -1257,7 +1257,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ToLocationId");
 
-                    b.ToTable("ShelfTransactions");
+                    b.ToTable("ShelfTransactions", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfType", b =>
@@ -1307,7 +1307,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ShelfTypes");
+                    b.ToTable("ShelfTypes", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfTypeLevel", b =>
@@ -1349,7 +1349,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("ShelfTypeId");
 
-                    b.ToTable("shelfTypeLevels");
+                    b.ToTable("shelfTypeLevels", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Shipment", b =>
@@ -1422,7 +1422,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("FromLocationId", "ToLocationId");
 
-                    b.ToTable("Shipments");
+                    b.ToTable("Shipments", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
@@ -1486,7 +1486,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("WarehouseLocationId");
 
-                    b.ToTable("ShipmentAssignments");
+                    b.ToTable("ShipmentAssignments", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentItem", b =>
@@ -1514,7 +1514,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ShipmentId", "ProductColorId")
                         .IsUnique();
 
-                    b.ToTable("ShipmentItems");
+                    b.ToTable("ShipmentItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentMedia", b =>
@@ -1555,7 +1555,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("UploadedByUserId");
 
-                    b.ToTable("ShipmentMedias");
+                    b.ToTable("ShipmentMedias", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Store", b =>
@@ -1617,7 +1617,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("Stores");
+                    b.ToTable("Stores", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreCreationRequest", b =>
@@ -1691,7 +1691,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("Status");
 
-                    b.ToTable("StoreCreationRequests");
+                    b.ToTable("StoreCreationRequests", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreInvitation", b =>
@@ -1736,7 +1736,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("StoreId", "UserId", "Status")
                         .HasDatabaseName("IX_StoreInvitation_Store_User_Status");
 
-                    b.ToTable("StoreInvitations");
+                    b.ToTable("StoreInvitations", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreOrder", b =>
@@ -1791,7 +1791,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("StoreLocationId");
 
-                    b.ToTable("StoreOrders");
+                    b.ToTable("StoreOrders", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreOrderItem", b =>
@@ -1820,7 +1820,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("StoreOrderId");
 
-                    b.ToTable("StoreOrderItems");
+                    b.ToTable("StoreOrderItems", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.User", b =>
@@ -1866,7 +1866,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("PartnerId");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.UserStore", b =>
@@ -1891,7 +1891,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("StoreId");
 
-                    b.ToTable("UserStores");
+                    b.ToTable("UserStores", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.UserWarehouse", b =>
@@ -1931,7 +1931,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("UserId", "WarehouseId")
                         .IsUnique();
 
-                    b.ToTable("UserWarehouses");
+                    b.ToTable("UserWarehouses", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Warehouse", b =>
@@ -1983,7 +1983,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
-                    b.ToTable("Warehouses");
+                    b.ToTable("Warehouses", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Account", b =>
