@@ -12,8 +12,8 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    [Migration("20260402123005_AddShelfTransactionAndShelfTracking")]
-    partial class AddShelfTransactionAndShelfTracking
+    [Migration("20260407035126_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -338,6 +338,14 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("AdminNote")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -349,7 +357,12 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("InventoryLocationId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid>("ProductColorId")
+                    b.Property<bool>("IsWarrantyClaim")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<Guid?>("ProductColorId")
                         .HasColumnType("uuid");
 
                     b.Property<int>("Quantity")
@@ -364,10 +377,26 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid?>("ReviewedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("ShelfId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime?>("WarrantyExpirationDate")
+                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
@@ -378,6 +407,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ReportedByUserId");
 
                     b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("ShelfId");
 
                     b.ToTable("DamageReports");
                 });
@@ -559,6 +590,38 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("PartnerId");
 
                     b.ToTable("MonthlySettlements");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.Notification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
@@ -1126,23 +1189,20 @@ namespace ToyShelf.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
-                    b.Property<int>("ExpectedQuantity")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ReceivedQuantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<Guid>("ShelfTypeId")
+                    b.Property<Guid>("ShelfId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ShipmentId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("ShelfTypeId");
+                    b.HasIndex("ShelfId");
 
                     b.HasIndex("ShipmentId");
 
@@ -1306,6 +1366,9 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<Guid?>("DamageReportId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1346,6 +1409,9 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
+                    b.HasIndex("DamageReportId")
+                        .IsUnique();
+
                     b.HasIndex("RequestedByUserId");
 
                     b.HasIndex("ShelfOrderId");
@@ -1380,6 +1446,9 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("DamageReportId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1397,6 +1466,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid?>("StoreOrderId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<Guid>("WarehouseLocationId")
                         .HasColumnType("uuid");
 
@@ -1405,6 +1479,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("AssignedByUserId");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DamageReportId");
 
                     b.HasIndex("ShelfOrderId");
 
@@ -2064,7 +2140,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .WithMany("DamageReports")
                         .HasForeignKey("ProductColorId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
                         .HasConstraintName("FK_DamageReport_ProductColor");
 
                     b.HasOne("ToyShelf.Domain.Entities.User", "ReportedByUser")
@@ -2080,6 +2155,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_DamageReport_ReviewedByUser");
 
+                    b.HasOne("ToyShelf.Domain.Entities.Shelf", "Shelf")
+                        .WithMany("DamageReports")
+                        .HasForeignKey("ShelfId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_DamageReport_Shelf");
+
                     b.Navigation("InventoryLocation");
 
                     b.Navigation("ProductColor");
@@ -2087,6 +2168,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ReportedByUser");
 
                     b.Navigation("ReviewedByUser");
+
+                    b.Navigation("Shelf");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Inventory", b =>
@@ -2350,12 +2433,12 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfShipmentItem", b =>
                 {
-                    b.HasOne("ToyShelf.Domain.Entities.ShelfType", "ShelfType")
+                    b.HasOne("ToyShelf.Domain.Entities.Shelf", "Shelf")
                         .WithMany("ShelfShipmentItems")
-                        .HasForeignKey("ShelfTypeId")
+                        .HasForeignKey("ShelfId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
-                        .HasConstraintName("FK_ShelfShipmentItem_ShelfType");
+                        .HasConstraintName("FK_ShelfShipmentItem_Shelf");
 
                     b.HasOne("ToyShelf.Domain.Entities.Shipment", "Shipment")
                         .WithMany("ShelfShipmentItems")
@@ -2364,7 +2447,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ShelfShipmentItem_Shipment");
 
-                    b.Navigation("ShelfType");
+                    b.Navigation("Shelf");
 
                     b.Navigation("Shipment");
                 });
@@ -2413,6 +2496,12 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Shipment", b =>
                 {
+                    b.HasOne("ToyShelf.Domain.Entities.DamageReport", "DamageReport")
+                        .WithOne("Shipment")
+                        .HasForeignKey("ToyShelf.Domain.Entities.Shipment", "DamageReportId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("FK_Shipment_DamageReport");
+
                     b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "FromLocation")
                         .WithMany("FromShipments")
                         .HasForeignKey("FromLocationId")
@@ -2458,6 +2547,8 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_Shipment_ToLocation");
 
+                    b.Navigation("DamageReport");
+
                     b.Navigation("FromLocation");
 
                     b.Navigation("RequestedByUser");
@@ -2487,6 +2578,11 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
 
+                    b.HasOne("ToyShelf.Domain.Entities.DamageReport", "DamageReport")
+                        .WithMany("ShipmentAssignments")
+                        .HasForeignKey("DamageReportId")
+                        .HasConstraintName("FK_ShipmentAssignment_DamageReport");
+
                     b.HasOne("ToyShelf.Domain.Entities.ShelfOrder", "ShelfOrder")
                         .WithMany("ShipmentAssignments")
                         .HasForeignKey("ShelfOrderId")
@@ -2513,6 +2609,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("AssignedByUser");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("DamageReport");
 
                     b.Navigation("ShelfOrder");
 
@@ -2803,6 +2901,10 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
                 {
                     b.Navigation("DamageMedia");
+
+                    b.Navigation("Shipment");
+
+                    b.Navigation("ShipmentAssignments");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryLocation", b =>
@@ -2903,6 +3005,10 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Shelf", b =>
                 {
+                    b.Navigation("DamageReports");
+
+                    b.Navigation("ShelfShipmentItems");
+
                     b.Navigation("ShelfTransactions");
                 });
 
@@ -2918,8 +3024,6 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfType", b =>
                 {
                     b.Navigation("ShelfOrderItems");
-
-                    b.Navigation("ShelfShipmentItems");
 
                     b.Navigation("ShelfTypeLevels");
 

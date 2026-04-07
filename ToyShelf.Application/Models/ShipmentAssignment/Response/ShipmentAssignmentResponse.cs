@@ -17,6 +17,10 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public Guid? ShelfOrderId { get; set; }
 		public string? ShelfOrderCode { get; set; }
 
+		public Guid? DamageReportId { get; set; }
+		public string? DamageReportCode { get; set; }
+		public string? AdminNote { get; set; }
+
 		// ⭐ thêm để FE xử lý rõ ràng
 		public string OrderType { get; set; } = null!; // "STORE" | "SHELF"
 
@@ -31,6 +35,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public string CreatedByName { get; set; } = null!;
 		public string? AssignedByName { get; set; }
 
+		public AssignmentType Type { get; set; }
 		public AssignmentStatus Status { get; set; }
 		public ShipmentStatus ShipmentStatus { get; set; }
 
@@ -39,6 +44,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public List<ShipmentAssignmentProductItemResponse>? ProductItems { get; set; }
 		public List<ShipmentAssignmentShelfItemResponse>? ShelfItems { get; set; }
+		public ShipmentAssignmentDamageItemResponse? DamageReturnItem { get; set; }
 	}
 
 	public class ShipmentAssignmentProductItemResponse
@@ -66,5 +72,18 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public int Quantity { get; set; }
 		public int FulfilledQuantity { get; set; }
+	}
+
+	public class ShipmentAssignmentDamageItemResponse
+	{
+		public Guid DamageReportId { get; set; }
+		public string DamageCode { get; set; } = null!;
+		public string DamageType { get; set; } = null!; // Product | Shelf
+		public string Source { get; set; } = null!;     // Manufacturer | StoreHandling...
+		public int Quantity { get; set; }
+
+		public string? TargetName { get; set; } // Tên Sản phẩm hoặc Mã Kệ cụ thể
+		public string? Description { get; set; } // Mô tả lỗi từ Store
+		public string? ImageUrl { get; set; }    // Ảnh sản phẩm hoặc ảnh hiện trường hỏng
 	}
 }

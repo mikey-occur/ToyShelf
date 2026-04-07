@@ -41,12 +41,29 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Notifications",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Content = table.Column<string>(type: "text", nullable: false),
+                    IsRead = table.Column<bool>(type: "boolean", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Notifications", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "PartnerTiers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
-                    Priority = table.Column<int>(type: "integer", nullable: false)
+                    Priority = table.Column<int>(type: "integer", nullable: false),
+                    MaxShelvesPerStore = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -54,26 +71,10 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PriceSegments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
-                    MinPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
-                    MaxPrice = table.Column<decimal>(type: "numeric(18,2)", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PriceSegments", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ProductCategories",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ParentId = table.Column<Guid>(type: "uuid", nullable: true),
                     Code = table.Column<string>(type: "text", nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Description = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
@@ -84,12 +85,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_ProductCategories", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProductCategories_ProductCategories_ParentId",
-                        column: x => x.ParentId,
-                        principalTable: "ProductCategories",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -106,6 +101,27 @@ namespace ToyShelf.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Roles", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShelfTypes",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Name = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    Description = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    Width = table.Column<double>(type: "double precision", nullable: false),
+                    Height = table.Column<double>(type: "double precision", nullable: false),
+                    Depth = table.Column<double>(type: "double precision", nullable: false),
+                    TotalLevels = table.Column<int>(type: "integer", nullable: false),
+                    SuitableProductCategoryTypes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    DisplayGuideline = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true),
+                    IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShelfTypes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -182,33 +198,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "CommissionPolicies",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    PartnerTierId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PriceSegmentId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CommissionRate = table.Column<decimal>(type: "numeric(5,4)", precision: 5, scale: 4, nullable: false),
-                    EffectiveDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_CommissionPolicies", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_CommissionPolicy_PartnerTier",
-                        column: x => x.PartnerTierId,
-                        principalTable: "PartnerTiers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_CommissionPolicy_PriceSegment",
-                        column: x => x.PriceSegmentId,
-                        principalTable: "PriceSegments",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Products",
                 columns: table => new
                 {
@@ -239,6 +228,31 @@ namespace ToyShelf.Infrastructure.Migrations
                         name: "FK_Product_ProductCategory",
                         column: x => x.ProductCategoryId,
                         principalTable: "ProductCategories",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "shelfTypeLevels",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShelfTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Level = table.Column<int>(type: "integer", nullable: false),
+                    Name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    ClearanceHeight = table.Column<double>(type: "double precision", nullable: false),
+                    MaxWeightCapacity = table.Column<double>(type: "double precision", nullable: false),
+                    RecommendedCapacity = table.Column<int>(type: "integer", nullable: false),
+                    SuitableProductCategoryTypes = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    DisplayGuideline = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_shelfTypeLevels", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShelfTypeLevel_ShelfType",
+                        column: x => x.ShelfTypeId,
+                        principalTable: "ShelfTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -300,6 +314,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     Month = table.Column<int>(type: "integer", nullable: false),
                     Year = table.Column<int>(type: "integer", nullable: false),
                     TotalItems = table.Column<int>(type: "integer", nullable: false),
+                    TotalSalesAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     TotalCommissionAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     DeductionAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     Note = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
@@ -325,6 +340,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PartnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CityId = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     StoreAddress = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
@@ -338,6 +354,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Stores", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Store_City",
+                        column: x => x.CityId,
+                        principalTable: "Cities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Store_Partner",
                         column: x => x.PartnerId,
@@ -376,10 +398,10 @@ namespace ToyShelf.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     ColorId = table.Column<Guid>(type: "uuid", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PriceSegmentId = table.Column<Guid>(type: "uuid", nullable: false),
                     Sku = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Price = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     QrCode = table.Column<string>(type: "text", nullable: true),
+                    Model3DUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
                     IsActive = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true)
                 },
@@ -390,12 +412,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         name: "FK_ProductColor_Color",
                         column: x => x.ColorId,
                         principalTable: "Colors",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_ProductColor_PriceSegment",
-                        column: x => x.PriceSegmentId,
-                        principalTable: "PriceSegments",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
@@ -456,34 +472,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         principalTable: "Warehouses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Shelves",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    PartnerId = table.Column<Guid>(type: "uuid", nullable: true),
-                    StoreId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    Level = table.Column<int>(type: "integer", nullable: false),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    AssignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    UnassignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Shelves", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_Shelf_Partner",
-                        column: x => x.PartnerId,
-                        principalTable: "Partners",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_Shelf_Store",
-                        column: x => x.StoreId,
-                        principalTable: "Stores",
-                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
@@ -549,6 +537,7 @@ namespace ToyShelf.Infrastructure.Migrations
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     PartnerId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CityId = table.Column<Guid>(type: "uuid", nullable: false),
                     RequestedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
                     ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
                     Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
@@ -564,6 +553,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_StoreCreationRequests", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_StoreCreationRequest_City",
+                        column: x => x.CityId,
+                        principalTable: "Cities",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_StoreCreationRequest_Partner",
                         column: x => x.PartnerId,
@@ -670,50 +665,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DamageReports",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    InventoryLocationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProductColorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Quantity = table.Column<int>(type: "integer", nullable: false),
-                    Description = table.Column<string>(type: "text", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    ReportedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
-                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_DamageReports", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_DamageReport_InventoryLocation",
-                        column: x => x.InventoryLocationId,
-                        principalTable: "InventoryLocations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DamageReport_ProductColor",
-                        column: x => x.ProductColorId,
-                        principalTable: "ProductColors",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DamageReport_ReportedByUser",
-                        column: x => x.ReportedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_DamageReport_ReviewedByUser",
-                        column: x => x.ReviewedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Inventories",
                 columns: table => new
                 {
@@ -776,6 +727,81 @@ namespace ToyShelf.Infrastructure.Migrations
                         principalTable: "InventoryLocations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShelfOrders",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(30)", maxLength: 30, nullable: false),
+                    StoreLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    RequestedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ApprovedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    RejectedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Note = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    AdminNote = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ApprovedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    RejectedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShelfOrders", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrder_ApprovedByUser",
+                        column: x => x.ApprovedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrder_RejectedByUser",
+                        column: x => x.RejectedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrder_RequestedByUser",
+                        column: x => x.RequestedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrder_StoreLocation",
+                        column: x => x.StoreLocationId,
+                        principalTable: "InventoryLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Shelves",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    InventoryLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShelfTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    AssignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    UnassignedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Shelves", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Shelf_InventoryLocation",
+                        column: x => x.InventoryLocationId,
+                        principalTable: "InventoryLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Shelf_ShelfType",
+                        column: x => x.ShelfTypeId,
+                        principalTable: "ShelfTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -897,71 +923,126 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DamageMedia",
+                name: "ShelfOrderItems",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    DamageReportId = table.Column<Guid>(type: "uuid", nullable: false),
-                    MediaUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
-                    MediaType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ShelfOrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShelfTypeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    FulfilledQuantity = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    ShelfTypeName = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    ImageUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShelfOrderItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrderItem_ShelfOrder",
+                        column: x => x.ShelfOrderId,
+                        principalTable: "ShelfOrders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShelfOrderItem_ShelfType",
+                        column: x => x.ShelfTypeId,
+                        principalTable: "ShelfTypes",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "DamageReports",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Source = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ProductColorId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ShelfId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Quantity = table.Column<int>(type: "integer", nullable: false),
+                    Description = table.Column<string>(type: "text", nullable: true),
+                    AdminNote = table.Column<string>(type: "text", nullable: true),
+                    InventoryLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ReportedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    ReviewedByUserId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ReviewedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    IsWarrantyClaim = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    WarrantyExpirationDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DamageReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DamageReport_InventoryLocation",
+                        column: x => x.InventoryLocationId,
+                        principalTable: "InventoryLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DamageReport_ProductColor",
+                        column: x => x.ProductColorId,
+                        principalTable: "ProductColors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DamageReport_ReportedByUser",
+                        column: x => x.ReportedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DamageReport_ReviewedByUser",
+                        column: x => x.ReviewedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_DamageReport_Shelf",
+                        column: x => x.ShelfId,
+                        principalTable: "Shelves",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShelfTransactions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShelfId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FromLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ToLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    FromStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ToStatus = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ReferenceType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    ReferenceId = table.Column<Guid>(type: "uuid", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_DamageMedia", x => x.Id);
+                    table.PrimaryKey("PK_ShelfTransactions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DamageMedia_DamageReport",
-                        column: x => x.DamageReportId,
-                        principalTable: "DamageReports",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ShipmentAssignments",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    StoreOrderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    WarehouseLocationId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ShipperId = table.Column<Guid>(type: "uuid", nullable: true),
-                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
-                    RespondedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AssignedByUserId = table.Column<Guid>(type: "uuid", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ShipmentAssignments", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ShipmentAssignment_AssignedByUser",
-                        column: x => x.AssignedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_ShipmentAssignment_CreatedByUser",
-                        column: x => x.CreatedByUserId,
-                        principalTable: "Users",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_ShipmentAssignment_InventoryLocation",
-                        column: x => x.WarehouseLocationId,
+                        name: "FK_ShelfTransaction_FromLocation",
+                        column: x => x.FromLocationId,
                         principalTable: "InventoryLocations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ShipmentAssignment_Shipper",
-                        column: x => x.ShipperId,
-                        principalTable: "Users",
-                        principalColumn: "Id");
-                    table.ForeignKey(
-                        name: "FK_ShipmentAssignment_StoreOrder",
-                        column: x => x.StoreOrderId,
-                        principalTable: "StoreOrders",
+                        name: "FK_ShelfTransaction_Shelf",
+                        column: x => x.ShelfId,
+                        principalTable: "Shelves",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShelfTransaction_ToLocation",
+                        column: x => x.ToLocationId,
+                        principalTable: "InventoryLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -999,6 +1080,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     OrderItemId = table.Column<Guid>(type: "uuid", nullable: false),
                     PartnerId = table.Column<Guid>(type: "uuid", nullable: false),
                     MonthlySettlementId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SalesAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     AppliedRate = table.Column<decimal>(type: "numeric(18,4)", nullable: false),
                     CommissionAmount = table.Column<decimal>(type: "numeric(18,2)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
@@ -1027,12 +1109,95 @@ namespace ToyShelf.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "DamageMedia",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    DamageReportId = table.Column<Guid>(type: "uuid", nullable: false),
+                    MediaUrl = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    MediaType = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_DamageMedia", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_DamageMedia_DamageReport",
+                        column: x => x.DamageReportId,
+                        principalTable: "DamageReports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShipmentAssignments",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoreOrderId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ShelfOrderId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DamageReportId = table.Column<Guid>(type: "uuid", nullable: true),
+                    WarehouseLocationId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShipperId = table.Column<Guid>(type: "uuid", nullable: true),
+                    Type = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false, defaultValueSql: "CURRENT_TIMESTAMP"),
+                    RespondedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedByUserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AssignedByUserId = table.Column<Guid>(type: "uuid", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShipmentAssignments", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_AssignedByUser",
+                        column: x => x.AssignedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_CreatedByUser",
+                        column: x => x.CreatedByUserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_DamageReport",
+                        column: x => x.DamageReportId,
+                        principalTable: "DamageReports",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_InventoryLocation",
+                        column: x => x.WarehouseLocationId,
+                        principalTable: "InventoryLocations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_ShelfOrder",
+                        column: x => x.ShelfOrderId,
+                        principalTable: "ShelfOrders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_Shipper",
+                        column: x => x.ShipperId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_ShipmentAssignment_StoreOrder",
+                        column: x => x.StoreOrderId,
+                        principalTable: "StoreOrders",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Shipments",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     Code = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
-                    StoreOrderId = table.Column<Guid>(type: "uuid", nullable: false),
+                    StoreOrderId = table.Column<Guid>(type: "uuid", nullable: true),
+                    ShelfOrderId = table.Column<Guid>(type: "uuid", nullable: true),
+                    DamageReportId = table.Column<Guid>(type: "uuid", nullable: true),
                     ShipperId = table.Column<Guid>(type: "uuid", nullable: true),
                     FromLocationId = table.Column<Guid>(type: "uuid", nullable: false),
                     ToLocationId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -1054,6 +1219,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Shipment_DamageReport",
+                        column: x => x.DamageReportId,
+                        principalTable: "DamageReports",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
+                    table.ForeignKey(
                         name: "FK_Shipment_FromLocation",
                         column: x => x.FromLocationId,
                         principalTable: "InventoryLocations",
@@ -1066,6 +1237,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
+                        name: "FK_Shipment_ShelfOrder",
+                        column: x => x.ShelfOrderId,
+                        principalTable: "ShelfOrders",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
                         name: "FK_Shipment_Shipper",
                         column: x => x.ShipperId,
                         principalTable: "Users",
@@ -1075,14 +1252,39 @@ namespace ToyShelf.Infrastructure.Migrations
                         name: "FK_Shipment_StoreOrder",
                         column: x => x.StoreOrderId,
                         principalTable: "StoreOrders",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Shipment_ToLocation",
                         column: x => x.ToLocationId,
                         principalTable: "InventoryLocations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ShelfShipmentItems",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShipmentId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ShelfId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Status = table.Column<string>(type: "character varying(20)", maxLength: 20, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ShelfShipmentItems", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ShelfShipmentItem_Shelf",
+                        column: x => x.ShelfId,
+                        principalTable: "Shelves",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_ShelfShipmentItem_Shipment",
+                        column: x => x.ShipmentId,
+                        principalTable: "Shipments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -1208,17 +1410,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "CommissionTableId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CommissionPolicies_PartnerTierId_PriceSegmentId",
-                table: "CommissionPolicies",
-                columns: new[] { "PartnerTierId", "PriceSegmentId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_CommissionPolicies_PriceSegmentId",
-                table: "CommissionPolicies",
-                column: "PriceSegmentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_CommissionTableApplies_CommissionTableId",
                 table: "CommissionTableApplies",
                 column: "CommissionTableId");
@@ -1257,6 +1448,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_DamageReports_ReviewedByUserId",
                 table: "DamageReports",
                 column: "ReviewedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DamageReports_ShelfId",
+                table: "DamageReports",
+                column: "ShelfId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Inventories_InventoryLocationId_ProductColorId_Status",
@@ -1302,6 +1498,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_MonthlySettlements_PartnerId",
                 table: "MonthlySettlements",
                 column: "PartnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId_CreatedAt",
+                table: "Notifications",
+                columns: new[] { "UserId", "CreatedAt" },
+                descending: new[] { false, true });
 
             migrationBuilder.CreateIndex(
                 name: "IX_OrderItems_OrderId_ProductColorId",
@@ -1364,30 +1566,9 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "AccountId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_PriceSegments_Code",
-                table: "PriceSegments",
-                column: "Code",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_PriceSegments_MinPrice_MaxPrice",
-                table: "PriceSegments",
-                columns: new[] { "MinPrice", "MaxPrice" });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductCategories_ParentId",
-                table: "ProductCategories",
-                column: "ParentId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ProductColors_ColorId",
                 table: "ProductColors",
                 column: "ColorId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_ProductColors_PriceSegmentId",
-                table: "ProductColors",
-                column: "PriceSegmentId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProductColors_ProductId",
@@ -1418,20 +1599,86 @@ namespace ToyShelf.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrderItems_ShelfOrderId",
+                table: "ShelfOrderItems",
+                column: "ShelfOrderId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrderItems_ShelfTypeId",
+                table: "ShelfOrderItems",
+                column: "ShelfTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrders_ApprovedByUserId",
+                table: "ShelfOrders",
+                column: "ApprovedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrders_Code",
+                table: "ShelfOrders",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrders_RejectedByUserId",
+                table: "ShelfOrders",
+                column: "RejectedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrders_RequestedByUserId",
+                table: "ShelfOrders",
+                column: "RequestedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfOrders_StoreLocationId",
+                table: "ShelfOrders",
+                column: "StoreLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfShipmentItems_ShelfId",
+                table: "ShelfShipmentItems",
+                column: "ShelfId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfShipmentItems_ShipmentId",
+                table: "ShelfShipmentItems",
+                column: "ShipmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfTransactions_FromLocationId",
+                table: "ShelfTransactions",
+                column: "FromLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfTransactions_ShelfId",
+                table: "ShelfTransactions",
+                column: "ShelfId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShelfTransactions_ToLocationId",
+                table: "ShelfTransactions",
+                column: "ToLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_shelfTypeLevels_ShelfTypeId",
+                table: "shelfTypeLevels",
+                column: "ShelfTypeId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Shelves_Code",
                 table: "Shelves",
                 column: "Code",
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Shelves_PartnerId",
+                name: "IX_Shelves_InventoryLocationId",
                 table: "Shelves",
-                column: "PartnerId");
+                column: "InventoryLocationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Shelves_StoreId",
+                name: "IX_Shelves_ShelfTypeId",
                 table: "Shelves",
-                column: "StoreId");
+                column: "ShelfTypeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShipmentAssignments_AssignedByUserId",
@@ -1442,6 +1689,16 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_ShipmentAssignments_CreatedByUserId",
                 table: "ShipmentAssignments",
                 column: "CreatedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShipmentAssignments_DamageReportId",
+                table: "ShipmentAssignments",
+                column: "DamageReportId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ShipmentAssignments_ShelfOrderId",
+                table: "ShipmentAssignments",
+                column: "ShelfOrderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_ShipmentAssignments_ShipperId",
@@ -1486,6 +1743,12 @@ namespace ToyShelf.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Shipments_DamageReportId",
+                table: "Shipments",
+                column: "DamageReportId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Shipments_FromLocationId_ToLocationId",
                 table: "Shipments",
                 columns: new[] { "FromLocationId", "ToLocationId" });
@@ -1494,6 +1757,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_Shipments_RequestedByUserId",
                 table: "Shipments",
                 column: "RequestedByUserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Shipments_ShelfOrderId",
+                table: "Shipments",
+                column: "ShelfOrderId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Shipments_ShipmentAssignmentId",
@@ -1514,6 +1782,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "IX_Shipments_ToLocationId",
                 table: "Shipments",
                 column: "ToLocationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_StoreCreationRequests_CityId",
+                table: "StoreCreationRequests",
+                column: "CityId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StoreCreationRequests_CreatedAt",
@@ -1587,6 +1860,11 @@ namespace ToyShelf.Infrastructure.Migrations
                 column: "StoreLocationId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Stores_CityId",
+                table: "Stores",
+                column: "CityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Stores_Code",
                 table: "Stores",
                 column: "Code",
@@ -1649,9 +1927,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "CommissionItemCategories");
 
             migrationBuilder.DropTable(
-                name: "CommissionPolicies");
-
-            migrationBuilder.DropTable(
                 name: "CommissionTableApplies");
 
             migrationBuilder.DropTable(
@@ -1664,10 +1939,22 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "InventoryTransactions");
 
             migrationBuilder.DropTable(
+                name: "Notifications");
+
+            migrationBuilder.DropTable(
                 name: "PasswordResetOtps");
 
             migrationBuilder.DropTable(
-                name: "Shelves");
+                name: "ShelfOrderItems");
+
+            migrationBuilder.DropTable(
+                name: "ShelfShipmentItems");
+
+            migrationBuilder.DropTable(
+                name: "ShelfTransactions");
+
+            migrationBuilder.DropTable(
+                name: "shelfTypeLevels");
 
             migrationBuilder.DropTable(
                 name: "ShipmentItems");
@@ -1703,9 +1990,6 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "CommissionItems");
 
             migrationBuilder.DropTable(
-                name: "DamageReports");
-
-            migrationBuilder.DropTable(
                 name: "Accounts");
 
             migrationBuilder.DropTable(
@@ -1718,31 +2002,40 @@ namespace ToyShelf.Infrastructure.Migrations
                 name: "CommissionTables");
 
             migrationBuilder.DropTable(
-                name: "ProductColors");
-
-            migrationBuilder.DropTable(
                 name: "ShipmentAssignments");
 
             migrationBuilder.DropTable(
-                name: "Colors");
+                name: "DamageReports");
 
             migrationBuilder.DropTable(
-                name: "PriceSegments");
-
-            migrationBuilder.DropTable(
-                name: "Products");
+                name: "ShelfOrders");
 
             migrationBuilder.DropTable(
                 name: "StoreOrders");
 
             migrationBuilder.DropTable(
-                name: "ProductCategories");
+                name: "ProductColors");
+
+            migrationBuilder.DropTable(
+                name: "Shelves");
 
             migrationBuilder.DropTable(
                 name: "Users");
 
             migrationBuilder.DropTable(
+                name: "Colors");
+
+            migrationBuilder.DropTable(
+                name: "Products");
+
+            migrationBuilder.DropTable(
                 name: "InventoryLocations");
+
+            migrationBuilder.DropTable(
+                name: "ShelfTypes");
+
+            migrationBuilder.DropTable(
+                name: "ProductCategories");
 
             migrationBuilder.DropTable(
                 name: "Stores");

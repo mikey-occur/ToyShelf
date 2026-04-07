@@ -23,6 +23,7 @@ namespace ToyShelf.Domain.Entities
 
 		public Guid? StoreOrderId { get; set; }
 		public Guid? ShelfOrderId { get; set; }
+		public Guid? DamageReportId { get; set; }
 
 		public Guid? ShipperId { get; set; }
 
@@ -41,6 +42,7 @@ namespace ToyShelf.Domain.Entities
 
 		public virtual StoreOrder? StoreOrder { get; set; }
 		public virtual ShelfOrder? ShelfOrder { get; set; }
+		public virtual DamageReport? DamageReport { get; set; }
 
 		public virtual User? Shipper { get; set; }
 
