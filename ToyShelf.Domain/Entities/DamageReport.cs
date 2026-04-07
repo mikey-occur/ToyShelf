@@ -60,11 +60,8 @@ namespace ToyShelf.Domain.Entities
 		public Guid? ReviewedByUserId { get; set; }
 		public DateTime? ReviewedAt { get; set; }
 
-		// 5. LIÊN KẾT THU HỒI (Vận đơn trả hàng)
-		public Guid? ReturnShipmentId { get; set; }
 
 		// 6. Bảo hành 
-
 		public bool IsWarrantyClaim { get; set; } = false; // Đánh dấu đây là ca bảo hành
 
 		// Thời hạn bảo hành (nếu cần đối soát nhanh)
@@ -74,9 +71,9 @@ namespace ToyShelf.Domain.Entities
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
 		public virtual ProductColor? ProductColor { get; set; }
 		public virtual Shelf? Shelf { get; set; }
+		public virtual Shipment? Shipment { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
-		public virtual Shipment? Shipment { get; set; }
 		public virtual ICollection<DamageMedia> DamageMedia { get; set; } = new List<DamageMedia>();
 		public virtual ICollection<ShipmentAssignment> ShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 	}
