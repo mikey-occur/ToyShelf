@@ -102,11 +102,22 @@ app.UseStaticFiles(new StaticFileOptions
 
 // ===== Hangfire Dashboard =====
 app.UseHangfireDashboard("/hangfire");
+// 1. Job chốt toán cuối tháng (Chạy vào 0h ngày 1 hàng tháng)
 var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
 recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
 	"auto-monthly-settlement",
 	service => service.GenerateLastMonthSettlementAutoAsync(),
 	"0 0 1 * *",
+	new RecurringJobOptions
+	{
+		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
+	}
+);
+// job xoá notification cũ hơn 30 ngày (Chạy vào 2h sáng hàng ngày)
+recurringJobManager.AddOrUpdate<INotificationService>(
+	"Cleanup-Old-Notifications",
+	service => service.CleanupOldNotificationsAsync(30),
+	Cron.Daily(2, 0),
 	new RecurringJobOptions
 	{
 		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
@@ -120,6 +131,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapHub<ProductHub>("/productHub");
+app.MapHub<NotificationHub>("/hubs/notification");
 
 app.MapControllers();
 

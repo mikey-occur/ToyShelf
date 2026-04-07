@@ -2,6 +2,7 @@
 using Hangfire.PostgreSql;
 using Microsoft.Extensions.Options;
 using PayOS;
+using StackExchange.Redis;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Notifications;
@@ -52,7 +53,30 @@ namespace ToyShelf.API.Configuration
 					options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
 				}));
 			services.AddHangfireServer();
-			
+
+			// Lấy ConnectionString từ appsettings.json
+			var redisConnection = configuration.GetConnectionString("Redis");
+			if (!string.IsNullOrEmpty(redisConnection))
+			{
+				// Khởi tạo lõi kết nối (Cái này để fix lỗi sập nguồn lúc nãy)
+				services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnection));
+			}
+
+			services.AddStackExchangeRedisCache(options =>
+			{
+				options.Configuration = redisConnection;
+				options.InstanceName = "ToyShelf_";
+			});
+
+
+
+			services.AddSignalR()
+			.AddStackExchangeRedis(redisConnection!, options =>
+			{
+
+				options.Configuration.ChannelPrefix = RedisChannel.Literal("ToyShelf_SignalR");
+			});
+
 			// ===== Unit of Work & Generic =====
 			services.AddScoped<IUnitOfWork, UnitOfWork>();
 
@@ -104,7 +128,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IShelfOrderItemRepository, ShelfOrderItemRepository>();
 			services.AddScoped<IShelfShipmentItemRepository, ShelfShipmentItemRepository>();
 			services.AddScoped<IShelfTransactionRepository, ShelfTransactionRepository>();
-			
+			services.AddScoped<INotificationRepository, NotificationRepository>();
+			services.AddScoped<INotificationBroadcaster, SignalRService>();
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -140,6 +165,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IShelfTypeService, ShelfTypeService>();
 			services.AddScoped<IDashboardService, DashboardService>();
 			services.AddScoped<IShelfOrderService, ShelfOrderService>();
+			services.AddScoped<INotificationService, NotificationService>();
+			services.AddScoped<IRedisCacheService, RedisCacheService>();
 		}
     }
 }

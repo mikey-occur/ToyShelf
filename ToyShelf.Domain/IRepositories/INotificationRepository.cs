@@ -10,5 +10,6 @@ namespace ToyShelf.Domain.IRepositories
 	public interface INotificationRepository : IGenericRepository<Notification>
 	{
 		Task<List<Notification>> GetByUserIdAsync(Guid userId, int take = 20);
+		Task DeleteOldNotificationsAsync(DateTime thresholdDate);
 	}
 }
