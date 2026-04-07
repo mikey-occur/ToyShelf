@@ -21,6 +21,7 @@ namespace ToyShelf.Application.Services
 		private readonly IShelfRepository _shelfRepository;
 		private readonly IInventoryLocationRepository _locationRepository;
 		private readonly IUserStoreRepository _userStoreRepository;
+		private readonly IShipmentAssignmentService _shipmentAssignmentService;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -32,6 +33,7 @@ namespace ToyShelf.Application.Services
 			IShelfRepository shelfRepository,
 			IInventoryLocationRepository locationRepository,
 			IUserStoreRepository userStoreRepository,
+			IShipmentAssignmentService shipmentAssignmentService,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -40,6 +42,7 @@ namespace ToyShelf.Application.Services
 			_shelfRepository = shelfRepository;
 			_locationRepository = locationRepository;
 			_userStoreRepository = userStoreRepository;
+			_shipmentAssignmentService = shipmentAssignmentService;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -128,32 +131,43 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(report);
 		}
 
-		// ================= APPROVE (Duyệt thu hồi/Bảo hành) =================
-		public async Task ApproveAsync(Guid id, string? adminNote, ICurrentUser currentUser)
+		// ================= APPROVE (Admin quyết định kho thu hồi) =================
+		public async Task ApproveAsync(Guid id, Guid warehouseLocationId, string? adminNote, ICurrentUser currentUser)
 		{
+			// 1. Kiểm tra tồn tại báo cáo
 			var report = await _repository.GetByIdAsync(id);
-			if (report == null) throw new AppException("Report not found", 404);
-			if (report.Status != DamageStatus.Pending) throw new AppException("Report already processed", 400);
+			if (report == null)
+				throw new AppException("Không tìm thấy báo cáo hư hại.", 404);
 
+			if (report.Status != DamageStatus.Pending)
+				throw new AppException("Báo cáo này đã được xử lý trước đó.", 400);
+
+			// 2. Cập nhật trạng thái duyệt
 			report.Status = DamageStatus.Approved;
 			report.AdminNote = adminNote;
 			report.ReviewedByUserId = currentUser.UserId;
 			report.ReviewedAt = _dateTime.UtcNow;
 
-			// Xử lý thực tế sau khi duyệt
+			// 3. XỬ LÝ KHO TẠI STORE (Trách nhiệm của Partner)
+			// Trừ kho để Partner không thể bán món hàng lỗi này nữa
 			if (report.Type == DamageType.Product)
 			{
-				// Trừ kho Available tại Store
-				var inventory = await _inventoryRepository.GetByLocationAndProductAsync(report.InventoryLocationId, report.ProductColorId!.Value);
-				if (inventory != null)
+				var storeInventory = await _inventoryRepository.GetByLocationAndProductAsync(
+					report.InventoryLocationId,
+					report.ProductColorId!.Value);
+
+				if (storeInventory != null)
 				{
-					inventory.Quantity -= report.Quantity;
-					// Note: Bạn có thể chuyển sang bản ghi InventoryStatus.Damaged nếu hệ thống yêu cầu tách kho lỗi
+					// Kiểm tra nếu số lượng thực tế tại Store của Partner nhỏ hơn số lượng báo hỏng
+					if (storeInventory.Quantity < report.Quantity)
+						throw new AppException("Số lượng tồn kho tại Store của Partner không đủ để thu hồi.", 400);
+
+					storeInventory.Quantity -= report.Quantity;
+					_inventoryRepository.Update(storeInventory);
 				}
 			}
 			else if (report.Type == DamageType.Shelf)
 			{
-				// Khóa kệ, chuyển trạng thái sang Bảo trì/Thu hồi
 				var shelf = await _shelfRepository.GetByIdAsync(report.ShelfId!.Value);
 				if (shelf != null)
 				{
@@ -162,7 +176,19 @@ namespace ToyShelf.Application.Services
 				}
 			}
 
+			// Lưu thay đổi trạng thái Report và Kho Store trước
 			_repository.Update(report);
+			await _unitOfWork.SaveChangesAsync();
+
+			// 4. LUỒNG ĐIỀU PHỐI VẬN CHUYỂN (Chỉ định kho thu hồi)
+			// Admin truyền warehouseLocationId vào đây. 
+			// Logic gôm đơn sẽ tìm xe của kho này đang chuẩn bị đi đến Store của Partner.
+			await _shipmentAssignmentService.CreateFromDamageReportAsync(
+				report.Id,
+				warehouseLocationId, // Sử dụng ID do Admin chỉ định
+				currentUser);
+
+			// Lưu thay đổi cho ShipmentAssignment (tạo mới hoặc gôm vào xe có sẵn)
 			await _unitOfWork.SaveChangesAsync();
 		}
 
