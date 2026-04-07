@@ -9,6 +9,11 @@ namespace ToyShelf.Application.Models.Order
 	public class OrderDetailResponse
 	{
 		public Guid Id { get; set; }
+		public Guid StoreId { get; set; }
+		public string? StoreName { get; set; }
+		public Guid StaffId { get; set; }
+		public string StaffName { get; set; } = string.Empty;
+		public string StaffEmail { get; set; } = string.Empty;
 		public string CustomerName { get; set; } = string.Empty;
 		public string CustomerPhone { get; set; } = string.Empty;
 		public long OrderCode { get; set; }
@@ -16,8 +21,7 @@ namespace ToyShelf.Application.Models.Order
 		public string PaymentMethod { get; set; } = string.Empty;
 		public string Status { get; set; } = string.Empty;
 		public DateTime CreatedAt { get; set; }
-		public string? StoreName { get; set; }
-
+	
 		public List<OrderItemDetailResponse> Items { get; set; } = new List<OrderItemDetailResponse>();
 	}
 

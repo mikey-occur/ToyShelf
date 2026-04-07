@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.CommissionHistory.Response;
 using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -20,13 +22,15 @@ namespace ToyShelf.Application.Services
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepsitory;
 		private readonly IMonthlySettlementRepository _settlementRepository;
 		private readonly IExportService _exportService;
+		private readonly INotificationService _notificationService;
 
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExportService exportService)
+		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExportService exportService, INotificationService notificationService)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
 			_settlementRepository = settlementRepository;
 			_exportService = exportService;
+			_notificationService = notificationService;
 		}
 
 		// Tổng kết hoá đơn tháng
@@ -107,16 +111,35 @@ namespace ToyShelf.Application.Services
 		{
 			var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(id);
 
-			if (settlement == null || settlement.Status == "PAID")
+			// Thêm check xem đã Paid hoặc đã Received chưa
+			if (settlement == null || settlement.Status == "PAID" || settlement.Status == "RECEIVED")
 			{
 				return false;
 			}
+
 			settlement.Status = "PAID";
 			settlement.PaidAt = DateTime.UtcNow;
 			_unitOfWork.Repository<MonthlySettlement>().Update(settlement);
-			await _unitOfWork.SaveChangesAsync();
 
-			return true;
+			// Lưu vào DB
+			var isSaved = await _unitOfWork.SaveChangesAsync() > 0;
+
+			// BẮN NOTIFICATION CHO PARTNER
+			if (isSaved)
+			{
+				// Giả sử trong MonthlySettlement của sếp có trường PartnerId (hoặc UserId)
+				var request = new CreateNotificationRequest
+				{
+					UserId = settlement.PartnerId, // Gửi đúng cho ông Partner đó
+					Title = "Thanh toán đối soát thành công",
+					// Dặn Partner vào xác nhận, Frontend có thể dính kèm ID này để làm nút bấm
+					Content = $"Kỳ đối soát tháng này đã được chuyển khoản. Vui lòng bấm Xác Nhận khi bạn đã nhận được."
+				};
+
+				await _notificationService.CreateNotificationAsync(request);
+			}
+
+			return isSaved;
 		}
 
 		public async Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter)
@@ -222,5 +245,33 @@ namespace ToyShelf.Application.Services
 
 			return fileBytes;
 		}
+
+		public async Task<bool> ConfirmReceiptAsync(Guid settlementId, ICurrentUser currentUser)
+		{
+			var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(settlementId);
+
+			if (settlement == null)
+			{
+				throw new Exception("Không tìm thấy phiếu đối soát!");
+			}
+			Guid currentPartnerId = currentUser.UserId;
+
+			if (settlement.PartnerId != currentPartnerId)
+			{
+				throw new Exception("Bạn không có quyền xác nhận phiếu đối soát này!");
+			}
+			if (settlement.Status != "PAID")
+			{
+				throw new Exception("Phiếu đối soát chưa được chuyển khoản hoặc đã được xác nhận rồi.");
+			}
+			settlement.Status = "RECEIVED";
+
+			_unitOfWork.Repository<MonthlySettlement>().Update(settlement);
+			await _unitOfWork.SaveChangesAsync();
+
+			return true;
+		}
+
+
 	}
 }

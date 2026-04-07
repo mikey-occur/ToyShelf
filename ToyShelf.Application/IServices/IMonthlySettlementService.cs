@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
 
@@ -19,7 +20,7 @@ namespace ToyShelf.Application.IServices
 		Task<MonthlySettlementResponse> UpdateDeductionAsync(Guid id, decimal deductionAmount, string note);
 		Task<byte[]> ExportSettlementsToExcelAsync(SettlementFilterRequest filter);
 
-
+		Task<bool> ConfirmReceiptAsync(Guid settlementId, ICurrentUser currentUser);
 	}
 }
 
