@@ -127,8 +127,12 @@ namespace ToyShelf.Application.Services
 			var response = new OrderDetailResponse
 			{
 				Id = order.Id,
+				StoreId = order.StoreId,
 				CustomerName = order.CustomerName,
 				CustomerPhone = order.CustomerPhone,
+				StaffId = order.StaffId,
+				StaffName = order.Staff?.FullName ?? "N/A",
+				StaffEmail = order.Staff?.Email ?? "N/A",
 				OrderCode = order.OrderCode,
 				TotalAmount = order.TotalAmount,
 				PaymentMethod = order.PaymentMethod,

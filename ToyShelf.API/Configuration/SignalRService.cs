@@ -4,17 +4,25 @@ using ToyShelf.Application.IServices;
 
 namespace ToyShelf.API.Configuration
 {
-    public class SignalRService : IProductBroadcaster
-    {
+    public class SignalRService : IProductBroadcaster, INotificationBroadcaster
+	{
         private readonly IHubContext<ProductHub> _hubContext;
-        
-        public SignalRService(IHubContext<ProductHub> hubContext)
+        private readonly IHubContext<NotificationHub> _notificationHubContext;
+
+		public SignalRService(IHubContext<ProductHub> hubContext, IHubContext<NotificationHub> notificationHubContext)
         {
             _hubContext = hubContext;
-        }
+            _notificationHubContext = notificationHubContext;
+		}
         public async Task NotifyProductSelectedAsync(Guid productId)
         {
             await _hubContext.Clients.All.SendAsync("OnProductSelected", productId);
         }
-    }
+
+		public async Task SendNotificationToUserAsync(Guid userId, string title, string content)
+		{
+			string userRoom = $"noti:user:{userId}";
+			await _notificationHubContext.Clients.Group(userRoom).SendAsync("ReceiveNewNotification", title, content);
+		}
+	}
 }
