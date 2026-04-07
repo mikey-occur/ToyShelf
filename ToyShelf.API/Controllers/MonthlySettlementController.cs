@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.MonthlySettlement.Request;
@@ -145,5 +147,28 @@ namespace ToyShelf.API.Controllers
 			}
 		}
 
+		[HttpPut("{id}/confirm-receipt")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<IActionResult> ConfirmReceipt(Guid id, [FromServices] ICurrentUser currentUser)
+		{
+			try
+			{
+				await _settlementService.ConfirmReceiptAsync(id, currentUser);
+
+				return Ok(new
+				{
+					success = true,
+					message = "Đã xác nhận nhận tiền hoa hồng thành công!"
+				});
+			}
+			catch (Exception ex)
+			{
+				return BadRequest(new
+				{
+					success = false,
+					message = ex.Message
+				});
+			}
+		}
 	}
 }

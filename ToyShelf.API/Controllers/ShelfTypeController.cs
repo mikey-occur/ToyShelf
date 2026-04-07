@@ -8,11 +8,11 @@ namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]
 	[ApiController]
-	public class ShefTypeController : ControllerBase
+	public class ShelfTypeController : ControllerBase
 	{
 		private readonly IShelfTypeService _shelfTypeService;
 
-		public ShefTypeController(IShelfTypeService shelfTypeService)
+		public ShelfTypeController(IShelfTypeService shelfTypeService)
 		{
 			_shelfTypeService = shelfTypeService;
 		}

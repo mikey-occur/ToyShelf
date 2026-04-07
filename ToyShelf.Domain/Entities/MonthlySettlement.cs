@@ -25,7 +25,7 @@ namespace ToyShelf.Domain.Entities
 		public string? Note { get; set; }
 		public decimal FinalAmount { get; set; }
 
-		// Trạng thái: PENDING (Chờ chuyển tiền), PAID (Đã chuyển khoản xong)
+		// Trạng thái: PENDING (Chờ chuyển tiền), PAID (Đã chuyển khoản xong), 
 		public string Status { get; set; } = "PENDING";
 
 
