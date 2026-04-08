@@ -130,6 +130,13 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+	Authorization = new[] { new HangfireAuthorizationFilter() }
+
+});
+
+
 app.MapHub<ProductHub>("/productHub");
 app.MapHub<NotificationHub>("/hubs/notification");
 

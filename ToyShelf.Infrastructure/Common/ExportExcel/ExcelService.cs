@@ -53,9 +53,62 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			workbook.SaveAs(stream);
 			return stream.ToArray();
 		}
-	
 
-	    public List<ExcelProductImport> ReadProductExcel(Stream excelStream)
+		public List<T> ImportGeneric<T>(Stream excelStream) where T : new()
+		{
+			var result = new List<T>();
+			using var workbook = new XLWorkbook(excelStream);
+			var worksheet = workbook.Worksheet(1);
+			var rows = worksheet.RangeUsed().RowsUsed();
+
+			// 1. Lấy danh sách Header ở dòng 1
+			var headerRow = rows.First();
+			var properties = typeof(T).GetProperties();
+			var headerMapping = new Dictionary<int, System.Reflection.PropertyInfo>();
+
+			for (int col = 1; col <= worksheet.LastColumnUsed().ColumnNumber(); col++)
+			{
+				var headerText = headerRow.Cell(col).GetString().Trim();
+				var prop = properties.FirstOrDefault(p =>
+				string.Equals(p.Name, headerText, StringComparison.OrdinalIgnoreCase) ||
+				string.Equals(p.Name, System.Text.RegularExpressions.Regex.Replace(headerText, @"\s+", ""), StringComparison.OrdinalIgnoreCase));
+				if (prop != null)
+				{
+					headerMapping.Add(col, prop);
+				}
+			}
+
+			// 2. Đọc dữ liệu từ dòng 2 trở đi
+			foreach (var row in rows.Skip(1))
+			{
+				var item = new T();
+				bool hasData = false;
+
+				foreach (var mapping in headerMapping)
+				{
+					var cell = row.Cell(mapping.Key);
+					if (!cell.IsEmpty())
+					{
+						var prop = mapping.Value;
+						var targetType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+
+						try
+						{
+							var value = Convert.ChangeType(cell.Value, targetType);
+							prop.SetValue(item, value);
+							hasData = true;
+						}
+						catch { /* Bỏ qua lỗi convert nếu dữ liệu rác */ }
+					}
+				}
+
+				if (hasData) result.Add(item);
+			}
+
+			return result;
+		}
+
+		public List<ExcelProductImport> ReadProductExcel(Stream excelStream)
 		{
 			var result = new List<ExcelProductImport>();
 			using var workbook = new XLWorkbook(excelStream);
