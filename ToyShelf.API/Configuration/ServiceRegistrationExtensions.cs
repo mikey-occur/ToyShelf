@@ -56,11 +56,11 @@ namespace ToyShelf.API.Configuration
 
 			// Lấy ConnectionString từ appsettings.json
 			var redisConnection = configuration.GetConnectionString("Redis");
-			if (!string.IsNullOrEmpty(redisConnection))
-			{
+			//if (!string.IsNullOrEmpty(redisConnection))
+			//{
 				// Khởi tạo lõi kết nối (Cái này để fix lỗi sập nguồn lúc nãy)
 				services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnection));
-			}
+			//}
 
 			services.AddStackExchangeRedisCache(options =>
 			{
