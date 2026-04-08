@@ -54,6 +54,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<ShipmentItem> ShipmentItems { get; set; }
 		public DbSet<ShipmentMedia> ShipmentMedias { get; set; } // Bỏ s
 		public DbSet<ShipmentAssignment> ShipmentAssignments { get; set; }
+		public DbSet<AssignmentShelfOrder> AssignmentShelfOrders { get; set; }
+		public DbSet<AssignmentStoreOrder> AssignmentStoreOrders { get; set; }
 
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderItem> OrderItems { get; set; }	
@@ -1184,11 +1186,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(a => a.ShelfOrder) 
 					  .HasForeignKey(a => a.ShelfOrderId)
 					  .OnDelete(DeleteBehavior.Cascade);
-
-				entity.HasMany(e => e.ShipmentAssignments)
-					  .WithOne(a => a.ShelfOrder) 
-					  .HasForeignKey(a => a.ShelfOrderId)
-					  .OnDelete(DeleteBehavior.Cascade);
 			});
 
 			// ================== ShelfOrderItem ==================
@@ -1956,16 +1953,6 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.RespondedAt);
 
-				entity.HasOne(e => e.StoreOrder)
-				  .WithMany(s => s.ShipmentAssignments)
-				  .HasForeignKey(e => e.StoreOrderId)
-				  .HasConstraintName("FK_ShipmentAssignment_StoreOrder");
-
-				entity.HasOne(e => e.ShelfOrder)
-				  .WithMany(s => s.ShipmentAssignments)
-				  .HasForeignKey(e => e.ShelfOrderId)
-				  .HasConstraintName("FK_ShipmentAssignment_ShelfOrder");
-
 				entity.HasOne(e => e.Shipper)
 				  .WithMany(s => s.Shippers)
 				  .HasForeignKey(e => e.ShipperId)
@@ -1987,8 +1974,54 @@ namespace ToyShelf.Infrastructure.Context
 				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
 			});
 
-				// ================== Order ==================
-				modelBuilder.Entity<Order>(entity =>
+			// ================== AssignmentStoreOrder ==================
+			modelBuilder.Entity<AssignmentStoreOrder>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.HasIndex(e => new { e.ShipmentAssignmentId, e.StoreOrderId }).IsUnique();
+
+				// Cấu hình mối quan hệ với ShipmentAssignment
+				entity.HasOne(e => e.ShipmentAssignment)
+					.WithMany(s => s.AssignmentStoreOrders)
+					.HasForeignKey(e => e.ShipmentAssignmentId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Cấu hình mối quan hệ với StoreOrder
+				entity.HasOne(e => e.StoreOrder)
+					.WithMany(s => s.AssignmentStoreOrders)
+					.HasForeignKey(e => e.StoreOrderId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// ================== AssignmentShelfOrder ==================
+			modelBuilder.Entity<AssignmentShelfOrder>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.HasIndex(e => new { e.ShipmentAssignmentId, e.ShelfOrderId }).IsUnique();
+
+				// Cấu hình mối quan hệ với ShipmentAssignment
+				entity.HasOne(e => e.ShipmentAssignment)
+					.WithMany(s => s.AssignmentShelfOrders)
+					.HasForeignKey(e => e.ShipmentAssignmentId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Cấu hình mối quan hệ với ShelfOrder
+				entity.HasOne(e => e.ShelfOrder)
+					.WithMany(s => s.AssignmentShelfOrders)
+					.HasForeignKey(e => e.ShelfOrderId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// ================== Order ==================
+			modelBuilder.Entity<Order>(entity =>
 			{
 				entity.HasKey(e => e.Id);
 

@@ -33,22 +33,24 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<IEnumerable<ShipmentAssignment>> GetByStoreOrderIdWithDetailsAsync(Guid storeOrderId)
 		{
 			return await GetAssignmentWithFullDetailsQuery()
-				.Where(x => x.StoreOrderId == storeOrderId)
+				.Where(x => x.AssignmentStoreOrders.Any(aso => aso.StoreOrderId == storeOrderId))
 				.ToListAsync();
 		}
-
 
 		public async Task<ShipmentAssignment?> GetPendingByLocationAsync(Guid warehouseLocationId, Guid storeLocationId)
 		{
 			return await _context.ShipmentAssignments
-				.Include(x => x.StoreOrder)
-				.Include(x => x.ShelfOrder)
-				.Include(x => x.DamageReports) // Nạp danh sách reports để check Any()
-				.Where(x => x.WarehouseLocationId == warehouseLocationId && x.Status == AssignmentStatus.Pending && x.ShipperId == null)
+				.Include(x => x.AssignmentStoreOrders).ThenInclude(aso => aso.StoreOrder)
+				.Include(x => x.AssignmentShelfOrders).ThenInclude(ash => ash.ShelfOrder)
+				.Include(x => x.DamageReports)
+				.Where(x => x.WarehouseLocationId == warehouseLocationId
+							&& x.Status == AssignmentStatus.Pending
+							&& x.ShipperId == null)
 				.Where(x =>
-					(x.StoreOrder != null && x.StoreOrder.StoreLocationId == storeLocationId) ||
-					(x.ShelfOrder != null && x.ShelfOrder.StoreLocationId == storeLocationId) ||
-					(x.DamageReports.Any(dr => dr.InventoryLocationId == storeLocationId)) // Check trong Collection 1-N
+					// Check xem trong danh sách đơn hàng có đơn nào thuộc Store này không
+					x.AssignmentStoreOrders.Any(aso => aso.StoreOrder.StoreLocationId == storeLocationId) ||
+					x.AssignmentShelfOrders.Any(ash => ash.ShelfOrder.StoreLocationId == storeLocationId) ||
+					x.DamageReports.Any(dr => dr.InventoryLocationId == storeLocationId)
 				)
 				.FirstOrDefaultAsync();
 		}
@@ -63,26 +65,31 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.AssignedByUser)
 				.Include(x => x.CreatedByUser)
 
-				// --- Nhánh Store Order ---
-				.Include(x => x.StoreOrder)
-					.ThenInclude(o => o!.StoreLocation)
-				.Include(x => x.StoreOrder)
-					.ThenInclude(o => o!.Items)
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc.Product)
-				.Include(x => x.StoreOrder)
-					.ThenInclude(o => o!.Items)
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc.Color)
+				// --- Nhánh Store Orders (N-N qua bảng trung gian) ---
+				.Include(x => x.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.StoreOrder)
+						.ThenInclude(o => o.StoreLocation)
+				.Include(x => x.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.StoreOrder)
+						.ThenInclude(o => o.Items)
+							.ThenInclude(i => i.ProductColor)
+								.ThenInclude(pc => pc.Product)
+				.Include(x => x.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.StoreOrder)
+						.ThenInclude(o => o.Items)
+							.ThenInclude(i => i.ProductColor)
+								.ThenInclude(pc => pc.Color)
 
-				// --- Nhánh Shelf Order ---
-				.Include(x => x.ShelfOrder)
-					.ThenInclude(o => o!.StoreLocation)
-				.Include(x => x.ShelfOrder)
-					.ThenInclude(o => o!.Items)
-						.ThenInclude(i => i.ShelfType)
+				// --- Nhánh Shelf Orders (N-N qua bảng trung gian) ---
+				.Include(x => x.AssignmentShelfOrders)
+					.ThenInclude(ash => ash.ShelfOrder)
+						.ThenInclude(o => o.StoreLocation)
+				.Include(x => x.AssignmentShelfOrders)
+					.ThenInclude(ash => ash.ShelfOrder)
+						.ThenInclude(o => o.Items)
+							.ThenInclude(i => i.ShelfType)
 
-				// --- Nhánh Damage Reports (Quan hệ 1-N mới) ---
+				// --- Nhánh Damage Reports (1-N) ---
 				.Include(x => x.DamageReports)
 					.ThenInclude(dr => dr.InventoryLocation)
 				.Include(x => x.DamageReports)

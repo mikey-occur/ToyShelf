@@ -93,14 +93,17 @@ namespace ToyShelf.Application.Services
 
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
+			// 1. Validation đầu vào cơ bản
 			if (request.Items == null || !request.Items.Any())
 				throw new AppException("Shipment items are required", 400);
 
+			// 2. Lấy Assignment kèm chi tiết các bảng trung gian (N-N)
 			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
 
 			if (assignment == null)
 				throw new AppException("Assignment not found", 404);
 
+			// 3. Kiểm tra trạng thái Shipper (Chỉ cho phép tạo khi đã Accepted)
 			if (assignment.Status == AssignmentStatus.Rejected)
 				throw new AppException("Shipper has rejected this assignment", 400);
 
@@ -110,27 +113,31 @@ namespace ToyShelf.Application.Services
 			if (assignment.ShipperId == null)
 				throw new AppException("Shipper not assigned", 400);
 
-			var isStoreOrder = assignment.StoreOrderId != null;
-
-			if (isStoreOrder && assignment.StoreOrder!.Status == StoreOrderStatus.Fulfilled)
-				throw new AppException("Order already fulfilled", 400);
-
-			if (!isStoreOrder && assignment.ShelfOrder!.Status == ShelfOrderStatus.Fulfilled)
-				throw new AppException("Order already fulfilled", 400);
-
+			// 4. Khởi tạo Shipment
 			var code = await GenerateCode();
+
+			// Ép kiểu về Guid? để FirstOrDefault trả về null nếu danh sách trống
+			var toLocationId = assignment.AssignmentStoreOrders
+								   .Select(x => (Guid?)x.StoreOrder.StoreLocationId)
+								   .FirstOrDefault()
+							   ?? assignment.AssignmentShelfOrders
+								   .Select(x => (Guid?)x.ShelfOrder.StoreLocationId)
+								   .FirstOrDefault()
+							   ?? assignment.DamageReports
+								   .Select(x => (Guid?)x.InventoryLocationId)
+								   .FirstOrDefault();
+
+			// Kiểm tra nếu cuối cùng vẫn không tìm thấy địa điểm nào
+			if (toLocationId == null)
+				throw new AppException("Could not determine destination location for this shipment", 400);
 
 			var shipment = new Shipment
 			{
 				Id = Guid.NewGuid(),
 				Code = code,
-				StoreOrderId = assignment.StoreOrderId,
-				ShelfOrderId = assignment.ShelfOrderId,
 				ShipmentAssignmentId = assignment.Id,
 				FromLocationId = assignment.WarehouseLocationId,
-				ToLocationId = isStoreOrder
-					? assignment.StoreOrder!.StoreLocationId
-					: assignment.ShelfOrder!.StoreLocationId,
+				ToLocationId = toLocationId.Value,
 				RequestedByUserId = currentUser.UserId,
 				ShipperId = assignment.ShipperId,
 				Status = ShipmentStatus.Draft,
@@ -139,197 +146,126 @@ namespace ToyShelf.Application.Services
 
 			await _shipmentRepository.AddAsync(shipment);
 
-			// ================= STORE ORDER =================
-			if (isStoreOrder)
+			// 5. XỬ LÝ DANH SÁCH ITEMS TRONG REQUEST
+			foreach (var reqItem in request.Items)
 			{
-				foreach (var reqItem in request.Items)
+				// ================= TRƯỜNG HỢP: GIAO SẢN PHẨM (STORE PRODUCT) =================
+				if (reqItem.ProductColorId != null)
 				{
-					if (reqItem.ProductColorId == null)
-						throw new AppException("ProductColorId is required", 400);
+					var expectedQty = reqItem.ExpectedQuantity ?? throw new AppException("ExpectedQuantity is required", 400);
 
-					if (reqItem.ExpectedQuantity == null)
-						throw new AppException("ExpectedQuantity is required", 400);
-
-					var expectedQty = reqItem.ExpectedQuantity.Value;
-
-					var orderItem = assignment.StoreOrder!.Items
+					// Tìm Item này trong toàn bộ các Store Orders được gán cho xe
+					var orderItem = assignment.AssignmentStoreOrders
+						.SelectMany(x => x.StoreOrder.Items)
 						.FirstOrDefault(x => x.ProductColorId == reqItem.ProductColorId);
 
 					if (orderItem == null)
-						throw new AppException("Invalid product", 400);
+						throw new AppException($"Product {reqItem.ProductColorId} not found in any assigned orders", 400);
 
 					var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+					if (expectedQty <= 0 || expectedQty > remaining)
+						throw new AppException($"Invalid quantity for product {reqItem.ProductColorId}. Max remaining: {remaining}", 400);
 
-					if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
-						throw new AppException("Invalid or exceeding quantity", 400);
+					// Check tồn kho Available tại Warehouse nguồn
+					var inventory = await _inventoryRepository.GetByLocationAndProductAsync(assignment.WarehouseLocationId, orderItem.ProductColorId);
+					if (inventory == null || inventory.Quantity < expectedQty)
+						throw new AppException($"Not enough stock for product {reqItem.ProductColorId} in warehouse", 400);
 
-					var inventory = await _inventoryRepository.GetByLocationAndProductAsync(
-						assignment.WarehouseLocationId,
-						orderItem.ProductColorId
-					);
-
-					if (inventory == null || inventory.Quantity < reqItem.ExpectedQuantity)
-						throw new AppException($"Not enough inventory in warehouse '{assignment.WarehouseLocation.Name}'", 400);
-
-					var shipmentItem = new ShipmentItem
+					await _shipmentItemRepository.AddAsync(new ShipmentItem
 					{
 						Id = Guid.NewGuid(),
 						ShipmentId = shipment.Id,
 						ProductColorId = orderItem.ProductColorId,
 						ExpectedQuantity = expectedQty,
 						ReceivedQuantity = 0
-					};
+					});
 
-					await _shipmentItemRepository.AddAsync(shipmentItem);
+					// Chuyển trạng thái StoreOrder sang Processing
+					if (orderItem.StoreOrder.Status == StoreOrderStatus.Approved)
+						orderItem.StoreOrder.Status = StoreOrderStatus.Processing;
 				}
-			}
-			// ================= SHELF ORDER =================
-			else
-			{
-				foreach (var reqItem in request.Items)
+
+				// ================= TRƯỜNG HỢP: GIAO KỆ (SHELF) =================
+				else if (reqItem.ShelfTypeId != null || (reqItem.ShelfIds != null && reqItem.ShelfIds.Any()))
 				{
 					var isManual = reqItem.ShelfIds != null && reqItem.ShelfIds.Any();
+					Guid shelfTypeId;
+					List<Shelf> shelvesToReserve;
 
 					if (isManual)
 					{
-						// Không cho dùng chung
+						// LUỒNG MANUAL: Admin chọn đích danh ID kệ
 						if (reqItem.ShelfTypeId != null || reqItem.ExpectedQuantity != null)
 							throw new AppException("Manual mode cannot use ShelfTypeId or ExpectedQuantity", 400);
-					}
-					else
-					{
-						// AUTO bắt buộc đủ field
-						if (reqItem.ShelfTypeId == null || reqItem.ExpectedQuantity == null)
-							throw new AppException("ShelfTypeId and ExpectedQuantity are required", 400);
-					}
 
-					// Lấy OrderItem
-					Guid shelfTypeId;
-
-					if (isManual)
-					{
-						// lấy type từ shelf thật
-						var shelves = await _shelfRepository.GetByIds(reqItem.ShelfIds!);
-
-						if (shelves.Count != reqItem.ShelfIds!.Count)
+						shelvesToReserve = await _shelfRepository.GetByIds(reqItem.ShelfIds!);
+						if (shelvesToReserve.Count != reqItem.ShelfIds!.Count)
 							throw new AppException("Some shelves not found", 400);
 
-						shelfTypeId = shelves.First().ShelfTypeId;
-
-						// check cùng type
-						if (shelves.Any(x => x.ShelfTypeId != shelfTypeId))
-							throw new AppException("All shelves must have same type", 400);
+						shelfTypeId = shelvesToReserve.First().ShelfTypeId;
+						if (shelvesToReserve.Any(x => x.ShelfTypeId != shelfTypeId))
+							throw new AppException("All selected shelves must be the same type", 400);
 					}
 					else
 					{
-						shelfTypeId = reqItem.ShelfTypeId!.Value;
+						// LUỒNG AUTO: Hệ thống tự bốc kệ theo số lượng
+						if (reqItem.ShelfTypeId == null || reqItem.ExpectedQuantity == null)
+							throw new AppException("ShelfTypeId and ExpectedQuantity are required for Auto mode", 400);
+
+						shelfTypeId = reqItem.ShelfTypeId.Value;
+						var quantity = reqItem.ExpectedQuantity.Value;
+
+						shelvesToReserve = await _shelfRepository.GetAvailableShelvesByType(
+							assignment.WarehouseLocationId,
+							shelfTypeId,
+							quantity
+						);
+
+						if (shelvesToReserve.Count < quantity)
+							throw new AppException($"Not enough available shelves of type {shelfTypeId} in warehouse", 400);
 					}
 
-					var orderItem = assignment.ShelfOrder!.Items
+					// Tìm Shelf Order Item tương ứng trong Assignment
+					var shelfOrderItem = assignment.AssignmentShelfOrders
+						.SelectMany(x => x.ShelfOrder.Items)
 						.FirstOrDefault(x => x.ShelfTypeId == shelfTypeId);
 
-					if (orderItem == null)
-						throw new AppException("Invalid shelf item", 400);
+					if (shelfOrderItem == null)
+						throw new AppException("This shelf type is not in the assigned orders", 400);
 
-					var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+					var remainingShelf = shelfOrderItem.Quantity - shelfOrderItem.FulfilledQuantity;
+					if (shelvesToReserve.Count > remainingShelf)
+						throw new AppException($"Exceeding remaining quantity for shelf type. Max allowed: {remainingShelf}", 400);
 
-					// Manual -> Admin chọn Shelf cụ thể
-					if (isManual)
+					// Cập nhật trạng thái từng cái kệ và lưu Shipment Item
+					foreach (var shelf in shelvesToReserve)
 					{
-						var shelves = await _shelfRepository.GetByIds(reqItem.ShelfIds!);
+						if (shelf.Status != ShelfStatus.Available || shelf.InventoryLocationId != assignment.WarehouseLocationId)
+							throw new AppException($"Shelf {shelf.Code} is not available or in wrong location", 400);
 
-						var quantity = shelves.Count;
+						shelf.Status = ShelfStatus.Reserved; // Đánh dấu giữ chỗ
 
-						if (quantity <= 0 || quantity > remaining)
-							throw new AppException("Invalid or exceeding quantity", 400);
-
-						foreach (var shelf in shelves)
+						await _shelfShipmentItemRepository.AddAsync(new ShelfShipmentItem
 						{
-							if (shelf.Status != ShelfStatus.Available ||
-								shelf.InventoryLocationId != assignment.WarehouseLocationId)
-							{
-								throw new AppException($"Shelf {shelf.Id} is not available", 400);
-							}
-
-							shelf.Status = ShelfStatus.Reserved;
-
-							var shelfItem = new ShelfShipmentItem
-							{
-								Id = Guid.NewGuid(),
-								ShipmentId = shipment.Id,
-								ShelfId = shelf.Id,
-								Status = ShelfShipmentStatus.InTransit
-							};
-
-							await _shelfShipmentItemRepository.AddAsync(shelfItem);
-
-						}
+							Id = Guid.NewGuid(),
+							ShipmentId = shipment.Id,
+							ShelfId = shelf.Id,
+							Status = ShelfShipmentStatus.InTransit
+						});
 					}
 
-					// Tự động chọn shelf từ warehouse theo type và số lượng
-					else
-					{
-						var quantity = reqItem.ExpectedQuantity!.Value;
-
-						if (quantity <= 0 || quantity > remaining)
-							throw new AppException("Invalid or exceeding quantity", 400);
-
-						var shelves = await _shelfRepository
-							.GetAvailableShelvesByType(
-								assignment.WarehouseLocationId,
-								shelfTypeId,
-								quantity
-							);
-
-						if (shelves == null || shelves.Count < quantity)
-							throw new AppException("Not enough shelves in warehouse", 400);
-
-						foreach (var shelf in shelves)
-						{
-							shelf.Status = ShelfStatus.Reserved;
-
-							var shelfItem = new ShelfShipmentItem
-							{
-								Id = Guid.NewGuid(),
-								ShipmentId = shipment.Id,
-								ShelfId = shelf.Id,
-								Status = ShelfShipmentStatus.InTransit
-							};
-
-							await _shelfShipmentItemRepository.AddAsync(shelfItem);
-
-						}
-					}
+					// Chuyển trạng thái ShelfOrder sang Processing
+					if (shelfOrderItem.ShelfOrder.Status == ShelfOrderStatus.Approved)
+						shelfOrderItem.ShelfOrder.Status = ShelfOrderStatus.Processing;
 				}
 			}
 
-			if (isStoreOrder)
-			{
-				var order = assignment.StoreOrder!;
-
-				if (order.Status == StoreOrderStatus.Approved)
-				{
-					order.Status = StoreOrderStatus.Processing;
-				}
-			}
-			else
-			{
-				var order = assignment.ShelfOrder!;
-
-				if (order.Status == ShelfOrderStatus.Approved)
-				{
-					order.Status = ShelfOrderStatus.Processing;
-				}
-			}
-
+			// 6. Lưu toàn bộ thay đổi vào database
 			await _unitOfWork.SaveChangesAsync();
 
+			// 7. Map kết quả trả về
 			var result = await _shipmentRepository.GetByIdWithDetailsAsync(shipment.Id);
-
-			if (result == null)
-				throw new AppException("Shipment not found", 404);
-
-			return MapToResponse(result);
+			return MapToResponse(result!);
 		}
 
 		public async Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
