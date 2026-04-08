@@ -1482,6 +1482,16 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_ReviewedByUser");
 
+				entity.HasOne(s => s.Shipment)
+					  .WithMany(d => d.DamageReports)
+					  .HasForeignKey(e => e.ShipmentId)
+					  .HasConstraintName("FK_DamageReport_Shipment");
+
+				entity.HasOne(e => e.ShipmentAssignment)
+					  .WithMany(s => s.DamageReports)
+					  .HasForeignKey(e => e.ShipmentAssignmentId)
+					  .HasConstraintName("FK_DamageReport_ShipmentAssignment");
+
 				// Media đính kèm
 				entity.HasMany(e => e.DamageMedia)
 					  .WithOne(m => m.DamageReport)
@@ -1812,12 +1822,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(s => s.ShelfOrderId)
 					  .HasConstraintName("FK_Shipment_ShelfOrder");
 
-				entity.HasOne(s => s.DamageReport)
-					  .WithOne(d => d.Shipment)
-					  .HasForeignKey<Shipment>(s => s.DamageReportId)
-					  .OnDelete(DeleteBehavior.SetNull)
-					  .HasConstraintName("FK_Shipment_DamageReport");
-
 				entity.HasOne(e => e.Shipper)
 					  .WithMany(u => u.Shipments)
 					  .HasForeignKey(e => e.ShipperId)
@@ -1981,11 +1985,6 @@ namespace ToyShelf.Infrastructure.Context
 				  .WithMany(s => s.ShipmentAssignments)
 				  .HasForeignKey(e => e.WarehouseLocationId)
 				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
-
-				entity.HasOne(e => e.DamageReport)
-				  .WithMany(s => s.ShipmentAssignments)
-				  .HasForeignKey(e => e.DamageReportId)
-				  .HasConstraintName("FK_ShipmentAssignment_DamageReport");
 			});
 
 				// ================== Order ==================

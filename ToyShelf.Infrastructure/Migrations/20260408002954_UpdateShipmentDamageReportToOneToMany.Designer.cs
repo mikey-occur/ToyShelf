@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260408002954_UpdateShipmentDamageReportToOneToMany")]
+    partial class UpdateShipmentDamageReportToOneToMany
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -377,9 +380,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid?>("ShelfId")
                         .HasColumnType("uuid");
 
-                    b.Property<Guid?>("ShipmentAssignmentId")
-                        .HasColumnType("uuid");
-
                     b.Property<Guid?>("ShipmentId")
                         .HasColumnType("uuid");
 
@@ -412,8 +412,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("ReviewedByUserId");
 
                     b.HasIndex("ShelfId");
-
-                    b.HasIndex("ShipmentAssignmentId");
 
                     b.HasIndex("ShipmentId");
 
@@ -1447,6 +1445,9 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<Guid?>("DamageReportId")
+                        .HasColumnType("uuid");
+
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -1477,6 +1478,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasIndex("AssignedByUserId");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("DamageReportId");
 
                     b.HasIndex("ShelfOrderId");
 
@@ -2157,11 +2160,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_DamageReport_Shelf");
 
-                    b.HasOne("ToyShelf.Domain.Entities.ShipmentAssignment", "ShipmentAssignment")
-                        .WithMany("DamageReports")
-                        .HasForeignKey("ShipmentAssignmentId")
-                        .HasConstraintName("FK_DamageReport_ShipmentAssignment");
-
                     b.HasOne("ToyShelf.Domain.Entities.Shipment", "Shipment")
                         .WithMany("DamageReports")
                         .HasForeignKey("ShipmentId")
@@ -2178,8 +2176,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Shelf");
 
                     b.Navigation("Shipment");
-
-                    b.Navigation("ShipmentAssignment");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.Inventory", b =>
@@ -2580,6 +2576,11 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_ShipmentAssignment_CreatedByUser");
 
+                    b.HasOne("ToyShelf.Domain.Entities.DamageReport", "DamageReport")
+                        .WithMany("ShipmentAssignments")
+                        .HasForeignKey("DamageReportId")
+                        .HasConstraintName("FK_ShipmentAssignment_DamageReport");
+
                     b.HasOne("ToyShelf.Domain.Entities.ShelfOrder", "ShelfOrder")
                         .WithMany("ShipmentAssignments")
                         .HasForeignKey("ShelfOrderId")
@@ -2606,6 +2607,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("AssignedByUser");
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("DamageReport");
 
                     b.Navigation("ShelfOrder");
 
@@ -2896,6 +2899,8 @@ namespace ToyShelf.Infrastructure.Migrations
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
                 {
                     b.Navigation("DamageMedia");
+
+                    b.Navigation("ShipmentAssignments");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryLocation", b =>
@@ -3034,8 +3039,6 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShipmentAssignment", b =>
                 {
-                    b.Navigation("DamageReports");
-
                     b.Navigation("Shipments");
                 });
 
