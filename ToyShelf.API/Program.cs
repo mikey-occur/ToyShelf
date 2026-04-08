@@ -107,7 +107,7 @@ var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>(
 recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
 	"auto-monthly-settlement",
 	service => service.GenerateLastMonthSettlementAutoAsync(),
-	"0 0 1 * *",
+	"0 0 * * *",
 	new RecurringJobOptions
 	{
 		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
@@ -130,6 +130,11 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+app.UseHangfireDashboard("/hangfire", new DashboardOptions
+{
+	Authorization = new[] { new HangfireAuthorizationFilter() }
+
+});
 app.MapHub<ProductHub>("/productHub");
 app.MapHub<NotificationHub>("/hubs/notification");
 

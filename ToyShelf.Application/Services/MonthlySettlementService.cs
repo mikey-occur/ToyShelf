@@ -21,10 +21,10 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepsitory;
 		private readonly IMonthlySettlementRepository _settlementRepository;
-		private readonly IExportService _exportService;
+		private readonly IExcelService _exportService;
 		private readonly INotificationService _notificationService;
 
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExportService exportService, INotificationService notificationService)
+		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;

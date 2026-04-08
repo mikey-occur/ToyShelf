@@ -8,6 +8,7 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Product.Request;
 using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.ProductCategory.Response;
+using ToyShelf.Application.Models.ProductColor.Request;
 using ToyShelf.Application.Models.ProductColor.Response;
 using ToyShelf.Application.Models.Store.Response;
 using ToyShelf.Application.QRcode;
@@ -28,7 +29,8 @@ namespace ToyShelf.Application.Services
 		private readonly IQrCodeService _qrCodeService;
 		private readonly IProductColorRepository _productColorRepository;
 		private readonly IColorRepository _colorRepository;
-		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster, IProductColorRepository productColorRepository, IColorRepository colorRepository, IQrCodeService qrCodeService)
+		private readonly IExcelService _excelFileService;
+		public ProductService(IProductRepository productRepository, IProductCategoryRepository categoryRepository, IUnitOfWork unitOfWork, IDateTimeProvider dateTimeProvider,IProductBroadcaster productBroadcaster, IProductColorRepository productColorRepository, IColorRepository colorRepository, IQrCodeService qrCodeService, IExcelService excelFileService)
 		{
 			_productRepository = productRepository;
 			_categoryRepository = categoryRepository;
@@ -38,6 +40,7 @@ namespace ToyShelf.Application.Services
 			_productColorRepository = productColorRepository;
 			_colorRepository = colorRepository;
 			_qrCodeService = qrCodeService;
+			_excelFileService = excelFileService;
 		}
 		//===Create===
 		public async Task<ProductResponse> CreateProductAsync(ProductRequest request)
@@ -299,7 +302,6 @@ namespace ToyShelf.Application.Services
 				UpdatedAt = product.UpdatedAt,
 
 				Colors = product.ProductColors
-				.Where(c => c.IsActive)
 				.Select(c => new ProductColorResponse
 				{
 					Id = c.Id,
@@ -368,5 +370,87 @@ namespace ToyShelf.Application.Services
 				return null;
 			return MapToResponse(product);
         }
-    }
+
+		public async Task<bool> ImportProductsFromExcelAsync(Stream fileStream)
+		{
+			var excelData = _excelFileService.ReadProductExcel(fileStream);
+			if (excelData == null || !excelData.Any()) return false;
+
+			// Kéo Category và Color lên RAM 
+			var categories = await _categoryRepository.GetAllAsync();
+			var colors = (await _colorRepository.GetAllAsync()).ToList();
+
+			// 2. Gom nhóm theo Tên Sản Phẩm
+			var groupedProducts = excelData.GroupBy(x => x.ProductName.Trim().ToLower());
+
+			// 3. Quét từng sản phẩm để đút vào hàm CreateProductAsync
+			foreach (var group in groupedProducts)
+			{
+				var firstRow = group.First();
+
+				var category = categories.FirstOrDefault(c => c.Code.ToLower() == firstRow.CategoryCode.ToLower());
+				if (category == null)
+					throw new Exception($"Lỗi: Không tìm thấy Danh Mục '{firstRow.CategoryCode}' cho sản phẩm '{firstRow.ProductName}'");
+
+				// 🛠 CHUẨN BỊ REQUEST NHƯ THỂ USER GỌI TỪ API 
+				var request = new ProductRequest
+				{
+					ProductCategoryId = category.Id,
+					Name = firstRow.ProductName,
+					BasePrice = firstRow.BasePrice,
+					Description = firstRow.Description,
+					Barcode = firstRow.Barcode,
+					Brand = firstRow.Brand,
+					Material = firstRow.Material,
+					OriginCountry = firstRow.OriginCountry,
+					AgeRange = firstRow.AgeRange,
+					Width = firstRow.Width,
+					Length = firstRow.Length,
+					Height = firstRow.Height,
+					Weight = firstRow.Weight,
+					Colors = new List<ProductColorCreateRequest>() 
+				};
+
+		
+				foreach (var colorRow in group)
+				{
+					var colorEntity = colors.FirstOrDefault(c => c.Name.ToLower() == colorRow.ColorName.ToLower());
+
+					
+					if (colorEntity == null)
+					{
+					
+						string tempColorSkuCode = colorRow.ColorName.Length >= 2
+							? colorRow.ColorName.Substring(0, 2).ToUpper()
+							: colorRow.ColorName.ToUpper();
+
+						colorEntity = new Color
+						{
+							Id = Guid.NewGuid(),
+							Name = colorRow.ColorName,
+							SkuCode = tempColorSkuCode
+						};
+
+						colors.Add(colorEntity);
+						await _colorRepository.AddAsync(colorEntity);
+
+						
+						await _unitOfWork.SaveChangesAsync();
+					}
+
+					request.Colors.Add(new ProductColorCreateRequest
+					{
+						ColorId = colorEntity.Id,
+						Price = colorRow.ColorPrice,
+						ImageUrl = colorRow.ImageUrl,
+						Model3DUrl = colorRow.Model3DUrl
+					});
+				}
+
+				await CreateProductAsync(request);
+			}
+
+			return true;
+		}
+	}
 }

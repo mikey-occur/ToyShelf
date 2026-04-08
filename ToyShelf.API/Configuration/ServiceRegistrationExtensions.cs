@@ -159,7 +159,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IMonthlySettlementService, MonthlySettlementService>();
 			services.AddScoped<IShipmentAssignmentService, ShipmentAssignmentService>();
 			services.AddScoped<IShipmentService, ShipmentService>();
-			services.AddScoped<IExportService, ExcelExportService>();
+			services.AddScoped<IExcelService, ExcelService>();
 			services.AddScoped<IShelfTypeService, ShelfTypeService>();
 			services.AddScoped<IDashboardService, DashboardService>();
 			services.AddScoped<IShelfOrderService, ShelfOrderService>();
