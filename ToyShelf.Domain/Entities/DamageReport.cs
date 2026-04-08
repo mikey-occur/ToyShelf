@@ -44,6 +44,11 @@ namespace ToyShelf.Domain.Entities
 		// 2. ĐỐI TƯỢNG BỊ HƯ HẠI
 		public Guid? ProductColorId { get; set; }
 		public Guid? ShelfId { get; set; }
+
+		// Điều xe
+		public Guid? ShipmentId { get; set; }
+		// Điều Shipper
+		public Guid? ShipmentAssignmentId { get; set; }
 		public int Quantity { get; set; }
 
 
@@ -72,10 +77,10 @@ namespace ToyShelf.Domain.Entities
 		public virtual ProductColor? ProductColor { get; set; }
 		public virtual Shelf? Shelf { get; set; }
 		public virtual Shipment? Shipment { get; set; }
+		public virtual ShipmentAssignment? ShipmentAssignment { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
 		public virtual ICollection<DamageMedia> DamageMedia { get; set; } = new List<DamageMedia>();
-		public virtual ICollection<ShipmentAssignment> ShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
 	}
 
 }

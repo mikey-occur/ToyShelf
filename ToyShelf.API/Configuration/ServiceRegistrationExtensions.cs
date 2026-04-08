@@ -41,8 +41,6 @@ namespace ToyShelf.API.Configuration
 				return new PayOSClient(options.ClientId, options.ApiKey, options.ChecksumKey);
 			});
 
-
-
 			// ===== Hangfire =====
 			services.AddHangfire(config => config
 				.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
@@ -63,12 +61,10 @@ namespace ToyShelf.API.Configuration
 			}
 
 			services.AddStackExchangeRedisCache(options =>
-			{
-				options.Configuration = redisConnection;
-				options.InstanceName = "ToyShelf_";
-			});
-
-
+				{
+					options.Configuration = redisConnection;
+					options.InstanceName = "ToyShelf_";
+				});
 
 			services.AddSignalR()
 			.AddStackExchangeRedis(redisConnection!, options =>

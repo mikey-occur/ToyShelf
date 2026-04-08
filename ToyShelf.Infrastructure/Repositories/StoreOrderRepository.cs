@@ -40,7 +40,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
 				.Include(o => o.Shipments)
-				.Include(o => o.ShipmentAssignments)
+				.Include(o => o.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.ShipmentAssignment)
+						.ThenInclude(sa => sa.Shipper)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
@@ -52,7 +54,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			if (status.HasValue)
 				query = query.Where(x => x.Status == status);
 
-			return await query.ToListAsync();
+			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 		}
 
 		public async Task<StoreOrder?> GetByIdWithItemsAsync(Guid id)
@@ -64,7 +66,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
 				.Include(o => o.Shipments)
-				.Include(o => o.ShipmentAssignments)
+				.Include(o => o.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.ShipmentAssignment)
+						.ThenInclude(sa => sa.Shipper)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Product)
