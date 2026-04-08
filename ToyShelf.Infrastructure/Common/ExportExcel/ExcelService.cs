@@ -149,6 +149,75 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			}
 			return result;
 		}
+
+		public byte[] ExportGeneric<T>(IEnumerable<T> data, string sheetName = "ExportData")
+		{
+			using var workbook = new XLWorkbook();
+			var worksheet = workbook.Worksheets.Add(sheetName);
+
+			
+			var properties = typeof(T).GetProperties();
+
+			// 1. TẠO HEADER (Dòng 1)
+			for (int col = 0; col < properties.Length; col++)
+			{
+				var cell = worksheet.Cell(1, col + 1);
+
+				
+				cell.Value = properties[col].Name;
+
+				
+				cell.Style.Font.Bold = true;
+				cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+				cell.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+			}
+
+			// 2. ĐỔ DỮ LIỆU (Từ dòng 2 trở đi)
+			if (data != null && data.Any())
+			{
+				int currentRow = 2;
+				foreach (var item in data)
+				{
+					for (int col = 0; col < properties.Length; col++)
+					{
+						var cell = worksheet.Cell(currentRow, col + 1);
+
+						
+						var value = properties[col].GetValue(item);
+
+						if (value != null)
+						{
+							// Phân loại data type để ClosedXML format cho đúng (số ra số, chữ ra chữ)
+							if (value is DateTime dt)
+							{
+								cell.Value = dt;
+								cell.Style.DateFormat.Format = "dd/MM/yyyy HH:mm";
+							}
+							else if (value is bool b)
+							{
+								cell.Value = b ? "True" : "False"; // Hoặc "Có" / "Không" tùy sếp
+							}
+							else if (value is int || value is decimal || value is double || value is float || value is long)
+							{
+								// Ép kiểu về double để Excel hiểu đây là cột Number (có thể tính tổng được)
+								cell.Value = Convert.ToDouble(value);
+							}
+							else
+							{
+								cell.Value = value.ToString();
+							}
+						}
+					}
+					currentRow++;
+				}
+			}
+
+		
+			worksheet.Columns().AdjustToContents();
+			using var stream = new MemoryStream();
+			workbook.SaveAs(stream);
+			return stream.ToArray();
+		}
 	}
 }
 
