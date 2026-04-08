@@ -30,7 +30,7 @@ namespace ToyShelf.Domain.Entities
 
 		public Guid? StoreOrderId { get; set; }
 		public Guid? ShelfOrderId { get; set; }
-		public Guid? DamageReportId { get; set; }
+
 		public Guid WarehouseLocationId { get; set; }
 
 		public Guid? ShipperId { get; set; }
@@ -49,8 +49,8 @@ namespace ToyShelf.Domain.Entities
 		public virtual User? Shipper { get; set; }
 		public virtual User CreatedByUser { get; set; } = null!;
 		public virtual User? AssignedByUser { get; set; } 
-		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 		public virtual InventoryLocation WarehouseLocation { get; set; } = null!;
-		public virtual DamageReport? DamageReport { get; set; }
+		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
+		public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
 	}
 }

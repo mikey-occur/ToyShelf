@@ -44,7 +44,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 		public List<ShipmentAssignmentProductItemResponse>? ProductItems { get; set; }
 		public List<ShipmentAssignmentShelfItemResponse>? ShelfItems { get; set; }
-		public ShipmentAssignmentDamageItemResponse? DamageReturnItem { get; set; }
+		public List<ShipmentAssignmentDamageItemResponse>? DamageReturnItems { get; set; } = new();
 	}
 
 	public class ShipmentAssignmentProductItemResponse

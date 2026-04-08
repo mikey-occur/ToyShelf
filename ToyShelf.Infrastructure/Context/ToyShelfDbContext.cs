@@ -1487,6 +1487,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShipmentId)
 					  .HasConstraintName("FK_DamageReport_Shipment");
 
+				entity.HasOne(e => e.ShipmentAssignment)
+					  .WithMany(s => s.DamageReports)
+					  .HasForeignKey(e => e.ShipmentAssignmentId)
+					  .HasConstraintName("FK_DamageReport_ShipmentAssignment");
+
 				// Media đính kèm
 				entity.HasMany(e => e.DamageMedia)
 					  .WithOne(m => m.DamageReport)
@@ -1980,11 +1985,6 @@ namespace ToyShelf.Infrastructure.Context
 				  .WithMany(s => s.ShipmentAssignments)
 				  .HasForeignKey(e => e.WarehouseLocationId)
 				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
-
-				entity.HasOne(e => e.DamageReport)
-				  .WithMany(s => s.ShipmentAssignments)
-				  .HasForeignKey(e => e.DamageReportId)
-				  .HasConstraintName("FK_ShipmentAssignment_DamageReport");
 			});
 
 				// ================== Order ==================

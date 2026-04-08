@@ -47,90 +47,65 @@ namespace ToyShelf.Application.Services
 		private void UpdateAssignmentType(ShipmentAssignment assignment)
 		{
 			bool hasDelivery = assignment.StoreOrderId.HasValue || assignment.ShelfOrderId.HasValue;
-			bool hasReturn = assignment.DamageReportId.HasValue;
+			// KIỂM TRA TRONG DANH SÁCH 1-N
+			bool hasReturn = assignment.DamageReports.Any();
 
 			if (hasDelivery && hasReturn) assignment.Type = AssignmentType.Combined;
 			else if (hasReturn) assignment.Type = AssignmentType.Return;
 			else assignment.Type = AssignmentType.Delivery;
 		}
 
-		// ================= CREATE =================
-		public async Task<ShipmentAssignmentResponse> CreateAsync(
-			CreateShipmentAssignmentRequest request,
-			ICurrentUser currentUser)
+		// ================= CREATE (Từ Order) =================
+		public async Task<ShipmentAssignmentResponse> CreateAsync(CreateShipmentAssignmentRequest request, ICurrentUser currentUser)
 		{
 			if (request.StoreOrderId == null && request.ShelfOrderId == null)
 				throw new AppException("Order is required", 400);
-
-			if (request.StoreOrderId != null && request.ShelfOrderId != null)
-				throw new AppException("Only one order type is allowed", 400);
 
 			Guid? storeLocationId = null;
 
 			if (request.StoreOrderId != null)
 			{
 				var order = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId.Value);
-				if (order == null)
-				{
-					throw new AppException($"Store Order with ID {request.StoreOrderId.Value} not found.", 404);
-				}
-
-				if (order.Status != StoreOrderStatus.Approved)
-				{
-					throw new AppException($"Store Order is not approved (Current status: {order.Status}).", 400);
-				}
+				if (order == null || order.Status != StoreOrderStatus.Approved)
+					throw new AppException("Order not found or not approved", 400);
 				storeLocationId = order.StoreLocationId;
 			}
 			else if (request.ShelfOrderId != null)
 			{
 				var order = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId.Value);
-				if (order == null)
-				{
-					throw new AppException($"Shelf Order with ID {request.ShelfOrderId.Value} not found.", 404);
-				}
-
-				if (order.Status != ShelfOrderStatus.Approved)
-				{
-					throw new AppException($"Shelf Order is not approved (Current status: {order.Status}).", 400);
-				}
+				if (order == null || order.Status != ShelfOrderStatus.Approved)
+					throw new AppException("Order not found or not approved", 400);
 				storeLocationId = order.StoreLocationId;
 			}
 
-			// 2. LOGIC GÔM ĐƠN: Tìm xem Store này có Assignment nào đang PENDING (Ví dụ đang chờ thu hồi hàng hỏng)
-			var existing = await _assignmentRepository.GetPendingByLocationAsync(
-				request.WarehouseLocationId,
-				storeLocationId!.Value);
+			// Gôm đơn vào Assignment hiện có
+			var existing = await _assignmentRepository.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId!.Value);
 
 			if (existing != null)
 			{
 				bool updated = false;
-
-				// Nhồi StoreOrder nếu xe đang chờ và ngăn StoreOrder còn trống
 				if (request.StoreOrderId != null && existing.StoreOrderId == null)
 				{
 					existing.StoreOrderId = request.StoreOrderId;
 					updated = true;
 				}
-				// Nhồi ShelfOrder nếu xe đang chờ và ngăn ShelfOrder còn trống
 				else if (request.ShelfOrderId != null && existing.ShelfOrderId == null)
 				{
 					existing.ShelfOrderId = request.ShelfOrderId;
 					updated = true;
 				}
 
-				// Nếu nhồi thành công vào xe hiện có
 				if (updated)
 				{
-					UpdateAssignmentType(existing); // Cập nhật lại Type (Delivery -> Combined nếu đã có Damage)
+					UpdateAssignmentType(existing);
 					_assignmentRepository.Update(existing);
 					await _unitOfWork.SaveChangesAsync();
-
 					var updatedResult = await _assignmentRepository.GetByIdWithDetailsAsync(existing.Id);
 					return MapToResponse(updatedResult!);
 				}
 			}
 
-			// 3. Nếu không gôm được, tạo mới
+			// Tạo mới nếu không gôm được
 			var assignment = new ShipmentAssignment
 			{
 				Id = Guid.NewGuid(),
@@ -143,48 +118,46 @@ namespace ToyShelf.Application.Services
 			};
 
 			UpdateAssignmentType(assignment);
-
 			await _assignmentRepository.AddAsync(assignment);
 			await _unitOfWork.SaveChangesAsync();
 
 			var result = await _assignmentRepository.GetByIdWithDetailsAsync(assignment.Id);
-
-			if (result == null) throw new AppException("Shipment assignment not found", 404);
-
-			return MapToResponse(result);
+			return MapToResponse(result!);
 		}
 
-		// TẠO TỪ DAMAGE REPORT
+		// ================= CREATE TỪ DAMAGE REPORT (Gôm đơn 1-N) =================
 		public async Task CreateFromDamageReportAsync(Guid damageReportId, Guid warehouseLocationId, ICurrentUser currentUser)
 		{
 			var report = await _damageReportRepository.GetByIdAsync(damageReportId);
 			if (report == null) throw new AppException("Report not found", 404);
 
-			// Tìm xem có đơn giao hàng nào đang chờ đến Store đó không để đi nhờ xe
+			// Tìm xe đang PENDING đi từ Kho này đến Store của report
 			var existing = await _assignmentRepository.GetPendingByLocationAsync(warehouseLocationId, report.InventoryLocationId);
 
-			// CHỈ nhồi nếu tìm thấy xe và ngăn DamageReport của xe đó còn trống
-			if (existing != null && existing.DamageReportId == null)
+			if (existing != null)
 			{
-				existing.DamageReportId = damageReportId;
+				// VÌ LÀ 1-N: Cứ nhồi vào danh sách, không cần check null nữa
+				report.ShipmentAssignmentId = existing.Id;
+				_damageReportRepository.Update(report);
+
 				UpdateAssignmentType(existing);
 				_assignmentRepository.Update(existing);
 			}
 			else
 			{
-				// Nếu không có xe nào đang chờ, hoặc xe đang chờ đã nhận 1 đơn thu hồi khác rồi
 				var assignment = new ShipmentAssignment
 				{
 					Id = Guid.NewGuid(),
-					DamageReportId = damageReportId,
 					WarehouseLocationId = warehouseLocationId,
 					Status = AssignmentStatus.Pending,
 					Type = AssignmentType.Return,
 					CreatedAt = _dateTime.UtcNow,
 					CreatedByUserId = currentUser.UserId
 				};
-				UpdateAssignmentType(assignment);
 				await _assignmentRepository.AddAsync(assignment);
+
+				report.ShipmentAssignmentId = assignment.Id;
+				_damageReportRepository.Update(report);
 			}
 			await _unitOfWork.SaveChangesAsync();
 		}
@@ -352,80 +325,71 @@ namespace ToyShelf.Application.Services
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
-			// Xác định các cờ trạng thái để biết Assignment này chứa những gì
+			// 1. Xác định các cờ trạng thái dựa trên dữ liệu thực tế
 			var hasStoreOrder = assignment.StoreOrderId != null;
 			var hasShelfOrder = assignment.ShelfOrderId != null;
-			var hasDamageReport = assignment.DamageReportId != null;
+			// Kiểm tra danh sách DamageReports thay vì 1 ID đơn lẻ
+			var hasDamageReports = assignment.DamageReports != null && assignment.DamageReports.Any();
 
-			// Lấy shipment mới nhất để xem trạng thái vận chuyển hiện tại
+			// 2. Lấy shipment mới nhất để theo dõi trạng thái vận chuyển
 			var shipment = assignment.Shipments?
 				.OrderByDescending(s => s.CreatedAt)
 				.FirstOrDefault();
 
-			// --- TẠO ORDER TYPE ĐỘNG ---
+			// 3. Tạo Order Type động (Ví dụ: "STORE-DAMAGE" hoặc "SHELF-DAMAGE")
 			var types = new List<string>();
 			if (hasStoreOrder) types.Add("STORE");
 			if (hasShelfOrder) types.Add("SHELF");
-			if (hasDamageReport) types.Add("DAMAGE");
+			if (hasDamageReports) types.Add("DAMAGE");
 
-			// Kết quả sẽ ra dạng: "STORE", "STORE-SHELF", "STORE-SHELF-DAMAGE", v.v.
 			string dynamicOrderType = types.Any() ? string.Join("-", types) : "UNKNOWN";
 
+			// 4. Khởi tạo Response cơ bản
 			var response = new ShipmentAssignmentResponse
 			{
 				Id = assignment.Id,
 
-				// ===== THÔNG TIN ĐƠN HÀNG & BÁO CÁO =====
 				StoreOrderId = assignment.StoreOrderId,
 				StoreOrderCode = assignment.StoreOrder?.Code,
 
 				ShelfOrderId = assignment.ShelfOrderId,
 				ShelfOrderCode = assignment.ShelfOrder?.Code,
 
-				DamageReportId = assignment.DamageReportId,
-				DamageReportCode = assignment.DamageReport?.Code,
-
-				// Phân loại đơn để UI hiển thị Label (STORE / SHELF / DAMAGE)
 				OrderType = dynamicOrderType,
 
-				// ===== THÔNG TIN ĐỊA ĐIỂM (LOCATION) =====
 				WarehouseLocationId = assignment.WarehouseLocationId,
 				WarehouseLocationName = assignment.WarehouseLocation?.Name ?? "",
 
-				// Ưu tiên lấy StoreLocationId từ đơn giao, nếu không có thì lấy từ đơn thu hồi
+				// Logic lấy Store Location thông minh: Ưu tiên đơn Giao -> đơn Kệ -> đơn Thu hồi
 				StoreLocationId = hasStoreOrder
 					? (assignment.StoreOrder?.StoreLocationId ?? Guid.Empty)
 					: (hasShelfOrder
 						? (assignment.ShelfOrder?.StoreLocationId ?? Guid.Empty)
-						: (assignment.DamageReport?.InventoryLocationId ?? Guid.Empty)),
+						: (assignment.DamageReports?.FirstOrDefault()?.InventoryLocationId ?? Guid.Empty)),
 
 				StoreLocationName = hasStoreOrder
 					? (assignment.StoreOrder?.StoreLocation?.Name ?? "")
 					: (hasShelfOrder
 						? (assignment.ShelfOrder?.StoreLocation?.Name ?? "")
-						: (assignment.DamageReport?.InventoryLocation?.Name ?? "")),
+						: (assignment.DamageReports?.FirstOrDefault()?.InventoryLocation?.Name ?? "")),
 
-				// ===== THÔNG TIN NHÂN SỰ =====
 				ShipperName = assignment.Shipper?.FullName,
-				CreatedByName = assignment.CreatedByUser?.FullName
-					?? throw new Exception("CreatedByUser not loaded"),
+				CreatedByName = assignment.CreatedByUser?.FullName ?? "System",
 				AssignedByName = assignment.AssignedByUser?.FullName,
 
-				// ===== TRẠNG THÁI & THỜI GIAN =====
-				Type = assignment.Type, // Delivery / Return / Combined
+				Type = assignment.Type,
 				Status = assignment.Status,
 				ShipmentStatus = shipment?.Status ?? ShipmentStatus.Draft,
 
-				// Ghi chú thông minh cho Shipper
-				AdminNote = hasDamageReport
-					? $"[THU HỒI] {assignment.DamageReport?.AdminNote ?? "Vui lòng thu hồi hàng hỏng tại Store"}"
-					: "Giao hàng theo đơn",
+				AdminNote = hasDamageReports
+					? $"[THU HỒI] Có {assignment.DamageReports?.Count ?? 0} báo cáo món hàng cần lấy về kho."
+					: "Giao hàng theo vận đơn của hệ thống.",
 
 				CreatedAt = assignment.CreatedAt,
 				RespondedAt = assignment.RespondedAt
 			};
 
-			// ================= 1. XỬ LÝ HÀNG GIAO (STORE ORDER) =================
+			// StoreOrder 
 			if (hasStoreOrder && assignment.StoreOrder != null)
 			{
 				response.ProductItems = assignment.StoreOrder.Items
@@ -441,7 +405,7 @@ namespace ToyShelf.Application.Services
 					}).ToList();
 			}
 
-			// ================= 2. XỬ LÝ KỆ GIAO (SHELF ORDER) =================
+			// ShelfOrder
 			if (hasShelfOrder && assignment.ShelfOrder != null)
 			{
 				response.ShelfItems = assignment.ShelfOrder.Items
@@ -463,29 +427,24 @@ namespace ToyShelf.Application.Services
 					}).ToList();
 			}
 
-			// ================= 3. XỬ LÝ HÀNG THU HỒI (DAMAGE REPORT) =================
-			if (hasDamageReport && assignment.DamageReport != null)
+			// DamageReport
+			if (hasDamageReports && assignment.DamageReports != null)
 			{
-				var dr = assignment.DamageReport;
-
-				// Tạo một object chi tiết món hàng cần thu hồi để Shipper đối soát
-				response.DamageReturnItem = new ShipmentAssignmentDamageItemResponse
+				response.DamageReturnItems = assignment.DamageReports.Select(dr => new ShipmentAssignmentDamageItemResponse
 				{
 					DamageReportId = dr.Id,
 					DamageCode = dr.Code,
-					DamageType = dr.Type.ToString(), // Product hoặc Shelf
-					Source = dr.Source.ToString(),   // Lỗi do ai?
+					DamageType = dr.Type.ToString(),
+					Source = dr.Source.ToString(),
 					Quantity = dr.Quantity,
 					Description = dr.Description,
 
-					// Thông tin định danh chi tiết
 					TargetName = dr.Type == DamageType.Product
 						? $"{dr.ProductColor?.Product?.Name} ({dr.ProductColor?.Color?.Name})"
 						: $"Kệ: {dr.Shelf?.Code}",
 
-					// Ưu tiên lấy ảnh sản phẩm, nếu không có lấy ảnh hiện trường Store đã chụp
 					ImageUrl = dr.ProductColor?.ImageUrl ?? dr.DamageMedia.FirstOrDefault()?.MediaUrl
-				};
+				}).ToList();
 			}
 
 			return response;
