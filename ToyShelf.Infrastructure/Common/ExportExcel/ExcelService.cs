@@ -6,10 +6,11 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
+using ToyShelf.Application.Models.Product.Request;
 
 namespace ToyShelf.Infrastructure.Common.ExportExcel
 {
-	public class ExcelExportService : IExportService
+	public class ExcelService : IExcelService
 	{
 		public byte[] ExportSettlements(IEnumerable<MonthlySettlementResponse> settlements)
 		{
@@ -52,5 +53,49 @@ namespace ToyShelf.Infrastructure.Common.ExportExcel
 			workbook.SaveAs(stream);
 			return stream.ToArray();
 		}
+	
+
+	    public List<ExcelProductImport> ReadProductExcel(Stream excelStream)
+		{
+			var result = new List<ExcelProductImport>();
+			using var workbook = new XLWorkbook(excelStream);
+			var worksheet = workbook.Worksheet(1);
+
+			var usedRange = worksheet.RangeUsed();
+			if (usedRange == null)
+			{
+				return result;
+			}
+			var rows = usedRange.RowsUsed().Skip(1);
+
+			foreach (var row in rows)
+			{
+				if (row.Cell(2).IsEmpty() || row.Cell(14).IsEmpty())
+					continue;
+
+				result.Add(new ExcelProductImport
+				{
+					CategoryCode = row.Cell(1).GetString().Trim(),
+					ProductName = row.Cell(2).GetString().Trim(),
+					BasePrice = row.Cell(3).GetValue<decimal>(),
+					Description = row.Cell(4).GetString().Trim(),
+					Barcode = row.Cell(5).GetString().Trim(),
+					Brand = row.Cell(6).GetString().Trim(),
+					Material = row.Cell(7).GetString().Trim(),
+					OriginCountry = row.Cell(8).GetString().Trim(),
+					AgeRange = row.Cell(9).GetString().Trim(),
+					Width = row.Cell(10).IsEmpty() ? null : row.Cell(10).GetValue<decimal>(),
+					Length = row.Cell(11).IsEmpty() ? null : row.Cell(11).GetValue<decimal>(),
+					Height = row.Cell(12).IsEmpty() ? null : row.Cell(12).GetValue<decimal>(),
+					Weight = row.Cell(13).IsEmpty() ? null : row.Cell(13).GetValue<decimal>(),
+					ColorName = row.Cell(14).GetString().Trim(),
+					ColorPrice = row.Cell(15).GetValue<decimal>(),
+					ImageUrl = row.Cell(16).GetString().Trim(),
+					Model3DUrl = row.Cell(17).GetString().Trim()
+				});
+			}
+			return result;
+		}
 	}
 }
+

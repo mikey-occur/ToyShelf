@@ -171,5 +171,46 @@ namespace ToyShelf.API.Controllers
                 timestamp = System.DateTime.Now
             });
         }
-    }
+
+		/// <summary>
+		/// Import Products from Excel file.
+		/// </summary>
+		// ===== IMPORT EXCEL =====
+		[HttpPost("import-excel")]
+		[Consumes("multipart/form-data")] 
+		public async Task<IActionResult> ImportExcel(IFormFile file)
+		{
+			// 1. Validate file đầu vào
+			if (file == null || file.Length == 0)
+			{
+				return BadRequest(new { success = false, message = "Vui lòng chọn file Excel để upload." });
+			}
+
+			var extension = Path.GetExtension(file.FileName).ToLower();
+			if (extension != ".xlsx" && extension != ".xls")
+			{
+				return BadRequest(new { success = false, message = "Chỉ hỗ trợ định dạng file Excel (.xlsx, .xls)" });
+			}
+
+			try
+			{
+				// 2. Mở luồng đọc file và gọi Service
+				using var stream = file.OpenReadStream();
+				var result = await _productService.ImportProductsFromExcelAsync(stream);
+
+				if (result)
+				{
+					// Trả về thành công
+					return Ok(ActionResponse.Ok("Import dữ liệu từ Excel thành công!"));
+				}
+
+				return BadRequest(new { success = false, message = "File Excel trống hoặc không có dữ liệu hợp lệ." });
+			}
+			catch (Exception ex)
+			{
+				// Bắt lỗi (Ví dụ lỗi không tìm thấy Category sếp throw ở dưới Service)
+				return BadRequest(new { success = false, message = $"Lỗi khi import: {ex.Message}" });
+			}
+		}
+	}
   }

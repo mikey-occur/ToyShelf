@@ -111,13 +111,11 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			var items = await query
                 .OrderByDescending(p => p.CreatedAt)
-				.Include(p => p.ProductColors) 
-            .ThenInclude(pc => pc.Color)
-                .Skip((pageNumber - 1) * pageSize)
+				.Include(p => p.ProductColors.Where(pc => isActive == null || pc.IsActive == isActive.Value))
+			    .ThenInclude(pc => pc.Color)
+				.Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
 				.Include(p => p.ProductCategory)
-				.Include(p => p.ProductColors)
-					   .ThenInclude(pc => pc.Color)
 				.ToListAsync();
 
             return (items, totalCount);
