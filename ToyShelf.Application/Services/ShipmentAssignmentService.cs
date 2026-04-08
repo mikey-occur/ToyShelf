@@ -46,8 +46,7 @@ namespace ToyShelf.Application.Services
 		// Thông minh : Cập nhật loại đơn
 		private void UpdateAssignmentType(ShipmentAssignment assignment)
 		{
-			bool hasDelivery = assignment.StoreOrderId.HasValue || assignment.ShelfOrderId.HasValue;
-			// KIỂM TRA TRONG DANH SÁCH 1-N
+			bool hasDelivery = assignment.AssignmentStoreOrders.Any() || assignment.AssignmentShelfOrders.Any();
 			bool hasReturn = assignment.DamageReports.Any();
 
 			if (hasDelivery && hasReturn) assignment.Type = AssignmentType.Combined;
@@ -59,106 +58,115 @@ namespace ToyShelf.Application.Services
 		public async Task<ShipmentAssignmentResponse> CreateAsync(CreateShipmentAssignmentRequest request, ICurrentUser currentUser)
 		{
 			if (request.StoreOrderId == null && request.ShelfOrderId == null)
-				throw new AppException("Order is required", 400);
+				throw new AppException("Ít nhất một đơn hàng (Hàng hoặc Kệ) là bắt buộc", 400);
 
-			Guid? storeLocationId = null;
+			Guid storeLocationId;
 
+			// Kiểm tra và lấy thông tin vị trí cửa hàng
 			if (request.StoreOrderId != null)
 			{
 				var order = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId.Value);
 				if (order == null || order.Status != StoreOrderStatus.Approved)
-					throw new AppException("Order not found or not approved", 400);
+					throw new AppException("Đơn hàng không tồn tại hoặc chưa được duyệt", 400);
 				storeLocationId = order.StoreLocationId;
 			}
-			else if (request.ShelfOrderId != null)
+			else
 			{
-				var order = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId.Value);
+				var order = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId!.Value);
 				if (order == null || order.Status != ShelfOrderStatus.Approved)
-					throw new AppException("Order not found or not approved", 400);
+					throw new AppException("Đơn kệ không tồn tại hoặc chưa được duyệt", 400);
 				storeLocationId = order.StoreLocationId;
 			}
 
-			// Gôm đơn vào Assignment hiện có
-			var existing = await _assignmentRepository.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId!.Value);
+			// TÌM XE ĐANG CHỜ (GOM ĐƠN)
+			var assignment = await _assignmentRepository.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId);
 
-			if (existing != null)
+			if (assignment == null)
 			{
-				bool updated = false;
-				if (request.StoreOrderId != null && existing.StoreOrderId == null)
+				// TẠO MỚI NẾU CHƯA CÓ XE CHỜ
+				assignment = new ShipmentAssignment
 				{
-					existing.StoreOrderId = request.StoreOrderId;
-					updated = true;
-				}
-				else if (request.ShelfOrderId != null && existing.ShelfOrderId == null)
-				{
-					existing.ShelfOrderId = request.ShelfOrderId;
-					updated = true;
-				}
+					Id = Guid.NewGuid(),
+					WarehouseLocationId = request.WarehouseLocationId,
+					Status = AssignmentStatus.Pending,
+					CreatedAt = _dateTime.UtcNow,
+					CreatedByUserId = currentUser.UserId
+				};
+				await _assignmentRepository.AddAsync(assignment);
+			}
 
-				if (updated)
+			// NHỒI ĐƠN VÀO BẢNG TRUNG GIAN (N-N)
+			if (request.StoreOrderId.HasValue)
+			{
+				if (!assignment.AssignmentStoreOrders.Any(x => x.StoreOrderId == request.StoreOrderId))
 				{
-					UpdateAssignmentType(existing);
-					_assignmentRepository.Update(existing);
-					await _unitOfWork.SaveChangesAsync();
-					var updatedResult = await _assignmentRepository.GetByIdWithDetailsAsync(existing.Id);
-					return MapToResponse(updatedResult!);
+					assignment.AssignmentStoreOrders.Add(new AssignmentStoreOrder { StoreOrderId = request.StoreOrderId.Value });
 				}
 			}
 
-			// Tạo mới nếu không gôm được
-			var assignment = new ShipmentAssignment
+			if (request.ShelfOrderId.HasValue)
 			{
-				Id = Guid.NewGuid(),
-				StoreOrderId = request.StoreOrderId,
-				ShelfOrderId = request.ShelfOrderId,
-				WarehouseLocationId = request.WarehouseLocationId,
-				Status = AssignmentStatus.Pending,
-				CreatedAt = _dateTime.UtcNow,
-				CreatedByUserId = currentUser.UserId
-			};
+				if (!assignment.AssignmentShelfOrders.Any(x => x.ShelfOrderId == request.ShelfOrderId))
+				{
+					assignment.AssignmentShelfOrders.Add(new AssignmentShelfOrder { ShelfOrderId = request.ShelfOrderId.Value });
+				}
+			}
 
 			UpdateAssignmentType(assignment);
-			await _assignmentRepository.AddAsync(assignment);
 			await _unitOfWork.SaveChangesAsync();
 
 			var result = await _assignmentRepository.GetByIdWithDetailsAsync(assignment.Id);
 			return MapToResponse(result!);
 		}
 
-		// ================= CREATE TỪ DAMAGE REPORT (Gôm đơn 1-N) =================
+		// Gôm đơn 1 - N
 		public async Task CreateFromDamageReportAsync(Guid damageReportId, Guid warehouseLocationId, ICurrentUser currentUser)
 		{
+			// 1. Kiểm tra báo cáo hư hại
 			var report = await _damageReportRepository.GetByIdAsync(damageReportId);
-			if (report == null) throw new AppException("Report not found", 404);
+			if (report == null)
+				throw new AppException("Damage report not found", 404);
 
-			// Tìm xe đang PENDING đi từ Kho này đến Store của report
-			var existing = await _assignmentRepository.GetPendingByLocationAsync(warehouseLocationId, report.InventoryLocationId);
+			// 2. Tìm hoặc Khởi tạo Assignment (Xe)
+			var assignment = await _assignmentRepository.GetPendingByLocationAsync(warehouseLocationId, report.InventoryLocationId);
+			bool isNewAssignment = false;
 
-			if (existing != null)
+			if (assignment == null)
 			{
-				// VÌ LÀ 1-N: Cứ nhồi vào danh sách, không cần check null nữa
-				report.ShipmentAssignmentId = existing.Id;
-				_damageReportRepository.Update(report);
-
-				UpdateAssignmentType(existing);
-				_assignmentRepository.Update(existing);
-			}
-			else
-			{
-				var assignment = new ShipmentAssignment
+				assignment = new ShipmentAssignment
 				{
 					Id = Guid.NewGuid(),
 					WarehouseLocationId = warehouseLocationId,
 					Status = AssignmentStatus.Pending,
-					Type = AssignmentType.Return,
+					Type = AssignmentType.Return, // Mặc định ban đầu là Return
 					CreatedAt = _dateTime.UtcNow,
 					CreatedByUserId = currentUser.UserId
 				};
-				await _assignmentRepository.AddAsync(assignment);
-
-				report.ShipmentAssignmentId = assignment.Id;
-				_damageReportRepository.Update(report);
+				isNewAssignment = true;
 			}
+
+			// 3. Thiết lập mối quan hệ (Link Report vào Xe)
+			report.ShipmentAssignmentId = assignment.Id;
+
+			// Cập nhật quan hệ trong bộ nhớ (In-memory) để logic UpdateAssignmentType chạy chính xác
+			if (assignment.DamageReports == null) assignment.DamageReports = new List<DamageReport>();
+			assignment.DamageReports.Add(report);
+
+			// 4. Cập nhật trạng thái và Lưu dữ liệu
+			UpdateAssignmentType(assignment);
+
+			if (isNewAssignment)
+			{
+				await _assignmentRepository.AddAsync(assignment);
+			}
+			else
+			{
+				_assignmentRepository.Update(assignment);
+			}
+
+			_damageReportRepository.Update(report);
+
+			// Lưu toàn bộ thay đổi trong 1 Transaction thông qua Unit of Work
 			await _unitOfWork.SaveChangesAsync();
 		}
 
@@ -215,8 +223,6 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-
-
 		public async Task AcceptAsync(Guid id, ICurrentUser currentUser)
 		{
 			// 1. Lấy assignment 
@@ -251,7 +257,6 @@ namespace ToyShelf.Application.Services
 			_assignmentRepository.Update(assignment);
 			await _unitOfWork.SaveChangesAsync();
 		}
-
 
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
@@ -325,53 +330,33 @@ namespace ToyShelf.Application.Services
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
-			// 1. Xác định các cờ trạng thái dựa trên dữ liệu thực tế
-			var hasStoreOrder = assignment.StoreOrderId != null;
-			var hasShelfOrder = assignment.ShelfOrderId != null;
-			// Kiểm tra danh sách DamageReports thay vì 1 ID đơn lẻ
-			var hasDamageReports = assignment.DamageReports != null && assignment.DamageReports.Any();
+			// Chuyển từ bảng trung gian sang danh sách Entity để dễ xử lý mapping
+			var storeOrders = assignment.AssignmentStoreOrders.Select(x => x.StoreOrder).Where(x => x != null).ToList();
+			var shelfOrders = assignment.AssignmentShelfOrders.Select(x => x.ShelfOrder).Where(x => x != null).ToList();
+			var damageReports = assignment.DamageReports ?? new List<DamageReport>();
 
-			// 2. Lấy shipment mới nhất để theo dõi trạng thái vận chuyển
-			var shipment = assignment.Shipments?
-				.OrderByDescending(s => s.CreatedAt)
-				.FirstOrDefault();
+			var shipment = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
 
-			// 3. Tạo Order Type động (Ví dụ: "STORE-DAMAGE" hoặc "SHELF-DAMAGE")
+			// Tạo Order Type động
 			var types = new List<string>();
-			if (hasStoreOrder) types.Add("STORE");
-			if (hasShelfOrder) types.Add("SHELF");
-			if (hasDamageReports) types.Add("DAMAGE");
+			if (storeOrders.Any()) types.Add("STORE");
+			if (shelfOrders.Any()) types.Add("SHELF");
+			if (damageReports.Any()) types.Add("DAMAGE");
 
-			string dynamicOrderType = types.Any() ? string.Join("-", types) : "UNKNOWN";
+			// Lấy địa điểm Store đầu tiên tìm thấy
+			var firstStore = storeOrders.FirstOrDefault()?.StoreLocation ??
+							 shelfOrders.FirstOrDefault()?.StoreLocation ??
+							 damageReports.FirstOrDefault()?.InventoryLocation;
 
-			// 4. Khởi tạo Response cơ bản
 			var response = new ShipmentAssignmentResponse
 			{
 				Id = assignment.Id,
-
-				StoreOrderId = assignment.StoreOrderId,
-				StoreOrderCode = assignment.StoreOrder?.Code,
-
-				ShelfOrderId = assignment.ShelfOrderId,
-				ShelfOrderCode = assignment.ShelfOrder?.Code,
-
-				OrderType = dynamicOrderType,
-
+				OrderType = types.Any() ? string.Join("-", types) : "EMPTY",
 				WarehouseLocationId = assignment.WarehouseLocationId,
 				WarehouseLocationName = assignment.WarehouseLocation?.Name ?? "",
 
-				// Logic lấy Store Location thông minh: Ưu tiên đơn Giao -> đơn Kệ -> đơn Thu hồi
-				StoreLocationId = hasStoreOrder
-					? (assignment.StoreOrder?.StoreLocationId ?? Guid.Empty)
-					: (hasShelfOrder
-						? (assignment.ShelfOrder?.StoreLocationId ?? Guid.Empty)
-						: (assignment.DamageReports?.FirstOrDefault()?.InventoryLocationId ?? Guid.Empty)),
-
-				StoreLocationName = hasStoreOrder
-					? (assignment.StoreOrder?.StoreLocation?.Name ?? "")
-					: (hasShelfOrder
-						? (assignment.ShelfOrder?.StoreLocation?.Name ?? "")
-						: (assignment.DamageReports?.FirstOrDefault()?.InventoryLocation?.Name ?? "")),
+				StoreLocationId = firstStore?.Id ?? Guid.Empty,
+				StoreLocationName = firstStore?.Name ?? "N/A",
 
 				ShipperName = assignment.Shipper?.FullName,
 				CreatedByName = assignment.CreatedByUser?.FullName ?? "System",
@@ -381,71 +366,56 @@ namespace ToyShelf.Application.Services
 				Status = assignment.Status,
 				ShipmentStatus = shipment?.Status ?? ShipmentStatus.Draft,
 
-				AdminNote = hasDamageReports
-					? $"[THU HỒI] Có {assignment.DamageReports?.Count ?? 0} báo cáo món hàng cần lấy về kho."
+				AdminNote = damageReports.Any()
+					? $"[THU HỒI] Có {damageReports.Count} báo cáo cần lấy về kho."
 					: "Giao hàng theo vận đơn của hệ thống.",
 
 				CreatedAt = assignment.CreatedAt,
 				RespondedAt = assignment.RespondedAt
 			};
 
-			// StoreOrder 
-			if (hasStoreOrder && assignment.StoreOrder != null)
-			{
-				response.ProductItems = assignment.StoreOrder.Items
-					.Select(x => new ShipmentAssignmentProductItemResponse
-					{
-						ProductColorId = x.ProductColorId,
-						SKU = x.ProductColor?.Product?.SKU ?? "N/A",
-						ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
-						Color = x.ProductColor?.Color?.Name ?? "N/A",
-						ImageUrl = x.ProductColor?.ImageUrl,
-						Quantity = x.Quantity,
-						FulfilledQuantity = x.FulfilledQuantity
-					}).ToList();
-			}
-
-			// ShelfOrder
-			if (hasShelfOrder && assignment.ShelfOrder != null)
-			{
-				response.ShelfItems = assignment.ShelfOrder.Items
-					.Select(x =>
-					{
-						var shelfType = x.ShelfType;
-						return new ShipmentAssignmentShelfItemResponse
-						{
-							ShelfTypeId = x.ShelfTypeId,
-							ShelfTypeName = x.ShelfTypeName,
-							ImageUrl = x.ImageUrl,
-							Width = shelfType?.Width ?? 0,
-							Height = shelfType?.Height ?? 0,
-							Depth = shelfType?.Depth ?? 0,
-							TotalLevels = shelfType?.TotalLevels ?? 0,
-							Quantity = x.Quantity,
-							FulfilledQuantity = x.FulfilledQuantity,
-						};
-					}).ToList();
-			}
-
-			// DamageReport
-			if (hasDamageReports && assignment.DamageReports != null)
-			{
-				response.DamageReturnItems = assignment.DamageReports.Select(dr => new ShipmentAssignmentDamageItemResponse
+			// GOM TẤT CẢ HÀNG HÓA TỪ NHIỀU ĐƠN (SelectMany)
+			response.ProductItems = storeOrders
+				.SelectMany(o => o.Items)
+				.Select(x => new ShipmentAssignmentProductItemResponse
 				{
-					DamageReportId = dr.Id,
-					DamageCode = dr.Code,
-					DamageType = dr.Type.ToString(),
-					Source = dr.Source.ToString(),
-					Quantity = dr.Quantity,
-					Description = dr.Description,
-
-					TargetName = dr.Type == DamageType.Product
-						? $"{dr.ProductColor?.Product?.Name} ({dr.ProductColor?.Color?.Name})"
-						: $"Kệ: {dr.Shelf?.Code}",
-
-					ImageUrl = dr.ProductColor?.ImageUrl ?? dr.DamageMedia.FirstOrDefault()?.MediaUrl
+					ProductColorId = x.ProductColorId,
+					SKU = x.ProductColor?.Product?.SKU ?? "N/A",
+					ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
+					Color = x.ProductColor?.Color?.Name ?? "N/A",
+					ImageUrl = x.ProductColor?.ImageUrl,
+					Quantity = x.Quantity,
+					FulfilledQuantity = x.FulfilledQuantity
 				}).ToList();
-			}
+
+			// GOM TẤT CẢ KỆ TỪ NHIỀU ĐƠN
+			response.ShelfItems = shelfOrders
+				.SelectMany(o => o.Items)
+				.Select(x => new ShipmentAssignmentShelfItemResponse
+				{
+					ShelfTypeId = x.ShelfTypeId,
+					ShelfTypeName = x.ShelfTypeName,
+					ImageUrl = x.ImageUrl,
+					Width = x.ShelfType?.Width ?? 0,
+					Height = x.ShelfType?.Height ?? 0,
+					Quantity = x.Quantity,
+					FulfilledQuantity = x.FulfilledQuantity,
+				}).ToList();
+
+			// GOM THU HỒI
+			response.DamageReturnItems = damageReports.Select(dr => new ShipmentAssignmentDamageItemResponse
+			{
+				DamageReportId = dr.Id,
+				DamageCode = dr.Code,
+				DamageType = dr.Type.ToString(),
+				Source = dr.Source.ToString(),
+				Description = dr.Description,
+				TargetName = dr.Type == DamageType.Product
+					? $"{dr.ProductColor?.Product?.Name} ({dr.ProductColor?.Color?.Name})"
+					: $"Kệ: {dr.Shelf?.Code}",
+				Quantity = dr.Quantity,
+				ImageUrl = dr.ProductColor?.ImageUrl ?? dr.DamageMedia.FirstOrDefault()?.MediaUrl
+			}).ToList();
 
 			return response;
 		}
