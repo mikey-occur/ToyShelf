@@ -283,6 +283,55 @@ namespace ToyShelf.Infrastructure.Repositories
 					.Select(x => (x.StoreId, x.StoreName, x.City, x.PartnerName, x.TotalRevenue, x.TotalOrders))
 					.ToList();
 		}
+
+		public async Task<List<(Guid PartnerId, string CompanyName, string ContactName, string Email, string Tier, decimal TotalRevenue, decimal TotalCommission)>> GetTopPartnersByRevenueAsync(int top = 3, int? month = null, int? year = null)
+		{
+			var query = _context.CommissionHistories.AsQueryable();
+
+			if (year.HasValue) query = query.Where(c => c.CreatedAt.Year == year.Value);
+			if (month.HasValue) query = query.Where(c => c.CreatedAt.Month == month.Value);
+
+			var rawData = await query
+				.GroupBy(c => c.PartnerId)
+				.Select(g => new
+				{
+					PartnerId = g.Key,
+					TotalRevenue = g.Sum(c => c.SalesAmount),
+					TotalCommission = g.Sum(c => c.CommissionAmount)
+				})
+				.OrderByDescending(x => x.TotalRevenue)
+				.Take(top)
+				.Join(_context.Partners,
+					  stats => stats.PartnerId,
+					  p => p.Id,
+					  (stats, p) => new
+					  {
+						  PartnerId = stats.PartnerId,
+						  CompanyName = p.CompanyName,
+
+						
+						  ContactName = p.Users.OrderBy(u => u.CreatedAt).Select(u => u.FullName).FirstOrDefault(),
+						  Email = p.Users.OrderBy(u => u.CreatedAt).Select(u => u.Email).FirstOrDefault(),
+
+						  Tier = p.PartnerTier.Name,
+						  TotalRevenue = stats.TotalRevenue,
+						  TotalCommission = stats.TotalCommission
+					  })
+				.OrderByDescending(x => x.TotalRevenue)
+				.ToListAsync();
+
+			return rawData
+				.Select(x => (
+					x.PartnerId,
+					x.CompanyName,
+					x.ContactName ?? "Đang cập nhật", 
+					x.Email ?? "Đang cập nhật",
+					x.Tier ?? "Đang cập nhật", 
+					x.TotalRevenue,
+					x.TotalCommission
+				))
+				.ToList();
+		}
 	}
 }
 

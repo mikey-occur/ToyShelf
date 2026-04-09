@@ -37,5 +37,10 @@ namespace ToyShelf.Domain.IRepositories
 			public int TotalOrders { get; set; }
 			public decimal TotalRevenue { get; set; }
 		}
+
+		Task<List<(Guid PartnerId, string CompanyName, string ContactName, string Email, string Tier, decimal TotalRevenue, decimal TotalCommission)>> GetTopPartnersByRevenueAsync(
+		int top = 3,
+		int? month = null,
+		int? year = null);
 	}
 }

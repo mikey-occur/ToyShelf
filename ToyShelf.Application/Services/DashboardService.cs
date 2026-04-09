@@ -509,5 +509,23 @@ namespace ToyShelf.Application.Services
 
 			return response;
 		}
+
+		public async Task<List<TopPartnerResponse>> GetTopPartnersByRevenueAsync(int? month = null, int? year = null)
+		{
+			var tupleList = await _orderRepository.GetTopPartnersByRevenueAsync(3, month, year);
+
+			var response = tupleList.Select(t => new TopPartnerResponse
+			{
+				PartnerId = t.PartnerId,
+				CompanyName = t.CompanyName,
+				ContactName = t.ContactName ?? "Đang cập nhật",
+				Email = t.Email ?? "Đang cập nhật",
+				Tier = t.Tier,
+				TotalRevenue = t.TotalRevenue,
+				TotalCommission = t.TotalCommission
+			}).ToList();
+
+			return response;
+		}
 	}
 }

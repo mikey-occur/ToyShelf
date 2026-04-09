@@ -172,7 +172,22 @@ namespace ToyShelf.API.Controllers
 		}
 
 
+		/// <summary>
+		/// Lấy danh sách Top Đối tác có doanh thu cao nhất
+		/// </summary>
+		[HttpGet("top-partners")]
+		public async Task<BaseResponse<List<TopPartnerResponse>>> GetTopPartners([FromQuery] int? month, [FromQuery] int? year)
+		{
+			// Fix chống cháy: Có tháng mà không có năm thì lấy năm hiện tại
+			if (month.HasValue && !year.HasValue)
+			{
+				year = DateTime.Now.Year;
+			}
 
+			var result = await _dashboardService.GetTopPartnersByRevenueAsync(month, year);
+
+			return BaseResponse<List<TopPartnerResponse>>.Ok(result, "Lấy bảng xếp hạng đối tác thành công!");
+		}
 
 
 
