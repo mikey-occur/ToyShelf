@@ -492,5 +492,22 @@ namespace ToyShelf.Application.Services
 
 			return response;
 		}
+
+		public async Task<List<TopStoreResponse>> GetTopStoresByRevenueAsync(int? month = null, int? year = null)
+		{
+			var tupleList = await _orderRepository.GetTopStoresByRevenueAsync(3, month, year);
+
+			var response = tupleList.Select(t => new TopStoreResponse
+			{
+				StoreId = t.StoreId,
+				StoreName = t.StoreName,
+				City = t.City, 
+				PartnerName = t.PartnerName,
+				TotalRevenue = t.TotalRevenue,
+				TotalOrders = t.TotalOrders
+			}).ToList();
+
+			return response;
+		}
 	}
 }

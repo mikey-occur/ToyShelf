@@ -244,6 +244,46 @@ namespace ToyShelf.Infrastructure.Repositories
 				))
 				.ToList();
 		}
+
+		public async Task<List<(Guid StoreId, string StoreName, string City, string PartnerName, decimal TotalRevenue, int TotalOrders)>> GetTopStoresByRevenueAsync(int top = 3, int? month = null, int? year = null)
+		{
+			var query = _context.Orders
+			.Where(o => o.Status.ToUpper() == "PAID") 
+			.AsQueryable();
+
+				if (year.HasValue) query = query.Where(o => o.CreatedAt.Year == year.Value);
+				if (month.HasValue) query = query.Where(o => o.CreatedAt.Month == month.Value);
+
+				var rawData = await query
+					.GroupBy(o => o.StoreId)
+					.Select(g => new
+					{
+						StoreId = g.Key,
+						TotalRevenue = g.Sum(o => o.TotalAmount), 
+						TotalOrders = g.Count()                  
+					})
+					.OrderByDescending(x => x.TotalRevenue)      
+					.Take(top)
+					.Join(_context.Stores.Include(s => s.Partner),
+						  stats => stats.StoreId,
+						  store => store.Id,
+						  (stats, store) => new
+						  {
+							  StoreId = stats.StoreId,
+							  StoreName = store.Name,
+							  City = store.City.Name,             
+							  PartnerName = store.Partner.CompanyName, 
+							  TotalRevenue = stats.TotalRevenue,
+							  TotalOrders = stats.TotalOrders
+						  })
+					.OrderByDescending(x => x.TotalRevenue)
+					.ToListAsync();
+
+				return rawData
+					.Select(x => (x.StoreId, x.StoreName, x.City, x.PartnerName, x.TotalRevenue, x.TotalOrders))
+					.ToList();
+		}
 	}
 }
+
 

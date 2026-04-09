@@ -21,6 +21,6 @@ namespace ToyShelf.Application.IServices
 		Task<SystemStatsResponse> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null);
 		Task<List<SystemChartItemResponse>> GetSystemRevenueChartAsync(StoreChartRequest request);
 		Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null);
-
+		Task<List<TopStoreResponse>> GetTopStoresByRevenueAsync(int? month = null, int? year = null);
 	}
 }
