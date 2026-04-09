@@ -166,6 +166,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<INotificationService, NotificationService>();
 			services.AddScoped<IRedisCacheService, RedisCacheService>();
 			services.AddScoped<IDamageReportService, DamageReportService>();
+			services.AddScoped<ICommissionHistoryService, CommissionHistoryService>();
 		}
     }
 }

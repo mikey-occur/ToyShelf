@@ -10,5 +10,10 @@ namespace ToyShelf.Domain.IRepositories
 	public interface ICommissionHistoryRepsitory : IGenericRepository<CommissionHistory>
 	{
 		Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth);
+		Task<(IEnumerable<CommissionHistory> Items, int TotalCount)> GetHistoriesPaginatedAsync(
+			int pageNumber = 1,
+			int pageSize = 10,
+			Guid? partnerId = null,
+			string? searchItem = null);
 	}
 }
