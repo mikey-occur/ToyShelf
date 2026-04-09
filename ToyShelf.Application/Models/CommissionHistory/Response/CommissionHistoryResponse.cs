@@ -10,11 +10,12 @@ namespace ToyShelf.Application.Models.CommissionHistory.Response
 	{
 		public Guid Id { get; set; }
 		public Guid OrderItemId { get; set; }
-
 		public decimal AppliedRate { get; set; }
-
 		public decimal CommissionAmount { get; set; }
-
 		public DateTime CreatedAt { get; set; }
+		public int Quantity { get; set; } 
+		public long OrderCode { get; set; } 
+		public string PaymentMethod { get; set; } = string.Empty;
+		public DateTime OrderDate { get; set; }
 	}
 }
