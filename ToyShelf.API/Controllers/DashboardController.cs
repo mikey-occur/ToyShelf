@@ -3,6 +3,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
+using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 namespace ToyShelf.API.Controllers
 {
@@ -130,16 +131,63 @@ namespace ToyShelf.API.Controllers
 			});
 		}
 
+		/// <summary>
+		/// get san pham ban chay nhat 
+		/// </summary>
+
+		[HttpGet("top-selling")]
+		public async Task<BaseResponse<List<TopSellingProductResponse>>> GetTopSellingProducts([FromQuery] int? month, [FromQuery] int? year)
+		{
+			if (month.HasValue && !year.HasValue)
+			{
+				year = DateTime.Now.Year;
+			}
+
+			var result = await _dashboardService.GetTopSellingProductsAsync(month, year);
+			return BaseResponse<List<TopSellingProductResponse>>.Ok(result, "Lấy Top 3 bán chạy thành công");
+		}
 
 
 
 
+		/// <summary>
+		/// Lấy danh sách Top Cửa hàng có doanh thu cao nhất (Bảng vàng)
+		/// </summary>
+		/// <param name="month">Tháng cần xem (từ 1 đến 12)</param>
+		/// <param name="year">Năm cần xem</param>
+		[HttpGet("top-stores")]
+		public async Task<BaseResponse<List<TopStoreResponse>>> GetTopStores(
+			[FromQuery] int? month,
+			[FromQuery] int? year)
+		{
+			
+			if (month.HasValue && !year.HasValue)
+			{
+				year = DateTime.Now.Year;
+			}
+
+			// Gọi Service lấy data (Mặc định lấy top 3 như đã setup)
+			var result = await _dashboardService.GetTopStoresByRevenueAsync(month, year);
+			return BaseResponse<List<TopStoreResponse>>.Ok(result, "Lấy bảng xếp hạng cửa hàng thành công!");
+		}
 
 
+		/// <summary>
+		/// Lấy danh sách Top Đối tác có doanh thu cao nhất
+		/// </summary>
+		[HttpGet("top-partners")]
+		public async Task<BaseResponse<List<TopPartnerResponse>>> GetTopPartners([FromQuery] int? month, [FromQuery] int? year)
+		{
+			// Fix chống cháy: Có tháng mà không có năm thì lấy năm hiện tại
+			if (month.HasValue && !year.HasValue)
+			{
+				year = DateTime.Now.Year;
+			}
 
+			var result = await _dashboardService.GetTopPartnersByRevenueAsync(month, year);
 
-
-
+			return BaseResponse<List<TopPartnerResponse>>.Ok(result, "Lấy bảng xếp hạng đối tác thành công!");
+		}
 
 
 

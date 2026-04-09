@@ -185,6 +185,154 @@ namespace ToyShelf.Infrastructure.Repositories
 			})
 			.ToListAsync();
 			}
+
+		public async Task<List<(Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
+		int top = 3,
+		int? month = null,
+		int? year = null)
+		{
+			var query = _context.OrderItems
+				.Where(oi => oi.Order.Status.ToUpper() == "PAID")
+				.AsQueryable();
+
+			if (year.HasValue)
+			{
+				query = query.Where(oi => oi.Order.CreatedAt.Year == year.Value);
+			}
+
+			if (month.HasValue)
+			{
+				query = query.Where(oi => oi.Order.CreatedAt.Month == month.Value);
+			}
+
+			var rawData = await query
+				.GroupBy(oi => oi.ProductColorId)
+				.Select(g => new
+				{
+					ProductColorId = g.Key,
+					TotalSold = g.Sum(oi => oi.Quantity)
+				})
+				.OrderByDescending(x => x.TotalSold)
+				.Take(top)
+				.Join(_context.ProductColors.Include(pc => pc.Product).Include(pc => pc.Color),
+					  sold => sold.ProductColorId,
+					  pc => pc.Id,
+					  (sold, pc) => new
+					  {
+						  ProductColorId = sold.ProductColorId,
+						  ProductName = pc.Product.Name,
+						  Sku = pc.Sku,
+						  Brand = pc.Product.Brand,
+						  ColorName = pc.Color.Name,
+						  ImageUrl = pc.ImageUrl,
+
+						  Price = pc.Price,
+						  TotalSold = sold.TotalSold
+					  })
+				.OrderByDescending(x => x.TotalSold)
+				.ToListAsync();
+			return rawData
+				.Select(x => (
+					x.ProductColorId,
+					x.ProductName,
+					x.Sku,
+					x.Brand,
+					x.ColorName,
+					x.ImageUrl,
+					x.Price,
+					x.TotalSold
+				))
+				.ToList();
+		}
+
+		public async Task<List<(Guid StoreId, string StoreName, string City, string PartnerName, decimal TotalRevenue, int TotalOrders)>> GetTopStoresByRevenueAsync(int top = 3, int? month = null, int? year = null)
+		{
+			var query = _context.Orders
+			.Where(o => o.Status.ToUpper() == "PAID") 
+			.AsQueryable();
+
+				if (year.HasValue) query = query.Where(o => o.CreatedAt.Year == year.Value);
+				if (month.HasValue) query = query.Where(o => o.CreatedAt.Month == month.Value);
+
+				var rawData = await query
+					.GroupBy(o => o.StoreId)
+					.Select(g => new
+					{
+						StoreId = g.Key,
+						TotalRevenue = g.Sum(o => o.TotalAmount), 
+						TotalOrders = g.Count()                  
+					})
+					.OrderByDescending(x => x.TotalRevenue)      
+					.Take(top)
+					.Join(_context.Stores.Include(s => s.Partner),
+						  stats => stats.StoreId,
+						  store => store.Id,
+						  (stats, store) => new
+						  {
+							  StoreId = stats.StoreId,
+							  StoreName = store.Name,
+							  City = store.City.Name,             
+							  PartnerName = store.Partner.CompanyName, 
+							  TotalRevenue = stats.TotalRevenue,
+							  TotalOrders = stats.TotalOrders
+						  })
+					.OrderByDescending(x => x.TotalRevenue)
+					.ToListAsync();
+
+				return rawData
+					.Select(x => (x.StoreId, x.StoreName, x.City, x.PartnerName, x.TotalRevenue, x.TotalOrders))
+					.ToList();
+		}
+
+		public async Task<List<(Guid PartnerId, string CompanyName, string ContactName, string Email, string Tier, decimal TotalRevenue, decimal TotalCommission)>> GetTopPartnersByRevenueAsync(int top = 3, int? month = null, int? year = null)
+		{
+			var query = _context.CommissionHistories.AsQueryable();
+
+			if (year.HasValue) query = query.Where(c => c.CreatedAt.Year == year.Value);
+			if (month.HasValue) query = query.Where(c => c.CreatedAt.Month == month.Value);
+
+			var rawData = await query
+				.GroupBy(c => c.PartnerId)
+				.Select(g => new
+				{
+					PartnerId = g.Key,
+					TotalRevenue = g.Sum(c => c.SalesAmount),
+					TotalCommission = g.Sum(c => c.CommissionAmount)
+				})
+				.OrderByDescending(x => x.TotalRevenue)
+				.Take(top)
+				.Join(_context.Partners,
+					  stats => stats.PartnerId,
+					  p => p.Id,
+					  (stats, p) => new
+					  {
+						  PartnerId = stats.PartnerId,
+						  CompanyName = p.CompanyName,
+
+						
+						  ContactName = p.Users.OrderBy(u => u.CreatedAt).Select(u => u.FullName).FirstOrDefault(),
+						  Email = p.Users.OrderBy(u => u.CreatedAt).Select(u => u.Email).FirstOrDefault(),
+
+						  Tier = p.PartnerTier.Name,
+						  TotalRevenue = stats.TotalRevenue,
+						  TotalCommission = stats.TotalCommission
+					  })
+				.OrderByDescending(x => x.TotalRevenue)
+				.ToListAsync();
+
+			return rawData
+				.Select(x => (
+					x.PartnerId,
+					x.CompanyName,
+					x.ContactName ?? "Đang cập nhật", 
+					x.Email ?? "Đang cập nhật",
+					x.Tier ?? "Đang cập nhật", 
+					x.TotalRevenue,
+					x.TotalCommission
+				))
+				.ToList();
+		}
 	}
 }
+
 
