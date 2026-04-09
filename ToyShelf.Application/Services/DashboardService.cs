@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
+using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -471,6 +472,25 @@ namespace ToyShelf.Application.Services
 			}
 
 			return chartData;
+		}
+
+		public async Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null)
+		{
+			var tupleList = await _orderRepository.GetTopSellingProductsAsync(3, month, year);
+
+			var response = tupleList.Select(t => new TopSellingProductResponse
+			{
+				ProductColorId = t.ProductColorId,
+				ProductName = t.ProductName,
+				Price = t.Price,
+				TotalSold = t.TotalSold,
+				Brand = t.Brand,
+				Sku = t.Sku,
+				ColorName = t.ColorName,
+				ImageUrl = t.ImageUrl
+			}).ToList();
+
+			return response;
 		}
 	}
 }

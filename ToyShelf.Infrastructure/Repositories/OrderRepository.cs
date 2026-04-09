@@ -185,6 +185,65 @@ namespace ToyShelf.Infrastructure.Repositories
 			})
 			.ToListAsync();
 			}
+
+		public async Task<List<(Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
+		int top = 3,
+		int? month = null,
+		int? year = null)
+		{
+			var query = _context.OrderItems
+				.Where(oi => oi.Order.Status.ToUpper() == "PAID")
+				.AsQueryable();
+
+			if (year.HasValue)
+			{
+				query = query.Where(oi => oi.Order.CreatedAt.Year == year.Value);
+			}
+
+			if (month.HasValue)
+			{
+				query = query.Where(oi => oi.Order.CreatedAt.Month == month.Value);
+			}
+
+			var rawData = await query
+				.GroupBy(oi => oi.ProductColorId)
+				.Select(g => new
+				{
+					ProductColorId = g.Key,
+					TotalSold = g.Sum(oi => oi.Quantity)
+				})
+				.OrderByDescending(x => x.TotalSold)
+				.Take(top)
+				.Join(_context.ProductColors.Include(pc => pc.Product).Include(pc => pc.Color),
+					  sold => sold.ProductColorId,
+					  pc => pc.Id,
+					  (sold, pc) => new
+					  {
+						  ProductColorId = sold.ProductColorId,
+						  ProductName = pc.Product.Name,
+						  Sku = pc.Sku,
+						  Brand = pc.Product.Brand,
+						  ColorName = pc.Color.Name,
+						  ImageUrl = pc.ImageUrl,
+
+						  Price = pc.Price,
+						  TotalSold = sold.TotalSold
+					  })
+				.OrderByDescending(x => x.TotalSold)
+				.ToListAsync();
+			return rawData
+				.Select(x => (
+					x.ProductColorId,
+					x.ProductName,
+					x.Sku,
+					x.Brand,
+					x.ColorName,
+					x.ImageUrl,
+					x.Price,
+					x.TotalSold
+				))
+				.ToList();
+		}
 	}
 }
 

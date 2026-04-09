@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
+using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 
 namespace ToyShelf.Application.IServices
@@ -19,6 +20,7 @@ namespace ToyShelf.Application.IServices
 
 		Task<SystemStatsResponse> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null);
 		Task<List<SystemChartItemResponse>> GetSystemRevenueChartAsync(StoreChartRequest request);
+		Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null);
 
 	}
 }
