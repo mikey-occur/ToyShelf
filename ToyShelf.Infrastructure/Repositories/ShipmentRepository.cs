@@ -33,11 +33,22 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(si => si.Shelf)
 						.ThenInclude(sh => sh.ShelfType)
 				// Nhánh Damage Report
-				.Include(x => x.DamageReports) 
-					.ThenInclude(dr => dr.ProductColor)
-				// Nếu muốn lấy thêm thông tin khác của DamageReport thì Include tiếp:
 				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Shelf)
+					.ThenInclude(dr => dr.Items) // Chui vào danh sách món hỏng
+						.ThenInclude(i => i.ProductColor)
+							.ThenInclude(pc => pc!.Product)
+				.Include(x => x.DamageReports)
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.ProductColor)
+							.ThenInclude(pc => pc!.Color)
+				.Include(x => x.DamageReports)
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.Shelf)
+							.ThenInclude(s => s!.ShelfType)
+				.Include(x => x.DamageReports)
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.DamageMedia)
+				// Nhánh đơn hàng Store và Shelf
 				.Include(x => x.StoreOrder)
 					.ThenInclude(o => o!.StoreLocation)
 				.Include(x => x.ShelfOrder);

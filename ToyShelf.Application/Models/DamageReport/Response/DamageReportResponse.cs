@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.Models.DamageReport.Response
@@ -11,33 +8,51 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 	{
 		public Guid Id { get; set; }
 		public string Code { get; set; } = string.Empty;
-		public DamageType Type { get; set; }
+		public DamageReportType Type { get; set; }
 		public DamageSource Source { get; set; }
 		public DamageStatus Status { get; set; }
 
-		// Thông tin sản phẩm (nếu hỏng hàng)
-		public Guid? ProductColorId { get; set; }
-		public string ProductName { get; set; } = string.Empty;
-		public string SKU { get; set; } = string.Empty;
-		public string ColorName { get; set; } = string.Empty;
-		public string? ImageUrl { get; set; }
+		// Thông tin địa điểm
+		public string StoreName { get; set; } = string.Empty;
+		public string StoreAddress { get; set; } = string.Empty;
 
-		// Thông tin kệ (nếu hỏng kệ/thiết bị IoT)
-		public Guid? ShelfId { get; set; }
-		public string ShelfCode { get; set; } = string.Empty;
-
-		public int Quantity { get; set; }
+		// Nội dung mô tả chung
 		public string? Description { get; set; }
 		public string? AdminNote { get; set; }
 		public bool IsWarrantyClaim { get; set; }
 
+		// Thông tin nhân sự (Đúng yêu cầu của bồ)
 		public Guid ReportedByUserId { get; set; }
 		public string ReportedByName { get; set; } = string.Empty;
 		public Guid? ReviewedByUserId { get; set; }
 		public string ReviewedByName { get; set; } = string.Empty;
 
+		// Thời gian
 		public DateTime CreatedAt { get; set; }
 		public DateTime? ReviewedAt { get; set; }
+
+		// Danh sách chi tiết các món hỏng (1-N)
+		public List<DamageItemResponse> Items { get; set; } = new List<DamageItemResponse>();
+	}
+
+	public class DamageItemResponse
+	{
+		public Guid Id { get; set; }
+		public DamageItemType Type { get; set; }
+		public int? Quantity { get; set; }
+
+		// Thông tin Sản phẩm
+		public Guid? ProductColorId { get; set; }
+		public string? ProductName { get; set; }
+		public string? SKU { get; set; }
+		public string? ColorName { get; set; }
+		public string? ImageUrl { get; set; }
+
+		// Thông tin Kệ
+		public Guid? ShelfId { get; set; }
+		public string? ShelfCode { get; set; }
+
+		// Media bằng chứng gắn theo từng món
 		public List<string> MediaUrls { get; set; } = new List<string>();
 	}
 }
