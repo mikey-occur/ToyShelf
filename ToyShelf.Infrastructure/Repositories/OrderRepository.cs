@@ -139,27 +139,34 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (totalOrders, totalRevenue);
 		}
 
-		public async Task<(int TotalOrders, decimal TotalRevenue)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+		public async Task<(int TotalOrders, decimal TotalRevenue, int TotalPartners, int TotalStores)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
 		{
-			var query = _context.Orders
-				.Where(o => o.Status.ToUpper() == "PAID")
-				.AsQueryable();
+			var orderQuery = _context.Orders.Where(o => o.Status.ToUpper() == "PAID").AsQueryable();
+			var partnerQuery = _context.Partners.AsQueryable();
+			var storeQuery = _context.Stores.AsQueryable();
 
 			if (fromDate.HasValue)
 			{
-				query = query.Where(o => o.CreatedAt >= fromDate.Value);
+				orderQuery = orderQuery.Where(o => o.CreatedAt >= fromDate.Value);
+				partnerQuery = partnerQuery.Where(p => p.CreatedAt >= fromDate.Value);
+				storeQuery = storeQuery.Where(s => s.CreatedAt >= fromDate.Value);
 			}
 
 			if (toDate.HasValue)
 			{
-				query = query.Where(o => o.CreatedAt <= toDate.Value);
+				orderQuery = orderQuery.Where(o => o.CreatedAt <= toDate.Value);
+				partnerQuery = partnerQuery.Where(p => p.CreatedAt <= toDate.Value);
+				storeQuery = storeQuery.Where(s => s.CreatedAt <= toDate.Value);
 			}
 
-			var totalOrders = await query.CountAsync();
+			// 3. Thực thi lấy số liệu song song (hoặc tuần tự)
+			var totalOrders = await orderQuery.CountAsync();
+			var totalRevenue = await orderQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
+			var totalPartners = await partnerQuery.CountAsync();
+			var totalStores = await storeQuery.CountAsync();
 
-			var totalRevenue = await query.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
-
-			return (totalOrders, totalRevenue);
+			// Trả về Tuple 4 món
+			return (totalOrders, totalRevenue, totalPartners, totalStores);
 		}
 
 		public async Task<List<IOrderRepository.DailyStatResult>> GetSystemChartDataAsync(DateTime startDate, DateTime endDate)

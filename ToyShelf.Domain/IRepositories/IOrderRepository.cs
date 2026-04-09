@@ -19,7 +19,7 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Order?> GetOrderWithCommissionHistoryAsync(Guid orderId);
 
 		// Lấy tổng số liệu cho các thẻ Card (Tổng đơn, Tổng doanh thu toàn hệ thống)
-		Task<(int TotalOrders, decimal TotalRevenue)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null);
+		Task<(int TotalOrders, decimal TotalRevenue, int TotalPartners, int TotalStores)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null);
 
 		// Lấy dữ liệu vẽ Biểu đồ doanh thu toàn hệ thống
 		Task<List<DailyStatResult>> GetSystemChartDataAsync(DateTime startDate, DateTime endDate);

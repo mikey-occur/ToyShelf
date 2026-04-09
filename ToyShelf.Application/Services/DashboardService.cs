@@ -375,7 +375,9 @@ namespace ToyShelf.Application.Services
 			return new SystemStatsResponse
 			{
 				TotalOrders = stats.TotalOrders,
-				TotalRevenue = stats.TotalRevenue
+				TotalRevenue = stats.TotalRevenue,
+				TotalPartners = stats.TotalPartners, 
+				TotalStores = stats.TotalStores
 			};
 		}
 
