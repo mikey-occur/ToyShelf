@@ -11,14 +11,10 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 	{
 		public Guid Id { get; set; }
 
-		public Guid? StoreOrderId { get; set; }
-		public string? StoreOrderCode { get; set; }
+		public List<string> StoreOrderCodes { get; set; } = new();
+		public List<string> ShelfOrderCodes { get; set; } = new();
+		public List<string> DamageReportCodes { get; set; } = new();
 
-		public Guid? ShelfOrderId { get; set; }
-		public string? ShelfOrderCode { get; set; }
-
-		public Guid? DamageReportId { get; set; }
-		public string? DamageReportCode { get; set; }
 		public string? AdminNote { get; set; }
 
 		// ⭐ thêm để FE xử lý rõ ràng

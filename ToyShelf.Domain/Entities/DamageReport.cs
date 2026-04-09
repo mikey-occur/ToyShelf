@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Domain.Entities
 {
-	public enum DamageType
+	public enum DamageReportType
 	{
-		Product,     
-		Shelf          
+		Product,
+		Shelf,
+		Combined // Có cả 2
 	}
 
 	public enum DamageSource
@@ -36,28 +37,20 @@ namespace ToyShelf.Domain.Entities
 
 
 		// 1. PHÂN LOẠI & NGUỒN GỐC
-		public DamageType Type { get; set; }      // Hàng hay Kệ?
+		public DamageReportType Type { get; set; } // Product | Shelf | Combined (Có cả 2)
 		public DamageSource Source { get; set; }  // Lỗi do ai/đâu?
 		public DamageStatus Status { get; set; }
 
-
-		// 2. ĐỐI TƯỢNG BỊ HƯ HẠI
-		public Guid? ProductColorId { get; set; }
-		public Guid? ShelfId { get; set; }
-
-		// Điều xe
+		// Vận chuyển
 		public Guid? ShipmentId { get; set; }
-		// Điều Shipper
 		public Guid? ShipmentAssignmentId { get; set; }
-		public int Quantity { get; set; }
 
-
-		// 3. THÔNG TIN CHI TIẾT
+		// 2. THÔNG TIN CHI TIẾT
 		public string? Description { get; set; }
 		public string? AdminNote { get; set; }
 
 
-		// 4. ĐỊA ĐIỂM & NHÂN SỰ
+		// 3. ĐỊA ĐIỂM & NHÂN SỰ
 		public Guid InventoryLocationId { get; set; } // Store nơi xảy ra sự cố
 		public Guid ReportedByUserId { get; set; }
 		public DateTime CreatedAt { get; set; }
@@ -66,7 +59,7 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? ReviewedAt { get; set; }
 
 
-		// 6. Bảo hành 
+		// 4. Bảo hành 
 		public bool IsWarrantyClaim { get; set; } = false; // Đánh dấu đây là ca bảo hành
 
 		// Thời hạn bảo hành (nếu cần đối soát nhanh)
@@ -74,13 +67,10 @@ namespace ToyShelf.Domain.Entities
 
 		// Navigation
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
-		public virtual ProductColor? ProductColor { get; set; }
-		public virtual Shelf? Shelf { get; set; }
 		public virtual Shipment? Shipment { get; set; }
 		public virtual ShipmentAssignment? ShipmentAssignment { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
-		public virtual ICollection<DamageMedia> DamageMedia { get; set; } = new List<DamageMedia>();
+		public virtual ICollection<DamageReportItem> Items { get; set; } = new List<DamageReportItem>();
 	}
-
 }

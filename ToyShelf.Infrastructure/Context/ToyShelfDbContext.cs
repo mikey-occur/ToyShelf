@@ -69,6 +69,7 @@ namespace ToyShelf.Infrastructure.Context
 
 		public DbSet<DamageReport> DamageReports { get; set; }
 		public DbSet<DamageMedia> DamageMedia { get; set; }
+		public DbSet<DamageReportItem> DamageReportItems { get; set; }
 
 		public DbSet<Notification> Notifications { get; set; }
 
@@ -766,10 +767,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(t => t.ProductColor)
 					  .HasForeignKey(t => t.ProductColorId);
 
-				entity.HasMany(e => e.DamageReports)
-					  .WithOne(d => d.ProductColor)
-					  .HasForeignKey(d => d.ProductColorId);
-
 				entity.HasMany(e => e.StoreOrderItems)
 					  .WithOne(a => a.ProductColor)
 				      .HasForeignKey(a => a.ProductColorId);
@@ -1428,8 +1425,6 @@ namespace ToyShelf.Infrastructure.Context
 						.HasConversion<string>()
 						.HasMaxLength(20);
 
-				entity.Property(e => e.Quantity).IsRequired();
-
 				entity.Property(e => e.Description);
 				entity.Property(e => e.AdminNote);
 
@@ -1451,20 +1446,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.InventoryLocationId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_InventoryLocation");
-
-				// Liên kết với Sản phẩm (Nullable)
-				entity.HasOne(e => e.ProductColor)
-					  .WithMany(p => p.DamageReports)
-					  .HasForeignKey(e => e.ProductColorId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_DamageReport_ProductColor");
-
-				// Liên kết với Kệ (Nullable)
-				entity.HasOne(e => e.Shelf)
-					  .WithMany(d => d.DamageReports) 
-					  .HasForeignKey(e => e.ShelfId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_DamageReport_Shelf");
 
 				// Nhân sự
 				entity.HasOne(e => e.ReportedByUser)
@@ -1490,10 +1471,44 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_DamageReport_ShipmentAssignment");
 
 				// Media đính kèm
-				entity.HasMany(e => e.DamageMedia)
+				entity.HasMany(e => e.Items)
 					  .WithOne(m => m.DamageReport)
 					  .HasForeignKey(m => m.DamageReportId)
 					  .OnDelete(DeleteBehavior.Cascade);
+			});
+
+			modelBuilder.Entity<DamageReportItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+				entity.Property(e => e.Id).ValueGeneratedOnAdd();
+
+				entity.Property(e => e.DamageItemType)
+					  .HasConversion<string>()
+					  .HasMaxLength(20);
+
+				entity.Property(e => e.Quantity);
+
+				// ===== Relationships =====
+
+				entity.HasOne(e => e.DamageReport)
+					  .WithMany(r => r.Items)
+					  .HasForeignKey(e => e.DamageReportId)
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_DamageReportItem_DamageReport");
+
+				// Nối với Product
+				entity.HasOne(e => e.ProductColor)
+					  .WithMany(p => p.DamageReportItems) 
+					  .HasForeignKey(e => e.ProductColorId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_DamageReportItem_ProductColor");
+
+				// Nối với Shelf
+				entity.HasOne(e => e.Shelf)
+					  .WithMany(s => s.DamageReportItems) 
+					  .HasForeignKey(e => e.ShelfId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_DamageReportItem_Shelf");
 			});
 
 			// ==================== DamageMedia ==================
@@ -1518,11 +1533,11 @@ namespace ToyShelf.Infrastructure.Context
 
 				// ===== Relationships =====
 
-				entity.HasOne(e => e.DamageReport)
+				entity.HasOne(e => e.DamageReportItem)
 					  .WithMany(r => r.DamageMedia)
-					  .HasForeignKey(e => e.DamageReportId)
+					  .HasForeignKey(e => e.DamageReportItemId)
 					  .OnDelete(DeleteBehavior.Cascade)
-					  .HasConstraintName("FK_DamageMedia_DamageReport");
+					  .HasConstraintName("FK_DamageMedia_DamageReportItem");
 			});
 
 			// ================== Warehouse ==================

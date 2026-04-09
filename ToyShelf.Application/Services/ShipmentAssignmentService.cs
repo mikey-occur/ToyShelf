@@ -89,6 +89,7 @@ namespace ToyShelf.Application.Services
 					Id = Guid.NewGuid(),
 					WarehouseLocationId = request.WarehouseLocationId,
 					Status = AssignmentStatus.Pending,
+					Type = AssignmentType.Delivery,
 					CreatedAt = _dateTime.UtcNow,
 					CreatedByUserId = currentUser.UserId
 				};
@@ -330,10 +331,9 @@ namespace ToyShelf.Application.Services
 
 		private static ShipmentAssignmentResponse MapToResponse(ShipmentAssignment assignment)
 		{
-			// Chuyển từ bảng trung gian sang danh sách Entity để dễ xử lý mapping
-			var storeOrders = assignment.AssignmentStoreOrders.Select(x => x.StoreOrder).Where(x => x != null).ToList();
-			var shelfOrders = assignment.AssignmentShelfOrders.Select(x => x.ShelfOrder).Where(x => x != null).ToList();
-			var damageReports = assignment.DamageReports ?? new List<DamageReport>();
+			var storeOrders = assignment.AssignmentStoreOrders?.Select(x => x.StoreOrder).Where(x => x != null).ToList() ?? new();
+			var shelfOrders = assignment.AssignmentShelfOrders?.Select(x => x.ShelfOrder).Where(x => x != null).ToList() ?? new();
+			var damageReports = assignment.DamageReports?.ToList() ?? new();
 
 			var shipment = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
 
@@ -352,6 +352,11 @@ namespace ToyShelf.Application.Services
 			{
 				Id = assignment.Id,
 				OrderType = types.Any() ? string.Join("-", types) : "EMPTY",
+
+				StoreOrderCodes = storeOrders.Select(o => o.Code).ToList(),
+				ShelfOrderCodes = shelfOrders.Select(o => o.Code).ToList(),
+				DamageReportCodes = damageReports.Select(dr => dr.Code).ToList(),
+
 				WarehouseLocationId = assignment.WarehouseLocationId,
 				WarehouseLocationName = assignment.WarehouseLocation?.Name ?? "",
 
@@ -403,19 +408,26 @@ namespace ToyShelf.Application.Services
 				}).ToList();
 
 			// GOM THU HỒI
-			response.DamageReturnItems = damageReports.Select(dr => new ShipmentAssignmentDamageItemResponse
-			{
-				DamageReportId = dr.Id,
-				DamageCode = dr.Code,
-				DamageType = dr.Type.ToString(),
-				Source = dr.Source.ToString(),
-				Description = dr.Description,
-				TargetName = dr.Type == DamageType.Product
-					? $"{dr.ProductColor?.Product?.Name} ({dr.ProductColor?.Color?.Name})"
-					: $"Kệ: {dr.Shelf?.Code}",
-				Quantity = dr.Quantity,
-				ImageUrl = dr.ProductColor?.ImageUrl ?? dr.DamageMedia.FirstOrDefault()?.MediaUrl
-			}).ToList();
+			response.DamageReturnItems = damageReports
+				.SelectMany(dr => dr.Items.Select(item => new ShipmentAssignmentDamageItemResponse
+				{
+					DamageReportId = dr.Id,
+					DamageCode = dr.Code,
+					DamageType = item.DamageItemType.ToString(), // Product hoặc Shelf
+					Source = dr.Source.ToString(),
+					Description = dr.Description,
+
+					// Logic hiển thị tên mục tiêu hỏng
+					TargetName = item.DamageItemType == DamageItemType.Product
+						? $"{item.ProductColor?.Product?.Name} ({item.ProductColor?.Color?.Name})"
+						: $"Kệ: {item.Shelf?.Code}",
+
+					Quantity = item.Quantity ?? 1,
+
+					// Ưu tiên lấy ảnh bằng chứng hỏng hóc, nếu không có thì lấy ảnh Product mẫu
+					ImageUrl = item.DamageMedia.FirstOrDefault()?.MediaUrl
+							   ?? item.ProductColor?.ImageUrl
+				})).ToList();
 
 			return response;
 		}

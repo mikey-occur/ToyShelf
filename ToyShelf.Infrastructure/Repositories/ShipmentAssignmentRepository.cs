@@ -93,15 +93,19 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.DamageReports)
 					.ThenInclude(dr => dr.InventoryLocation)
 				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.ProductColor)
-						.ThenInclude(pc => pc!.Product)
+					.ThenInclude(dr => dr.Items) 
+						.ThenInclude(i => i.ProductColor)
+							.ThenInclude(pc => pc!.Product)
 				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.ProductColor)
-						.ThenInclude(pc => pc!.Color)
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.ProductColor)
+							.ThenInclude(pc => pc!.Color)
 				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Shelf)
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.Shelf)
 				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.DamageMedia);
+					.ThenInclude(dr => dr.Items)
+						.ThenInclude(i => i.DamageMedia);
 		}
 	}
 }
