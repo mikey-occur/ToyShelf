@@ -39,6 +39,7 @@ namespace ToyShelf.Domain.Entities
 		public DateTime? PickedUpAt { get; set; }
 		public DateTime? DeliveredAt { get; set; }
 		public DateTime? ReceivedAt { get; set; }
+		public DateTime? ArrivedWarehouseAt { get; set; }
 
 
 		// Gom đơn

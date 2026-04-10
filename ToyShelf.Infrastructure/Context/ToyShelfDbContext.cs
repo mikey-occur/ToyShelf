@@ -1816,6 +1816,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ReceivedAt);
 
+				entity.Property(e => e.ArrivedWarehouseAt);
+
 				// ===== Relationships =====
 
 				entity.HasOne(e => e.FromLocation)

@@ -487,6 +487,23 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
+		//public async Task ArrivedWarehouseAsync(Guid shipmentId, ICurrentUser currentUser)
+		//{
+		//	var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
+
+		//	if (shipment == null) throw new AppException("Shipment not found", 404);
+
+		//	// Chỉ ghi nhận khi xe đang trên đường về (IsReturn đã bật)
+		//	if (!shipment.IsReturn)
+		//		throw new AppException("Shipment is not in return process", 400);
+
+		//	shipment.ArrivedWarehouseAt = _dateTime.UtcNow;
+		//	// Bồ cần thêm field ArrivedWarehouseAt vào DB tương tự DeliveredAt
+
+		//	_shipmentRepository.Update(shipment);
+		//	await _unitOfWork.SaveChangesAsync();
+		//}
+
 		public async Task ReceiveAsync(Guid shipmentId, ReceiveShipmentRequest request)
 		{
 			// 1. Lấy thông tin Shipment kèm đầy đủ Details (Items, ShelfItems, DamageReports)
