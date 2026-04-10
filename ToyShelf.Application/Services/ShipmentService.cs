@@ -348,7 +348,11 @@ namespace ToyShelf.Application.Services
 				_shipmentRepository.Update(shipment);
 				await _unitOfWork.SaveChangesAsync();
 			}
-			catch (Exception ex) { throw; }
+			catch (Exception)
+			{
+				// Giữ nguyên Stack Trace gốc để biết chính xác lỗi ở dòng nào
+				throw;
+			}
 		}
 		public async Task PickupReturnAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
@@ -418,6 +422,8 @@ namespace ToyShelf.Application.Services
 						else if (reportItem.DamageItemType == DamageItemType.Shelf && reportItem.ShelfId.HasValue)
 						{
 							var shelf = await _shelfRepository.GetByIdAsync(reportItem.ShelfId.Value);
+							if (shelf == null)
+								throw new AppException($"Shelf with ID {reportItem.ShelfId} not found", 404);
 							var oldStatus = shelf.Status; // Thường là Maintenance hoặc Damaged
 							shelf.Status = ShelfStatus.InTransit;
 
@@ -444,7 +450,11 @@ namespace ToyShelf.Application.Services
 				_shipmentRepository.Update(shipment);
 				await _unitOfWork.SaveChangesAsync();
 			}
-			catch (Exception ex) { throw; }
+			catch (Exception)
+			{
+				// Giữ nguyên Stack Trace gốc để biết chính xác lỗi ở dòng nào
+				throw;
+			}
 		}
 		public async Task DeliveryAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
