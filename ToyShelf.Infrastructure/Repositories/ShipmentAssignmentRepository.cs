@@ -42,7 +42,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.ShipmentAssignments
 				.Include(x => x.AssignmentStoreOrders).ThenInclude(aso => aso.StoreOrder)
 				.Include(x => x.AssignmentShelfOrders).ThenInclude(ash => ash.ShelfOrder)
-				.Include(x => x.DamageReports)
+				.Include(x => x.AssignmentDamageReports).ThenInclude(adr => adr.DamageReport)
 				.Where(x => x.WarehouseLocationId == warehouseLocationId
 							&& x.Status == AssignmentStatus.Pending
 							&& x.ShipperId == null)
@@ -50,7 +50,7 @@ namespace ToyShelf.Infrastructure.Repositories
 					// Check xem trong danh sách đơn hàng có đơn nào thuộc Store này không
 					x.AssignmentStoreOrders.Any(aso => aso.StoreOrder.StoreLocationId == storeLocationId) ||
 					x.AssignmentShelfOrders.Any(ash => ash.ShelfOrder.StoreLocationId == storeLocationId) ||
-					x.DamageReports.Any(dr => dr.InventoryLocationId == storeLocationId)
+					x.AssignmentDamageReports.Any(adr => adr.DamageReport.InventoryLocationId == storeLocationId)
 				)
 				.FirstOrDefaultAsync();
 		}
@@ -90,22 +90,27 @@ namespace ToyShelf.Infrastructure.Repositories
 							.ThenInclude(i => i.ShelfType)
 
 				// --- Nhánh Damage Reports (1-N) ---
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.InventoryLocation)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items) 
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc!.Product)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc!.Color)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.Shelf)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.DamageMedia);
+				.Include(x => x.AssignmentDamageReports)
+					.ThenInclude(adr => adr.DamageReport)
+						.ThenInclude(dr => dr.InventoryLocation)
+				.Include(x => x.AssignmentDamageReports)
+					.ThenInclude(adr => adr.DamageReport)
+						.ThenInclude(dr => dr.Items)
+							.ThenInclude(i => i.ProductColor)
+								.ThenInclude(pc => pc!.Product)
+				.Include(x => x.AssignmentDamageReports)
+					.ThenInclude(adr => adr.DamageReport)
+						.ThenInclude(dr => dr.Items)
+							.ThenInclude(i => i.ProductColor)
+								.ThenInclude(pc => pc!.Color)
+				.Include(x => x.AssignmentDamageReports)
+					.ThenInclude(adr => adr.DamageReport)
+						.ThenInclude(dr => dr.Items)
+							.ThenInclude(i => i.Shelf)
+				.Include(x => x.AssignmentDamageReports)
+					.ThenInclude(adr => adr.DamageReport)
+						.ThenInclude(dr => dr.Items)
+							.ThenInclude(i => i.DamageMedia);
 		}
 	}
 }

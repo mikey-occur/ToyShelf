@@ -43,7 +43,7 @@ namespace ToyShelf.Domain.Entities
 
 		// Vận chuyển
 		public Guid? ShipmentId { get; set; }
-		public Guid? ShipmentAssignmentId { get; set; }
+
 
 		// 2. THÔNG TIN CHI TIẾT
 		public string? Description { get; set; }
@@ -68,9 +68,9 @@ namespace ToyShelf.Domain.Entities
 		// Navigation
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
 		public virtual Shipment? Shipment { get; set; }
-		public virtual ShipmentAssignment? ShipmentAssignment { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
 		public virtual ICollection<DamageReportItem> Items { get; set; } = new List<DamageReportItem>();
+		public virtual ICollection<AssignmentDamageReport> AssignmentDamageReports { get; set; } = new List<AssignmentDamageReport>();
 	}
 }

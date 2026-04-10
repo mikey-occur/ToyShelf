@@ -12,20 +12,22 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public Guid Id { get; set; }
 		public string Code { get; set; } = null!;
 
+		// Thay vì 1 ID lẻ, ta trả về danh sách để FE biết chuyến này gom những đơn nào
+		public List<Guid> StoreOrderIds { get; set; } = new();
+		public List<Guid> ShelfOrderIds { get; set; } = new();
+		public List<Guid> DamageReportIds { get; set; } = new();
 
-		public Guid? StoreOrderId { get; set; }
-		public Guid? ShelfOrderId { get; set; }
-
-		public string OrderType { get; set; } = null!;
-
-		public Guid ToLocationId { get; set; }
-		public string ToLocationName { get; set; } = null!;
+		// Flag quan trọng để Shipper biết là đi giao hay đi thu hồi
+		public bool IsReturn { get; set; }
+		public string OrderType { get; set; } = null!; // "STORE", "SHELF", "RETURN", hoặc "MIXED"
 
 		public Guid FromLocationId { get; set; }
 		public string FromLocationName { get; set; } = null!;
 
-		public string? ShipperName { get; set; }
+		public Guid ToLocationId { get; set; }
+		public string ToLocationName { get; set; } = null!;
 
+		public string? ShipperName { get; set; }
 		public ShipmentStatus Status { get; set; }
 
 		public DateTime CreatedAt { get; set; }
@@ -33,7 +35,13 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public DateTime? DeliveredAt { get; set; }
 		public DateTime? ReceivedAt { get; set; }
 
+		// Danh sách sản phẩm tổng hợp (đã gộp từ tất cả StoreOrders hoặc DamageReports)
 		public List<ShipmentProductItemResponse>? ProductItems { get; set; }
+
+		// Danh sách kệ tổng hợp (đã GroupBy theo ShelfType)
 		public List<ShipmentShelfItemResponse>? ShelfItems { get; set; }
+
+		// Thêm thông tin Media (Bằng chứng lúc Pickup/Delivery) nếu FE cần hiển thị
+		public List<string>? MediaUrls { get; set; }
 	}
 }

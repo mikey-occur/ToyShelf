@@ -46,7 +46,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual User? AssignedByUser { get; set; } 
 		public virtual InventoryLocation WarehouseLocation { get; set; } = null!;
 		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
-		public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
+		public virtual ICollection<AssignmentDamageReport> AssignmentDamageReports { get; set; } = new List<AssignmentDamageReport>();
 		public virtual ICollection<AssignmentStoreOrder> AssignmentStoreOrders { get; set; } = new List<AssignmentStoreOrder>();
 		public virtual ICollection<AssignmentShelfOrder> AssignmentShelfOrders { get; set; } = new List<AssignmentShelfOrder>();
 	}

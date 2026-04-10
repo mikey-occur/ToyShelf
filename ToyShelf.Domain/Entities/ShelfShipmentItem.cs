@@ -19,10 +19,12 @@ namespace ToyShelf.Domain.Entities
 
 		public Guid ShipmentId { get; set; }
 		public Guid ShelfId { get; set; }
+		public Guid? ShelfOrderItemId { get; set; }
 
 		public ShelfShipmentStatus Status { get; set; }
 
 		public virtual Shipment Shipment { get; set; } = null!;
 		public virtual Shelf Shelf { get; set; } = null!;
+		public virtual ShelfOrderItem? ShelfOrderItem { get; set; }
 	}
 }

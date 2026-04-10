@@ -47,7 +47,7 @@ namespace ToyShelf.Application.Services
 		private void UpdateAssignmentType(ShipmentAssignment assignment)
 		{
 			bool hasDelivery = assignment.AssignmentStoreOrders.Any() || assignment.AssignmentShelfOrders.Any();
-			bool hasReturn = assignment.DamageReports.Any();
+			bool hasReturn = assignment.AssignmentDamageReports.Any();
 
 			if (hasDelivery && hasReturn) assignment.Type = AssignmentType.Combined;
 			else if (hasReturn) assignment.Type = AssignmentType.Return;
@@ -123,14 +123,10 @@ namespace ToyShelf.Application.Services
 		// Gôm đơn 1 - N
 		public async Task CreateFromDamageReportAsync(Guid damageReportId, Guid warehouseLocationId, ICurrentUser currentUser)
 		{
-			// 1. Kiểm tra báo cáo hư hại
 			var report = await _damageReportRepository.GetByIdAsync(damageReportId);
-			if (report == null)
-				throw new AppException("Damage report not found", 404);
+			if (report == null) throw new AppException("Damage report not found", 404);
 
-			// 2. Tìm hoặc Khởi tạo Assignment (Xe)
 			var assignment = await _assignmentRepository.GetPendingByLocationAsync(warehouseLocationId, report.InventoryLocationId);
-			bool isNewAssignment = false;
 
 			if (assignment == null)
 			{
@@ -139,35 +135,22 @@ namespace ToyShelf.Application.Services
 					Id = Guid.NewGuid(),
 					WarehouseLocationId = warehouseLocationId,
 					Status = AssignmentStatus.Pending,
-					Type = AssignmentType.Return, // Mặc định ban đầu là Return
 					CreatedAt = _dateTime.UtcNow,
 					CreatedByUserId = currentUser.UserId
 				};
-				isNewAssignment = true;
-			}
-
-			// 3. Thiết lập mối quan hệ (Link Report vào Xe)
-			report.ShipmentAssignmentId = assignment.Id;
-
-			// Cập nhật quan hệ trong bộ nhớ (In-memory) để logic UpdateAssignmentType chạy chính xác
-			if (assignment.DamageReports == null) assignment.DamageReports = new List<DamageReport>();
-			assignment.DamageReports.Add(report);
-
-			// 4. Cập nhật trạng thái và Lưu dữ liệu
-			UpdateAssignmentType(assignment);
-
-			if (isNewAssignment)
-			{
 				await _assignmentRepository.AddAsync(assignment);
 			}
-			else
+
+			// FIX: Dùng bảng trung gian N-N thay vì gán trực tiếp ID vào Report
+			if (!assignment.AssignmentDamageReports.Any(x => x.DamageReportId == damageReportId))
 			{
-				_assignmentRepository.Update(assignment);
+				assignment.AssignmentDamageReports.Add(new AssignmentDamageReport
+				{
+					DamageReportId = damageReportId
+				});
 			}
 
-			_damageReportRepository.Update(report);
-
-			// Lưu toàn bộ thay đổi trong 1 Transaction thông qua Unit of Work
+			UpdateAssignmentType(assignment);
 			await _unitOfWork.SaveChangesAsync();
 		}
 
@@ -333,7 +316,7 @@ namespace ToyShelf.Application.Services
 		{
 			var storeOrders = assignment.AssignmentStoreOrders?.Select(x => x.StoreOrder).Where(x => x != null).ToList() ?? new();
 			var shelfOrders = assignment.AssignmentShelfOrders?.Select(x => x.ShelfOrder).Where(x => x != null).ToList() ?? new();
-			var damageReports = assignment.DamageReports?.ToList() ?? new();
+			var damageReports = assignment.AssignmentDamageReports?.Select(x => x.DamageReport).Where(x => x != null).ToList() ?? new();
 
 			var shipment = assignment.Shipments?.OrderByDescending(s => s.CreatedAt).FirstOrDefault();
 

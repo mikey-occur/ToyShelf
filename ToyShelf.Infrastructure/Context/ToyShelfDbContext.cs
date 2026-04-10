@@ -56,6 +56,7 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<ShipmentAssignment> ShipmentAssignments { get; set; }
 		public DbSet<AssignmentShelfOrder> AssignmentShelfOrders { get; set; }
 		public DbSet<AssignmentStoreOrder> AssignmentStoreOrders { get; set; }
+		public DbSet<AssignmentDamageReport> AssignmentDamageReports { get; set; }
 
 		public DbSet<Order> Orders { get; set; }
 		public DbSet<OrderItem> OrderItems { get; set; }	
@@ -466,9 +467,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(a => a.StoreOrderId);
 
 
-				entity.HasMany(e => e.Shipments)
-					  .WithOne(a => a.StoreOrder)
-					  .HasForeignKey(a => a.StoreOrderId);
+				entity.HasOne(e => e.Shipment)
+					  .WithMany(a => a.StoreOrders)
+					  .HasForeignKey(e => e.ShipmentId)
+					  .HasConstraintName("FK_StoreOrder_Shipment");
 
 				entity.HasOne(e => e.ApprovedByUser)
 					  .WithMany(a => a.ApprovedStoreOrders)
@@ -1179,10 +1181,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(a => a.ShelfOrderId)
 					  .OnDelete(DeleteBehavior.Cascade);
 
-				entity.HasMany(e => e.Shipments)
-					  .WithOne(a => a.ShelfOrder) 
-					  .HasForeignKey(a => a.ShelfOrderId)
-					  .OnDelete(DeleteBehavior.Cascade);
+
+				entity.HasOne(e => e.Shipment)
+					  .WithMany(a => a.ShelfOrders)
+					  .HasForeignKey(e => e.ShipmentId)
+					  .HasConstraintName("FK_ShelfOrder_Shipment");
 			});
 
 			// ================== ShelfOrderItem ==================
@@ -1248,6 +1251,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShelfId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShelfShipmentItem_Shelf");
+
+				entity.HasOne(e => e.ShelfOrderItem)
+					  .WithMany(s => s.ShelfShipmentItems)
+					  .HasForeignKey(e => e.ShelfOrderItemId)
+					  .HasConstraintName("FK_ShelfShipmentItem_ShelfOrderItem");
 			});
 
 			// ================== ShelfTransaction ==================
@@ -1465,11 +1473,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShipmentId)
 					  .HasConstraintName("FK_DamageReport_Shipment");
 
-				entity.HasOne(e => e.ShipmentAssignment)
-					  .WithMany(s => s.DamageReports)
-					  .HasForeignKey(e => e.ShipmentAssignmentId)
-					  .HasConstraintName("FK_DamageReport_ShipmentAssignment");
-
 				// Media đính kèm
 				entity.HasMany(e => e.Items)
 					  .WithOne(m => m.DamageReport)
@@ -1477,6 +1480,7 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Cascade);
 			});
 
+			// ================== DamageReportItem ==================
 			modelBuilder.Entity<DamageReportItem>(entity =>
 			{
 				entity.HasKey(e => e.Id);
@@ -1509,6 +1513,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShelfId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReportItem_Shelf");
+
+				entity.HasMany(e => e.DamageMedia)
+					  .WithOne(i => i.DamageReportItem)
+					  .HasForeignKey(i => i.DamageReportItemId);
 			});
 
 			// ==================== DamageMedia ==================
@@ -1789,6 +1797,10 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(50);
 
+				entity.Property(e => e.IsReturn)
+					  .IsRequired()
+					  .HasDefaultValue(false);
+
 				entity.Property(e => e.Status)
 					  .IsRequired()
 					  .HasConversion<string>()
@@ -1824,21 +1836,17 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Shipment_RequestedByUser");
 
-				entity.HasOne(s => s.StoreOrder)
-					  .WithMany(o => o.Shipments)
-					  .HasForeignKey(s => s.StoreOrderId)
-					  .HasConstraintName("FK_Shipment_StoreOrder");
-
-				entity.HasOne(s => s.ShelfOrder)
-					  .WithMany(o => o.Shipments)
-					  .HasForeignKey(s => s.ShelfOrderId)
-					  .HasConstraintName("FK_Shipment_ShelfOrder");
-
 				entity.HasOne(e => e.Shipper)
 					  .WithMany(u => u.Shipments)
 					  .HasForeignKey(e => e.ShipperId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_Shipment_Shipper");
+
+				entity.HasOne(s => s.ShipmentAssignment)
+					  .WithMany(sa => sa.Shipments)
+					  .HasForeignKey(s => s.ShipmentAssignmentId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_Shipment_Assignment");
 
 				// Shipment
 
@@ -1850,13 +1858,21 @@ namespace ToyShelf.Infrastructure.Context
 			          .WithOne(i => i.Shipment)
 			          .HasForeignKey(i => i.ShipmentId);
 
-				entity.HasOne(s => s.ShipmentAssignment)
-					  .WithMany(sa => sa.Shipments)
-					  .HasForeignKey(s => s.ShipmentAssignmentId)
-					  .OnDelete(DeleteBehavior.Restrict)
-					  .HasConstraintName("FK_Shipment_Assignment");
+				entity.HasMany(e => e.StoreOrders)
+					  .WithOne(i => i.Shipment)
+					  .HasForeignKey(i => i.ShipmentId);
 
+				entity.HasMany(e => e.ShelfOrders)
+					  .WithOne(i => i.Shipment)
+					  .HasForeignKey(i => i.ShipmentId);
 
+				entity.HasMany(e => e.DamageReports)
+					  .WithOne(i => i.Shipment)
+					  .HasForeignKey(i => i.ShipmentId);
+
+				entity.HasMany(e => e.ShelfShipmentItems)
+					  .WithOne(i => i.Shipment)
+					  .HasForeignKey(i => i.ShipmentId);
 				// ===== Index =====
 
 				entity.HasIndex(e => e.Code)
@@ -1893,6 +1909,23 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShipmentItem_ProductColor");
 
+				entity.HasOne(e => e.Shelf)
+					  .WithMany(s => s.ShipmentItems) 
+				  	  .HasForeignKey(e => e.ShelfId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShipmentItem_Shelf");
+
+				entity.HasOne(e => e.StoreOrderItem)
+					  .WithMany(s => s.ShipmentItems) 
+					  .HasForeignKey(e => e.StoreOrderItemId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShipmentItem_StoreOrderItem");
+
+				entity.HasOne(e => e.DamageReportItem)
+					  .WithMany(d => d.ShipmentItems) 
+					  .HasForeignKey(e => e.DamageReportItemId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShipmentItem_DamageReportItem");
 				// ===== Index =====
 
 				entity.HasIndex(e => new { e.ShipmentId, e.ProductColorId })
@@ -1987,6 +2020,23 @@ namespace ToyShelf.Infrastructure.Context
 				  .WithMany(s => s.ShipmentAssignments)
 				  .HasForeignKey(e => e.WarehouseLocationId)
 				  .HasConstraintName("FK_ShipmentAssignment_InventoryLocation");
+
+				// N
+				entity.HasMany(e => e.Shipments)
+				  .WithOne(i => i.ShipmentAssignment)
+				  .HasForeignKey(i => i.ShipmentAssignmentId);
+
+				entity.HasMany(e => e.AssignmentDamageReports)
+				  .WithOne(i => i.ShipmentAssignment)
+				  .HasForeignKey(i => i.ShipmentAssignmentId);
+
+				entity.HasMany(e => e.AssignmentStoreOrders)
+				  .WithOne(i => i.ShipmentAssignment)
+				  .HasForeignKey(i => i.ShipmentAssignmentId);
+
+				entity.HasMany(e => e.AssignmentShelfOrders)
+				  .WithOne(i => i.ShipmentAssignment)
+				  .HasForeignKey(i => i.ShipmentAssignmentId);
 			});
 
 			// ================== AssignmentStoreOrder ==================
@@ -2032,6 +2082,29 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasOne(e => e.ShelfOrder)
 					.WithMany(s => s.AssignmentShelfOrders)
 					.HasForeignKey(e => e.ShelfOrderId)
+					.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// ================== AssignmentDamageReport ==================
+			modelBuilder.Entity<AssignmentDamageReport>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.HasIndex(e => new { e.ShipmentAssignmentId, e.DamageReportId }).IsUnique();
+
+				// Cấu hình mối quan hệ với ShipmentAssignment
+				entity.HasOne(e => e.ShipmentAssignment)
+					.WithMany(s => s.AssignmentDamageReports)
+					.HasForeignKey(e => e.ShipmentAssignmentId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Cấu hình mối quan hệ với ShelfOrder
+				entity.HasOne(e => e.DamageReport)
+					.WithMany(s => s.AssignmentDamageReports)
+					.HasForeignKey(e => e.DamageReportId)
 					.OnDelete(DeleteBehavior.Cascade);
 			});
 

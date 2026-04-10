@@ -71,7 +71,8 @@ namespace ToyShelf.Application.Services
 
 			// 4. Total Orders (distinct từ shipment)
 			var totalOrders = await shipmentQuery
-				.Select(x => x.StoreOrderId)
+				.SelectMany(x => x.StoreOrders)
+				.Select(x => x.Id)
 				.Distinct()
 				.CountAsync();
 
@@ -103,7 +104,7 @@ namespace ToyShelf.Application.Services
 			// ===== STORE ORDER CHART =====
 
 			var orderChart = await _storeOrderRepository.GetQueryable()
-				.Where(x => x.Shipments.Any(s => s.FromLocation.WarehouseId == warehouseId))
+				.Where(x => x.Shipment != null && x.Shipment.FromLocation.WarehouseId == warehouseId)
 				.GroupBy(x => x.Status)
 				.Select(g => new ChartItem
 				{

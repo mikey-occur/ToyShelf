@@ -12,7 +12,8 @@ namespace ToyShelf.Domain.Entities
 		Sale,
 		Damage,
 		Refill,
-		Audit
+		Audit,
+		DamageReport
 	}
 	public class InventoryTransaction
 	{
