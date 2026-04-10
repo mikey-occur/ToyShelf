@@ -11,7 +11,8 @@ namespace ToyShelf.Domain.Entities
 		Shipment,
 		Recall,
 		Maintenance,
-		Audit
+		Audit,
+		DamageReport
 	}
 
 	public class ShelfTransaction
