@@ -92,191 +92,184 @@ namespace ToyShelf.Application.Services
 
 			return shipments.Select(MapToResponse);
 		}
-
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
-			// 1. Validation đầu vào căn bản
+			// 1. Validation & Load Data
 			if (request.Items == null || !request.Items.Any())
 				throw new AppException("Shipment items are required", 400);
 
-			// 2. Lấy Assignment kèm chi tiết các quan hệ (N-N)
 			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
-
-			if (assignment == null)
-				throw new AppException("Assignment not found", 404);
-
-			// 3. Kiểm tra trạng thái Shipper
-			if (assignment.Status == AssignmentStatus.Rejected)
-				throw new AppException("Shipper has rejected this assignment", 400);
+			if (assignment == null) throw new AppException("Assignment not found", 404);
 
 			if (assignment.Status != AssignmentStatus.Accepted)
-				throw new AppException("Shipper must accept assignment first", 400);
+				throw new AppException("Shipper must accept assignment before creating shipment", 400);
+
+			if (assignment.Status == AssignmentStatus.Rejected)
+				throw new AppException("Shipper has rejected this assignment", 400);
 
 			if (assignment.ShipperId == null)
 				throw new AppException("Shipper not assigned to this assignment", 400);
 
-			// 4. Xác định điểm đến (ToLocationId) cho Shipment này
-			// Một Assignment có thể đi qua nhiều điểm, nhưng 1 Shipment chỉ có 1 đích đến
-			var toLocationId = assignment.AssignmentStoreOrders
-								.Select(x => (Guid?)x.StoreOrder.StoreLocationId)
-								.FirstOrDefault()
-							?? assignment.AssignmentShelfOrders
-								.Select(x => (Guid?)x.ShelfOrder.StoreLocationId)
-								.FirstOrDefault()
-							?? assignment.AssignmentDamageReports
-								.Select(x => (Guid?)x.DamageReport.InventoryLocationId)
-								.FirstOrDefault();
 
-			if (toLocationId == null)
-				throw new AppException("Could not determine destination location for this shipment", 400);
+			// Xác định đích đến (ToLocation) dựa trên đơn hàng đầu tiên tìm thấy trong assignment
+			var toLocationId = assignment.AssignmentStoreOrders.Select(x => (Guid?)x.StoreOrder.StoreLocationId).FirstOrDefault()
+							?? assignment.AssignmentShelfOrders.Select(x => (Guid?)x.ShelfOrder.StoreLocationId).FirstOrDefault()
+							?? assignment.AssignmentDamageReports.Select(x => (Guid?)x.DamageReport.InventoryLocationId).FirstOrDefault();
 
+			if (toLocationId == null) throw new AppException("Destination location could not be determined", 400);
+
+			var code = await GenerateCode();
+			// 2. Khởi tạo Shipment Header
 			var shipment = new Shipment
 			{
 				Id = Guid.NewGuid(),
-				Code = await GenerateCode(),
+				Code = code,
 				ShipmentAssignmentId = assignment.Id,
 				FromLocationId = assignment.WarehouseLocationId,
 				ToLocationId = toLocationId.Value,
 				RequestedByUserId = currentUser.UserId,
 				ShipperId = assignment.ShipperId,
 				Status = ShipmentStatus.Draft,
-				CreatedAt = _dateTime.UtcNow
+				CreatedAt = _dateTime.UtcNow,
+				IsReturn = false // Mặc định là false, sẽ update nếu có DamageReport thu hồi
 			};
 
-			// 5. Liên kết các Orders/Reports thuộc ToLocation này vào Shipment
-			var relatedStoreOrders = assignment.AssignmentStoreOrders
-				.Where(x => x.StoreOrder.StoreLocationId == toLocationId)
-				.Select(x => x.StoreOrder).ToList();
-
-			var relatedShelfOrders = assignment.AssignmentShelfOrders
-				.Where(x => x.ShelfOrder.StoreLocationId == toLocationId)
-				.Select(x => x.ShelfOrder).ToList();
-
-			relatedStoreOrders.ForEach(o => shipment.StoreOrders.Add(o));
-			relatedShelfOrders.ForEach(o => shipment.ShelfOrders.Add(o));
-
-			try
+			// 3. Duyệt danh sách Item do WM gửi lên
+			foreach (var reqItem in request.Items)
 			{
-				await _shipmentRepository.AddAsync(shipment);
-
-				// 6. XỬ LÝ CHI TIẾT DANH SÁCH ITEMS
-				foreach (var reqItem in request.Items)
+				//  TRƯỜNG HỢP: SẢN PHẨM (STORE ORDER) 
+				if (reqItem.StoreOrderId.HasValue && reqItem.ProductColorId.HasValue)
 				{
-					// --- TRƯỜNG HỢP: GIAO SẢN PHẨM (STORE PRODUCT) ---
-					if (reqItem.ProductColorId != null)
+					var order = assignment.AssignmentStoreOrders
+						.Where(x => x.StoreOrderId == reqItem.StoreOrderId)
+						.Select(x => x.StoreOrder).FirstOrDefault();
+
+					if (order == null) throw new AppException($"Store Order {reqItem.StoreOrderId} not in this assignment", 400);
+
+					var orderItem = order.Items.FirstOrDefault(i => i.ProductColorId == reqItem.ProductColorId);
+					if (orderItem == null) throw new AppException("Product not found in the specified store order", 400);
+
+					// Kiểm tra số lượng WM bốc so với yêu cầu còn lại
+					var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
+					if (reqItem.ExpectedQuantity <= 0 || reqItem.ExpectedQuantity > remaining)
+						throw new AppException($"Invalid qty for {order.Code}. Max allowed: {remaining}", 400);
+
+					// Kiểm tra tồn kho Available tại Warehouse
+					var inventory = await _inventoryRepository.GetAsync(assignment.WarehouseLocationId, reqItem.ProductColorId.Value, InventoryStatus.Available);
+					if (inventory == null || inventory.Quantity < reqItem.ExpectedQuantity)
+						throw new AppException($"Out of stock for {orderItem.ProductColor.Product.Name} in warehouse", 400);
+
+					// Add Item vào Shipment (Link tới StoreOrderItemId chuẩn xác)
+					shipment.Items.Add(new ShipmentItem
 					{
-						var expectedQty = reqItem.ExpectedQuantity ?? throw new AppException("ExpectedQuantity is required for products", 400);
+						Id = Guid.NewGuid(),
+						StoreOrderItemId = orderItem.Id,
+						ProductColorId = reqItem.ProductColorId,
+						ExpectedQuantity = reqItem.ExpectedQuantity,
+						ReceivedQuantity = 0
+					});
 
-						// Tìm trong các đơn hàng đã gom
-						var orderItem = relatedStoreOrders.SelectMany(x => x.Items)
-							.FirstOrDefault(x => x.ProductColorId == reqItem.ProductColorId);
-
-						if (orderItem == null)
-							throw new AppException($"Product {reqItem.ProductColorId} not found in assigned orders for this destination", 400);
-
-						var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
-						if (expectedQty <= 0 || expectedQty > remaining)
-							throw new AppException($"Invalid quantity for product {reqItem.ProductColorId}. Max allowed: {remaining}", 400);
-
-						// Kiểm tra tồn kho Available tại Warehouse
-						var inventory = await _inventoryRepository.GetByLocationAndProductAsync(assignment.WarehouseLocationId, orderItem.ProductColorId);
-						if (inventory == null || inventory.Quantity < expectedQty)
-							throw new AppException($"Not enough stock for product {reqItem.ProductColorId} in warehouse", 400);
-
-						await _shipmentItemRepository.AddAsync(new ShipmentItem
-						{
-							Id = Guid.NewGuid(),
-							ShipmentId = shipment.Id,
-							ProductColorId = orderItem.ProductColorId,
-							ExpectedQuantity = expectedQty,
-							ReceivedQuantity = 0
-						});
-
-						if (orderItem.StoreOrder.Status == StoreOrderStatus.Approved)
-							orderItem.StoreOrder.Status = StoreOrderStatus.Processing;
-					}
-
-					// --- TRƯỜNG HỢP: GIAO KỆ (SHELF) ---
-					else if (reqItem.ShelfTypeId != null || (reqItem.ShelfIds != null && reqItem.ShelfIds.Any()))
-					{
-						var isManual = reqItem.ShelfIds != null && reqItem.ShelfIds.Any();
-						Guid shelfTypeId;
-						List<Shelf> shelvesToReserve;
-
-						if (isManual)
-						{
-							shelvesToReserve = await _shelfRepository.GetByIds(reqItem.ShelfIds!);
-							if (shelvesToReserve.Count != reqItem.ShelfIds!.Count)
-								throw new AppException("Some selected shelves were not found", 404);
-
-							shelfTypeId = shelvesToReserve.First().ShelfTypeId;
-						}
-						else
-						{
-							shelfTypeId = reqItem.ShelfTypeId ?? throw new AppException("ShelfTypeId is required for Auto mode", 400);
-							var qty = reqItem.ExpectedQuantity ?? throw new AppException("ExpectedQuantity is required for Auto mode", 400);
-
-							shelvesToReserve = await _shelfRepository.GetAvailableShelvesByType(assignment.WarehouseLocationId, shelfTypeId, qty);
-							if (shelvesToReserve.Count < qty)
-								throw new AppException($"Not enough available shelves of type {shelfTypeId}", 400);
-						}
-
-						// Tìm item trong đơn hàng kệ đã gom
-						var shelfOrderItem = relatedShelfOrders.SelectMany(x => x.Items)
-							.FirstOrDefault(x => x.ShelfTypeId == shelfTypeId);
-
-						if (shelfOrderItem == null)
-							throw new AppException($"Shelf type {shelfTypeId} is not in assigned orders for this destination", 400);
-
-						foreach (var shelf in shelvesToReserve)
-						{
-							if (shelf.Status != ShelfStatus.Available || shelf.InventoryLocationId != assignment.WarehouseLocationId)
-								throw new AppException($"Shelf {shelf.Code} is not available at this warehouse", 400);
-
-							shelf.Status = ShelfStatus.Reserved; // Giữ chỗ ngay khi tạo Draft
-
-							await _shelfShipmentItemRepository.AddAsync(new ShelfShipmentItem
-							{
-								Id = Guid.NewGuid(),
-								ShipmentId = shipment.Id,
-								ShelfId = shelf.Id,
-								Status = ShelfShipmentStatus.InTransit
-							});
-						}
-
-						if (shelfOrderItem.ShelfOrder.Status == ShelfOrderStatus.Approved)
-							shelfOrderItem.ShelfOrder.Status = ShelfOrderStatus.Processing;
-					}
+					if (!shipment.StoreOrders.Contains(order)) shipment.StoreOrders.Add(order);
+					order.Status = StoreOrderStatus.Processing;
 				}
 
-				// 7. Lưu thay đổi xuống Database
-				await _unitOfWork.SaveChangesAsync();
+				// TRƯỜNG HỢP: KỆ (SHELF ORDER) 
+				else if (reqItem.ShelfOrderId.HasValue && (reqItem.ShelfTypeId.HasValue || reqItem.ShelfIds?.Any() == true))
+				{
+					var sOrder = assignment.AssignmentShelfOrders
+						.Where(x => x.ShelfOrderId == reqItem.ShelfOrderId)
+						.Select(x => x.ShelfOrder).FirstOrDefault();
 
-				// 8. Map và trả về kết quả
-				var result = await _shipmentRepository.GetByIdWithDetailsAsync(shipment.Id);
-				return MapToResponse(result!);
+					if (sOrder == null) throw new AppException("Shelf Order not found", 400);
+
+					var shelfOrderItem = sOrder.Items.FirstOrDefault(i => i.ShelfTypeId == reqItem.ShelfTypeId);
+					if (shelfOrderItem == null) throw new AppException("Shelf type not in this order", 400);
+
+					// Xử lý chọn kệ: Auto (theo Type) hoặc Manual (theo danh sách Id)
+					List<Shelf> shelvesToReserve;
+					if (reqItem.ShelfIds != null && reqItem.ShelfIds.Any())
+					{
+						shelvesToReserve = await _shelfRepository.GetByIds(reqItem.ShelfIds);
+						if (shelvesToReserve.Count != reqItem.ShelfIds.Count) throw new AppException("Some shelves not found", 404);
+					}
+					else
+					{
+						shelvesToReserve = await _shelfRepository.GetAvailableShelvesByType(
+							assignment.WarehouseLocationId, reqItem.ShelfTypeId!.Value, reqItem.ExpectedQuantity);
+					}
+
+					if (shelvesToReserve.Count < reqItem.ExpectedQuantity)
+						throw new AppException($"Not enough available shelves for {sOrder.Code}", 400);
+
+					// Add từng con kệ vào ShelfShipmentItems
+					foreach (var shelf in shelvesToReserve)
+					{
+						shelf.Status = ShelfStatus.Reserved; // Lock kệ ngay lập tức
+						shipment.ShelfShipmentItems.Add(new ShelfShipmentItem
+						{
+							Id = Guid.NewGuid(),
+							ShelfId = shelf.Id,
+							ShelfOrderItemId = shelfOrderItem.Id, // Link nguồn gốc kệ
+							Status = ShelfShipmentStatus.InTransit
+						});
+					}
+
+					if (!shipment.ShelfOrders.Contains(sOrder)) shipment.ShelfOrders.Add(sOrder);
+					sOrder.Status = ShelfOrderStatus.Processing;
+				}
 			}
-			catch (AppException) { throw; }
-			catch (Exception ex)
+
+			// 4. TRƯỜNG HỢP: THU HỒI (DAMAGE REPORT) 
+			// Hệ thống sẽ tự quét các DamageReport của ShipmentAsssignment thông quá AssignmentDamageReports
+			var pendingDamageReports = assignment.AssignmentDamageReports
+				.Select(x => x.DamageReport)
+				.Where(d => d.Status == DamageStatus.Approved) // Chỉ lấy những đơn đã được Admin Duyệt
+				.ToList();
+
+			foreach (var report in pendingDamageReports)
 			{
-				throw new AppException($"Internal Error: {ex.Message}", 500);
-			}
-		}
+				// Chuyển trạng thái sang "Đã gán xe/Đang chờ lấy"
+				report.Status = DamageStatus.Scheduled;
 
+				// Liên kết DamageReport vào Shipment
+				if (!shipment.DamageReports.Contains(report))
+					shipment.DamageReports.Add(report);
+
+				foreach (var dItem in report.Items)
+				{
+					// Tự động map toàn bộ hàng hỏng vào ShipmentItems
+					shipment.Items.Add(new ShipmentItem
+					{
+						Id = Guid.NewGuid(),
+						ShipmentId = shipment.Id,
+						DamageReportItemId = dItem.Id,
+						ProductColorId = dItem.ProductColorId,
+						ShelfId = dItem.ShelfId,
+						// Kệ hỏng mặc định là 1, sản phẩm lấy theo số lượng báo cáo
+						ExpectedQuantity = dItem.DamageItemType == DamageItemType.Shelf ? 1 : (dItem.Quantity ?? 0),
+						ReceivedQuantity = 0
+					});
+				}
+			}
+
+			// 4. Lưu và Trả về
+			await _shipmentRepository.AddAsync(shipment);
+			await _unitOfWork.SaveChangesAsync();
+
+			var result = await _shipmentRepository.GetByIdWithDetailsAsync(shipment.Id);
+			return MapToResponse(result!);
+		}
 		public async Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
-			// 1. Lấy thông tin Shipment kèm đầy đủ chi tiết để tránh N+1
 			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 
-			if (shipment == null)
-				throw new AppException("Shipment not found", 404);
-
+			if (shipment == null) throw new AppException("Shipment not found", 404);
 			if (shipment.Status != ShipmentStatus.Draft)
 				throw new AppException("Shipment is not in Draft status and cannot be picked up", 400);
 
 			try
 			{
-				// 2. Lưu bằng chứng lấy hàng
+				// 1. Lưu bằng chứng lấy hàng tại kho
 				var media = new ShipmentMedia
 				{
 					Id = Guid.NewGuid(),
@@ -289,199 +282,170 @@ namespace ToyShelf.Application.Services
 				};
 				await _shipmentMediaRepository.AddAsync(media);
 
-				// 3. XỬ LÝ LOGIC TỒN KHO
-
-				// --- TRƯỜNG HỢP A: SẢN PHẨM TỪ STORE ORDER ---
-				// Chỉ lọc những Items có StoreOrderItemId (hàng mới đi giao)
+				// 2. XỬ LÝ HÀNG MỚI (STORE ORDER) - Trừ Available tại Warehouse
 				var storeOrderItems = shipment.Items.Where(x => x.StoreOrderItemId != null).ToList();
-				if (storeOrderItems.Any())
+				foreach (var item in storeOrderItems)
 				{
-					foreach (var item in storeOrderItems)
+					var productColorId = item.ProductColorId!.Value;
+
+					var inventoryAvailable = await _inventoryRepository.GetAsync(shipment.FromLocationId, productColorId, InventoryStatus.Available);
+					if (inventoryAvailable == null || inventoryAvailable.Quantity < item.ExpectedQuantity)
+						throw new AppException($"Not enough available stock for product {productColorId} at warehouse", 400);
+
+					inventoryAvailable.Quantity -= item.ExpectedQuantity;
+
+					// Chuyển sang InTransit của Warehouse
+					var inventoryTransit = await _inventoryRepository.GetAsync(shipment.FromLocationId, productColorId, InventoryStatus.InTransit);
+					if (inventoryTransit == null)
 					{
-						// Vì StoreOrder bắt buộc có Product, dùng .Value an toàn
-						var productColorId = item.ProductColorId ?? throw new AppException("ProductColorId is required for store items", 400);
-
-						var inventoryAvailable = await _inventoryRepository
-							.GetAsync(shipment.FromLocationId, productColorId, InventoryStatus.Available);
-
-						if (inventoryAvailable == null || inventoryAvailable.Quantity < item.ExpectedQuantity)
-							throw new AppException($"Not enough available stock for product {productColorId}", 400);
-
-						// Trừ Available - Cộng InTransit
-						inventoryAvailable.Quantity -= item.ExpectedQuantity;
-
-						var inventoryTransit = await _inventoryRepository
-							.GetAsync(shipment.FromLocationId, productColorId, InventoryStatus.InTransit);
-
-						if (inventoryTransit == null)
-						{
-							inventoryTransit = new Inventory
-							{
-								Id = Guid.NewGuid(),
-								InventoryLocationId = shipment.FromLocationId,
-								ProductColorId = productColorId,
-								Status = InventoryStatus.InTransit,
-								Quantity = item.ExpectedQuantity
-							};
-							await _inventoryRepository.AddAsync(inventoryTransit);
-						}
-						else
-						{
-							inventoryTransit.Quantity += item.ExpectedQuantity;
-						}
-
-						await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
-						{
-							Id = Guid.NewGuid(),
-							ProductColorId = productColorId,
-							FromLocationId = shipment.FromLocationId,
-							ToLocationId = shipment.ToLocationId,
-							FromStatus = InventoryStatus.Available,
-							ToStatus = InventoryStatus.InTransit,
-							Quantity = item.ExpectedQuantity,
-							ReferenceType = InventoryReferenceType.Shipment,
-							ReferenceId = shipment.Id,
-							CreatedAt = _dateTime.UtcNow
-						});
+						inventoryTransit = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = shipment.FromLocationId, ProductColorId = productColorId, Status = InventoryStatus.InTransit, Quantity = item.ExpectedQuantity };
+						await _inventoryRepository.AddAsync(inventoryTransit);
 					}
+					else inventoryTransit.Quantity += item.ExpectedQuantity;
+
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = productColorId,
+						FromLocationId = shipment.FromLocationId,
+						ToLocationId = shipment.ToLocationId,
+						FromStatus = InventoryStatus.Available,
+						ToStatus = InventoryStatus.InTransit,
+						Quantity = item.ExpectedQuantity,
+						ReferenceType = InventoryReferenceType.Shipment,
+						ReferenceId = shipment.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
 				}
 
-				// --- TRƯỜNG HỢP B: KỆ (SHELF) ---
-				// Xử lý thông qua bảng trung gian ShelfShipmentItems (Luồng giao kệ mới)
-				if (shipment.ShelfShipmentItems != null && shipment.ShelfShipmentItems.Any())
+				// 3. XỬ LÝ KỆ MỚI (SHELF ORDER) - Reserved -> InTransit
+				foreach (var item in shipment.ShelfShipmentItems)
 				{
-					foreach (var item in shipment.ShelfShipmentItems)
+					var shelf = await _shelfRepository.GetByIdAsync(item.ShelfId);
+					if (shelf == null || shelf.Status != ShelfStatus.Reserved)
+						throw new AppException($"Shelf {shelf?.Code} is not ready (Reserved) for pickup", 400);
+
+					shelf.Status = ShelfStatus.InTransit;
+
+					await _shelfTransactionRepository.AddAsync(new ShelfTransaction
 					{
-						var shelf = await _shelfRepository.GetByIdAsync(item.ShelfId);
-						if (shelf == null) throw new AppException($"Shelf {item.ShelfId} not found", 404);
-
-						if (shelf.Status != ShelfStatus.Reserved)
-							throw new AppException($"Shelf {shelf.Code} must be Reserved first", 400);
-
-						shelf.Status = ShelfStatus.InTransit;
-
-						await _shelfTransactionRepository.AddAsync(new ShelfTransaction
-						{
-							Id = Guid.NewGuid(),
-							ShelfId = shelf.Id,
-							FromLocationId = shipment.FromLocationId,
-							ToLocationId = shipment.ToLocationId,
-							FromStatus = ShelfStatus.Reserved,
-							ToStatus = ShelfStatus.InTransit,
-							ReferenceType = ShelfReferenceType.Shipment,
-							ReferenceId = shipment.Id,
-							CreatedAt = _dateTime.UtcNow
-						});
-					}
+						Id = Guid.NewGuid(),
+						ShelfId = shelf.Id,
+						FromLocationId = shipment.FromLocationId,
+						ToLocationId = shipment.ToLocationId,
+						FromStatus = ShelfStatus.Reserved,
+						ToStatus = ShelfStatus.InTransit,
+						ReferenceType = ShelfReferenceType.Shipment,
+						ReferenceId = shipment.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
 				}
 
-				// --- TRƯỜNG HỢP C: THU HỒI HÀNG/KỆ HƯ HỎNG (DAMAGE REPORT) ---
-				if (shipment.DamageReports != null && shipment.DamageReports.Any())
-				{
-					foreach (var report in shipment.DamageReports)
-					{
-						// Duyệt qua từng Item chi tiết trong tờ khai hỏng
-						foreach (var reportItem in report.Items)
-						{
-							// 1. Nếu Item là SẢN PHẨM
-							if (reportItem.DamageItemType == DamageItemType.Product && reportItem.ProductColorId.HasValue)
-							{
-								var productColorId = reportItem.ProductColorId.Value;
-								var qty = reportItem.Quantity ?? 1; // Mặc định là 1 nếu không nhập
-
-								// Trừ kho trạng thái Damaged tại Store
-								var inventoryDamaged = await _inventoryRepository
-									.GetAsync(report.InventoryLocationId, productColorId, InventoryStatus.Damaged);
-
-								if (inventoryDamaged == null || inventoryDamaged.Quantity < qty)
-									throw new AppException($"Insufficient damaged stock for product {productColorId} at source location", 400);
-
-								inventoryDamaged.Quantity -= qty;
-
-								// Cộng vào trạng thái InTransit tại Store (đang trên xe shipper)
-								var inventoryTransit = await _inventoryRepository
-									.GetAsync(report.InventoryLocationId, productColorId, InventoryStatus.InTransit);
-
-								if (inventoryTransit == null)
-								{
-									inventoryTransit = new Inventory
-									{
-										Id = Guid.NewGuid(),
-										InventoryLocationId = report.InventoryLocationId,
-										ProductColorId = productColorId,
-										Status = InventoryStatus.InTransit,
-										Quantity = qty
-									};
-									await _inventoryRepository.AddAsync(inventoryTransit);
-								}
-								else
-								{
-									inventoryTransit.Quantity += qty;
-								}
-
-								// Log Transaction cho sản phẩm
-								await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
-								{
-									Id = Guid.NewGuid(),
-									ProductColorId = productColorId,
-									FromLocationId = report.InventoryLocationId, // Từ Store
-									ToLocationId = shipment.FromLocationId,      // Về Warehouse (Source của Shipment)
-									FromStatus = InventoryStatus.Damaged,
-									ToStatus = InventoryStatus.InTransit,
-									Quantity = qty,
-									ReferenceType = InventoryReferenceType.DamageReport,
-									ReferenceId = report.Id,
-									CreatedAt = _dateTime.UtcNow
-								});
-							}
-
-							// 2. Nếu Item là KỆ
-							else if (reportItem.DamageItemType == DamageItemType.Shelf && reportItem.ShelfId.HasValue)
-							{
-								var shelf = await _shelfRepository.GetByIdAsync(reportItem.ShelfId.Value);
-								if (shelf == null) throw new AppException($"Shelf {reportItem.ShelfId} not found", 404);
-
-								// Chuyển trạng thái kệ từ Damaged sang InTransit
-								// (Giả sử bồ có thêm trạng thái Damaged trong ShelfStatus)
-								var oldStatus = shelf.Status;
-								shelf.Status = ShelfStatus.InTransit;
-
-								// Log Transaction cho kệ
-								await _shelfTransactionRepository.AddAsync(new ShelfTransaction
-								{
-									Id = Guid.NewGuid(),
-									ShelfId = shelf.Id,
-									FromLocationId = report.InventoryLocationId,
-									ToLocationId = shipment.FromLocationId,
-									FromStatus = oldStatus,
-									ToStatus = ShelfStatus.InTransit,
-									ReferenceType = ShelfReferenceType.DamageReport,
-									ReferenceId = report.Id,
-									CreatedAt = _dateTime.UtcNow
-								});
-							}
-						}
-
-						// Cập nhật trạng thái phiếu báo hỏng thành InTransit theo đúng Enum DamageStatus bồ đã định nghĩa
-						report.Status = DamageStatus.InTransit;
-					}
-				}
-				// 4. Cập nhật trạng thái Shipment
+				// 4. Update Header
 				shipment.Status = ShipmentStatus.Shipping;
 				shipment.PickedUpAt = _dateTime.UtcNow;
 
 				_shipmentRepository.Update(shipment);
-
-				// 5. Lưu tất cả thay đổi vào Database
 				await _unitOfWork.SaveChangesAsync();
 			}
-			catch (AppException) { throw; }
-			catch (Exception ex)
-			{
-				throw new AppException($"An error occurred during pickup: {ex.Message}", 500);
-			}
+			catch (Exception ex) { throw; }
 		}
+		public async Task PickupReturnAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
+		{
+			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 
+			if (shipment == null) throw new AppException("Shipment not found", 404);
+			// Chỉ cho phép thu hồi khi xe đang trong hành trình giao hoặc đã giao xong 1 phần
+			if (shipment.Status != ShipmentStatus.Shipping && shipment.Status != ShipmentStatus.Delivered)
+				throw new AppException("Invalid status to pickup return items", 400);
+
+			try
+			{
+				// 1. Lưu bằng chứng bốc hàng hỏng tại Store
+				var media = new ShipmentMedia
+				{
+					Id = Guid.NewGuid(),
+					ShipmentId = shipmentId,
+					UploadedByUserId = currentUser.UserId,
+					MediaUrl = request.MediaUrl,
+					MediaType = ShipmentMediaType.Image,
+					Purpose = ShipmentMediaPurpose.ReturnPickup, // Enum mới cho thu hồi
+					CreatedAt = _dateTime.UtcNow
+				};
+				await _shipmentMediaRepository.AddAsync(media);
+
+				// 2. Duyệt qua các DamageReport được gán trong Shipment
+				foreach (var report in shipment.DamageReports)
+				{
+					if (report.Status != DamageStatus.Scheduled) continue;
+
+					foreach (var reportItem in report.Items)
+					{
+						// TRƯỜNG HỢP: SẢN PHẨM HỎNG - Trừ Damaged tại Store -> Cộng InTransit tại Store
+						if (reportItem.DamageItemType == DamageItemType.Product && reportItem.ProductColorId.HasValue)
+						{
+							var qty = reportItem.Quantity ?? 0;
+							var invDamaged = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.Damaged);
+
+							if (invDamaged == null || invDamaged.Quantity < qty)
+								throw new AppException($"Store does not have enough damaged stock for {reportItem.ProductColorId}", 400);
+
+							invDamaged.Quantity -= qty;
+
+							var invTransit = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.InTransit);
+							if (invTransit == null)
+							{
+								invTransit = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = report.InventoryLocationId, ProductColorId = reportItem.ProductColorId.Value, Status = InventoryStatus.InTransit, Quantity = qty };
+								await _inventoryRepository.AddAsync(invTransit);
+							}
+							else invTransit.Quantity += qty;
+
+							await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+							{
+								Id = Guid.NewGuid(),
+								ProductColorId = reportItem.ProductColorId.Value,
+								FromLocationId = report.InventoryLocationId, // Từ Store
+								ToLocationId = shipment.FromLocationId,      // Đích là Warehouse
+								FromStatus = InventoryStatus.Damaged,
+								ToStatus = InventoryStatus.InTransit,
+								Quantity = qty,
+								ReferenceType = InventoryReferenceType.DamageReport,
+								ReferenceId = report.Id,
+								CreatedAt = _dateTime.UtcNow
+							});
+						}
+						// TRƯỜNG HỢP: KỆ HỎNG - Chuyển trạng thái kệ tại Store sang InTransit
+						else if (reportItem.DamageItemType == DamageItemType.Shelf && reportItem.ShelfId.HasValue)
+						{
+							var shelf = await _shelfRepository.GetByIdAsync(reportItem.ShelfId.Value);
+							var oldStatus = shelf.Status; // Thường là Maintenance hoặc Damaged
+							shelf.Status = ShelfStatus.InTransit;
+
+							await _shelfTransactionRepository.AddAsync(new ShelfTransaction
+							{
+								Id = Guid.NewGuid(),
+								ShelfId = shelf.Id,
+								FromLocationId = report.InventoryLocationId,
+								ToLocationId = shipment.FromLocationId,
+								FromStatus = oldStatus,
+								ToStatus = ShelfStatus.InTransit,
+								ReferenceType = ShelfReferenceType.DamageReport,
+								ReferenceId = report.Id,
+								CreatedAt = _dateTime.UtcNow
+							});
+						}
+					}
+					report.Status = DamageStatus.InTransit;
+				}
+
+				// 3. Update Header
+				shipment.IsReturn = true; // Chính thức xác nhận xe đang chở hàng về
+
+				_shipmentRepository.Update(shipment);
+				await _unitOfWork.SaveChangesAsync();
+			}
+			catch (Exception ex) { throw; }
+		}
 		public async Task DeliveryAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
 			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
