@@ -10,24 +10,15 @@ namespace ToyShelf.Domain.Common.Commission
 {
 	public class CommissionService : ICommissionService
 	{
-		private readonly IUnitOfWork _unitOfWork;
-		private readonly ICommissionItemRepository _commissionItemRepository;
+	
 		private readonly IProductColorRepository _productColorRepository;
-		private readonly ICommissionTableApplyRepository _commissionTableApplyRepository;
-
-		private readonly IPartnerRepository _partnerRepository;
+		private readonly ICommissionTableApplyRepository _commissionTableApplyRepository;		
 		public CommissionService(
-			IUnitOfWork unitOfWork,
-			ICommissionItemRepository CommisisonItemRepository,
 			IProductColorRepository productColorRepository,
-			ICommissionTableApplyRepository commissionTableApplyRepository,
-			IPartnerRepository partnerRepository)
-		{
-			_unitOfWork = unitOfWork;
-			_commissionItemRepository = CommisisonItemRepository;
+			ICommissionTableApplyRepository commissionTableApplyRepository)
+		{	
 			_productColorRepository = productColorRepository;
 			_commissionTableApplyRepository = commissionTableApplyRepository;
-			_partnerRepository = partnerRepository;
 		}
 
 		public async Task<CommissionCalculationResult> CalculateCommissionAsync(Guid partnerId, Guid productColorId, decimal soldPrice)
