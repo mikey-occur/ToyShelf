@@ -27,6 +27,7 @@ namespace ToyShelf.Application.Services
 		private readonly IShelfTransactionRepository _shelfTransactionRepository;
 		private readonly IDamageReportRepository _damageReportRepository;
 		private readonly IStoreOrderRepository _storeOrderRepository;
+		private readonly IShelfOrderRepository _shelfOrderRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -44,6 +45,7 @@ namespace ToyShelf.Application.Services
 			IShelfTransactionRepository shelfTransactionRepository,
 			IDamageReportRepository damageReportRepository,
 			IStoreOrderRepository storeOrderRepository,
+			IShelfOrderRepository shelfOrderRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -58,6 +60,7 @@ namespace ToyShelf.Application.Services
 			_shelfTransactionRepository = shelfTransactionRepository;
 			_damageReportRepository = damageReportRepository;
 			_storeOrderRepository = storeOrderRepository;
+			_shelfOrderRepository = shelfOrderRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
