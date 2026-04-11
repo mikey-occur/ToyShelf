@@ -23,12 +23,16 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(a => a!.Shipper)
 				// Nhánh sản phẩm
 				.Include(x => x.Items)
-					.ThenInclude(i => i.ProductColor)
-						.ThenInclude(pc => pc.Product)
+					.ThenInclude(i => i.StoreOrderItem)
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
-						.ThenInclude(pc => pc.Color)
+						.ThenInclude(pc => pc!.Product)
+				.Include(x => x.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc!.Color)
 				// Nhánh kệ
+				.Include(x => x.ShelfShipmentItems)
+					.ThenInclude(si => si.ShelfOrderItem)
 				.Include(x => x.ShelfShipmentItems)
 					.ThenInclude(si => si.Shelf)
 						.ThenInclude(sh => sh.ShelfType)
@@ -49,6 +53,8 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(dr => dr.Items)
 						.ThenInclude(i => i.DamageMedia)
 				// Nhánh đơn hàng Store và Shelf
+				.Include(x => x.StoreOrders)
+					.ThenInclude(o => o.Items)
 				.Include(x => x.StoreOrders)
 					.ThenInclude(o => o.StoreLocation)
 				.Include(x => x.ShelfOrders)

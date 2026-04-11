@@ -6,22 +6,21 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Application.Models.Shipment.Request
 {
-	public class ReceiveShipmentRequest
+	public class StoreReceiveRequest
 	{
-		public List<ReceiveShipmentProductItemRequest>? ProductItems { get; set; }
-		public List<ReceiveShipmentShelfItemRequest>? ShelfItems { get; set; }
+		public List<ReceiveProductItemDetail> ProductItems { get; set; } = new();
+		public List<ReceiveShelfItemDetail> ShelfItems { get; set; } = new();
 	}
 
-
-	public class ReceiveShipmentProductItemRequest
+	public class ReceiveProductItemDetail
 	{
-		public Guid ProductColorId { get; set; }
-		public int ReceivedQuantity { get; set; }
+		public Guid ShipmentItemId { get; set; } // Lấy từ ShipmentProductItemDto.ShipmentItemId
+		public int ReceivedQuantity { get; set; } // Lấy từ ô Input nhân viên nhập
 	}
 
-	public class ReceiveShipmentShelfItemRequest
+	public class ReceiveShelfItemDetail
 	{
-		public Guid ShelfId { get; set; }
-		public bool IsReceived { get; set; } 
+		public Guid ShelfShipmentItemId { get; set; } // Lấy từ ShipmentShelfItemDto.ShelfShipmentItemId
+		public bool IsReceived { get; set; } // Checkbox: Có nhận được kệ hay không
 	}
 }
