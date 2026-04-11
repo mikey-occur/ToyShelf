@@ -336,9 +336,9 @@ namespace ToyShelf.Application.Services
 				Id = assignment.Id,
 				OrderType = types.Any() ? string.Join("-", types) : "EMPTY",
 
-				StoreOrderCodes = storeOrders.Select(o => o.Code).ToList(),
-				ShelfOrderCodes = shelfOrders.Select(o => o.Code).ToList(),
-				DamageReportCodes = damageReports.Select(dr => dr.Code).ToList(),
+				StoreOrders = storeOrders.Select(o => new OrderReferenceResponse { Id = o.Id, Code = o.Code }).ToList(),
+				ShelfOrders = shelfOrders.Select(o => new OrderReferenceResponse { Id = o.Id, Code = o.Code }).ToList(),
+				DamageReports = damageReports.Select(dr => new OrderReferenceResponse { Id = dr.Id, Code = dr.Code }).ToList(),
 
 				WarehouseLocationId = assignment.WarehouseLocationId,
 				WarehouseLocationName = assignment.WarehouseLocation?.Name ?? "",
@@ -362,19 +362,34 @@ namespace ToyShelf.Application.Services
 				RespondedAt = assignment.RespondedAt
 			};
 
-			// GOM TẤT CẢ HÀNG HÓA TỪ NHIỀU ĐƠN (SelectMany)
+			// GOM SẢN PHẨM: Chỉ lấy những mặt hàng mà Kho này ĐANG CÓ
 			response.ProductItems = storeOrders
 				.SelectMany(o => o.Items)
-				.Select(x => new ShipmentAssignmentProductItemResponse
-				{
-					ProductColorId = x.ProductColorId,
-					SKU = x.ProductColor?.Product?.SKU ?? "N/A",
-					ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
-					Color = x.ProductColor?.Color?.Name ?? "N/A",
-					ImageUrl = x.ProductColor?.ImageUrl,
-					Quantity = x.Quantity,
-					FulfilledQuantity = x.FulfilledQuantity
-				}).ToList();
+				.Select(x => {
+					// Tìm tồn kho khả dụng tại kho được chỉ định của Assignment
+					var stock = x.ProductColor?.Inventories?.FirstOrDefault(i =>
+									i.InventoryLocationId == assignment.WarehouseLocationId &&
+									i.Status == InventoryStatus.Available);
+
+					// Nếu kho không có món này hoặc số lượng = 0, trả về null để lọc bỏ sau
+					if (stock == null || stock.Quantity <= 0) return null;
+
+					return new ShipmentAssignmentProductItemResponse
+					{
+						StoreOrderId = x.StoreOrderId,
+						ProductColorId = x.ProductColorId,
+						SKU = x.ProductColor?.Product?.SKU ?? "N/A",
+						ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
+						Color = x.ProductColor?.Color?.Name ?? "N/A",
+						ImageUrl = x.ProductColor?.ImageUrl,
+						// Số lượng bốc: Lấy số lượng khách cần (còn thiếu) nhưng không vượt quá tồn kho hiện có
+						Quantity = Math.Min(x.Quantity - x.FulfilledQuantity, stock.Quantity),
+						FulfilledQuantity = x.FulfilledQuantity
+					};
+				})
+				.Where(x => x != null && x.Quantity > 0) // Loại bỏ các món kho không đáp ứng được
+				.Cast<ShipmentAssignmentProductItemResponse>()
+				.ToList();
 
 			// GOM TẤT CẢ KỆ TỪ NHIỀU ĐƠN
 			response.ShelfItems = shelfOrders

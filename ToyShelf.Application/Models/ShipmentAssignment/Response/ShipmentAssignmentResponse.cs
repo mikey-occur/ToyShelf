@@ -11,9 +11,9 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 	{
 		public Guid Id { get; set; }
 
-		public List<string> StoreOrderCodes { get; set; } = new();
-		public List<string> ShelfOrderCodes { get; set; } = new();
-		public List<string> DamageReportCodes { get; set; } = new();
+		public List<OrderReferenceResponse> StoreOrders { get; set; } = new();
+		public List<OrderReferenceResponse> ShelfOrders { get; set; } = new();
+		public List<OrderReferenceResponse> DamageReports { get; set; } = new();
 
 		public string? AdminNote { get; set; }
 
@@ -45,6 +45,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 	public class ShipmentAssignmentProductItemResponse
 	{
+		public Guid StoreOrderId { get; set; }
 		public Guid ProductColorId { get; set; }
 		public string SKU { get; set; } = null!;
 		public string ProductName { get; set; } = null!;

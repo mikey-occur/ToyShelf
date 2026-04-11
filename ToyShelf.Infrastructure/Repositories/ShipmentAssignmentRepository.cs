@@ -79,6 +79,11 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(o => o.Items)
 							.ThenInclude(i => i.ProductColor)
 								.ThenInclude(pc => pc.Color)
+				.Include(x => x.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.StoreOrder)
+						.ThenInclude(o => o.Items)
+							.ThenInclude(i => i.ProductColor)
+								.ThenInclude(pc => pc.Inventories)
 
 				// --- Nhánh Shelf Orders (N-N qua bảng trung gian) ---
 				.Include(x => x.AssignmentShelfOrders)
