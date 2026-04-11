@@ -488,34 +488,32 @@ namespace ToyShelf.Application.Services
 
 			await _unitOfWork.SaveChangesAsync();
 		}
+		public async Task ArrivedWarehouseAsync(Guid shipmentId, ICurrentUser currentUser)
+		{
+			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
+			if (shipment == null) throw new AppException("Shipment not found", 404);
 
-		//public async Task ArrivedWarehouseAsync(Guid shipmentId, ICurrentUser currentUser)
-		//{
-		//	var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
-		//	if (shipment == null) throw new AppException("Shipment not found", 404);
+			// 1. Ghi nhận mốc thời gian về đến cổng kho cho cả 2 trường hợp
+			shipment.ArrivedWarehouseAt = _dateTime.UtcNow;
 
-		//	// 1. Ghi nhận mốc thời gian về đến cổng kho cho cả 2 trường hợp
-		//	shipment.ArrivedWarehouseAt = _dateTime.UtcNow;
+			// 2. Phân loại trạng thái dựa trên việc có hàng thu hồi hay không
+			if (!shipment.IsReturn)
+			{
+				// TRƯỜNG HỢP 1: KHÔNG CÓ HÀNG HỎNG
+				// Xe về không -> Đóng đơn luôn, Shipper xong nhiệm vụ
+				shipment.Status = ShipmentStatus.Completed;
+			}
+			else
+			{
+				// TRƯỜNG HỢP 2: CÓ HÀNG HỎNG
+				// Chuyển sang DeliveredReturn để "treo" đơn đó lại
+				// Ép Admin/WM phải vào hàm ReceiveReturn để xác nhận rồi mới cho Complete
+				shipment.Status = ShipmentStatus.DeliveredReturn;
+			}
 
-		//	// 2. Phân loại trạng thái dựa trên việc có hàng thu hồi hay không
-		//	if (!shipment.IsReturn)
-		//	{
-		//		// TRƯỜNG HỢP 1: KHÔNG CÓ HÀNG HỎNG
-		//		// Xe về không -> Đóng đơn luôn, Shipper xong nhiệm vụ
-		//		shipment.Status = ShipmentStatus.Completed;
-		//	}
-		//	else
-		//	{
-		//		// TRƯỜNG HỢP 2: CÓ HÀNG HỎNG
-		//		// Chuyển sang DeliveredReturn để "treo" đơn đó lại
-		//		// Ép Admin/WM phải vào hàm ReceiveReturn để xác nhận rồi mới cho Complete
-		//		shipment.Status = ShipmentStatus.DeliveredReturn;
-		//	}
-
-		//	_shipmentRepository.Update(shipment);
-		//	await _unitOfWork.SaveChangesAsync();
-		//}
-
+			_shipmentRepository.Update(shipment);
+			await _unitOfWork.SaveChangesAsync();
+		}
 		public async Task ReceiveAsync(Guid shipmentId, ReceiveShipmentRequest request)
 		{
 			// 1. Lấy thông tin Shipment kèm đầy đủ Details (Items, ShelfItems, DamageReports)
@@ -761,7 +759,6 @@ namespace ToyShelf.Application.Services
 				throw new AppException($"Receive failed: {ex.Message}", 500);
 			}
 		}
-
 		public async Task<IEnumerable<ShelfSimpleResponse>> GetShelvesByShipmentAsync(Guid shipmentId)
 		{
 			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
@@ -778,7 +775,6 @@ namespace ToyShelf.Application.Services
 				Status = s.Status
 			});
 		}
-
 		public async Task<List<ShelfShipmentItemResponse>> GetShelfItemsAsync(Guid shipmentId)
 		{
 			// Cần Load thêm Shelf và ShelfType để Map thông tin
@@ -803,14 +799,12 @@ namespace ToyShelf.Application.Services
 
 			return result;
 		}
-
 		private async Task<string> GenerateCode()
 		{
 			var max = await _shipmentRepository.GetMaxSequenceAsync();
 
 			return $"{Prefix}-{(max + 1):D5}";
 		}
-
 		private static ShipmentResponse MapToResponse(Shipment shipment)
 		{
 			// 1. Xác định loại vận đơn thông minh hơn
