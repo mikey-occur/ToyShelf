@@ -446,6 +446,8 @@ namespace ToyShelf.Application.Services
 
 				// 3. Update Header
 				shipment.IsReturn = true; // Chính thức xác nhận xe đang chở hàng về
+				shipment.Status = ShipmentStatus.ShippingReturn; // Trạng thái mới cho luồng thu hồi
+				shipment.ReturnPickedUpAt = _dateTime.UtcNow;
 
 				_shipmentRepository.Update(shipment);
 				await _unitOfWork.SaveChangesAsync();
@@ -489,16 +491,26 @@ namespace ToyShelf.Application.Services
 
 		//public async Task ArrivedWarehouseAsync(Guid shipmentId, ICurrentUser currentUser)
 		//{
-		//	var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
-
+		//	var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 		//	if (shipment == null) throw new AppException("Shipment not found", 404);
 
-		//	// Chỉ ghi nhận khi xe đang trên đường về (IsReturn đã bật)
-		//	if (!shipment.IsReturn)
-		//		throw new AppException("Shipment is not in return process", 400);
-
+		//	// 1. Ghi nhận mốc thời gian về đến cổng kho cho cả 2 trường hợp
 		//	shipment.ArrivedWarehouseAt = _dateTime.UtcNow;
-		//	// Bồ cần thêm field ArrivedWarehouseAt vào DB tương tự DeliveredAt
+
+		//	// 2. Phân loại trạng thái dựa trên việc có hàng thu hồi hay không
+		//	if (!shipment.IsReturn)
+		//	{
+		//		// TRƯỜNG HỢP 1: KHÔNG CÓ HÀNG HỎNG
+		//		// Xe về không -> Đóng đơn luôn, Shipper xong nhiệm vụ
+		//		shipment.Status = ShipmentStatus.Completed;
+		//	}
+		//	else
+		//	{
+		//		// TRƯỜNG HỢP 2: CÓ HÀNG HỎNG
+		//		// Chuyển sang DeliveredReturn để "treo" đơn đó lại
+		//		// Ép Admin/WM phải vào hàm ReceiveReturn để xác nhận rồi mới cho Complete
+		//		shipment.Status = ShipmentStatus.DeliveredReturn;
+		//	}
 
 		//	_shipmentRepository.Update(shipment);
 		//	await _unitOfWork.SaveChangesAsync();
@@ -739,8 +751,8 @@ namespace ToyShelf.Application.Services
 				}
 
 				// 4. Chốt Shipment
-				shipment.Status = ShipmentStatus.Received;
-				shipment.ReceivedAt = _dateTime.UtcNow;
+				//shipment.Status = ShipmentStatus.Received;
+				shipment.StoreReceivedAt = _dateTime.UtcNow;
 
 				await _unitOfWork.SaveChangesAsync();
 			}
@@ -836,7 +848,10 @@ namespace ToyShelf.Application.Services
 				CreatedAt = shipment.CreatedAt,
 				PickedUpAt = shipment.PickedUpAt,
 				DeliveredAt = shipment.DeliveredAt,
-				ReceivedAt = shipment.ReceivedAt
+				StoreReceivedAt = shipment.StoreReceivedAt,
+				ReturnPickedUpAt = shipment.ReturnPickedUpAt,
+				ArrivedWarehouseAt = shipment.ArrivedWarehouseAt,
+				WarehouseReceivedAt = shipment.WarehouseReceivedAt
 			};
 
 			// ================= MAPPING SẢN PHẨM =================

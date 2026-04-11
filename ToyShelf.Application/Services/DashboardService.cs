@@ -88,7 +88,7 @@ namespace ToyShelf.Application.Services
 
 			// 6. Completed
 			var totalCompleted = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Received
+				x.Status == ShipmentStatus.Completed
 			);
 
 			// 7. Shipment Chart
