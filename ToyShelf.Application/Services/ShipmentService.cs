@@ -720,6 +720,48 @@ namespace ToyShelf.Application.Services
 			return result;
 		}
 
+		// Hỗ trợ StoreReceiveAsync để FE có thể lấy chi tiết từng Item trong đơn hàng khi nhận hàng tại Store
+		public async Task<ShipmentReceiveViewModel> GetShipmentForReceivingAsync(Guid shipmentId)
+		{
+			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
+
+			if (shipment == null) throw new AppException("Shipment not found", 404);
+
+			// Chỉ cho phép lấy data nếu vận đơn đang trên đường giao (để tránh nhận ghi đè)
+			if (shipment.Status != ShipmentStatus.Delivered)
+				throw new AppException("Vận đơn không ở trạng thái có thể nhận hàng", 400);
+
+			return new ShipmentReceiveViewModel
+			{
+				ShipmentId = shipment.Id,
+				ShipmentCode = shipment.Code,
+				FromLocationName = shipment.FromLocation?.Name ?? "N/A",
+				ToLocationName = shipment.ToLocation?.Name ?? "N/A",
+
+				// 1. Danh sách sản phẩm: FE lặp cái này ra các dòng Input
+				ProductItems = shipment.Items
+					.Where(x => x.StoreOrderItemId != null) // Lọc các dòng thuộc đơn hàng Store
+					.Select(x => new ShipmentProductItemDto
+					{
+						ShipmentItemId = x.Id,
+						ProductColorId = x.ProductColorId ?? Guid.Empty,
+						ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
+						ColorName = x.ProductColor?.Color?.Name ?? "N/A",
+						ImageUrl = x.ProductColor?.ImageUrl,
+						ExpectedQuantity = x.ExpectedQuantity // Số lượng FE hiển thị làm "mốc"
+					}).ToList(),
+
+				// 2. Danh sách kệ: FE lặp ra các dòng Checkbox
+				ShelfItems = shipment.ShelfShipmentItems.Select(x => new ShipmentShelfItemDto
+				{
+					ShelfShipmentItemId = x.Id,
+					ShelfId = x.ShelfId,
+					ShelfCode = x.Shelf?.Code ?? "N/A",
+					ShelfTypeName = x.Shelf?.ShelfType?.Name ?? "N/A"
+				}).ToList()
+			};
+		}
+
 		// Helper
 		private async Task<string> GenerateCode()
 		{
