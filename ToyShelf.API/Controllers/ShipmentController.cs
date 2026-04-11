@@ -110,6 +110,17 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Shipment delivered successfully");
 		}
 
+		[HttpPatch("{id}/arrived-warehouse")]
+		[Authorize(Roles = "Warehouse")]
+		public async Task<ActionResult<ActionResponse>> ArrivedWarehouse(
+		Guid id,
+		[FromServices] ICurrentUser currentUser)
+		{
+			await _shipmentService.ArrivedWarehouseAsync(id, currentUser);
+
+			return ActionResponse.Ok("Shipment arrival at warehouse recorded successfully");
+		}
+
 		[HttpPatch("{id}/receive")]
 		[Authorize(Roles = "Partner")]
 		public async Task<ActionResult<ActionResponse>> Receive(Guid id, ReceiveShipmentRequest request)
