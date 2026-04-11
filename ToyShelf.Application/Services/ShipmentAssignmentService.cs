@@ -387,6 +387,8 @@ namespace ToyShelf.Application.Services
 					Width = x.ShelfType?.Width ?? 0,
 					Height = x.ShelfType?.Height ?? 0,
 					Quantity = x.Quantity,
+					Depth = x.ShelfType?.Depth ?? 0,
+					TotalLevels = x.ShelfType?.TotalLevels ?? 0,
 					FulfilledQuantity = x.FulfilledQuantity,
 				}).ToList();
 

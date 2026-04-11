@@ -8,11 +8,14 @@ namespace ToyShelf.Domain.Entities
 {
 	public enum ShipmentStatus
 	{
+		// Luồng đi
 		Draft,
-		//Approved,
 		Shipping,
 		Delivered,
-		Received,
+		// Luồng về nếu IsReturn = true
+		ShippingReturn,
+		DeliveredReturn,
+		Completed,
 		Cancelled
 	}
 
@@ -38,7 +41,10 @@ namespace ToyShelf.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? PickedUpAt { get; set; }
 		public DateTime? DeliveredAt { get; set; }
-		public DateTime? ReceivedAt { get; set; }
+		public DateTime? StoreReceivedAt { get; set; }
+		public DateTime? ReturnPickedUpAt { get; set; }
+		public DateTime? ArrivedWarehouseAt { get; set; }
+		public DateTime? WarehouseReceivedAt { get; set; }
 
 
 		// Gom đơn

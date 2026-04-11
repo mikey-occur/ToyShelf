@@ -24,11 +24,13 @@ namespace ToyShelf.Domain.Entities
 
 	public enum DamageStatus
 	{
-		Pending,        // Chờ Admin duyệt
-		Approved,       // Đã duyệt, chờ tạo/gán vận đơn thu hồi
-		InTransit,      // Shipper đang chở hàng/kệ về kho
-		Returned,       // Đã về đến kho tổng (Kết thúc quy trình tại Store)
-		Rejected        // Từ chối báo cáo (Ví dụ: Store báo hỏng không trung thực)
+		Pending,      // Chờ Admin duyệt
+		Approved,     // Đã duyệt, chờ tạo/gán vận đơn thu hồi
+		InTransit,    // Shipper đang chở hàng/kệ về kho
+		Returned,     // Đã về đến kho tổng (Kết thúc quy trình tại Store)
+		Rejected,     // Từ chối báo cáo (Ví dụ: Store báo hỏng không trung thực)
+		Scheduled     // Đã lên lịch thu hồi nhưng chưa đến ngày thu hồi (Dùng để quản lý thời gian thu hồi, tránh để quá lâu tại Store)
+
 	}
 	public class DamageReport
 	{

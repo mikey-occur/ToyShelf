@@ -10,7 +10,8 @@ namespace ToyShelf.Domain.Entities
 	{
 		Pickup,
 		Delivery,
-		Damage
+		Damage,
+		ReturnPickup
 	}
 
 	public enum ShipmentMediaType

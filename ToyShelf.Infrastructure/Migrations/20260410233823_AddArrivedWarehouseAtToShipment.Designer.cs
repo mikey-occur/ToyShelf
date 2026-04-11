@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260410233823_AddArrivedWarehouseAtToShipment")]
+    partial class AddArrivedWarehouseAtToShipment
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1482,11 +1485,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<DateTime?>("PickedUpAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<DateTime?>("ReceivedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<Guid>("RequestedByUserId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("ReturnPickedUpAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("ShipmentAssignmentId")
                         .HasColumnType("uuid");
@@ -1499,14 +1502,8 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
-                    b.Property<DateTime?>("StoreReceivedAt")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<Guid>("ToLocationId")
                         .HasColumnType("uuid");
-
-                    b.Property<DateTime?>("WarehouseReceivedAt")
-                        .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 

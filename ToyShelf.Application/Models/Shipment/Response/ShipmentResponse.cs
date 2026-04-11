@@ -33,7 +33,10 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public DateTime CreatedAt { get; set; }
 		public DateTime? PickedUpAt { get; set; }
 		public DateTime? DeliveredAt { get; set; }
-		public DateTime? ReceivedAt { get; set; }
+		public DateTime? StoreReceivedAt { get; set; }
+		public DateTime? ReturnPickedUpAt { get; set; }
+		public DateTime? ArrivedWarehouseAt { get; set; }
+		public DateTime? WarehouseReceivedAt { get; set; }
 
 		// Danh sách sản phẩm tổng hợp (đã gộp từ tất cả StoreOrders hoặc DamageReports)
 		public List<ShipmentProductItemResponse>? ProductItems { get; set; }

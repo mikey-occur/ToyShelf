@@ -86,6 +86,18 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Shipment picked up successfully");
 		}
 
+		[HttpPatch("{id}/return-pickup")]
+		[Authorize(Roles = "Warehouse")]
+		public async Task<ActionResult<ActionResponse>> PickupReturn(
+			Guid id,
+			[FromBody] UploadShipmentMediaRequest request,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _shipmentService.PickupReturnAsync(id, request, currentUser);
+
+			return ActionResponse.Ok("Return shipment picked up successfully");
+		}
+
 		[HttpPatch("{id}/delivery")]
 		[Authorize(Roles = "Warehouse")]
 		public async Task<ActionResult<ActionResponse>> Delivery(

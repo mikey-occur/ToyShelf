@@ -1814,7 +1814,15 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.DeliveredAt);
 
-				entity.Property(e => e.ReceivedAt);
+				entity.Property(e => e.StoreReceivedAt);
+
+				entity.Property(e => e.ReturnPickedUpAt);
+
+				entity.Property(e => e.ArrivedWarehouseAt);
+
+				entity.Property(e => e.WarehouseReceivedAt);
+
+
 
 				// ===== Relationships =====
 
