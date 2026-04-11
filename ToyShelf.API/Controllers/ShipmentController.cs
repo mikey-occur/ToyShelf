@@ -121,13 +121,22 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Shipment arrival at warehouse recorded successfully");
 		}
 
-		[HttpPatch("{id}/receive")]
-		[Authorize(Roles = "Partner")]
-		public async Task<ActionResult<ActionResponse>> Receive(Guid id, ReceiveShipmentRequest request)
+		[HttpPatch("{id}/store-receive")]
+		[Authorize(Roles = "Partner")] 
+		public async Task<ActionResult<ActionResponse>> StoreReceive(
+			Guid id,
+			[FromBody] StoreReceiveRequest request)
 		{
-			await _shipmentService.ReceiveAsync(id, request);
+			await _shipmentService.StoreReceiveAsync(id, request);
+			return ActionResponse.Ok("Store received products and shelves successfully");
+		}
 
-			return ActionResponse.Ok("Shipment received successfully");
+		[HttpPatch("{id}/warehouse-receive-return")]
+		[Authorize(Roles = "Warehouse")]
+		public async Task<ActionResult<ActionResponse>> WarehouseReceiveReturn(Guid id)
+		{
+			await _shipmentService.WarehouseReceiveReturnAsync(id);
+			return ActionResponse.Ok("Warehouse received return items. Shipment marked as Completed.");
 		}
 
 		//[HttpGet("{shipmentId}/shelves")]
