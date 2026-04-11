@@ -1934,10 +1934,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.DamageReportItemId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShipmentItem_DamageReportItem");
-				// ===== Index =====
-
-				entity.HasIndex(e => new { e.ShipmentId, e.ProductColorId })
-					  .IsUnique();
 			});
 
 			// ================== ShipmentMedia ==================

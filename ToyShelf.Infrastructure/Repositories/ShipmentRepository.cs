@@ -58,7 +58,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.StoreOrders)
 					.ThenInclude(o => o.StoreLocation)
 				.Include(x => x.ShelfOrders)
-					.ThenInclude(o => o.StoreLocation);
+					.ThenInclude(o => o.StoreLocation)
+				.Include(x => x.ShelfOrders)
+					.ThenInclude(o => o.Items);
 		}
 		public async Task<int> GetMaxSequenceAsync()
 		{

@@ -9,19 +9,23 @@ namespace ToyShelf.Application.Models.Shipment.Request
 	public class CreateShipmentRequest
 	{
 		public Guid ShipmentAssignmentId { get; set; }
-		// Items chỉ dành cho StoreOrder và ShelfOrder 
-		// vì đây là những món WM cần xác nhận số lượng bốc từ kho ra
-		public List<CreateShipmentItemRequest> Items { get; set; } = new();
+
+		public List<ProductShipmentItemRequest> Products { get; set; } = new();
+		public List<ShelfShipmentItemRequest> Shelves { get; set; } = new();
 	}
 
-	public class CreateShipmentItemRequest
+	public class ProductShipmentItemRequest
 	{
-		public Guid? StoreOrderId { get; set; }
-		public Guid? ShelfOrderId { get; set; }
+		public Guid StoreOrderId { get; set; }
+		public Guid ProductColorId { get; set; }
+		public int ExpectedQuantity { get; set; }
+	}
 
-		public Guid? ProductColorId { get; set; }
-		public Guid? ShelfTypeId { get; set; }
-		public int ExpectedQuantity { get; set; } // Số lượng thực tế WM bốc lên xe
-		public List<Guid>? ShelfIds { get; set; } // Dùng cho chọn kệ đích danh
+	public class ShelfShipmentItemRequest
+	{
+		public Guid ShelfOrderId { get; set; }
+		public Guid ShelfTypeId { get; set; }
+		public int ExpectedQuantity { get; set; }
+		public List<Guid> ShelfIds { get; set; } = new();
 	}
 }
