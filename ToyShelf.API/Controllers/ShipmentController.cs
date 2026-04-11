@@ -157,5 +157,14 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<IEnumerable<ShelfShipmentItemResponse>>
 				.Ok(result, "Get shelf items successfully");
 		}
+
+		[HttpGet("{id}/for-receiving")]
+		[Authorize(Roles = "Partner")] // Chỉ Store (Partner) mới cần lấy thông tin này để đếm hàng
+		public async Task<BaseResponse<ShipmentReceiveViewModel>> GetForReceiving(Guid id)
+		{
+			var result = await _shipmentService.GetShipmentForReceivingAsync(id);
+
+			return BaseResponse<ShipmentReceiveViewModel>.Ok(result, "Get receiving details successfully");
+		}
 	}
 }
