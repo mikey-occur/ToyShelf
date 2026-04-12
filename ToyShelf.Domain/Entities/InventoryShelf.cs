@@ -8,6 +8,7 @@ namespace ToyShelf.Domain.Entities
 {
 	public class InventoryShelf
 	{
+		public Guid Id { get; private set; }
 		public Guid InventoryLocationId { get; private set; }
         public Guid ShelfTypeId { get; private set; }
         public int Quantity { get; private set; }
@@ -22,7 +23,8 @@ namespace ToyShelf.Domain.Entities
 
         public InventoryShelf(Guid locationId, Guid shelfTypeId, int initialQuantity)
         {
-            InventoryLocationId = locationId;
+			Id = Guid.NewGuid();
+			InventoryLocationId = locationId;
             ShelfTypeId = shelfTypeId;
             Quantity = initialQuantity >= 0 ? initialQuantity : 0;
         }
