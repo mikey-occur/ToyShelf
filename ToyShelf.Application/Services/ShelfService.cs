@@ -38,10 +38,9 @@ namespace ToyShelf.Application.Services
 		// ===== CREATE =====
 		public async Task<List<ShelfResponse>> CreateAsync(CreateShelfRequest request)
 		{
-			if (request.Codes == null || !request.Codes.Any())
-				throw new AppException("Danh sách mã kệ không được để trống!", 400);
+			if (request.Quantity <= 0)
+				throw new AppException("Số lượng kệ tạo mới phải lớn hơn 0!", 400);
 
-			// Mở Transaction chung để cả 2 Service dùng chung một "đường ống"
 			await _unitOfWork.BeginTransactionAsync();
 
 			try
@@ -52,37 +51,44 @@ namespace ToyShelf.Application.Services
 				if (location.Type != InventoryLocationType.Warehouse)
 					throw new AppException("Kệ mới bắt buộc phải nhập tại Kho Tổng!", 400);
 
-				var createdShelves = new List<Shelf>();
-				int totalNewShelves = request.Codes.Count;
+				// 1. Lấy mã cuối cùng để biết bắt đầu từ đâu
+				var lastCode = await _shelfRepository.GetLastShelfCodeAsync();
+				int lastNumber = 0;
+				if (!string.IsNullOrEmpty(lastCode))
+				{
+					// "SH-00010" -> 10
+					int.TryParse(lastCode.Replace("SH-", ""), out lastNumber);
+				}
 
-				// 2. Tạo các kệ vật lý (Bảng Shelf)
-				foreach (var code in request.Codes)
+				var createdShelves = new List<Shelf>();
+
+				// 2. Vòng lặp đẻ con hàng loạt
+				for (int i = 1; i <= request.Quantity; i++)
 				{
 					var shelf = new Shelf
 					{
 						Id = Guid.NewGuid(),
 						InventoryLocationId = request.InventoryLocationId,
 						ShelfTypeId = request.ShelfTypeId,
-						Code = code.Trim(),
+						Code = $"SH-{(lastNumber + i):D5}", // Ví dụ: SH-00011
 						Status = ShelfStatus.Available
 					};
+
 					await _shelfRepository.AddAsync(shelf);
 					createdShelves.Add(shelf);
 				}
 
-				// Lưu bước 1 vào bộ nhớ tạm của DbContext
+				// 3. Lưu bước 1 (Bảng Shelf)
 				await _unitOfWork.SaveChangesAsync();
 
-				// 3. GỌI HÀM CỦA SERVICE KHÁC Ở ĐÂY
+				// 4. Cập nhật số lượng vào bảng InventoryShelf (Cờ check xung đột Version/xmin nằm ở đây)
 				await _inventoryShelfService.AddShelfQuantityAsync(
 					request.InventoryLocationId,
 					request.ShelfTypeId,
-					totalNewShelves);
+					request.Quantity);
 
-				// 4. CHỐT SỔ TẤT CẢ (Commit này sẽ chốt luôn cả thay đổi bên trong Service vừa gọi)
 				await _unitOfWork.CommitTransactionAsync();
 
-				// Trả về List để khớp với kiểu dữ liệu Task<List<ShelfResponse>>
 				return createdShelves.Select(s => MapToResponse(s)).ToList();
 			}
 			catch (Exception)

@@ -18,13 +18,13 @@ namespace ToyShelf.Infrastructure.Repositories
 
 		public async Task<InventoryShelf?> GetShelfAsync(Guid locationId, Guid shelfTypeId)
 		{
-			return await _context.Set<InventoryShelf>()
-		         .FirstOrDefaultAsync(x => x.InventoryLocationId == locationId && x.ShelfTypeId == shelfTypeId);
+			return await _context.InventoryShelves
+				 .FirstOrDefaultAsync(x => x.InventoryLocationId == locationId && x.ShelfTypeId == shelfTypeId);
 		}
 
 		public async Task<List<InventoryShelf>> GetShelvesByLocationAsync(Guid locationId)
 		{
-			return await _context.Set<InventoryShelf>()
+			return await _context.InventoryShelves
 				.Where(x => x.InventoryLocationId == locationId)
 				.Include(x => x.ShelfType)
 				.ToListAsync();
