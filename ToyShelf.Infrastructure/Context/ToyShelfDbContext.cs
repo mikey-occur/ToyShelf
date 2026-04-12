@@ -1316,11 +1316,12 @@ namespace ToyShelf.Infrastructure.Context
 			// ================== InventoryShelf ==================
 			modelBuilder.Entity<InventoryShelf>(entity =>
 			{
-				entity.ToTable("InventoryShelves");
+				entity.HasKey(e => e.Id);
+
 
 				// Khóa chính tổ hợp: LocationId + ShelfTypeId
 				entity.HasKey(e => new { e.InventoryLocationId, e.ShelfTypeId });
-
+				           
 				entity.Property(e => e.Quantity)
 					  .IsRequired()
 					  .HasDefaultValue(0);
