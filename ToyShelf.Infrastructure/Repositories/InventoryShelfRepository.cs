@@ -16,6 +16,16 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
+		public async Task<List<InventoryShelf>> GetDistributionsByShelfTypeAsync(Guid shelfTypeId)
+		{
+			return await _context.InventoryShelves
+				.Where(x => x.ShelfTypeId == shelfTypeId)
+				.Include(x => x.InventoryLocation) 
+				.Include(x => x.ShelfType)         
+				.ToListAsync();
+		
+		}
+
 		public async Task<InventoryShelf?> GetShelfAsync(Guid locationId, Guid shelfTypeId)
 		{
 			return await _context.InventoryShelves
@@ -27,7 +37,9 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.InventoryShelves
 				.Where(x => x.InventoryLocationId == locationId)
 				.Include(x => x.ShelfType)
+				.Include(x => x.InventoryLocation)
 				.ToListAsync();
 		}
+
 	}
 }

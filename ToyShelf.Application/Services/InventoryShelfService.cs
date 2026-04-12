@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.InventoryShelf.Response;
+using ToyShelf.Application.Models.Shelf.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 
@@ -31,9 +33,18 @@ namespace ToyShelf.Application.Services
 			_unitOfWork = unitOfWork;
 		}
 
-		public async Task<List<InventoryShelf>> GetShelvesByLocationAsync(Guid locationId)
+		public async Task<List<InventoryShelfResponse>> GetShelvesByLocationAsync(Guid locationId)
 		{
-			return await _shelfRepo.GetShelvesByLocationAsync(locationId);
+			var shelves = await _shelfRepo.GetShelvesByLocationAsync(locationId);
+			return shelves.Select(s => new InventoryShelfResponse
+			{
+				InventoryLocationId = s.InventoryLocationId,
+				LocationName = s.InventoryLocation.Name,
+				ShelfTypeId = s.ShelfTypeId,
+				ShelfTypeName = s.ShelfType.Name,
+				Quantity = s.Quantity,
+				TotalLevels = s.ShelfType.TotalLevels
+			}).ToList();
 		}
 
 		// goi ham nay de add quantity vao ke, neu ke chua co thi tao moi, sau do update so luong va luu vao db
@@ -138,6 +149,26 @@ namespace ToyShelf.Application.Services
 					throw;
 				}
 			}
+		}
+
+		public async Task<List<ShelfDistributionResponse>> GetShelfDistributionsAsync(Guid shelfTypeId)
+		{
+			var data = await _shelfRepo.GetDistributionsByShelfTypeAsync(shelfTypeId);
+
+			return data.Select(x => new ShelfDistributionResponse
+			{
+				InventoryLocationId = x.InventoryLocationId,
+				InventoryLocationName = x.InventoryLocation?.Name ?? "N/A",
+				Count = x.Quantity,
+				Shelf = new ShelfDetailResponse
+				{
+					ShelfTypeId = x.ShelfTypeId,
+					ShelfTypeName = x.ShelfType?.Name ?? "N/A",
+					Width = x.ShelfType?.Width ?? 0,
+					Height = x.ShelfType?.Height ?? 0,
+					Depth = x.ShelfType?.Depth ?? 0
+				}
+			}).ToList();
 		}
 	}
 }

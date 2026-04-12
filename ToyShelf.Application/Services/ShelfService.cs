@@ -62,7 +62,7 @@ namespace ToyShelf.Application.Services
 
 				var createdShelves = new List<Shelf>();
 
-				// 2. Vòng lặp đẻ con hàng loạt
+				
 				for (int i = 1; i <= request.Quantity; i++)
 				{
 					var shelf = new Shelf
