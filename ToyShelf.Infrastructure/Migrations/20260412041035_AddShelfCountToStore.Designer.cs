@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260412041035_AddShelfCountToStore")]
+    partial class AddShelfCountToStore
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -573,30 +576,6 @@ namespace ToyShelf.Infrastructure.Migrations
                         {
                             t.HasCheckConstraint("CK_InventoryLocation_OnlyOneOwner", "(\"WarehouseId\" IS NOT NULL AND \"StoreId\" IS NULL) OR (\"WarehouseId\" IS NULL AND \"StoreId\" IS NOT NULL)");
                         });
-                });
-
-            modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryShelf", b =>
-                {
-                    b.Property<Guid>("InventoryLocationId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("ShelfTypeId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Quantity")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasDefaultValue(0);
-
-                    b.Property<int>("RowVersion")
-                        .IsConcurrencyToken()
-                        .HasColumnType("integer");
-
-                    b.HasKey("InventoryLocationId", "ShelfTypeId");
-
-                    b.HasIndex("ShelfTypeId");
-
-                    b.ToTable("InventoryShelves", (string)null);
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryTransaction", b =>
@@ -2423,25 +2402,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Warehouse");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryShelf", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "InventoryLocation")
-                        .WithMany("InventoryShelves")
-                        .HasForeignKey("InventoryLocationId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("ToyShelf.Domain.Entities.ShelfType", "ShelfType")
-                        .WithMany()
-                        .HasForeignKey("ShelfTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("InventoryLocation");
-
-                    b.Navigation("ShelfType");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryTransaction", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.InventoryLocation", "FromLocation")
@@ -3153,8 +3113,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("IncomingShelfTransactions");
 
                     b.Navigation("Inventories");
-
-                    b.Navigation("InventoryShelves");
 
                     b.Navigation("OutgoingInventoryTransactions");
 

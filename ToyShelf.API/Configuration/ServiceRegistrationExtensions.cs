@@ -127,7 +127,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<INotificationRepository, NotificationRepository>();
 			services.AddScoped<INotificationBroadcaster, SignalRService>();
 			services.AddScoped<IDamageReportRepository, DamageReportRepository>();
-			
+			services.AddScoped<IInventoryShelfRepository, InventoryShelfRepository>();
+
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
 			services.AddScoped<IAccountService, AccountService>();
@@ -167,6 +168,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IRedisCacheService, RedisCacheService>();
 			services.AddScoped<IDamageReportService, DamageReportService>();
 			services.AddScoped<ICommissionHistoryService, CommissionHistoryService>();
+			services.AddScoped<IInventoryShelfService, InventoryShelfService>();
 		}
     }
 }

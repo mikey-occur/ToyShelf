@@ -12,7 +12,7 @@ namespace ToyShelf.Application.IServices
 {
     public interface IShelfService
     {
-        Task<ShelfResponse> CreateAsync(CreateShelfRequest request);
+		Task<List<ShelfResponse>> CreateAsync(CreateShelfRequest request);
         Task<IEnumerable<ShelfResponse>> GetAllAsync();
         Task<ShelfResponse> GetByIdAsync(Guid id);
         Task<ShelfResponse> UpdateAsync(Guid id, UpdateShelfRequest request);

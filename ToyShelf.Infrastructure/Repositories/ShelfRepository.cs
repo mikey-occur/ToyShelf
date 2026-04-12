@@ -92,5 +92,14 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Where(s => ids.Contains(s.Id))
 				.ToListAsync();
 		}
+
+		public async Task<string?> GetLastShelfCodeAsync()
+		{
+			return await _context.Shelves
+			.Where(s => s.Code.StartsWith("SH-"))
+			.OrderByDescending(s => s.Code)
+			.Select(s => s.Code)
+			.FirstOrDefaultAsync();
+		}
 	}
 }

@@ -17,6 +17,19 @@ namespace ToyShelf.Domain.Entities
 		public double? Latitude { get; set; }
 		public double? Longitude { get; set; }
 		public string? PhoneNumber { get; set; }
+		public int CurrentShelfCount { get; private set; }
+		//  chống xung đột dữ liệu
+		public byte[] RowVersion { get; set; } = null!;
+		public void IncreaseShelfCount(int count)
+		{
+			if (count <= 0) return;
+			CurrentShelfCount += count;
+		}
+		public void DecreaseShelfCount(int count)
+		{
+			if (count <= 0) return;
+			CurrentShelfCount = Math.Max(0, CurrentShelfCount - count);
+		}
 		public bool IsActive { get; set; } = true;
 		public DateTime CreatedAt { get; set; }
 		public DateTime? UpdatedAt { get; set; }
