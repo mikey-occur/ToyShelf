@@ -382,6 +382,14 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.PhoneNumber)
 					  .HasMaxLength(20);
 
+				entity.Property(e => e.CurrentShelfCount)
+					  .IsRequired()
+					  .HasDefaultValue(0);
+
+				// Chống xung đột dữ liệu (Race Condition) khi cộng/trừ số lượng
+				entity.Property(e => e.RowVersion)
+					  .IsRowVersion();
+
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
@@ -391,10 +399,6 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.UpdatedAt);
 
-				// FK 
-				//entity.HasMany(e => e.Shelves)
-				//	  .WithOne(a => a.Store)
-				//	  .HasForeignKey(a => a.StoreId);
 
 				entity.HasMany(e => e.StoreInvitations)
 				      .WithOne(s => s.Store)
