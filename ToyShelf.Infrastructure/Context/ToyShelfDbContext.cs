@@ -39,6 +39,8 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<ShelfType> ShelfTypes { get; set; }
 		public DbSet<ShelfTypeLevel> shelfTypeLevels { get; set; }
 
+		public DbSet<InventoryShelf> InventoryShelves { get; set; }
+
 		public DbSet<Product> Products { get; set; }
 		public DbSet<ProductCategory> ProductCategories { get; set; }
 		public DbSet<ProductColor> ProductColors { get; set; }
@@ -1310,6 +1312,35 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasConstraintName("FK_ShelfTransaction_ToLocation");
 			});
 
+
+			// ================== InventoryShelf ==================
+			modelBuilder.Entity<InventoryShelf>(entity =>
+			{
+				entity.ToTable("InventoryShelves");
+
+				// Khóa chính tổ hợp: LocationId + ShelfTypeId
+				entity.HasKey(e => new { e.InventoryLocationId, e.ShelfTypeId });
+
+				entity.Property(e => e.Quantity)
+					  .IsRequired()
+					  .HasDefaultValue(0);
+
+				
+				entity.Property(e => e.RowVersion)
+					  .IsRowVersion();
+
+				// Mối quan hệ với InventoryLocation
+				entity.HasOne(e => e.InventoryLocation)
+					  .WithMany(l => l.InventoryShelves)
+					  .HasForeignKey(e => e.InventoryLocationId)
+					  .OnDelete(DeleteBehavior.Cascade);
+
+				// Mối quan hệ với ShelfType
+				entity.HasOne(e => e.ShelfType)
+					  .WithMany() 
+					  .HasForeignKey(e => e.ShelfTypeId)
+					  .OnDelete(DeleteBehavior.Restrict);
+			});
 
 			// ================== Shelf ==================
 			modelBuilder.Entity<Shelf>(entity =>
