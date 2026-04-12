@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,11 +15,12 @@ namespace ToyShelf.Infrastructure.Repositories
 	{
 		private readonly ToyShelfDbContext _context;
 		private Hashtable _repositories;
-
-		public UnitOfWork(ToyShelfDbContext context)
+		private IDbContextTransaction? _currentTransaction;
+		public UnitOfWork(ToyShelfDbContext context, IDbContextTransaction? currentTransaction = null)
 		{
 			_context = context;
 			_repositories = new Hashtable();
+			_currentTransaction = currentTransaction;
 		}
 
 		public IGenericRepository<T> Repository<T>() where T : class
@@ -55,6 +57,55 @@ namespace ToyShelf.Infrastructure.Repositories
 			{
 				// Log lỗi tại đây hoặc quăng ra một Custom Exception của riêng bạn
 				throw new Exception("Dữ liệu đã bị thay đổi bởi người khác, vui lòng thử lại.");
+			}
+		}
+
+		public async Task BeginTransactionAsync()
+		{
+			if (_currentTransaction != null)
+			{
+				return;
+			}
+
+			_currentTransaction = await _context.Database.BeginTransactionAsync();
+		}
+
+		public async Task CommitTransactionAsync()
+		{
+			try
+			{
+				
+				if (_currentTransaction != null)
+				{
+					await _currentTransaction.CommitAsync();
+				}
+			}
+			finally
+			{
+				if (_currentTransaction != null)
+				{
+					await _currentTransaction.DisposeAsync();
+					_currentTransaction = null;
+				}
+			}
+		}
+
+		public async Task RollbackTransactionAsync()
+		{
+			try
+			{
+				if (_currentTransaction != null)
+				{
+					await _currentTransaction.RollbackAsync();
+				}
+			}
+			finally
+			{
+				if (_currentTransaction != null)
+				{
+					await _currentTransaction.DisposeAsync();
+					_currentTransaction = null;
+				}
 			}
 		}
 	}
