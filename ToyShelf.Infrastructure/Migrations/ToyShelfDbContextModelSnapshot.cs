@@ -588,11 +588,9 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<int>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("integer");
 
                     b.HasKey("InventoryLocationId", "ShelfTypeId");
 

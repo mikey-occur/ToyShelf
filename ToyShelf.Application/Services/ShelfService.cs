@@ -20,39 +20,76 @@ namespace ToyShelf.Application.Services
         private readonly IInventoryLocationRepository _inventoryLocationRepository; 
 		private readonly IUnitOfWork _unitOfWork;
         private readonly IDateTimeProvider _dateTime;
-        public ShelfService(
+		private readonly IInventoryShelfService _inventoryShelfService;
+		public ShelfService(
             IShelfRepository shelfRepository,
             IInventoryLocationRepository inventoryLocationRepository,
 			IUnitOfWork unitOfWork,
-            IDateTimeProvider dateTime)
+            IDateTimeProvider dateTime,
+			IInventoryShelfService inventoryShelfService)
         {
             _shelfRepository = shelfRepository;
             _inventoryLocationRepository = inventoryLocationRepository;
 			_unitOfWork = unitOfWork;
             _dateTime = dateTime;
+			_inventoryShelfService = inventoryShelfService;
         }
 
 		// ===== CREATE =====
-		public async Task<ShelfResponse> CreateAsync(CreateShelfRequest request)
+		public async Task<List<ShelfResponse>> CreateAsync(CreateShelfRequest request)
 		{
-			var location = await _inventoryLocationRepository.GetByIdAsync(request.InventoryLocationId);
-			if (location == null)
-				throw new AppException("Inventory location not found", 404);
+			if (request.Codes == null || !request.Codes.Any())
+				throw new AppException("Danh sách mã kệ không được để trống!", 400);
 
-			var shelf = new Shelf
+			// Mở Transaction chung để cả 2 Service dùng chung một "đường ống"
+			await _unitOfWork.BeginTransactionAsync();
+
+			try
 			{
-				Id = Guid.NewGuid(),
-				InventoryLocationId = request.InventoryLocationId,
-				ShelfTypeId = request.ShelfTypeId,
-				Code = request.Code.Trim(),
-				Status = ShelfStatus.Available,
-				AssignedAt = location.Type == InventoryLocationType.Store ? _dateTime.UtcNow : null
-			};
+				var location = await _inventoryLocationRepository.GetByIdAsync(request.InventoryLocationId);
+				if (location == null) throw new AppException("Không tìm thấy kho!", 404);
 
-			await _shelfRepository.AddAsync(shelf);
-			await _unitOfWork.SaveChangesAsync();
+				if (location.Type != InventoryLocationType.Warehouse)
+					throw new AppException("Kệ mới bắt buộc phải nhập tại Kho Tổng!", 400);
 
-			return MapToResponse(shelf);
+				var createdShelves = new List<Shelf>();
+				int totalNewShelves = request.Codes.Count;
+
+				// 2. Tạo các kệ vật lý (Bảng Shelf)
+				foreach (var code in request.Codes)
+				{
+					var shelf = new Shelf
+					{
+						Id = Guid.NewGuid(),
+						InventoryLocationId = request.InventoryLocationId,
+						ShelfTypeId = request.ShelfTypeId,
+						Code = code.Trim(),
+						Status = ShelfStatus.Available
+					};
+					await _shelfRepository.AddAsync(shelf);
+					createdShelves.Add(shelf);
+				}
+
+				// Lưu bước 1 vào bộ nhớ tạm của DbContext
+				await _unitOfWork.SaveChangesAsync();
+
+				// 3. GỌI HÀM CỦA SERVICE KHÁC Ở ĐÂY
+				await _inventoryShelfService.AddShelfQuantityAsync(
+					request.InventoryLocationId,
+					request.ShelfTypeId,
+					totalNewShelves);
+
+				// 4. CHỐT SỔ TẤT CẢ (Commit này sẽ chốt luôn cả thay đổi bên trong Service vừa gọi)
+				await _unitOfWork.CommitTransactionAsync();
+
+				// Trả về List để khớp với kiểu dữ liệu Task<List<ShelfResponse>>
+				return createdShelves.Select(s => MapToResponse(s)).ToList();
+			}
+			catch (Exception)
+			{
+				await _unitOfWork.RollbackTransactionAsync();
+				throw;
+			}
 		}
 
 		// ===== GET ALL =====

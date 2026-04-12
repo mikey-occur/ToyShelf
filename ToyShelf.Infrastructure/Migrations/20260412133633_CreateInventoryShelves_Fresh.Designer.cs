@@ -12,8 +12,8 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    [Migration("20260412074425_AddShelfInventoryEntity")]
-    partial class AddShelfInventoryEntity
+    [Migration("20260412133633_CreateInventoryShelves_Fresh")]
+    partial class CreateInventoryShelves_Fresh
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -591,11 +591,9 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("integer")
                         .HasDefaultValue(0);
 
-                    b.Property<byte[]>("RowVersion")
+                    b.Property<int>("RowVersion")
                         .IsConcurrencyToken()
-                        .IsRequired()
-                        .ValueGeneratedOnAddOrUpdate()
-                        .HasColumnType("bytea");
+                        .HasColumnType("integer");
 
                     b.HasKey("InventoryLocationId", "ShelfTypeId");
 

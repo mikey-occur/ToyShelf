@@ -45,25 +45,26 @@ namespace ToyShelf.API.Controllers
 		/// Create a new shelf.
 		/// </summary>
 		[HttpPost]
-        public async Task<BaseResponse<ShelfResponse>> Create([FromBody] CreateShelfRequest request)
-        {
-            var result = await _shelfService.CreateAsync(request);
-            return BaseResponse<ShelfResponse>.Ok(result, "Shelf created successfully");
-        }
+		public async Task<BaseResponse<List<ShelfResponse>>> Create([FromBody] CreateShelfRequest request)
+		{
+			
+			var result = await _shelfService.CreateAsync(request);
+			return BaseResponse<List<ShelfResponse>>.Ok(result, "Shelves created successfully");
+		}
 
-      
-        //[HttpGet]
-        //public async Task<BaseResponse<IEnumerable<ShelfResponse>>> GetAll()
-        //{
-        //    var result = await _shelfService.GetAllAsync();
-        //    return BaseResponse<IEnumerable<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
-        //}
 
-        // ===== GET BY ID =====
-        /// <summary>
-        /// Get shelf by ID.
-        /// </summary>
-        [HttpGet("{id:guid}")]
+		//[HttpGet]
+		//public async Task<BaseResponse<IEnumerable<ShelfResponse>>> GetAll()
+		//{
+		//    var result = await _shelfService.GetAllAsync();
+		//    return BaseResponse<IEnumerable<ShelfResponse>>.Ok(result, "Shelves retrieved successfully");
+		//}
+
+		// ===== GET BY ID =====
+		/// <summary>
+		/// Get shelf by ID.
+		/// </summary>
+		[HttpGet("{id:guid}")]
         public async Task<BaseResponse<ShelfResponse>> GetById(Guid id)
         {
             var result = await _shelfService.GetByIdAsync(id);

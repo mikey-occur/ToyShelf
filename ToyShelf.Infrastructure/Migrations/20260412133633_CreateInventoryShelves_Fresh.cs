@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ToyShelf.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class AddShelfInventoryEntity : Migration
+    public partial class CreateInventoryShelves_Fresh : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -18,7 +18,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     InventoryLocationId = table.Column<Guid>(type: "uuid", nullable: false),
                     ShelfTypeId = table.Column<Guid>(type: "uuid", nullable: false),
                     Quantity = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
-                    RowVersion = table.Column<byte[]>(type: "bytea", rowVersion: true, nullable: false)
+                    RowVersion = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {

@@ -1325,9 +1325,9 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValue(0);
 
-				
+
 				entity.Property(e => e.RowVersion)
-					  .IsRowVersion();
+					  .IsConcurrencyToken();
 
 				// Mối quan hệ với InventoryLocation
 				entity.HasOne(e => e.InventoryLocation)
