@@ -13,9 +13,6 @@ namespace ToyShelf.Domain.Entities
         public Guid ShelfTypeId { get; private set; }
         public int Quantity { get; private set; }
 
-		// Chống xung đột dữ liệu cho bảng tồn kho chi tiết
-		public int RowVersion { get; private set; } = 1;
-
 		public virtual InventoryLocation InventoryLocation { get; private set; } = null!;
         public virtual ShelfType ShelfType { get; private set; } = null!;
 
@@ -34,7 +31,6 @@ namespace ToyShelf.Domain.Entities
         {
             if (count <= 0) return; // Không làm gì nếu count = 0
             Quantity += count;
-			RowVersion++;
 		}
 
         // Trừ nhiều cái một lúc
@@ -45,7 +41,6 @@ namespace ToyShelf.Domain.Entities
                 throw new InvalidOperationException($"Tồn kho không đủ. Hiện có {Quantity}, yêu cầu trừ {count}.");
             
             Quantity -= count;
-			RowVersion++;
 		}
 
         // Phương thức hỗ trợ kiểm tra nhanh (Dùng ở Application Layer)
