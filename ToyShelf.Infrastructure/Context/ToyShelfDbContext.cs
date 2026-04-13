@@ -1317,11 +1317,9 @@ namespace ToyShelf.Infrastructure.Context
 			modelBuilder.Entity<InventoryShelf>(entity =>
 			{
 				entity.HasKey(e => e.Id);
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
 
-
-				// Khóa chính tổ hợp: LocationId + ShelfTypeId
-				entity.HasKey(e => new { e.InventoryLocationId, e.ShelfTypeId });
-				           
 				entity.Property(e => e.Quantity)
 					  .IsRequired()
 					  .HasDefaultValue(0);
@@ -1329,13 +1327,15 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasOne(e => e.InventoryLocation)
 					  .WithMany(l => l.InventoryShelves)
 					  .HasForeignKey(e => e.InventoryLocationId)
-					  .OnDelete(DeleteBehavior.Cascade);
+					  .OnDelete(DeleteBehavior.Cascade)
+					  .HasConstraintName("FK_InventoryShelf_InventoryLocation");
 
 				// Mối quan hệ với ShelfType
 				entity.HasOne(e => e.ShelfType)
-					  .WithMany() 
+					  .WithMany(st => st.InventoryShelves) 
 					  .HasForeignKey(e => e.ShelfTypeId)
-					  .OnDelete(DeleteBehavior.Restrict);
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_InventoryShelf_ShelfType");
 			});
 
 			// ================== Shelf ==================
