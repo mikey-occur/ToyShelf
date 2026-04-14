@@ -55,6 +55,33 @@ namespace ToyShelf.Infrastructure.Repositories
 				.FirstOrDefaultAsync();
 		}
 
+		/// <summary>
+		/// Tính tổng số lượng của một Item cụ thể đã được phân bổ vào các chuyến xe cho một StoreOrder.
+		/// Loại trừ các nhiệm vụ đã bị Cancelled.
+		/// </summary>
+		public async Task<int> GetTotalAllocatedQuantityAsync(Guid storeOrderId, Guid storeOrderItemId)
+		{
+			return await _context.AssignmentStoreOrderItems
+				.Where(asoi => asoi.AssignmentStoreOrder.StoreOrderId == storeOrderId
+							&& asoi.StoreOrderItemId == storeOrderItemId
+							&& asoi.AssignmentStoreOrder.ShipmentAssignment.Status != AssignmentStatus.Cancelled)
+				.SumAsync(asoi => asoi.AllocatedQuantity);
+		}
+
+		/// <summary>
+		/// Tính tổng số lượng của một Item cụ thể đã được phân bổ vào các chuyến xe cho một ShelfOrder.
+		/// Loại trừ các nhiệm vụ đã bị Cancelled.
+		/// </summary>
+		public async Task<int> GetTotalShelfAllocatedQuantityAsync(Guid shelfOrderId, Guid shelfOrderItemId)
+		{
+			return await _context.AssignmentShelfOrderItems
+				.Where(ashoi => ashoi.AssignmentShelfOrder.ShelfOrderId == shelfOrderId
+							 && ashoi.ShelfOrderItemId == shelfOrderItemId
+							 && ashoi.AssignmentShelfOrder.ShipmentAssignment.Status != AssignmentStatus.Cancelled)
+				.SumAsync(ashoi => ashoi.AllocatedQuantity);
+		}
+
+
 		// Helper để tái sử dụng các Include cho DamageReport và Order
 		private IQueryable<ShipmentAssignment> GetAssignmentWithFullDetailsQuery()
 		{
@@ -84,6 +111,11 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(o => o.Items)
 							.ThenInclude(i => i.ProductColor)
 								.ThenInclude(pc => pc.Inventories)
+				.Include(x => x.AssignmentStoreOrders)
+					.ThenInclude(aso => aso.AssignmentStoreOrderItems) 
+						.ThenInclude(asoi => asoi.StoreOrderItem)
+							.ThenInclude(soi => soi.ProductColor)
+								.ThenInclude(pc => pc.Product)
 
 				// --- Nhánh Shelf Orders (N-N qua bảng trung gian) ---
 				.Include(x => x.AssignmentShelfOrders)
@@ -93,6 +125,10 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(ash => ash.ShelfOrder)
 						.ThenInclude(o => o.Items)
 							.ThenInclude(i => i.ShelfType)
+				.Include(x => x.AssignmentShelfOrders)
+					.ThenInclude(ash => ash.AssignmentShelfOrderItems) 
+						.ThenInclude(ashi => ashi.ShelfOrderItem)
+							.ThenInclude(shi => shi.ShelfType)
 
 				// --- Nhánh Damage Reports (1-N) ---
 				.Include(x => x.AssignmentDamageReports)
