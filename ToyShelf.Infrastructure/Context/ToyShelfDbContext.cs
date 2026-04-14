@@ -57,7 +57,9 @@ namespace ToyShelf.Infrastructure.Context
 		public DbSet<ShipmentMedia> ShipmentMedias { get; set; } // Bỏ s
 		public DbSet<ShipmentAssignment> ShipmentAssignments { get; set; }
 		public DbSet<AssignmentShelfOrder> AssignmentShelfOrders { get; set; }
+		public DbSet<AssignmentShelfOrderItem> AssignmentShelfOrderItems { get; set; }
 		public DbSet<AssignmentStoreOrder> AssignmentStoreOrders { get; set; }
+		public DbSet<AssignmentStoreOrderItem> AssignmentStoreOrderItems { get; set; }
 		public DbSet<AssignmentDamageReport> AssignmentDamageReports { get; set; }
 
 		public DbSet<Order> Orders { get; set; }
@@ -2118,6 +2120,59 @@ namespace ToyShelf.Infrastructure.Context
 					.WithMany(s => s.AssignmentShelfOrders)
 					.HasForeignKey(e => e.ShelfOrderId)
 					.OnDelete(DeleteBehavior.Cascade);
+			});
+
+			// ================== AssignmentStoreOrderItem ==================
+			modelBuilder.Entity<AssignmentStoreOrderItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.AllocatedQuantity)
+					  .IsRequired();
+
+				// Đảm bảo một món trong một Assignment không bị lặp lại dòng phân bổ
+				entity.HasIndex(e => new { e.AssignmentStoreOrderId, e.StoreOrderItemId }).IsUnique();
+
+				// Nối với bảng trung gian StoreOrder (Xóa cha thì xóa con)
+				entity.HasOne(e => e.AssignmentStoreOrder)
+					.WithMany(s => s.AssignmentStoreOrderItems)
+					.HasForeignKey(e => e.AssignmentStoreOrderId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Nối với món hàng gốc (Dùng Restrict để tránh lỗi Multiple Cascade Paths)
+				entity.HasOne(e => e.StoreOrderItem)
+					.WithMany(s => s.AssignmentStoreOrderItems)
+					.HasForeignKey(e => e.StoreOrderItemId)
+					.OnDelete(DeleteBehavior.Restrict);
+			});
+
+			// ================== AssignmentShelfOrderItem ==================
+			modelBuilder.Entity<AssignmentShelfOrderItem>(entity =>
+			{
+				entity.HasKey(e => e.Id);
+
+				entity.Property(e => e.Id)
+					  .ValueGeneratedOnAdd();
+
+				entity.Property(e => e.AllocatedQuantity)
+					  .IsRequired();
+
+				entity.HasIndex(e => new { e.AssignmentShelfOrderId, e.ShelfOrderItemId }).IsUnique();
+
+				// Nối với bảng trung gian ShelfOrder (Xóa cha thì xóa con)
+				entity.HasOne(e => e.AssignmentShelfOrder)
+					.WithMany(s => s.AssignmentShelfOrderItems)
+					.HasForeignKey(e => e.AssignmentShelfOrderId)
+					.OnDelete(DeleteBehavior.Cascade);
+
+				// Nối với kệ gốc
+				entity.HasOne(e => e.ShelfOrderItem)
+					.WithMany(s => s.AssignmentShelfOrderItems)
+					.HasForeignKey(e => e.ShelfOrderItemId)
+					.OnDelete(DeleteBehavior.Restrict);
 			});
 
 			// ================== AssignmentDamageReport ==================
