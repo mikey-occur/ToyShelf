@@ -12,5 +12,7 @@ namespace ToyShelf.Domain.IRepositories
 		Task<InventoryShelf?> GetShelfAsync(Guid locationId, Guid shelfTypeId);
 		Task<List<InventoryShelf>> GetShelvesByLocationAsync(Guid locationId);
 		Task<List<InventoryShelf>> GetDistributionsByShelfTypeAsync(Guid shelfTypeId);
+		Task<InventoryShelf?> GetByLocationAndTypeAsync(Guid locationId, Guid shelfTypeId);
+		Task<InventoryShelf?> GetShelfWithStatusAsync(Guid locationId, Guid shelfTypeId, ShelfStatus status);
 	}
 }
