@@ -10,6 +10,7 @@ using ToyShelf.API.Middleware;
 using ToyShelf.Application.IServices;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Context;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
 builder.Services.AddAppServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 500L * 1024 * 1024; // 500 MB
+});
 builder.Services
 	.AddControllers()
 	.AddJsonOptions(opt =>
