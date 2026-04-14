@@ -53,6 +53,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public string? ImageUrl { get; set; }
 
 		public int Quantity { get; set; }
+		public int OriginalQuantity { get; set; }
 		public int FulfilledQuantity { get; set; }
 	}
 
@@ -68,6 +69,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 		public int TotalLevels { get; set; }
 
 		public int Quantity { get; set; }
+		public int OriginalQuantity { get; set; }
 		public int FulfilledQuantity { get; set; }
 	}
 

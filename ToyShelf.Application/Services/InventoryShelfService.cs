@@ -64,7 +64,7 @@ namespace ToyShelf.Application.Services
 					var shelf = await _shelfRepo.GetShelfAsync(locationId, shelfTypeId);
 					if (shelf == null)
 					{
-						shelf = new InventoryShelf(locationId, shelfTypeId, 0);
+						shelf = new InventoryShelf(locationId, shelfTypeId, 0, ShelfStatus.Available);
 						await _shelfRepo.AddAsync(shelf);
 					}
 

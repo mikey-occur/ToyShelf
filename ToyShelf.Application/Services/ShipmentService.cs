@@ -28,6 +28,7 @@ namespace ToyShelf.Application.Services
 		private readonly IDamageReportRepository _damageReportRepository;
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IShelfOrderRepository _shelfOrderRepository;
+		private readonly IInventoryShelfRepository _inventoryShelfRepository; 
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -46,6 +47,7 @@ namespace ToyShelf.Application.Services
 			IDamageReportRepository damageReportRepository,
 			IStoreOrderRepository storeOrderRepository,
 			IShelfOrderRepository shelfOrderRepository,
+			IInventoryShelfRepository inventoryShelfRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -61,6 +63,7 @@ namespace ToyShelf.Application.Services
 			_damageReportRepository = damageReportRepository;
 			_storeOrderRepository = storeOrderRepository;
 			_shelfOrderRepository = shelfOrderRepository;
+			_inventoryShelfRepository = inventoryShelfRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -183,34 +186,76 @@ namespace ToyShelf.Application.Services
 				var shelfOrderItem = sOrder.Items.FirstOrDefault(i => i.ShelfTypeId == sReq.ShelfTypeId);
 				if (shelfOrderItem == null) throw new AppException("Shelf type not in this order", 400);
 
-				// Lấy danh sách kệ vật lý (theo ID đích danh hoặc lấy tự động theo Type)
+				// --- LOGIC DỊCH CHUYỂN TỒN KHO TRÊN SỔ SÁCH (InventoryShelf) ---
+
+				// 1. Tìm bản ghi Available để trừ số lượng
+				var invAvailable = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+					assignment.WarehouseLocationId, sReq.ShelfTypeId, ShelfStatus.Available);
+
+				if (invAvailable == null || !invAvailable.HasEnoughStock(sReq.ExpectedQuantity))
+					throw new AppException($"Kho không đủ kệ sẵn dùng (Available). Loại: {shelfOrderItem.ShelfType?.Name}", 400);
+
+				// THỰC HIỆN TRỪ: Lấy từ ngăn "Available"
+				invAvailable.RemoveQuantity(sReq.ExpectedQuantity);
+
+				// 2. Tìm bản ghi Reserved để cộng số lượng (Theo dõi hàng đang chuẩn bị đi)
+				var invReserved = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+					assignment.WarehouseLocationId, sReq.ShelfTypeId, ShelfStatus.Reserved);
+
+				if (invReserved == null)
+				{
+					// Nếu chưa có "ngăn" Reserved cho loại kệ này tại kho này -> Tạo mới bản ghi InventoryShelf
+					// Giả sử Constructor InventoryShelf của bạn nhận thêm tham số Status
+					invReserved = new InventoryShelf(
+						assignment.WarehouseLocationId,
+						sReq.ShelfTypeId,
+						sReq.ExpectedQuantity,
+						ShelfStatus.Reserved
+					);
+					await _inventoryShelfRepository.AddAsync(invReserved);
+				}
+				else
+				{
+					// Nếu đã có bản ghi Reserved -> Cộng thêm vào
+					invReserved.AddQuantity(sReq.ExpectedQuantity);
+				}
+
+				// --- LOGIC XỬ LÝ ĐỊNH DANH TỦ VẬT LÝ (Shelf) ---
 				List<Shelf> shelvesToReserve;
 				if (sReq.ShelfIds != null && sReq.ShelfIds.Any())
 				{
 					shelvesToReserve = await _shelfRepository.GetByIds(sReq.ShelfIds);
-					if (shelvesToReserve.Count != sReq.ShelfIds.Count) throw new AppException("Some shelves not found", 404);
+					if (shelvesToReserve.Count != sReq.ShelfIds.Count)
+						throw new AppException("Một số kệ vật lý được chọn không tồn tại", 404);
+
+					if (shelvesToReserve.Any(x => x.Status != ShelfStatus.Available || x.InventoryLocationId != assignment.WarehouseLocationId))
+						throw new AppException("Một số kệ đã chọn không khả dụng hoặc không nằm tại kho này", 400);
 				}
 				else
 				{
+					// Tự động lấy các kệ Available theo số lượng yêu cầu
 					shelvesToReserve = await _shelfRepository.GetAvailableShelvesByType(
 						assignment.WarehouseLocationId, sReq.ShelfTypeId, sReq.ExpectedQuantity);
 				}
 
 				if (shelvesToReserve.Count < sReq.ExpectedQuantity)
-					throw new AppException($"Not enough available shelves for {sOrder.Code}", 400);
+					throw new AppException($"Không đủ {sReq.ExpectedQuantity} kệ vật lý Available trong kho để gán định danh.", 400);
 
+				// Cập nhật trạng thái từng cái tủ
 				foreach (var shelf in shelvesToReserve)
 				{
-					shelf.Status = ShelfStatus.Reserved; // Khóa kệ ngay
+					shelf.Status = ShelfStatus.Reserved; // Đồng bộ với InventoryShelf.Status
+
 					shipment.ShelfShipmentItems.Add(new ShelfShipmentItem
 					{
 						Id = Guid.NewGuid(),
 						ShelfId = shelf.Id,
 						ShelfOrderItemId = shelfOrderItem.Id,
-						Status = ShelfShipmentStatus.InTransit
+						Status = ShelfShipmentStatus.InTransit // Status của dòng Item trong vận đơn
 					});
 				}
 
+				// Cập nhật trạng thái đơn kệ
 				if (!shipment.ShelfOrders.Contains(sOrder)) shipment.ShelfOrders.Add(sOrder);
 				sOrder.Status = ShelfOrderStatus.Processing;
 			}

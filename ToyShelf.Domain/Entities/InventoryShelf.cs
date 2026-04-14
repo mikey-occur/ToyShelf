@@ -12,19 +12,22 @@ namespace ToyShelf.Domain.Entities
 		public Guid InventoryLocationId { get; private set; }
         public Guid ShelfTypeId { get; private set; }
         public int Quantity { get; private set; }
+		public ShelfStatus Status { get; set; }
+
 
 		public virtual InventoryLocation InventoryLocation { get; private set; } = null!;
         public virtual ShelfType ShelfType { get; private set; } = null!;
 
         private InventoryShelf() { }
 
-        public InventoryShelf(Guid locationId, Guid shelfTypeId, int initialQuantity)
+        public InventoryShelf(Guid locationId, Guid shelfTypeId, int initialQuantity, ShelfStatus status)
         {
 			Id = Guid.NewGuid();
 			InventoryLocationId = locationId;
             ShelfTypeId = shelfTypeId;
             Quantity = initialQuantity >= 0 ? initialQuantity : 0;
-        }
+            Status = status;
+		}
 
         // Thêm nhiều cái một lúc
         public void AddQuantity(int count)
