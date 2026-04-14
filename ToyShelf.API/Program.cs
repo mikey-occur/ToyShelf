@@ -106,7 +106,6 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 // ===== Hangfire Dashboard =====
-app.UseHangfireDashboard("/hangfire");
 // 1. Job chốt toán cuối tháng (Chạy vào 0h ngày 1 hàng tháng)
 var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
 recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
