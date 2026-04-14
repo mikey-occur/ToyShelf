@@ -22,5 +22,6 @@ namespace ToyShelf.Domain.Entities
 		public virtual ShelfOrder ShelfOrder { get; set; } = null!;
 		public virtual ShelfType ShelfType { get; set; } = null!;
 		public virtual ICollection<ShelfShipmentItem> ShelfShipmentItems { get; set; } = new List<ShelfShipmentItem>();
+		public virtual ICollection<AssignmentShelfOrderItem> AssignmentShelfOrderItems { get; set; } = new List<AssignmentShelfOrderItem>();
 	}
 }
