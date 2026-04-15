@@ -17,10 +17,11 @@ namespace ToyShelf.Domain.Entities
 		public string? QrCode { get; set; }
 		public string? Model3DUrl { get; set; }
 		public string? ImageUrl { get; set; }
-
+		
 		public bool IsActive { get; set; }
+		public bool HasFile { get; set; } = false;
 
-		public virtual Color Color { get; set; } = null!;
+        public virtual Color Color { get; set; } = null!;
 		public virtual Product Product { get; set; } = null!;
 		public virtual ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
 		public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();

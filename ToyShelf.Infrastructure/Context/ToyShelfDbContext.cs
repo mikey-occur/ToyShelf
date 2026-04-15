@@ -743,10 +743,13 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.IsActive)
 					  .HasDefaultValue(true);
 
-				// ================== RELATIONSHIPS ==================
+                entity.Property(e => e.HasFile)
+                      .HasDefaultValue(false);
 
-				// ProductColor → Product (N - 1)
-				entity.HasOne(e => e.Product)
+                // ================== RELATIONSHIPS ==================
+
+                // ProductColor → Product (N - 1)
+                entity.HasOne(e => e.Product)
 					  .WithMany(p => p.ProductColors)
 					  .HasForeignKey(e => e.ProductId)
 					  .OnDelete(DeleteBehavior.Cascade)
