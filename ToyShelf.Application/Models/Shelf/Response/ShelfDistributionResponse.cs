@@ -11,6 +11,6 @@ namespace ToyShelf.Application.Models.Shelf.Response
 		public Guid InventoryLocationId { get; set; }
 		public string InventoryLocationName { get; set; } = null!;
 		public ShelfDetailResponse Shelf { get; set; } = null!;
-		public int Count { get; set; }
+		public int Quantity { get; set; }
 	}
 }
