@@ -8,6 +8,7 @@ namespace ToyShelf.Application.Models.Product.Response
 {
 	public class TopSellingProductResponse
 	{
+		public Guid ProductId { get; set; }
 		public Guid ProductColorId { get; set; }
 		public string ProductName { get; set; } = string.Empty;
 		public string Sku { get; set; } = string.Empty;
