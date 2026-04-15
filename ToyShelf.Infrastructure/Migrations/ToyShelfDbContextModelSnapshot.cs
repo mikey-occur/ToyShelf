@@ -1083,6 +1083,11 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid>("ColorId")
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("HasFile")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("ImageUrl")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)");

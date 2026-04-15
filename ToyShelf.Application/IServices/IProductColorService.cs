@@ -20,5 +20,6 @@ namespace ToyShelf.Application.IServices
 		Task<ProductBySkuResponse?> GetByVariantSkuAsync(string sku);
 		Task<bool> RestoreProductColorAsync(Guid id);
 		Task<bool> DisableProductColorAsync(Guid id);
-	}
+		Task<bool> UpdateFileProductColorAsync(string sku , bool hasFile);
+    }
 }
