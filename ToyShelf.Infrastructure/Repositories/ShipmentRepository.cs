@@ -112,6 +112,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(s => s.Items)
 				.Include(s => s.ShelfShipmentItems)
 					.ThenInclude(x => x.Shelf).ThenInclude(sh => sh.ShelfType)
+				.Include(s => s.ShelfShipmentItems)    
+					.ThenInclude(x => x.ShelfOrderItem) 
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 

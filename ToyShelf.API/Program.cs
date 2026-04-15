@@ -10,6 +10,7 @@ using ToyShelf.API.Middleware;
 using ToyShelf.Application.IServices;
 using ToyShelf.Infrastructure.Common.Time;
 using ToyShelf.Infrastructure.Context;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +20,10 @@ builder.Services.AddCorsPolicies();
 builder.Services.AddSwaggerSetup();
 builder.Services.AddAppServices(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 500L * 1024 * 1024; // 500 MB
+});
 builder.Services
 	.AddControllers()
 	.AddJsonOptions(opt =>
@@ -106,7 +111,7 @@ var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>(
 recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
 	"auto-monthly-settlement",
 	service => service.GenerateLastMonthSettlementAutoAsync(),
-	"0 0 * * *",
+	Cron.Daily(0, 0),
 	new RecurringJobOptions
 	{
 		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")

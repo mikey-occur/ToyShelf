@@ -129,6 +129,31 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("AssignmentShelfOrders");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentShelfOrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AllocatedQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("AssignmentShelfOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ShelfOrderItemId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ShelfOrderItemId");
+
+                    b.HasIndex("AssignmentShelfOrderId", "ShelfOrderItemId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentShelfOrderItems");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentStoreOrder", b =>
                 {
                     b.Property<Guid>("Id")
@@ -149,6 +174,31 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("AssignmentStoreOrders");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentStoreOrderItem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("AllocatedQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("AssignmentStoreOrderId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("StoreOrderItemId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StoreOrderItemId");
+
+                    b.HasIndex("AssignmentStoreOrderId", "StoreOrderItemId")
+                        .IsUnique();
+
+                    b.ToTable("AssignmentStoreOrderItems");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
@@ -591,6 +641,11 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.Property<Guid>("ShelfTypeId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
 
                     b.HasKey("Id");
 
@@ -2199,6 +2254,25 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ShipmentAssignment");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentShelfOrderItem", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.AssignmentShelfOrder", "AssignmentShelfOrder")
+                        .WithMany("AssignmentShelfOrderItems")
+                        .HasForeignKey("AssignmentShelfOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ToyShelf.Domain.Entities.ShelfOrderItem", "ShelfOrderItem")
+                        .WithMany("AssignmentShelfOrderItems")
+                        .HasForeignKey("ShelfOrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignmentShelfOrder");
+
+                    b.Navigation("ShelfOrderItem");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentStoreOrder", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.ShipmentAssignment", "ShipmentAssignment")
@@ -2216,6 +2290,25 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("ShipmentAssignment");
 
                     b.Navigation("StoreOrder");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentStoreOrderItem", b =>
+                {
+                    b.HasOne("ToyShelf.Domain.Entities.AssignmentStoreOrder", "AssignmentStoreOrder")
+                        .WithMany("AssignmentStoreOrderItems")
+                        .HasForeignKey("AssignmentStoreOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ToyShelf.Domain.Entities.StoreOrderItem", "StoreOrderItem")
+                        .WithMany("AssignmentStoreOrderItems")
+                        .HasForeignKey("StoreOrderItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("AssignmentStoreOrder");
+
+                    b.Navigation("StoreOrderItem");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.CommissionHistory", b =>
@@ -3106,6 +3199,16 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("PasswordResetOtps");
                 });
 
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentShelfOrder", b =>
+                {
+                    b.Navigation("AssignmentShelfOrderItems");
+                });
+
+            modelBuilder.Entity("ToyShelf.Domain.Entities.AssignmentStoreOrder", b =>
+                {
+                    b.Navigation("AssignmentStoreOrderItems");
+                });
+
             modelBuilder.Entity("ToyShelf.Domain.Entities.City", b =>
                 {
                     b.Navigation("StoreCreationRequests");
@@ -3264,6 +3367,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.ShelfOrderItem", b =>
                 {
+                    b.Navigation("AssignmentShelfOrderItems");
+
                     b.Navigation("ShelfShipmentItems");
                 });
 
@@ -3324,6 +3429,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.StoreOrderItem", b =>
                 {
+                    b.Navigation("AssignmentStoreOrderItems");
+
                     b.Navigation("ShipmentItems");
                 });
 

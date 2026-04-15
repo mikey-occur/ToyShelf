@@ -40,6 +40,21 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.InventoryLocation)
 				.ToListAsync();
 		}
+		public async Task<InventoryShelf?> GetByLocationAndTypeAsync(Guid locationId, Guid shelfTypeId)
+		{
+			return await _context.InventoryShelves
+				.Include(x => x.ShelfType) 
+				.FirstOrDefaultAsync(x => x.InventoryLocationId == locationId
+									   && x.ShelfTypeId == shelfTypeId);
+		}
 
+		public async Task<InventoryShelf?> GetShelfWithStatusAsync(Guid locationId, Guid shelfTypeId, ShelfStatus status)
+		{
+			return await _context.InventoryShelves
+				.Include(x => x.ShelfType) // Include để lấy Name hiển thị lỗi nếu cần
+				.FirstOrDefaultAsync(x => x.InventoryLocationId == locationId
+									   && x.ShelfTypeId == shelfTypeId
+									   && x.Status == status);
+		}
 	}
 }
