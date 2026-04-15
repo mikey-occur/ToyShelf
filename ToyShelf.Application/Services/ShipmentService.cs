@@ -444,6 +444,7 @@ namespace ToyShelf.Application.Services
 			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 
 			if (shipment == null) throw new AppException("Shipment not found", 404);
+
 			// Chỉ cho phép thu hồi khi xe đang trong hành trình giao hoặc đã giao xong 1 phần
 			if (shipment.Status != ShipmentStatus.Shipping && shipment.Status != ShipmentStatus.Delivered)
 				throw new AppException("Invalid status to pickup return items", 400);
@@ -458,7 +459,7 @@ namespace ToyShelf.Application.Services
 					UploadedByUserId = currentUser.UserId,
 					MediaUrl = request.MediaUrl,
 					MediaType = ShipmentMediaType.Image,
-					Purpose = ShipmentMediaPurpose.ReturnPickup, // Enum mới cho thu hồi
+					Purpose = ShipmentMediaPurpose.ReturnPickup,
 					CreatedAt = _dateTime.UtcNow
 				};
 				await _shipmentMediaRepository.AddAsync(media);
@@ -468,48 +469,81 @@ namespace ToyShelf.Application.Services
 				{
 					if (report.Status != DamageStatus.Scheduled) continue;
 
-					foreach (var reportItem in report.Items)
+					// --- TRƯỜNG HỢP: SẢN PHẨM HỎNG ---
+					var productItems = report.Items.Where(i => i.DamageItemType == DamageItemType.Product).ToList();
+					foreach (var reportItem in productItems)
 					{
-						// TRƯỜNG HỢP: SẢN PHẨM HỎNG - Trừ Damaged tại Store -> Cộng InTransit tại Store
-						if (reportItem.DamageItemType == DamageItemType.Product && reportItem.ProductColorId.HasValue)
+						if (!reportItem.ProductColorId.HasValue) continue;
+
+						var qty = reportItem.Quantity ?? 0;
+						var invDamaged = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.Damaged);
+
+						if (invDamaged == null || invDamaged.Quantity < qty)
+							throw new AppException($"Store does not have enough damaged stock for {reportItem.ProductColorId}", 400);
+
+						invDamaged.Quantity -= qty;
+
+						var invTransit = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.InTransit);
+						if (invTransit == null)
 						{
-							var qty = reportItem.Quantity ?? 0;
-							var invDamaged = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.Damaged);
-
-							if (invDamaged == null || invDamaged.Quantity < qty)
-								throw new AppException($"Store does not have enough damaged stock for {reportItem.ProductColorId}", 400);
-
-							invDamaged.Quantity -= qty;
-
-							var invTransit = await _inventoryRepository.GetAsync(report.InventoryLocationId, reportItem.ProductColorId.Value, InventoryStatus.InTransit);
-							if (invTransit == null)
-							{
-								invTransit = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = report.InventoryLocationId, ProductColorId = reportItem.ProductColorId.Value, Status = InventoryStatus.InTransit, Quantity = qty };
-								await _inventoryRepository.AddAsync(invTransit);
-							}
-							else invTransit.Quantity += qty;
-
-							await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
-							{
-								Id = Guid.NewGuid(),
-								ProductColorId = reportItem.ProductColorId.Value,
-								FromLocationId = report.InventoryLocationId, // Từ Store
-								ToLocationId = shipment.FromLocationId,      // Đích là Warehouse
-								FromStatus = InventoryStatus.Damaged,
-								ToStatus = InventoryStatus.InTransit,
-								Quantity = qty,
-								ReferenceType = InventoryReferenceType.DamageReport,
-								ReferenceId = report.Id,
-								CreatedAt = _dateTime.UtcNow
-							});
+							invTransit = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = report.InventoryLocationId, ProductColorId = reportItem.ProductColorId.Value, Status = InventoryStatus.InTransit, Quantity = qty };
+							await _inventoryRepository.AddAsync(invTransit);
 						}
-						// TRƯỜNG HỢP: KỆ HỎNG - Chuyển trạng thái kệ tại Store sang InTransit
-						else if (reportItem.DamageItemType == DamageItemType.Shelf && reportItem.ShelfId.HasValue)
+						else invTransit.Quantity += qty;
+
+						await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
 						{
-							var shelf = await _shelfRepository.GetByIdAsync(reportItem.ShelfId.Value);
-							if (shelf == null)
-								throw new AppException($"Shelf with ID {reportItem.ShelfId} not found", 404);
-							var oldStatus = shelf.Status; // Thường là Maintenance hoặc Damaged
+							Id = Guid.NewGuid(),
+							ProductColorId = reportItem.ProductColorId.Value,
+							FromLocationId = report.InventoryLocationId,
+							ToLocationId = shipment.FromLocationId,
+							FromStatus = InventoryStatus.Damaged,
+							ToStatus = InventoryStatus.InTransit,
+							Quantity = qty,
+							ReferenceType = InventoryReferenceType.DamageReport,
+							ReferenceId = report.Id,
+							CreatedAt = _dateTime.UtcNow
+						});
+					}
+
+					// --- TRƯỜNG HỢP: KỆ HỎNG ---
+					var shelfItems = report.Items.Where(i => i.DamageItemType == DamageItemType.Shelf).ToList();
+					var shelfGroups = shelfItems
+						.Where(i => i.ShelfId.HasValue)
+						.GroupBy(i => i.Shelf!.ShelfTypeId)
+						.Select(g => new { ShelfTypeId = g.Key, Count = g.Count(), Items = g.ToList() });
+
+					foreach (var group in shelfGroups)
+					{
+						// A. Cập nhật Sổ cái InventoryShelf tại Store (InventoryLocationId của report)
+
+						// 1. Trừ số lượng Maintenance (Ngăn kệ hỏng tại Store)
+						var invMaintenance = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+							report.InventoryLocationId, group.ShelfTypeId, ShelfStatus.Maintenance);
+
+						if (invMaintenance == null || invMaintenance.Quantity < group.Count)
+							throw new AppException($"Dữ liệu tồn kho bảo trì tại Store không đủ để bốc hàng.", 400);
+
+						invMaintenance.RemoveQuantity(group.Count);
+
+						// 2. Tăng số lượng InTransit (Ngăn kệ đang đi đường)
+						var invTransit = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+							report.InventoryLocationId, group.ShelfTypeId, ShelfStatus.InTransit);
+
+						if (invTransit == null)
+						{
+							invTransit = new InventoryShelf(report.InventoryLocationId, group.ShelfTypeId, group.Count, ShelfStatus.InTransit);
+							await _inventoryShelfRepository.AddAsync(invTransit);
+						}
+						else invTransit.AddQuantity(group.Count);
+
+						// B. Cập nhật từng tủ vật lý và ghi Log
+						foreach (var item in group.Items)
+						{
+							var shelf = item.Shelf;
+							if (shelf == null) continue;
+
+							var oldStatus = shelf.Status;
 							shelf.Status = ShelfStatus.InTransit;
 
 							await _shelfTransactionRepository.AddAsync(new ShelfTransaction
@@ -517,7 +551,7 @@ namespace ToyShelf.Application.Services
 								Id = Guid.NewGuid(),
 								ShelfId = shelf.Id,
 								FromLocationId = report.InventoryLocationId,
-								ToLocationId = shipment.FromLocationId,
+								ToLocationId = shipment.FromLocationId, // Đích về Warehouse
 								FromStatus = oldStatus,
 								ToStatus = ShelfStatus.InTransit,
 								ReferenceType = ShelfReferenceType.DamageReport,
@@ -529,8 +563,8 @@ namespace ToyShelf.Application.Services
 					report.Status = DamageStatus.InTransit;
 				}
 
-				// 3. Update Header
-				shipment.Status = ShipmentStatus.ShippingReturn; // Trạng thái mới cho luồng thu hồi
+				// 3. Update Header Shipment
+				shipment.Status = ShipmentStatus.ShippingReturn;
 				shipment.ReturnPickedUpAt = _dateTime.UtcNow;
 
 				_shipmentRepository.Update(shipment);
@@ -538,7 +572,6 @@ namespace ToyShelf.Application.Services
 			}
 			catch (Exception)
 			{
-				// Giữ nguyên Stack Trace gốc để biết chính xác lỗi ở dòng nào
 				throw;
 			}
 		}
