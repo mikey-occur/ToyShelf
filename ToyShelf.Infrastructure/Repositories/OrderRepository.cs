@@ -257,7 +257,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToList();
 		}
 
-		public async Task<List<(Guid StoreId, string StoreName, string City, string PartnerName, decimal TotalRevenue, int TotalOrders)>> GetTopStoresByRevenueAsync(int top = 3, int? month = null, int? year = null)
+		public async Task<List<(Guid StoreId, string StoreName, string City, string PartnerName, decimal TotalRevenue, int TotalOrders)>> GetTopStoresByRevenueAsync(int top = 3, int? month = null, int? year = null, Guid? partnerId = null)
 		{
 			var query = _context.Orders
 			.Where(o => o.Status.ToUpper() == "PAID") 
@@ -266,7 +266,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				if (year.HasValue) query = query.Where(o => o.CreatedAt.Year == year.Value);
 				if (month.HasValue) query = query.Where(o => o.CreatedAt.Month == month.Value);
 
-				var rawData = await query
+				if (partnerId.HasValue)
+				{
+					query = query.Where(o => o.Store.PartnerId == partnerId.Value);
+				}
+
+			var rawData = await query
 					.GroupBy(o => o.StoreId)
 					.Select(g => new
 					{

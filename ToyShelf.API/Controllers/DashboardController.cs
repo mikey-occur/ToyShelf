@@ -150,18 +150,16 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<List<TopSellingProductResponse>>.Ok(result, "Lấy Top 3 bán chạy thành công");
 		}
 
-
-
-
 		/// <summary>
 		/// Lấy danh sách Top Cửa hàng có doanh thu cao nhất (Bảng vàng)
 		/// </summary>
 		/// <param name="month">Tháng cần xem (từ 1 đến 12)</param>
 		/// <param name="year">Năm cần xem</param>
+		/// <param name="partnerId">ID đối tác (nếu muốn lọc theo đối tác)</param>
 		[HttpGet("top-stores")]
-		public async Task<BaseResponse<List<TopStoreResponse>>> GetTopStores(
+		public async Task<BaseResponse<List<TopStoreResponse>>> GetTopStoresByRevenue(
 			[FromQuery] int? month,
-			[FromQuery] int? year)
+			[FromQuery] int? year, [FromQuery] Guid? partnerId)
 		{
 			
 			if (month.HasValue && !year.HasValue)
@@ -170,7 +168,7 @@ namespace ToyShelf.API.Controllers
 			}
 
 			// Gọi Service lấy data (Mặc định lấy top 3 như đã setup)
-			var result = await _dashboardService.GetTopStoresByRevenueAsync(month, year);
+			var result = await _dashboardService.GetTopStoresByRevenueAsync(month, year, partnerId);
 			return BaseResponse<List<TopStoreResponse>>.Ok(result, "Lấy bảng xếp hạng cửa hàng thành công!");
 		}
 

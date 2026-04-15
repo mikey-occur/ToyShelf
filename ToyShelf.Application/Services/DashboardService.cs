@@ -477,7 +477,7 @@ namespace ToyShelf.Application.Services
 
 		public async Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null, Guid? storeId = null, Guid? partnerId = null)
 		{
-			var tupleList = await _orderRepository.GetTopSellingProductsAsync(3, month, year);
+			var tupleList = await _orderRepository.GetTopSellingProductsAsync(3, month, year, storeId, partnerId);
 
 			var response = tupleList.Select(t => new TopSellingProductResponse
 			{
@@ -495,9 +495,9 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<List<TopStoreResponse>> GetTopStoresByRevenueAsync(int? month = null, int? year = null)
+		public async Task<List<TopStoreResponse>> GetTopStoresByRevenueAsync(int? month = null, int? year = null, Guid? partnerId = null)
 		{
-			var tupleList = await _orderRepository.GetTopStoresByRevenueAsync(3, month, year);
+			var tupleList = await _orderRepository.GetTopStoresByRevenueAsync(3, month, year, partnerId);
 
 			var response = tupleList.Select(t => new TopStoreResponse
 			{
