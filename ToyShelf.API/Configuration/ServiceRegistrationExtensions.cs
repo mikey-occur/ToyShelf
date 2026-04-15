@@ -52,26 +52,30 @@ namespace ToyShelf.API.Configuration
 				}));
 			services.AddHangfireServer();
 
-			// Lấy ConnectionString từ appsettings.json
-			var redisConnection = configuration.GetConnectionString("Redis");
-			if (!string.IsNullOrEmpty(redisConnection))
-			{
-				// Khởi tạo lõi kết nối (Cái này để fix lỗi sập nguồn lúc nãy)
-				services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnection));
-			}
+			// Lấy giá trị từ mục Redis:ConnectionString thay vì ConnectionStrings:Redis
+			var redisConnectionString = configuration.GetValue<string>("Redis:ConnectionString");
+			var instanceName = configuration.GetValue<string>("Redis:InstanceName") ?? "ToyShelf_";
 
-			services.AddStackExchangeRedisCache(options =>
+			if (!string.IsNullOrEmpty(redisConnectionString))
+			{
+				// 1. Đăng ký ConnectionMultiplexer an toàn
+				services.AddSingleton<IConnectionMultiplexer>(sp =>
+					ConnectionMultiplexer.Connect(redisConnectionString));
+
+				// 2. Đăng ký Distributed Cache
+				services.AddStackExchangeRedisCache(options =>
 				{
-					options.Configuration = redisConnection;
-					options.InstanceName = "ToyShelf_";
+					options.Configuration = redisConnectionString;
+					options.InstanceName = instanceName;
 				});
 
-			services.AddSignalR()
-			.AddStackExchangeRedis(redisConnection!, options =>
-			{
-
-				options.Configuration.ChannelPrefix = RedisChannel.Literal("ToyShelf_SignalR");
-			});
+				// 3. Đăng ký SignalR Backplane
+				services.AddSignalR()
+						.AddStackExchangeRedis(redisConnectionString, options =>
+						{
+							options.Configuration.ChannelPrefix = RedisChannel.Literal($"{instanceName}SignalR");
+						});
+			}
 
 			// ===== Unit of Work & Generic =====
 			services.AddScoped<IUnitOfWork, UnitOfWork>();
