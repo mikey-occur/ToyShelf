@@ -132,18 +132,21 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// get san pham ban chay nhat 
+		/// Lấy sản phẩm bán chạy nhất 
 		/// </summary>
-
 		[HttpGet("top-selling")]
-		public async Task<BaseResponse<List<TopSellingProductResponse>>> GetTopSellingProducts([FromQuery] int? month, [FromQuery] int? year)
+		public async Task<BaseResponse<List<TopSellingProductResponse>>> GetTopSellingProducts(
+			[FromQuery] int? month,
+			[FromQuery] int? year,
+			[FromQuery] Guid? storeId,
+			[FromQuery] Guid? partnerId)
 		{
 			if (month.HasValue && !year.HasValue)
 			{
 				year = DateTime.Now.Year;
 			}
 
-			var result = await _dashboardService.GetTopSellingProductsAsync(month, year);
+			var result = await _dashboardService.GetTopSellingProductsAsync(month, year, storeId, partnerId);
 			return BaseResponse<List<TopSellingProductResponse>>.Ok(result, "Lấy Top 3 bán chạy thành công");
 		}
 

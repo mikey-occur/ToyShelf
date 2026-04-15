@@ -186,23 +186,33 @@ namespace ToyShelf.Infrastructure.Repositories
 			.ToListAsync();
 			}
 
-		public async Task<List<(Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
+		public async Task<List<(Guid ProductId, Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
 		int top = 3,
 		int? month = null,
-		int? year = null)
+		int? year = null,
+		Guid? storeId = null,      
+		Guid? partnerId = null)    
 		{
 			var query = _context.OrderItems
 				.Where(oi => oi.Order.Status.ToUpper() == "PAID")
 				.AsQueryable();
 
 			if (year.HasValue)
-			{
 				query = query.Where(oi => oi.Order.CreatedAt.Year == year.Value);
-			}
 
 			if (month.HasValue)
-			{
 				query = query.Where(oi => oi.Order.CreatedAt.Month == month.Value);
+
+			// 1. Lọc theo Cửa hàng (Store)
+			if (storeId.HasValue)
+			{
+				query = query.Where(oi => oi.Order.StoreId == storeId.Value);
+			}
+
+			// 2. Lọc theo Đối tác (Partner)
+			if (partnerId.HasValue)
+			{
+				query = query.Where(oi => oi.Order.Store.PartnerId == partnerId.Value);
 			}
 
 			var rawData = await query
@@ -219,20 +229,22 @@ namespace ToyShelf.Infrastructure.Repositories
 					  pc => pc.Id,
 					  (sold, pc) => new
 					  {
+						  ProductId = pc.ProductId,
 						  ProductColorId = sold.ProductColorId,
 						  ProductName = pc.Product.Name,
 						  Sku = pc.Sku,
 						  Brand = pc.Product.Brand,
 						  ColorName = pc.Color.Name,
 						  ImageUrl = pc.ImageUrl,
-
 						  Price = pc.Price,
 						  TotalSold = sold.TotalSold
 					  })
 				.OrderByDescending(x => x.TotalSold)
 				.ToListAsync();
+
 			return rawData
 				.Select(x => (
+					x.ProductId, 
 					x.ProductColorId,
 					x.ProductName,
 					x.Sku,

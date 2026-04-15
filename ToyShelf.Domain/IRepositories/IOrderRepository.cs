@@ -17,11 +17,13 @@ namespace ToyShelf.Domain.IRepositories
 		Task<(int TotalOrders, decimal TotalRevenue)> GetStoreStatsAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null);
 		Task<List<DailyStatResult>> GetStoreChartDataAsync(Guid storeId, DateTime startDate, DateTime endDate);
 		Task<Order?> GetOrderWithCommissionHistoryAsync(Guid orderId);
-		Task<List<(Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
+		Task<List<(Guid ProductId, Guid ProductColorId, string ProductName, string Sku, string? Brand, string ColorName, string? ImageUrl, decimal Price, int TotalSold)>> GetTopSellingProductsAsync(
 		int top = 3,
 		int? month = null,
-		int? year = null);
-		
+		int? year = null,
+		Guid? storeId = null,      
+		Guid? partnerId = null);
+
 		Task<List<(Guid StoreId, string StoreName, string City, string PartnerName, decimal TotalRevenue, int TotalOrders)>> GetTopStoresByRevenueAsync(
 		int top = 3,
 		int? month = null,

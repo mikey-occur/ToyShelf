@@ -475,12 +475,13 @@ namespace ToyShelf.Application.Services
 			return chartData;
 		}
 
-		public async Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null)
+		public async Task<List<TopSellingProductResponse>> GetTopSellingProductsAsync(int? month = null, int? year = null, Guid? storeId = null, Guid? partnerId = null)
 		{
 			var tupleList = await _orderRepository.GetTopSellingProductsAsync(3, month, year);
 
 			var response = tupleList.Select(t => new TopSellingProductResponse
 			{
+				ProductId = t.ProductId,
 				ProductColorId = t.ProductColorId,
 				ProductName = t.ProductName,
 				Price = t.Price,
