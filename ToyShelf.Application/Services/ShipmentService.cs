@@ -805,41 +805,98 @@ namespace ToyShelf.Application.Services
 			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 			if (shipment == null) throw new AppException("Shipment not found", 404);
 
+			// Trạng thái DeliveredReturn nghĩa là Shipper đã về đến kho và bấm xác nhận trả hàng
 			if (shipment.Status != ShipmentStatus.DeliveredReturn)
 				throw new AppException("Vận đơn chưa ở trạng thái chờ nhận hàng trả (DeliveredReturn)", 400);
 
 			try
 			{
-				// ================= XỬ LÝ THU HỒI HÀNG HỎNG (DAMAGE REPORTS) =================
+				// ================= 1. XỬ LÝ THU HỒI HÀNG HÓA & KỆ (DAMAGE REPORTS) =================
 				if (shipment.DamageReports != null)
 				{
 					foreach (var report in shipment.DamageReports)
 					{
-						foreach (var rItem in report.Items)
+						// --- A. XỬ LÝ SẢN PHẨM HỎNG ---
+						var productItems = report.Items.Where(i => i.DamageItemType == DamageItemType.Product).ToList();
+						foreach (var rItem in productItems)
 						{
 							if (!rItem.ProductColorId.HasValue) continue;
 
 							var productColorId = rItem.ProductColorId.Value;
 							var qty = rItem.Quantity ?? 0;
 
-							// 1. Trừ InTransit tại địa điểm Store (nơi shipper bốc hàng hỏng lên)
+							// 1. Trừ InTransit tại địa điểm Store (nơi shipper đã bốc lên)
 							var transit = await _inventoryRepository.GetAsync(report.InventoryLocationId, productColorId, InventoryStatus.InTransit);
 							if (transit != null) transit.Quantity -= qty;
 
-							// 2. Cộng vào kho Damaged tại Warehouse tổng (Xác nhận thu hồi xong)
+							// 2. Cộng vào kho Damaged tại Warehouse (Xác nhận hàng đã về kho an toàn)
 							await HandleInventoryUpdateAsync(
 								report.InventoryLocationId, shipment.FromLocationId, productColorId,
 								InventoryStatus.InTransit, InventoryStatus.Damaged,
 								qty, report.Id, InventoryReferenceType.DamageReport);
 						}
+
+						// --- B. XỬ LÝ KỆ HỎNG ---
+						var shelfItems = report.Items.Where(i => i.DamageItemType == DamageItemType.Shelf).ToList();
+						var shelfGroups = shelfItems
+							.Where(i => i.ShelfId.HasValue)
+							.GroupBy(i => i.Shelf!.ShelfTypeId)
+							.Select(g => new { ShelfTypeId = g.Key, Count = g.Count(), Items = g.ToList() });
+
+						foreach (var group in shelfGroups)
+						{
+							// 1. Cập nhật Sổ cái InventoryShelf
+
+							// Trừ InTransit tại Store nguồn
+							var invTransit = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+								report.InventoryLocationId, group.ShelfTypeId, ShelfStatus.InTransit);
+							if (invTransit != null) invTransit.RemoveQuantity(group.Count);
+
+							// Cộng Maintenance tại Warehouse đích
+							var invWarehouseMaintenance = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+								shipment.FromLocationId, group.ShelfTypeId, ShelfStatus.Maintenance);
+
+							if (invWarehouseMaintenance == null)
+							{
+								invWarehouseMaintenance = new InventoryShelf(shipment.FromLocationId, group.ShelfTypeId, group.Count, ShelfStatus.Maintenance);
+								await _inventoryShelfRepository.AddAsync(invWarehouseMaintenance);
+							}
+							else invWarehouseMaintenance.AddQuantity(group.Count);
+
+							// 2. Cập nhật từng thực thể Shelf vật lý
+							foreach (var item in group.Items)
+							{
+								var shelf = item.Shelf;
+								if (shelf == null) continue;
+
+								// Di chuyển vị trí vật lý về Warehouse
+								shelf.InventoryLocationId = shipment.FromLocationId;
+								shelf.Status = ShelfStatus.Maintenance; // Vẫn giữ bảo trì cho đến khi sửa xong
+
+								await _shelfTransactionRepository.AddAsync(new ShelfTransaction
+								{
+									Id = Guid.NewGuid(),
+									ShelfId = shelf.Id,
+									FromLocationId = report.InventoryLocationId,
+									ToLocationId = shipment.FromLocationId,
+									FromStatus = ShelfStatus.InTransit,
+									ToStatus = ShelfStatus.Maintenance,
+									ReferenceType = ShelfReferenceType.DamageReport,
+									ReferenceId = report.Id,
+									CreatedAt = _dateTime.UtcNow
+								});
+							}
+						}
+
 						report.Status = DamageStatus.Returned; // Kết thúc Damage Report
 					}
 				}
 
-				// ================= KẾT THÚC VÒNG ĐỜI VẬN ĐƠN =================
+				// ================= 2. KẾT THÚC VÒNG ĐỜI VẬN ĐƠN =================
 				shipment.Status = ShipmentStatus.Completed;
 				shipment.WarehouseReceivedAt = _dateTime.UtcNow;
 
+				_shipmentRepository.Update(shipment);
 				await _unitOfWork.SaveChangesAsync();
 			}
 			catch (Exception ex)
