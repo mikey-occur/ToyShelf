@@ -18,6 +18,8 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 
 	public class WarehouseItemResponse
 	{
+		public Guid StoreOrderItemId { get; set; }
+
 		public Guid ProductColorId { get; set; }
 		public string SKU { get; set; } = string.Empty;
 		public string ProductName { get; set; } = string.Empty;
@@ -26,5 +28,9 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 
 		public int AvailableQuantity { get; set; }
 		//public int RequestedQuantity { get; set; }
+		public int OriginalQuantity { get; set; }
+		public int FulfilledQuantity { get; set; }
+		public int RemainingQuantity { get; set; }
+
 	}
 }
