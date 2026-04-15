@@ -301,6 +301,7 @@ namespace ToyShelf.Application.Services
 		}
 		public async Task PickupAsync(Guid shipmentId, UploadShipmentMediaRequest request, ICurrentUser currentUser)
 		{
+			// Đảm bảo Repository đã Include ShelfShipmentItems và Shelf (để lấy ShelfTypeId)
 			var shipment = await _shipmentRepository.GetByIdWithDetailsAsync(shipmentId);
 
 			if (shipment == null) throw new AppException("Shipment not found", 404);
@@ -322,7 +323,7 @@ namespace ToyShelf.Application.Services
 				};
 				await _shipmentMediaRepository.AddAsync(media);
 
-				// 2. XỬ LÝ HÀNG MỚI (STORE ORDER) - Trừ Available tại Warehouse
+				// 2. XỬ LÝ HÀNG MỚI (STORE ORDER) - Dịch chuyển Inventory (Sản phẩm)
 				var storeOrderItems = shipment.Items.Where(x => x.StoreOrderItemId != null).ToList();
 				foreach (var item in storeOrderItems)
 				{
@@ -334,11 +335,17 @@ namespace ToyShelf.Application.Services
 
 					inventoryAvailable.Quantity -= item.ExpectedQuantity;
 
-					// Chuyển sang InTransit của Warehouse
 					var inventoryTransit = await _inventoryRepository.GetAsync(shipment.FromLocationId, productColorId, InventoryStatus.InTransit);
 					if (inventoryTransit == null)
 					{
-						inventoryTransit = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = shipment.FromLocationId, ProductColorId = productColorId, Status = InventoryStatus.InTransit, Quantity = item.ExpectedQuantity };
+						inventoryTransit = new Inventory
+						{
+							Id = Guid.NewGuid(),
+							InventoryLocationId = shipment.FromLocationId,
+							ProductColorId = productColorId,
+							Status = InventoryStatus.InTransit,
+							Quantity = item.ExpectedQuantity
+						};
 						await _inventoryRepository.AddAsync(inventoryTransit);
 					}
 					else inventoryTransit.Quantity += item.ExpectedQuantity;
@@ -359,38 +366,76 @@ namespace ToyShelf.Application.Services
 				}
 
 				// 3. XỬ LÝ KỆ MỚI (SHELF ORDER) - Reserved -> InTransit
-				foreach (var item in shipment.ShelfShipmentItems)
+				// GroupBy theo ShelfTypeId để cập nhật InventoryShelf hiệu quả hơn
+				var shelfItems = shipment.ShelfShipmentItems.ToList();
+
+				// Lấy tất cả thông tin kệ vật lý để có ShelfTypeId
+				var shelfGroups = shelfItems
+					.Select(si => si.Shelf)
+					.GroupBy(s => s.ShelfTypeId)
+					.Select(g => new { ShelfTypeId = g.Key, Count = g.Count(), Shelves = g.ToList() });
+
+				foreach (var group in shelfGroups)
 				{
-					var shelf = await _shelfRepository.GetByIdAsync(item.ShelfId);
-					if (shelf == null || shelf.Status != ShelfStatus.Reserved)
-						throw new AppException($"Shelf {shelf?.Code} is not ready (Reserved) for pickup", 400);
+					// A. CẬP NHẬT INVENTORYSHELF 
 
-					shelf.Status = ShelfStatus.InTransit;
+					// 1. Trừ số lượng ở trạng thái Reserved tại kho đi
+					var invReserved = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						shipment.FromLocationId, group.ShelfTypeId, ShelfStatus.Reserved);
 
-					await _shelfTransactionRepository.AddAsync(new ShelfTransaction
+					if (invReserved == null || invReserved.Quantity < group.Count)
+						throw new AppException("Dữ liệu tồn kho Reserved không đủ để thực hiện Pickup.", 400);
+
+					invReserved.RemoveQuantity(group.Count);
+
+					// 2. Tăng số lượng ở trạng thái InTransit tại kho đi
+					var invTransit = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						shipment.FromLocationId, group.ShelfTypeId, ShelfStatus.InTransit);
+
+					if (invTransit == null)
 					{
-						Id = Guid.NewGuid(),
-						ShelfId = shelf.Id,
-						FromLocationId = shipment.FromLocationId,
-						ToLocationId = shipment.ToLocationId,
-						FromStatus = ShelfStatus.Reserved,
-						ToStatus = ShelfStatus.InTransit,
-						ReferenceType = ShelfReferenceType.Shipment,
-						ReferenceId = shipment.Id,
-						CreatedAt = _dateTime.UtcNow
-					});
+						invTransit = new InventoryShelf(shipment.FromLocationId, group.ShelfTypeId, group.Count, ShelfStatus.InTransit);
+						await _inventoryShelfRepository.AddAsync(invTransit);
+					}
+					else
+					{
+						invTransit.AddQuantity(group.Count);
+					}
+
+					// B. CẬP NHẬT TỪNG KỆ VẬT LÝ (Định danh)
+					foreach (var shelf in group.Shelves)
+					{
+						if (shelf.Status != ShelfStatus.Reserved)
+							throw new AppException($"Shelf {shelf.Code} is not Reserved and cannot be picked up", 400);
+
+						shelf.Status = ShelfStatus.InTransit;
+
+						await _shelfTransactionRepository.AddAsync(new ShelfTransaction
+						{
+							Id = Guid.NewGuid(),
+							ShelfId = shelf.Id,
+							FromLocationId = shipment.FromLocationId,
+							ToLocationId = shipment.ToLocationId,
+							FromStatus = ShelfStatus.Reserved,
+							ToStatus = ShelfStatus.InTransit,
+							ReferenceType = ShelfReferenceType.Shipment,
+							ReferenceId = shipment.Id,
+							CreatedAt = _dateTime.UtcNow
+						});
+					}
 				}
 
-				// 4. Update Header
+				// 4. Update Header Shipment
 				shipment.Status = ShipmentStatus.Shipping;
 				shipment.PickedUpAt = _dateTime.UtcNow;
 
 				_shipmentRepository.Update(shipment);
+
+				// Lưu toàn bộ thay đổi (Inventory, InventoryShelf, Shelf, Transactions)
 				await _unitOfWork.SaveChangesAsync();
 			}
 			catch (Exception)
 			{
-				// Giữ nguyên Stack Trace gốc để biết chính xác lỗi ở dòng nào
 				throw;
 			}
 		}
