@@ -154,76 +154,186 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
+		//public async Task<List<WarehouseMatchResponse>> GetAvailableWarehousesAsync(Guid storeOrderId)
+		//{
+		//	// 1. Lấy order
+		//	var order = await _storeOrderRepository.GetByIdWithItemsAsync(storeOrderId);
+
+		//	if (order == null)
+		//		throw new AppException("Store order not found", 404);
+
+		//	if (order.Status != StoreOrderStatus.Approved)
+		//		throw new AppException("Order must be approved", 400);
+
+		//	// 2. Lấy city của store
+		//	if (order.StoreLocation?.Store == null)
+		//		throw new AppException("Store location or store not found", 500);
+
+		//	var cityId = order.StoreLocation.Store.CityId;
+
+
+		//	// 3. Lấy warehouse locations cùng city
+		//	var warehouseLocations = await _locationRepository
+		//		.GetWarehouseLocationsByCityAsync(cityId);
+
+		//	if (!warehouseLocations.Any())
+		//		return new List<WarehouseMatchResponse>();
+
+		//	var locationIds = warehouseLocations.Select(l => l.Id).ToList();
+
+		//	// 4. Lấy inventory
+		//	var inventories = await _inventoryRepository
+		//		.GetByLocationIdsAsync(locationIds);
+
+		//	// 5. Map product cần từ order
+		//	var orderItems = order.Items.ToDictionary(
+		//		x => x.ProductColorId,
+		//		x => x.Quantity
+		//	);
+
+		//	// 6. Filter + Group
+		//	var result = inventories
+		//		.Where(i =>
+		//			orderItems.ContainsKey(i.ProductColorId) &&
+		//			i.Quantity > 0 &&
+		//			i.Status == InventoryStatus.Available)
+		//		.GroupBy(i => i.InventoryLocation)
+		//		.Where(g => g.FirstOrDefault()?.InventoryLocation?.Warehouse != null)
+		//		.Select(group =>
+		//		{
+		//			var first = group.First();
+		//			var warehouse = first.InventoryLocation!.Warehouse!;
+
+		//			return new WarehouseMatchResponse
+		//			{
+		//				WarehouseId = warehouse.Id,
+		//				WarehouseLocationId = group.Key.Id,
+		//				WarehouseName = warehouse.Name,
+		//				WarehouseCode = warehouse.Code,
+
+		//				Items = group.Select(i => new WarehouseItemResponse
+		//				{
+		//					ProductColorId = i.ProductColorId,
+		//					SKU = i.ProductColor.Product.SKU,
+		//					ProductName = i.ProductColor.Product.Name,
+		//					Color = i.ProductColor.Color.Name,
+		//					ImageUrl = i.ProductColor.ImageUrl,
+		//					AvailableQuantity = i.Quantity,
+		//					//RequestedQuantity = orderItems[i.ProductColorId]
+		//				}).ToList()
+		//			};
+		//		})
+		//		.ToList();
+
+		//	return result;
+		//}
+
 		public async Task<List<WarehouseMatchResponse>> GetAvailableWarehousesAsync(Guid storeOrderId)
 		{
-			// 1. Lấy order
+			// 1. Lấy thông tin đơn hàng và các mục hàng bên trong
+			// Đảm bảo Repository đã Include: StoreLocation.Store, Items.ProductColor.Product/Color
 			var order = await _storeOrderRepository.GetByIdWithItemsAsync(storeOrderId);
 
 			if (order == null)
-				throw new AppException("Store order not found", 404);
+				throw new AppException("Không tìm thấy đơn đặt hàng của cửa hàng", 404);
 
-			if (order.Status != StoreOrderStatus.Approved)
-				throw new AppException("Order must be approved", 400);
+			// 2. Kiểm tra trạng thái đơn hàng
+			// Cho phép: Approved (Đã duyệt) và PartiallyFulfilled (Đã giao một phần)
+			// Chặn: Pending (Chờ duyệt), Fulfilled (Đã hoàn tất), Cancelled (Đã hủy)
+			if (order.Status == StoreOrderStatus.Pending)
+				throw new AppException("Đơn hàng đang chờ phê duyệt, không thể thực hiện giao hàng", 400);
 
-			// 2. Lấy city của store
+			if (order.Status == StoreOrderStatus.Fulfilled)
+				throw new AppException("Đơn hàng này đã được giao hoàn tất", 400);
+
+			//if (order.Status == StoreOrderStatus.Cancelled)
+			//	throw new AppException("Đơn hàng đã bị hủy bỏ", 400);
+
+			// 3. Xác định khu vực (City) của Store để tìm kho gần nhất
 			if (order.StoreLocation?.Store == null)
-				throw new AppException("Store location or store not found", 500);
+				throw new AppException("Thông tin vị trí cửa hàng không hợp lệ", 500);
 
 			var cityId = order.StoreLocation.Store.CityId;
 
-
-			// 3. Lấy warehouse locations cùng city
-			var warehouseLocations = await _locationRepository
-				.GetWarehouseLocationsByCityAsync(cityId);
+			// 4. Lấy danh sách các địa điểm kho cùng thành phố
+			var warehouseLocations = await _locationRepository.GetWarehouseLocationsByCityAsync(cityId);
 
 			if (!warehouseLocations.Any())
 				return new List<WarehouseMatchResponse>();
 
 			var locationIds = warehouseLocations.Select(l => l.Id).ToList();
 
-			// 4. Lấy inventory
-			var inventories = await _inventoryRepository
-				.GetByLocationIdsAsync(locationIds);
+			// 5. Lấy toàn bộ tồn kho "Sẵn có" (Available) của các kho trong danh sách
+			var inventories = await _inventoryRepository.GetByLocationIdsAsync(locationIds);
 
-			// 5. Map product cần từ order
-			var orderItems = order.Items.ToDictionary(
-				x => x.ProductColorId,
-				x => x.Quantity
-			);
+			// 6. Lọc nhu cầu từ đơn hàng: Chỉ lấy những món chưa giao đủ
+			var orderRequirement = order.Items
+				.Where(x => x.Quantity > x.FulfilledQuantity) // Logic cực kỳ quan trọng cho Partial Fulfillment
+				.Select(x => new {
+					Id = x.Id,
+					ProductColorId = x.ProductColorId,
+					TotalRequested = x.Quantity,
+					AlreadyFulfilled = x.FulfilledQuantity,
+					RemainingNeeded = x.Quantity - x.FulfilledQuantity
+				}).ToList();
 
-			// 6. Filter + Group
-			var result = inventories
-				.Where(i =>
-					orderItems.ContainsKey(i.ProductColorId) &&
-					i.Quantity > 0 &&
-					i.Status == InventoryStatus.Available)
-				.GroupBy(i => i.InventoryLocation)
-				.Where(g => g.FirstOrDefault()?.InventoryLocation?.Warehouse != null)
-				.Select(group =>
+			// Nếu tất cả các món đã giao đủ, trả về danh sách rỗng
+			if (!orderRequirement.Any())
+				return new List<WarehouseMatchResponse>();
+
+			// 7. Thực hiện so khớp (Matching) giữa kho và nhu cầu
+			var result = warehouseLocations.Select(loc =>
+			{
+				// Lấy danh sách tồn kho thực tế tại địa điểm kho này
+				var locInventories = inventories
+					.Where(i => i.InventoryLocationId == loc.Id && i.Status == InventoryStatus.Available)
+					.ToList();
+
+				var matchedItems = new List<WarehouseItemResponse>();
+
+				foreach (var req in orderRequirement)
 				{
-					var first = group.First();
-					var warehouse = first.InventoryLocation!.Warehouse!;
+					// Tìm sản phẩm trong kho này
+					var inv = locInventories.FirstOrDefault(i => i.ProductColorId == req.ProductColorId);
 
-					return new WarehouseMatchResponse
+					// Chỉ thêm vào danh sách nếu kho có hàng (Số lượng > 0)
+					if (inv != null && inv.Quantity > 0)
 					{
-						WarehouseId = warehouse.Id,
-						WarehouseLocationId = group.Key.Id,
-						WarehouseName = warehouse.Name,
-						WarehouseCode = warehouse.Code,
-
-						Items = group.Select(i => new WarehouseItemResponse
+						matchedItems.Add(new WarehouseItemResponse
 						{
-							ProductColorId = i.ProductColorId,
-							SKU = i.ProductColor.Product.SKU,
-							ProductName = i.ProductColor.Product.Name,
-							Color = i.ProductColor.Color.Name,
-							ImageUrl = i.ProductColor.ImageUrl,
-							AvailableQuantity = i.Quantity,
-							//RequestedQuantity = orderItems[i.ProductColorId]
-						}).ToList()
-					};
-				})
-				.ToList();
+							// ID của dòng item trong đơn hàng (Dùng để gửi lên Assignment sau này)
+							StoreOrderItemId = req.Id,
+
+							ProductColorId = inv.ProductColorId,
+							SKU = inv.ProductColor?.Product?.SKU ?? "N/A",
+							ProductName = inv.ProductColor?.Product?.Name ?? "N/A",
+							Color = inv.ProductColor?.Color?.Name ?? "N/A",
+							ImageUrl = inv.ProductColor?.ImageUrl,
+
+							// Thông số tồn kho của kho hiện tại
+							AvailableQuantity = inv.Quantity,
+
+							// Thông số đơn hàng để FE hiển thị gợi ý cho Admin
+							OriginalQuantity = req.TotalRequested,
+							FulfilledQuantity = req.AlreadyFulfilled,
+							RemainingQuantity = req.RemainingNeeded
+						});
+					}
+				}
+
+				return new { Location = loc, Items = matchedItems };
+			})
+			.Where(x => x.Items.Any()) // Loại bỏ những kho không chứa bất kỳ món nào mình cần
+			.Select(x => new WarehouseMatchResponse
+			{
+				WarehouseId = x.Location.WarehouseId ?? Guid.Empty,
+				WarehouseLocationId = x.Location.Id,
+				WarehouseName = x.Location.Warehouse?.Name ?? "N/A",
+				WarehouseCode = x.Location.Warehouse?.Code ?? "N/A",
+				Items = x.Items
+			})
+			.OrderBy(x => x.WarehouseName)
+			.ToList();
 
 			return result;
 		}

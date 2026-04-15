@@ -56,7 +56,7 @@ namespace ToyShelf.API.Configuration
 			var redisConnectionString = configuration.GetValue<string>("Redis:ConnectionString");
 			var instanceName = configuration.GetValue<string>("Redis:InstanceName") ?? "ToyShelf_";
 
-			// 2. Nếu không có config, hãy ném lỗi rõ ràng để bạn biết mà sửa appsettings
+			// 2. Nếu không có config, hãy ném lỗi rõ ràng để biết mà sửa appsettings
 			if (string.IsNullOrEmpty(redisConnectionString))
 			{
 				throw new InvalidOperationException("Redis ConnectionString is missing! Check your appsettings.json.");
