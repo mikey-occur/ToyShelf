@@ -134,5 +134,35 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(sh => sh.ShelfType)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
+
+		public async Task<(int TotalDelivering, int TotalCompleted, int TotalCancelled, int TotalAll)> GetShipperStatsAsync(Guid shipperId)
+		{
+			var stats = await _context.Shipments
+			.Where(s => s.ShipperId == shipperId)
+			.GroupBy(s => s.ShipperId)
+			.Select(g => new
+			{
+				TotalDelivering = g.Count(s => s.Status == ShipmentStatus.Shipping ||
+											   s.Status == ShipmentStatus.ShippingReturn),
+
+				TotalCompleted = g.Count(s => s.Status == ShipmentStatus.Delivered ||
+											  s.Status == ShipmentStatus.DeliveredReturn ||
+											  s.Status == ShipmentStatus.Completed),
+
+				TotalCancelled = g.Count(s => s.Status == ShipmentStatus.Cancelled),
+
+				TotalAll = g.Count()
+			})
+			.FirstOrDefaultAsync();
+
+				// Nếu lính mới chưa có đơn, trả về toàn số 0
+				if (stats == null)
+				{
+					return (0, 0, 0, 0);
+				}
+
+				return (stats.TotalDelivering, stats.TotalCompleted, stats.TotalCancelled, stats.TotalAll);
+		}
 	}
+	
 }

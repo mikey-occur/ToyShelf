@@ -8,6 +8,7 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Product.Response;
+using ToyShelf.Application.Models.Shipment.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -528,6 +529,19 @@ namespace ToyShelf.Application.Services
 			}).ToList();
 
 			return response;
+		}
+
+		public async Task<ShipperStatCardResponse> GetShipperStatCardAsync(Guid shipperId)
+		{
+			var statsTuple = await _shipmentRepository.GetShipperStatsAsync(shipperId);
+		
+			return new ShipperStatCardResponse
+			{
+				TotalDelivering = statsTuple.TotalDelivering,
+				TotalCompleted = statsTuple.TotalCompleted,
+				TotalCancelled = statsTuple.TotalCancelled,
+				TotalAll = statsTuple.TotalAll
+			};
 		}
 	}
 }
