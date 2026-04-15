@@ -16,5 +16,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Shipment?> GetByIdWithItemsAsync(Guid id);
 		Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId);
 		Task<Shipment?> GetByIdWithShelfItemsAsync(Guid id);
+		Task<(int TotalDelivering, int TotalCompleted, int TotalCancelled, int TotalAll)> GetShipperStatsAsync(Guid shipperId);
 	}
 }
