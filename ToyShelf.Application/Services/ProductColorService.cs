@@ -160,9 +160,20 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-	
-		//====Mapper===
-		private ProductColorResponse MapToResponse(ProductColor productColor)
+        public async Task<bool> UpdateFileProductColorAsync(string sku,bool hasFile)
+        {
+			var color = _productColorRepository.GetColorBySkuAsync(sku).Result;
+			if (color == null)
+				throw new AppException($"ProductColor with SKU '{sku}' not found", 404);
+
+			color.HasFile = hasFile;
+			 _productColorRepository.Update(color);
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
+        //====Mapper===
+        private ProductColorResponse MapToResponse(ProductColor productColor)
 		{
 			return new ProductColorResponse
 			{
@@ -172,10 +183,11 @@ namespace ToyShelf.Application.Services
 				Price = productColor.Price,
 				QrCode = productColor.QrCode,
 				ImageUrl = productColor.ImageUrl,
-				IsActive = productColor.IsActive
-			};
+				IsActive = productColor.IsActive,
+				HasFile = productColor.HasFile
+            };
 		}
 
-
-	}
+       
+    }
 }
