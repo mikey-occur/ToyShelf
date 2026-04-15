@@ -111,7 +111,7 @@ var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>(
 recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
 	"auto-monthly-settlement",
 	service => service.GenerateLastMonthSettlementAutoAsync(),
-	"0 0 * * *",
+	Cron.Daily(0, 0),
 	new RecurringJobOptions
 	{
 		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
