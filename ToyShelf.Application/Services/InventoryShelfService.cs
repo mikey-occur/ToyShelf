@@ -42,6 +42,11 @@ namespace ToyShelf.Application.Services
 				LocationName = s.InventoryLocation.Name,
 				ShelfTypeId = s.ShelfTypeId,
 				ShelfTypeName = s.ShelfType.Name,
+				ImageUrl = s.ShelfType.ImageUrl,
+				Width = s.ShelfType.Width,
+				Height = s.ShelfType.Height,
+				Depth = s.ShelfType.Depth,
+				DisplayGuideline = s.ShelfType.DisplayGuideline,
 				Quantity = s.Quantity,
 				TotalLevels = s.ShelfType.TotalLevels
 			}).ToList();
@@ -159,14 +164,16 @@ namespace ToyShelf.Application.Services
 			{
 				InventoryLocationId = x.InventoryLocationId,
 				InventoryLocationName = x.InventoryLocation?.Name ?? "N/A",
-				Count = x.Quantity,
+				Quantity = x.Quantity,
 				Shelf = new ShelfDetailResponse
 				{
 					ShelfTypeId = x.ShelfTypeId,
 					ShelfTypeName = x.ShelfType?.Name ?? "N/A",
 					Width = x.ShelfType?.Width ?? 0,
 					Height = x.ShelfType?.Height ?? 0,
-					Depth = x.ShelfType?.Depth ?? 0
+					Depth = x.ShelfType?.Depth ?? 0,
+					ImageUrl = x.ShelfType?.ImageUrl,
+					DisplayGuideline = x.ShelfType?.DisplayGuideline
 				}
 			}).ToList();
 		}

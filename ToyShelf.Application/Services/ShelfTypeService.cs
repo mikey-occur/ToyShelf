@@ -162,7 +162,7 @@ namespace ToyShelf.Application.Services
 				if (levelsToRemove.Any())
 				{
 					// Xóa dưới DB
-					_unitOfWork.Repository<ShelfTypeLevel>().DeleteRange(levelsToRemove);
+					//_unitOfWork.Repository<ShelfTypeLevel>().DeleteRange(levelsToRemove);
 
 					foreach (var item in levelsToRemove)
 					{
@@ -201,7 +201,7 @@ namespace ToyShelf.Application.Services
 									: string.Empty,
 							DisplayGuideline = levelReq.DisplayGuideline
 						};
-
+						await _unitOfWork.Repository<ShelfTypeLevel>().AddAsync(newLevel);
 						shelfType.ShelfTypeLevels.Add(newLevel);
 					}
 				}
