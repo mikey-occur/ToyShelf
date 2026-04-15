@@ -107,26 +107,25 @@ app.UseStaticFiles(new StaticFileOptions
 
 // ===== Hangfire Dashboard =====
 // 1. Job chốt toán cuối tháng (Chạy vào 0h ngày 1 hàng tháng)
-var recurringJobManager = app.Services.GetRequiredService<IRecurringJobManager>();
-recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
-	"auto-monthly-settlement",
-	service => service.GenerateLastMonthSettlementAutoAsync(),
-	Cron.Daily(0, 0),
-	new RecurringJobOptions
-	{
-		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
-	}
-);
-// job xoá notification cũ hơn 30 ngày (Chạy vào 2h sáng hàng ngày)
-recurringJobManager.AddOrUpdate<INotificationService>(
-	"Cleanup-Old-Notifications",
-	service => service.CleanupOldNotificationsAsync(30),
-	Cron.Daily(2, 0),
-	new RecurringJobOptions
-	{
-		TimeZone = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time")
-	}
-);
+using (var scope = app.Services.CreateScope())
+{
+	var recurringJobManager = scope.ServiceProvider.GetRequiredService<IRecurringJobManager>();
+	var tz = TimeZoneInfo.FindSystemTimeZoneById("SE Asia Standard Time");
+
+	recurringJobManager.AddOrUpdate<IMonthlySettlementService>(
+		"auto-monthly-settlement",
+		service => service.GenerateLastMonthSettlementAutoAsync(),
+		Cron.Daily(0, 0),
+		new RecurringJobOptions { TimeZone = tz }
+	);
+
+	recurringJobManager.AddOrUpdate<INotificationService>(
+		"Cleanup-Old-Notifications",
+		service => service.CleanupOldNotificationsAsync(30),
+		Cron.Daily(2, 0),
+		new RecurringJobOptions { TimeZone = tz }
+	);
+}
 
 app.UseHttpsRedirection();
 

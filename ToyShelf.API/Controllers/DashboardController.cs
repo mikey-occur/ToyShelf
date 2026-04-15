@@ -1,10 +1,14 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Dashboard.Request;
 using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Product.Response;
+using ToyShelf.Application.Models.Shipment.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Application.Services;
 namespace ToyShelf.API.Controllers
 {
 	[Route("api/[controller]")]
@@ -191,7 +195,19 @@ namespace ToyShelf.API.Controllers
 		}
 
 
+		/// <summary>
+		/// Lấy thông tin thống kê (Stat Card) cho Shipper đang đăng nhập
+		/// </summary>
+		[HttpGet("shipper/stat-card")]
+		[Authorize(Roles = "Shipper")] 
+		public async Task<BaseResponse<ShipperStatCardResponse>> GetShipperStatCard([FromServices] ICurrentUser currentUser)
+		{
+			var shipperId = currentUser.UserId;
 
+			var result = await _dashboardService.GetShipperStatCardAsync(shipperId);
+
+			return BaseResponse<ShipperStatCardResponse>.Ok(result, "Lấy thông tin Stat Card thành công!");
+		}
 
 
 
