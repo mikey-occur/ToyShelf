@@ -22,7 +22,7 @@ namespace ToyShelf.Application.Models.Warehouse.Response
 
 	public class ChartItem
 	{
-		public string Status { get; set; } = null!;
-		public int Count { get; set; }
+		public string Label { get; set; } = null!;
+		public int Value { get; set; }
 	}
 }
