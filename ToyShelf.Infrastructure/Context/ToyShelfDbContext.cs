@@ -1186,11 +1186,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(a => a.ShelfOrderId)
 					  .OnDelete(DeleteBehavior.Cascade);
 
-
-				entity.HasOne(e => e.Shipment)
-					  .WithMany(a => a.ShelfOrders)
-					  .HasForeignKey(e => e.ShipmentId)
-					  .HasConstraintName("FK_ShelfOrder_Shipment");
 			});
 
 			// ================== ShelfOrderItem ==================
@@ -1901,10 +1896,6 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Media)
 			          .WithOne(i => i.Shipment)
 			          .HasForeignKey(i => i.ShipmentId);
-
-				entity.HasMany(e => e.ShelfOrders)
-					  .WithOne(i => i.Shipment)
-					  .HasForeignKey(i => i.ShipmentId);
 
 				entity.HasMany(e => e.DamageReports)
 					  .WithOne(i => i.Shipment)

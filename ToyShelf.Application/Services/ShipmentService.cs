@@ -181,35 +181,34 @@ namespace ToyShelf.Application.Services
 			// 3. XỬ LÝ KỆ (Shelf Orders)
 			foreach (var sReq in request.Shelves)
 			{
-				var sOrder = assignment.AssignmentShelfOrders
-					.Where(x => x.ShelfOrderId == sReq.ShelfOrderId)
-					.Select(x => x.ShelfOrder).FirstOrDefault();
+				// TRUY VẤN LẠI: Lấy ShelfOrder thông qua bảng trung gian AssignmentShelfOrders
+				var aso = assignment.AssignmentShelfOrders
+					.FirstOrDefault(x => x.ShelfOrderId == sReq.ShelfOrderId);
 
-				if (sOrder == null) throw new AppException("Shelf Order not found", 400);
+				if (aso == null)
+					throw new AppException($"Shelf Order {sReq.ShelfOrderId} not found in this assignment", 400);
+
+				var sOrder = aso.ShelfOrder;
 
 				var shelfOrderItem = sOrder.Items.FirstOrDefault(i => i.ShelfTypeId == sReq.ShelfTypeId);
-				if (shelfOrderItem == null) throw new AppException("Shelf type not in this order", 400);
+				if (shelfOrderItem == null)
+					throw new AppException("Shelf type not in this order", 400);
 
 				// --- LOGIC DỊCH CHUYỂN TỒN KHO TRÊN SỔ SÁCH (InventoryShelf) ---
-
-				// 1. Tìm bản ghi Available để trừ số lượng
+				// (Giữ nguyên logic của bạn)
 				var invAvailable = await _inventoryShelfRepository.GetShelfWithStatusAsync(
 					assignment.WarehouseLocationId, sReq.ShelfTypeId, ShelfStatus.Available);
 
 				if (invAvailable == null || !invAvailable.HasEnoughStock(sReq.ExpectedQuantity))
 					throw new AppException($"Kho không đủ kệ sẵn dùng (Available). Loại: {shelfOrderItem.ShelfType?.Name}", 400);
 
-				// THỰC HIỆN TRỪ: Lấy từ ngăn "Available"
 				invAvailable.RemoveQuantity(sReq.ExpectedQuantity);
 
-				// 2. Tìm bản ghi Reserved để cộng số lượng (Theo dõi hàng đang chuẩn bị đi)
 				var invReserved = await _inventoryShelfRepository.GetShelfWithStatusAsync(
 					assignment.WarehouseLocationId, sReq.ShelfTypeId, ShelfStatus.Reserved);
 
 				if (invReserved == null)
 				{
-					// Nếu chưa có "ngăn" Reserved cho loại kệ này tại kho này -> Tạo mới bản ghi InventoryShelf
-					// Giả sử Constructor InventoryShelf của bạn nhận thêm tham số Status
 					invReserved = new InventoryShelf(
 						assignment.WarehouseLocationId,
 						sReq.ShelfTypeId,
@@ -220,7 +219,6 @@ namespace ToyShelf.Application.Services
 				}
 				else
 				{
-					// Nếu đã có bản ghi Reserved -> Cộng thêm vào
 					invReserved.AddQuantity(sReq.ExpectedQuantity);
 				}
 
@@ -237,7 +235,6 @@ namespace ToyShelf.Application.Services
 				}
 				else
 				{
-					// Tự động lấy các kệ Available theo số lượng yêu cầu
 					shelvesToReserve = await _shelfRepository.GetAvailableShelvesByType(
 						assignment.WarehouseLocationId, sReq.ShelfTypeId, sReq.ExpectedQuantity);
 				}
@@ -248,24 +245,21 @@ namespace ToyShelf.Application.Services
 				// Cập nhật trạng thái từng cái tủ
 				foreach (var shelf in shelvesToReserve)
 				{
-					shelf.Status = ShelfStatus.Reserved; // Đồng bộ với InventoryShelf.Status
+					shelf.Status = ShelfStatus.Reserved;
 
 					shipment.ShelfShipmentItems.Add(new ShelfShipmentItem
 					{
 						Id = Guid.NewGuid(),
 						ShelfId = shelf.Id,
 						ShelfOrderItemId = shelfOrderItem.Id,
-						Status = ShelfShipmentStatus.InTransit // Status của dòng Item trong vận đơn
+						Status = ShelfShipmentStatus.InTransit
 					});
 				}
 
-				// Cập nhật trạng thái đơn kệ
-				if (!shipment.ShelfOrders.Contains(sOrder)) shipment.ShelfOrders.Add(sOrder);
 				sOrder.Status = ShelfOrderStatus.Processing;
 			}
 
 			// 4. TỰ ĐỘNG XỬ LÝ THU HỒI (Damage Reports)
-			// Thêm dấu ? và ?? để nếu không có DamageReport thì nó trả về list rỗng, foreach sẽ tự bỏ qua
 			var pendingDamageReports = assignment.AssignmentDamageReports?
 				.Select(x => x.DamageReport)
 				.Where(d => d != null && d.Status == DamageStatus.Approved)
@@ -1004,15 +998,22 @@ namespace ToyShelf.Application.Services
 										.Select(aso => aso.StoreOrder)
 										.Where(o => o != null)
 										.ToList() ?? new List<StoreOrder>();
+
+			var shelfOrdersFromAssignment = shipment.ShipmentAssignment?.AssignmentShelfOrders
+								.Select(aso => aso.ShelfOrder)
+								.Where(o => o != null)
+								.ToList() ?? new List<ShelfOrder>();
+
 			// 1. Xác định loại vận đơn thông minh hơn
 			string orderType = shipment.IsReturn ? "RETURN" : "STORE";
 			if (!shipment.IsReturn)
 			{
 				bool hasStore = storeOrdersFromAssignment.Any();
-				bool hasShelf = shipment.ShelfOrders.Any();
+				bool hasShelf = shelfOrdersFromAssignment.Any();
 
 				if (hasStore && hasShelf) orderType = "MIXED";
 				else if (hasShelf) orderType = "SHELF";
+				else if (hasStore) orderType = "STORE";
 			}
 
 			var response = new ShipmentResponse
@@ -1024,7 +1025,7 @@ namespace ToyShelf.Application.Services
 
 				// Trả về danh sách IDs để FE có thể link tới chi tiết từng đơn con
 				StoreOrderIds = storeOrdersFromAssignment.Select(x => x.Id).ToList(),
-				ShelfOrderIds = shipment.ShelfOrders.Select(x => x.Id).ToList(),
+				ShelfOrderIds = shelfOrdersFromAssignment.Select(x => x.Id).ToList(),
 				DamageReportIds = shipment.DamageReports.Select(x => x.Id).ToList(),
 
 				FromLocationId = shipment.FromLocationId,
