@@ -12,6 +12,7 @@ namespace ToyShelf.Application.Models.ProductColor.Response
 		public string ProductSku { get; set; } = null!;
 		public string ProductName { get; set; } = null!;
 		public decimal BasePrice { get; set; }
+		public decimal Price { get; set; }
 		public string? Description { get; set; }
 		public string? Barcode { get; set; }
 		public string? QrCode { get; set; }

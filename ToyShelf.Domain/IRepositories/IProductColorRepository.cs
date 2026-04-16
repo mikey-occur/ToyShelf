@@ -13,5 +13,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<bool> ExistsBySkuAsync(string sku);
 		Task<ProductColor?> GetColorBySkuAsync(string sku);
 		Task<ProductColor?> GetByIdWithProductAsync(Guid id);
+		Task<List<ProductColor>> SearchColorsBySkuAsync(string keyword);
 	}
 }
