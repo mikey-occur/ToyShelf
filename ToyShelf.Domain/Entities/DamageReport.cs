@@ -43,10 +43,6 @@ namespace ToyShelf.Domain.Entities
 		public DamageSource Source { get; set; }  // Lỗi do ai/đâu?
 		public DamageStatus Status { get; set; }
 
-		// Vận chuyển
-		public Guid? ShipmentId { get; set; }
-
-
 		// 2. THÔNG TIN CHI TIẾT
 		public string? Description { get; set; }
 		public string? AdminNote { get; set; }
@@ -69,7 +65,6 @@ namespace ToyShelf.Domain.Entities
 
 		// Navigation
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
-		public virtual Shipment? Shipment { get; set; }
 		public virtual User ReportedByUser { get; set; } = null!;
 		public virtual User? ReviewedByUser { get; set; }
 		public virtual ICollection<DamageReportItem> Items { get; set; } = new List<DamageReportItem>();

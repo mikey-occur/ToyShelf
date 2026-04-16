@@ -50,7 +50,7 @@ namespace ToyShelf.Domain.Entities
 		// Gom đơn
 		//public virtual ICollection<StoreOrder> StoreOrders { get; set; } = new List<StoreOrder>();
 		//public virtual ICollection<ShelfOrder> ShelfOrders { get; set; } = new List<ShelfOrder>();
-		public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
+		//public virtual ICollection<DamageReport> DamageReports { get; set; } = new List<DamageReport>();
 
 		public virtual InventoryLocation FromLocation { get; set; } = null!;
 		public virtual InventoryLocation ToLocation { get; set; } = null!;
