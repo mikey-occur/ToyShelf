@@ -345,7 +345,6 @@ namespace ToyShelf.Application.Services
 				Id = order.Id,
 				Code = order.Code,
 				StoreLocationId = order.StoreLocationId,
-				ShipmentId = order.ShipmentId,
 				ShipmentAssignmentIds = order.AssignmentStoreOrders?
 					.Select(aso => aso.ShipmentAssignmentId)
 					.ToList() ?? new List<Guid>(),

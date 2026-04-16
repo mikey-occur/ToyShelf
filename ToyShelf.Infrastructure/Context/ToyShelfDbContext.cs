@@ -474,12 +474,6 @@ namespace ToyShelf.Infrastructure.Context
 					  .WithOne(a => a.StoreOrder)
 					  .HasForeignKey(a => a.StoreOrderId);
 
-
-				entity.HasOne(e => e.Shipment)
-					  .WithMany(a => a.StoreOrders)
-					  .HasForeignKey(e => e.ShipmentId)
-					  .HasConstraintName("FK_StoreOrder_Shipment");
-
 				entity.HasOne(e => e.ApprovedByUser)
 					  .WithMany(a => a.ApprovedStoreOrders)
 					  .HasForeignKey(e => e.ApprovedByUserId)
@@ -1907,10 +1901,6 @@ namespace ToyShelf.Infrastructure.Context
 				entity.HasMany(e => e.Media)
 			          .WithOne(i => i.Shipment)
 			          .HasForeignKey(i => i.ShipmentId);
-
-				entity.HasMany(e => e.StoreOrders)
-					  .WithOne(i => i.Shipment)
-					  .HasForeignKey(i => i.ShipmentId);
 
 				entity.HasMany(e => e.ShelfOrders)
 					  .WithOne(i => i.Shipment)

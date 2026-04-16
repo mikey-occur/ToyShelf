@@ -53,15 +53,22 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(dr => dr.Items)
 						.ThenInclude(i => i.DamageMedia)
 				// Nhánh đơn hàng Store và Shelf
-				.Include(x => x.StoreOrders)
+				.Include(x => x.ShelfOrders)
+					.ThenInclude(o => o.StoreLocation)
+				.Include(x => x.ShelfOrders)
 					.ThenInclude(o => o.Items)
-				.Include(x => x.StoreOrders)
-					.ThenInclude(o => o.StoreLocation)
-				.Include(x => x.ShelfOrders)
-					.ThenInclude(o => o.StoreLocation)
-				.Include(x => x.ShelfOrders)
-					.ThenInclude(o => o.Items);
-		}
+				// StoreOrder
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.Shipper)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.Items) 
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.StoreLocation);
+				}
 		public async Task<int> GetMaxSequenceAsync()
 		{
 			var codes = await _context.Shipments
@@ -106,14 +113,17 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
-				.Include(s => s.StoreOrders).ThenInclude(o => o.Items)
+				.Include(s => s.ShipmentAssignment)
+					.ThenInclude(sa => sa.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.Items)
 				.Include(s => s.ShelfOrders).ThenInclude(o => o.Items)
 				.Include(s => s.DamageReports).ThenInclude(dr => dr.Items)
 				.Include(s => s.Items)
 				.Include(s => s.ShelfShipmentItems)
 					.ThenInclude(x => x.Shelf).ThenInclude(sh => sh.ShelfType)
-				.Include(s => s.ShelfShipmentItems)    
-					.ThenInclude(x => x.ShelfOrderItem) 
+				.Include(s => s.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfOrderItem)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
@@ -121,7 +131,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId)
 		{
 			return await GetShipmentWithFullDetailsQuery()
-				.Where(x => x.StoreOrders.Any(o => o.Id == storeOrderId))
+				.Where(x => x.ShipmentAssignment.AssignmentStoreOrders
+					.Any(aso => aso.StoreOrderId == storeOrderId))
 				.OrderByDescending(x => x.CreatedAt)
 				.ToListAsync();
 		}

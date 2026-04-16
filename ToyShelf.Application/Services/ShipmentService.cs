@@ -142,25 +142,30 @@ namespace ToyShelf.Application.Services
 			// 2. XỬ LÝ SẢN PHẨM (Store Orders)
 			foreach (var pReq in request.Products)
 			{
-				var order = assignment.AssignmentStoreOrders
-					.Where(x => x.StoreOrderId == pReq.StoreOrderId)
-					.Select(x => x.StoreOrder).FirstOrDefault();
+				// Tìm AssignmentStoreOrder để xác thực đơn hàng này có nằm trong nhiệm vụ không
+				var aso = assignment.AssignmentStoreOrders
+					.FirstOrDefault(x => x.StoreOrderId == pReq.StoreOrderId);
 
-				if (order == null) throw new AppException($"Order {pReq.StoreOrderId} not in assignment", 400);
+				if (aso == null)
+					throw new AppException($"Order {pReq.StoreOrderId} not in assignment", 400);
+
+				var order = aso.StoreOrder; // Lấy ra đơn hàng từ bảng trung gian
 
 				var orderItem = order.Items.FirstOrDefault(i => i.ProductColorId == pReq.ProductColorId);
-				if (orderItem == null) throw new AppException("Product not found in store order", 400);
+				if (orderItem == null)
+					throw new AppException("Product not found in store order", 400);
 
-				// Check số lượng hợp lệ
+				// 1. Kiểm tra số lượng còn lại có thể giao (Remaining)
 				var remaining = orderItem.Quantity - orderItem.FulfilledQuantity;
 				if (pReq.ExpectedQuantity <= 0 || pReq.ExpectedQuantity > remaining)
 					throw new AppException($"Invalid qty for {order.Code}. Max: {remaining}", 400);
 
-				// Check tồn kho Available tại Warehouse
+				// 2. Kiểm tra tồn kho tại Warehouse
 				var inventory = await _inventoryRepository.GetAsync(assignment.WarehouseLocationId, pReq.ProductColorId, InventoryStatus.Available);
 				if (inventory == null || inventory.Quantity < pReq.ExpectedQuantity)
 					throw new AppException($"Out of stock for {orderItem.ProductColor?.Product?.Name}", 400);
 
+				// 3. Thêm vào ShipmentItem (Món hàng thực tế bốc lên xe)
 				shipment.Items.Add(new ShipmentItem
 				{
 					Id = Guid.NewGuid(),
@@ -170,7 +175,6 @@ namespace ToyShelf.Application.Services
 					ReceivedQuantity = 0
 				});
 
-				if (!shipment.StoreOrders.Contains(order)) shipment.StoreOrders.Add(order);
 				order.Status = StoreOrderStatus.Processing;
 			}
 
@@ -996,11 +1000,15 @@ namespace ToyShelf.Application.Services
 		}
 		private static ShipmentResponse MapToResponse(Shipment shipment)
 		{
+			var storeOrdersFromAssignment = shipment.ShipmentAssignment?.AssignmentStoreOrders
+										.Select(aso => aso.StoreOrder)
+										.Where(o => o != null)
+										.ToList() ?? new List<StoreOrder>();
 			// 1. Xác định loại vận đơn thông minh hơn
 			string orderType = shipment.IsReturn ? "RETURN" : "STORE";
 			if (!shipment.IsReturn)
 			{
-				bool hasStore = shipment.StoreOrders.Any();
+				bool hasStore = storeOrdersFromAssignment.Any();
 				bool hasShelf = shipment.ShelfOrders.Any();
 
 				if (hasStore && hasShelf) orderType = "MIXED";
@@ -1015,7 +1023,7 @@ namespace ToyShelf.Application.Services
 				OrderType = orderType,
 
 				// Trả về danh sách IDs để FE có thể link tới chi tiết từng đơn con
-				StoreOrderIds = shipment.StoreOrders.Select(x => x.Id).ToList(),
+				StoreOrderIds = storeOrdersFromAssignment.Select(x => x.Id).ToList(),
 				ShelfOrderIds = shipment.ShelfOrders.Select(x => x.Id).ToList(),
 				DamageReportIds = shipment.DamageReports.Select(x => x.Id).ToList(),
 
