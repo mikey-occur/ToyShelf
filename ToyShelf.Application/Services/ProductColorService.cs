@@ -133,14 +133,13 @@ namespace ToyShelf.Application.Services
 		}
 
 		//===GetByVariantSku===
-		public async Task<ProductBySkuResponse?> GetByVariantSkuAsync(string sku)
+		public async Task<List<ProductBySkuResponse>> SearchByVariantSkuAsync(string keyword)
 		{
-			var color = await _productColorRepository.GetColorBySkuAsync(sku);
+			var colors = await _productColorRepository.SearchColorsBySkuAsync(keyword);
+			if (colors == null || !colors.Any())
+				return new List<ProductBySkuResponse>();
 
-			if (color == null)
-				return null;
-
-			return new ProductBySkuResponse
+			return colors.Select(color => new ProductBySkuResponse
 			{
 				ProductId = color.Product.Id,
 				ProductName = color.Product.Name,
@@ -157,7 +156,7 @@ namespace ToyShelf.Application.Services
 				IsConsignment = color.Product.IsConsignment,
 				VariantSku = color.Sku,
 				ColorName = color.Color.Name
-			};
+			}).ToList();
 		}
 
         public async Task<bool> UpdateFileProductColorAsync(string sku,bool hasFile)

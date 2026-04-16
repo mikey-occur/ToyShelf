@@ -17,7 +17,7 @@ namespace ToyShelf.Application.IServices
 		Task<ProductColorResponse> CreateProductColorAsync(ProductColorRequest request);
 		Task<ProductColorResponse?> UpdateProductColorAsync(Guid id, ProductColorUpdateRequest request);
 		Task<bool> DeleteProductColorAsync(Guid id);
-		Task<ProductBySkuResponse?> GetByVariantSkuAsync(string sku);
+		Task<List<ProductBySkuResponse>> SearchByVariantSkuAsync(string keyword);
 		Task<bool> RestoreProductColorAsync(Guid id);
 		Task<bool> DisableProductColorAsync(Guid id);
 		Task<bool> UpdateFileProductColorAsync(string sku , bool hasFile);
