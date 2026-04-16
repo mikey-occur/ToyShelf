@@ -145,6 +145,7 @@ namespace ToyShelf.Application.Services
 				ProductName = color.Product.Name,
 				ProductSku = color.Product.SKU,
 				BasePrice = color.Product.BasePrice,
+				Price = color.Price,
 				Description = color.Product.Description,
 				Barcode = color.Product.Barcode,
 				QrCode = color.QrCode,
