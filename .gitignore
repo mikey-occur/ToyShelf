@@ -68,7 +68,12 @@ packages/*
 
 appsettings*.json   
 
-  
+
+# Secrets & Environment
+.env
+.env.*
+!.env.example
+
 
 # DotNet Core   
 

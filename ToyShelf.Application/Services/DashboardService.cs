@@ -48,46 +48,36 @@ namespace ToyShelf.Application.Services
 
 		public async Task<WarehouseDashboardResponse> GetWarehouseDashboard(Guid warehouseId)
 		{
-			// ===== STAT CARD =====
-
-			// 1. Total Shelves
+			// ===== STAT CARD (Giữ nguyên vì không liên quan đến Shipment) =====
 			var totalShelves = await _shelfRepository.GetQueryable()
 				.CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
 
-			// 2. Total Inventory
 			var totalInventory = await _inventoryRepository.GetQueryable()
 				.Where(x => x.InventoryLocation.WarehouseId == warehouseId)
 				.SumAsync(x => (int?)x.Quantity) ?? 0;
 
-			// 3. Total Employees
 			var totalEmployees = await _userWarehouseRepository.GetQueryable()
 				.CountAsync(x => x.WarehouseId == warehouseId);
 
-			// ===== SHIPMENT BASE =====
-
+			// ===== SHIPMENT BASE (Dựa trên Warehouse xuất phát) =====
 			var shipmentQuery = _shipmentRepository.GetQueryable()
 				.Where(x => x.FromLocation.WarehouseId == warehouseId);
 
-			// ===== ORDER=====
-
-			// 4. Total Orders (distinct từ shipment)
+			// ===== ORDER =====
+			// 4. Total Orders: Phải đi qua AssignmentStoreOrder vì không còn Link trực tiếp
 			var totalOrders = await shipmentQuery
-				.SelectMany(x => x.StoreOrders)
-				.Select(x => x.Id)
+				.SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
+				.Select(aso => aso.StoreOrderId)
 				.Distinct()
 				.CountAsync();
 
-			// ===== SHIPMENT =====
-
-			// 5. In Progress
+			// ===== SHIPMENT STATS (Giữ nguyên logic status) =====
 			var totalInProgress = await shipmentQuery.CountAsync(x =>
 					x.Status == ShipmentStatus.Draft ||
 					x.Status == ShipmentStatus.Shipping ||
 					x.Status == ShipmentStatus.Delivered
 				);
 
-
-			// 6. Completed
 			var totalCompleted = await shipmentQuery.CountAsync(x =>
 				x.Status == ShipmentStatus.Completed
 			);
@@ -97,20 +87,21 @@ namespace ToyShelf.Application.Services
 				.GroupBy(x => x.Status)
 				.Select(g => new ChartItem
 				{
-					Status = g.Key.ToString(),
-					Count = g.Count()
+					Label = g.Key.ToString(), // Đổi Status thành Label cho đúng chuẩn Chart
+					Value = g.Count()
 				})
 				.ToListAsync();
 
-			// ===== STORE ORDER CHART =====
-
+			// ===== STORE ORDER CHART (SỬA LẠI CHỖ NÀY) =====
+			// Lấy tất cả các đơn hàng có liên quan đến kho này thông qua Assignment
 			var orderChart = await _storeOrderRepository.GetQueryable()
-				.Where(x => x.Shipment != null && x.Shipment.FromLocation.WarehouseId == warehouseId)
-				.GroupBy(x => x.Status)
+				.Where(o => o.AssignmentStoreOrders
+					.Any(aso => aso.ShipmentAssignment.WarehouseLocationId == warehouseId))
+				.GroupBy(o => o.Status)
 				.Select(g => new ChartItem
 				{
-					Status = g.Key.ToString(),
-					Count = g.Count()
+					Label = g.Key.ToString(),
+					Value = g.Count()
 				})
 				.ToListAsync();
 
@@ -120,10 +111,8 @@ namespace ToyShelf.Application.Services
 				TotalShelves = totalShelves,
 				TotalInventory = totalInventory,
 				TotalEmployees = totalEmployees,
-
 				TotalInProgressShipments = totalInProgress,
 				TotalCompletedShipments = totalCompleted,
-
 				ShipmentChart = shipmentChart,
 				OrderChart = orderChart
 			};

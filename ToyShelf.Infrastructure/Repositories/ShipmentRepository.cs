@@ -19,9 +19,55 @@ namespace ToyShelf.Infrastructure.Repositories
 			return _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
+				.Include(x => x.Shipper)
+				.Include(x => x.RequestedByUser)
+				.Include(x => x.Media)
+
 				.Include(x => x.ShipmentAssignment)
 					.ThenInclude(a => a!.Shipper)
-				// Nhánh sản phẩm
+
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.Items)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentShelfOrders)
+						.ThenInclude(aso => aso.ShelfOrder)
+							.ThenInclude(o => o.Items)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentShelfOrders)
+						.ThenInclude(aso => aso.ShelfOrder)
+							.ThenInclude(o => o.StoreLocation)
+
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentDamageReports)
+						.ThenInclude(adr => adr.DamageReport)
+							.ThenInclude(dr => dr.Items)
+								.ThenInclude(i => i.ProductColor)
+									.ThenInclude(pc => pc!.Product)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentDamageReports)
+						.ThenInclude(adr => adr.DamageReport)
+							.ThenInclude(dr => dr.Items)
+								.ThenInclude(i => i.ProductColor)
+									.ThenInclude(pc => pc!.Color)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentDamageReports)
+						.ThenInclude(adr => adr.DamageReport)
+							.ThenInclude(dr => dr.Items)
+								.ThenInclude(i => i.Shelf)
+									.ThenInclude(s => s!.ShelfType)
+				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.AssignmentDamageReports)
+						.ThenInclude(adr => adr.DamageReport)
+							.ThenInclude(dr => dr.Items)
+								.ThenInclude(i => i.DamageMedia)
+
 				.Include(x => x.Items)
 					.ThenInclude(i => i.StoreOrderItem)
 				.Include(x => x.Items)
@@ -30,37 +76,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc!.Color)
-				// Nhánh kệ
+
 				.Include(x => x.ShelfShipmentItems)
 					.ThenInclude(si => si.ShelfOrderItem)
 				.Include(x => x.ShelfShipmentItems)
 					.ThenInclude(si => si.Shelf)
-						.ThenInclude(sh => sh.ShelfType)
-				// Nhánh Damage Report
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items) // Chui vào danh sách món hỏng
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc!.Product)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.ProductColor)
-							.ThenInclude(pc => pc!.Color)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.Shelf)
-							.ThenInclude(s => s!.ShelfType)
-				.Include(x => x.DamageReports)
-					.ThenInclude(dr => dr.Items)
-						.ThenInclude(i => i.DamageMedia)
-				// Nhánh đơn hàng Store và Shelf
-				.Include(x => x.StoreOrders)
-					.ThenInclude(o => o.Items)
-				.Include(x => x.StoreOrders)
-					.ThenInclude(o => o.StoreLocation)
-				.Include(x => x.ShelfOrders)
-					.ThenInclude(o => o.StoreLocation)
-				.Include(x => x.ShelfOrders)
-					.ThenInclude(o => o.Items);
+						.ThenInclude(sh => sh.ShelfType);
 		}
 		public async Task<int> GetMaxSequenceAsync()
 		{
@@ -106,14 +127,23 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.Shipments
 				.Include(x => x.FromLocation)
 				.Include(x => x.ToLocation)
-				.Include(s => s.StoreOrders).ThenInclude(o => o.Items)
-				.Include(s => s.ShelfOrders).ThenInclude(o => o.Items)
-				.Include(s => s.DamageReports).ThenInclude(dr => dr.Items)
+				.Include(s => s.ShipmentAssignment)
+					.ThenInclude(sa => sa.AssignmentStoreOrders)
+						.ThenInclude(aso => aso.StoreOrder)
+							.ThenInclude(o => o.Items)
+				.Include(s => s.ShipmentAssignment)
+					.ThenInclude(sa => sa.AssignmentShelfOrders)
+						.ThenInclude(aso => aso.ShelfOrder)
+							.ThenInclude(o => o.Items)
+				.Include(s => s.ShipmentAssignment)
+					.ThenInclude(sa => sa.AssignmentDamageReports)
+						.ThenInclude(adr => adr.DamageReport)
+							.ThenInclude(dr => dr.Items)
 				.Include(s => s.Items)
 				.Include(s => s.ShelfShipmentItems)
 					.ThenInclude(x => x.Shelf).ThenInclude(sh => sh.ShelfType)
-				.Include(s => s.ShelfShipmentItems)    
-					.ThenInclude(x => x.ShelfOrderItem) 
+				.Include(s => s.ShelfShipmentItems)
+					.ThenInclude(x => x.ShelfOrderItem)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
@@ -121,7 +151,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId)
 		{
 			return await GetShipmentWithFullDetailsQuery()
-				.Where(x => x.StoreOrders.Any(o => o.Id == storeOrderId))
+				.Where(x => x.ShipmentAssignment.AssignmentStoreOrders
+					.Any(aso => aso.StoreOrderId == storeOrderId))
 				.OrderByDescending(x => x.CreatedAt)
 				.ToListAsync();
 		}
