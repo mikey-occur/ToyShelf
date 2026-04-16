@@ -43,14 +43,27 @@ namespace ToyShelf.API.Configuration
 
 			// ===== Hangfire =====
 			services.AddHangfire(config => config
-				.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-				.UseSimpleAssemblyNameTypeSerializer()
-				.UseRecommendedSerializerSettings()
-				.UsePostgreSqlStorage(options =>
-				{
-					options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
-				}));
-			services.AddHangfireServer();
+			.SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+			.UseSimpleAssemblyNameTypeSerializer()
+			.UseRecommendedSerializerSettings()
+			.UsePostgreSqlStorage(options =>
+			{
+				options.UseNpgsqlConnection(configuration.GetConnectionString("DefaultConnection"));
+			}, new PostgreSqlStorageOptions
+			{
+				// Tăng thời gian kiểm tra job mới (mặc định 15s) để giảm tải cho DB
+				QueuePollInterval = TimeSpan.FromSeconds(30),
+				// Tự động tạo Schema nếu chưa có
+				PrepareSchemaIfNecessary = true,
+				// Thời gian chờ khóa phân tán
+				DistributedLockTimeout = TimeSpan.FromMinutes(1)
+			}));
+
+			// QUAN TRỌNG: Giới hạn số lượng Worker chạy ngầm
+			services.AddHangfireServer(options =>
+			{
+				options.WorkerCount = 2;
+			});
 
 			// 1. Lấy chuỗi kết nối
 			var redisConnectionString = configuration.GetValue<string>("Redis:ConnectionString");
