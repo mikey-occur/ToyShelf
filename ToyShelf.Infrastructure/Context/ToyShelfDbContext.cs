@@ -454,6 +454,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ApprovedAt);
 
+				entity.Property(e => e.PartnerAdminApprovedAt);
+
 				entity.Property(e => e.RejectedAt);
 
 				// FK
@@ -485,6 +487,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.RejectedByUserId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_StoreOrder_RejectedByUser");
+
+				entity.HasOne(e => e.PartnerAdminApprovedByUser)
+					  .WithMany(a => a.PartnerAdminStoreOrders)
+					  .HasForeignKey(e => e.PartnerAdminApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_PartnerApprovedByUser");
 			});
 
 			// ================== StoreOrderItem ==================

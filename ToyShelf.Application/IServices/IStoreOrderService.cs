@@ -16,7 +16,9 @@ namespace ToyShelf.Application.IServices
 		Task<StoreOrderResponse> CreateAsync(CreateStoreOrderRequest request, ICurrentUser currentUser);
 		Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status);
 		Task<StoreOrderResponse> GetByIdAsync(Guid id);
-		Task ApproveAsync(Guid id, ICurrentUser currentUser);
+
+		Task PartnerAdminApproveAsync(Guid id, ICurrentUser currentUser);
+		Task AdminApproveAsync(Guid id, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, ICurrentUser currentUser);
 		Task<List<WarehouseMatchResponse>> GetAvailableWarehousesAsync(Guid storeOrderId);
 	}

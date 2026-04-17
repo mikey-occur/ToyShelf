@@ -54,19 +54,29 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Store order retrieved successfully");
 		}
 
-		// ================= APPROVE =================
-		[HttpPatch("{id}/approve")]
-		[Authorize(Roles = "Admin")]
-		public async Task<ActionResult<ActionResponse>> Approve(Guid id, [FromServices] ICurrentUser currentUser)
+		// ================= PARTNER ADMIN APPROVE =================
+		// Bước 1: Đối tác duyệt đơn của cửa hàng họ
+		[HttpPatch("{id}/partner-approve")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<ActionResponse>> PartnerApprove(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.ApproveAsync(id, currentUser);
+			await _storeOrderService.PartnerAdminApproveAsync(id, currentUser);
+			return ActionResponse.Ok("Partner has approved the order. Waiting for Admin final approval.");
+		}
 
-			return ActionResponse.Ok("Store order approved successfully");
+		// ================= ADMIN APPROVE =================
+		// Bước 2: Admin tổng duyệt cuối để xuất kho
+		[HttpPatch("{id}/admin-approve")]
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> AdminApprove(Guid id, [FromServices] ICurrentUser currentUser)
+		{
+			await _storeOrderService.AdminApproveAsync(id, currentUser);
+			return ActionResponse.Ok("Store order approved by Admin successfully.");
 		}
 
 		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(Guid id, [FromServices] ICurrentUser currentUser)
 		{
 			await _storeOrderService.RejectAsync(id, currentUser);

@@ -9,6 +9,7 @@ namespace ToyShelf.Domain.Entities
 	public enum StoreOrderStatus
 	{
 		Pending,
+		PartnerApproved,
 		Approved,
 		Rejected,
 		Processing,
@@ -24,18 +25,21 @@ namespace ToyShelf.Domain.Entities
 		public Guid StoreLocationId { get; set; }
 		public Guid RequestedByUserId { get; set; }
 
+		public Guid? PartnerAdminApprovedByUserId { get; set; }
 		public Guid? ApprovedByUserId { get; set; }
 		public Guid? RejectedByUserId { get; set; }
 
 		public StoreOrderStatus Status { get; set; }
 
 		public DateTime CreatedAt { get; set; }
+		public DateTime? PartnerAdminApprovedAt { get; set; }
 		public DateTime? ApprovedAt { get; set; }
 		public DateTime? RejectedAt { get; set; }
 
 		// Navigation
 		public virtual InventoryLocation StoreLocation { get; set; } = null!;
 		public virtual User RequestedByUser { get; set; } = null!;
+		public virtual User? PartnerAdminApprovedByUser { get; set; }
 		public virtual User? ApprovedByUser { get; set; }
 		public virtual User? RejectedByUser { get; set; }
 
