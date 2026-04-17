@@ -2411,6 +2411,12 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(n => n.Title).IsRequired().HasMaxLength(255);
 				entity.Property(n => n.Content).IsRequired();
 				entity.HasIndex(n => new { n.UserId, n.CreatedAt }).IsDescending(false, true);
+
+				// --- THÊM QUAN HỆ VÀO ĐÂY ---
+				entity.HasOne(n => n.User)                  
+					  .WithMany(u => u.Notifications)        
+					  .HasForeignKey(n => n.UserId)          
+					  .OnDelete(DeleteBehavior.Cascade);
 			});
 		}
 	}

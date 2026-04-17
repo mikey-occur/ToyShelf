@@ -38,6 +38,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<ShelfOrder> RequestShelfOrders { get; set; } = new List<ShelfOrder>();
 		public virtual ICollection<ShelfOrder> ApprovedShelfOrders { get; set; } = new List<ShelfOrder>();
 		public virtual ICollection<ShelfOrder> RejectedShelfOrders { get; set; } = new List<ShelfOrder>();
+		public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
 
 	}
 }

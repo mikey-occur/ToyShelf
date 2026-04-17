@@ -102,6 +102,10 @@ namespace ToyShelf.Application.Services
 				OrderItemId = ch.OrderItemId,
 				AppliedRate = ch.AppliedRate,
 				CommissionAmount = ch.CommissionAmount,
+				Quantity = ch.OrderItem?.Quantity ?? 0,
+				OrderCode = ch.OrderItem?.Order?.OrderCode ?? 0,
+				PaymentMethod = ch.OrderItem?.Order?.PaymentMethod ?? "Unknown",
+				OrderDate = ch.OrderItem?.Order?.CreatedAt ?? DateTime.MinValue,
 				CreatedAt = ch.CreatedAt
 			}).ToList();
 

@@ -41,7 +41,9 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.MonthlySettlements
 				.Include(ms => ms.Partner)
-				.Include(ms => ms.CommissionHistories) 
+				.Include(ms => ms.CommissionHistories)
+				.ThenInclude(ch => ch.OrderItem)
+				.ThenInclude(oi => oi.Order)
 				.FirstOrDefaultAsync(ms => ms.Id == id);
 		}
 	}
