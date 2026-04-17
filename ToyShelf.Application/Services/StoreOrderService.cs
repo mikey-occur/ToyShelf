@@ -359,6 +359,12 @@ namespace ToyShelf.Application.Services
 			return result;
 		}
 
+		public async Task<IEnumerable<StoreOrderResponse>> GetOrdersForAdminAsync(Guid partnerId, StoreOrderStatus? status)
+		{
+			var orders = await _storeOrderRepository.GetOrdersByPartnerAsync(partnerId, status);
+
+			return orders.Select(MapToResponse);
+		}
 		private static StoreOrderResponse MapToResponse(StoreOrder order)
 		{
 			return new StoreOrderResponse
@@ -373,12 +379,19 @@ namespace ToyShelf.Application.Services
 				StoreAddress = order.StoreLocation?.Store?.StoreAddress ?? string.Empty,
 				RequestedByUserId = order.RequestedByUserId,
 				RequestName = order.RequestedByUser?.FullName ?? string.Empty,
+
+				PartnerAdminApprovedByUserId = order.PartnerAdminApprovedByUserId,
+				PartnerAdminName = order.PartnerAdminApprovedByUser?.FullName ?? string.Empty,
+
 				ApprovedByUserId = order.ApprovedByUserId,
 				ApproveName = order.ApprovedByUser?.FullName ?? string.Empty,
+
 				RejectedByUserId = order.RejectedByUserId,
 				RejectName = order.RejectedByUser?.FullName ?? string.Empty,
+
 				Status = order.Status,
 				CreatedAt = order.CreatedAt,
+				PartnerAdminApprovedAt = order.PartnerAdminApprovedAt,
 				ApprovedAt = order.ApprovedAt,
 				RejectedAt = order.RejectedAt,
 				Items = order.Items.Select(i => new StoreOrderItemResponse
