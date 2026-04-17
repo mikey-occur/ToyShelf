@@ -291,9 +291,15 @@ namespace ToyShelf.Application.Services
 			{
 				Id = report.Id,
 				Code = report.Code,
+
+				ShipmentAssignmentIds = report.AssignmentDamageReports?
+					.Select(adr => adr.ShipmentAssignmentId)
+					.ToList() ?? new List<Guid>(),
+
 				Type = report.Type,
 				Source = report.Source,
 				Status = report.Status,
+
 				Description = report.Description,
 				AdminNote = report.AdminNote,
 				IsWarrantyClaim = report.IsWarrantyClaim,

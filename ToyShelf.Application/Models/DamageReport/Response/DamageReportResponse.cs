@@ -8,6 +8,9 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 	{
 		public Guid Id { get; set; }
 		public string Code { get; set; } = string.Empty;
+
+		public List<Guid> ShipmentAssignmentIds { get; set; } = new List<Guid>();
+
 		public DamageReportType Type { get; set; }
 		public DamageSource Source { get; set; }
 		public DamageStatus Status { get; set; }
