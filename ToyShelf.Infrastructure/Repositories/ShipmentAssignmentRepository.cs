@@ -37,6 +37,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
+		public async Task<IEnumerable<ShipmentAssignment>> GetByShelfOrderIdWithDetailsAsync(Guid shelfOrderId)
+		{
+			return await GetAssignmentWithFullDetailsQuery()
+				.Where(x => x.AssignmentShelfOrders.Any(ash => ash.ShelfOrderId == shelfOrderId))
+				.ToListAsync();
+		}
 		public async Task<ShipmentAssignment?> GetPendingByLocationAsync(Guid warehouseLocationId, Guid storeLocationId)
 		{
 			return await _context.ShipmentAssignments

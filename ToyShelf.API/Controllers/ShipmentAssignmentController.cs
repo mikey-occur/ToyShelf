@@ -102,6 +102,15 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Assignments retrieved successfully");
 		}
 
+		[HttpGet("shelf-order/{shelfOrderId}")]
+		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetByShelfOrder(Guid shelfOrderId)
+		{
+			var result = await _service.GetByShelfOrderId(shelfOrderId);
+
+			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
+				.Ok(result, "Shelf order assignments retrieved successfully");
+		}
+
 		[HttpGet]
 		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetAll()
 		{
