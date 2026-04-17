@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,14 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class ShelfOrderItemRepository : GenericRepository<ShelfOrderItem>, IShelfOrderItemRepository
 	{
-		public ShelfOrderItemRepository(ToyShelfDbContext context) : base(context){}
+		public ShelfOrderItemRepository(ToyShelfDbContext context) : base(context) { }
+
+		public async Task<IEnumerable<ShelfOrderItem>> GetByShelfOrderIdAsync(Guid shelfOrderId)
+		{
+			return await _context.ShelfOrderItems
+				.Include(x => x.ShelfType)
+				.Where(x => x.ShelfOrderId == shelfOrderId)
+				.ToListAsync();
+		}
 	}
 }

@@ -9,5 +9,6 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IShelfOrderItemRepository : IGenericRepository<ShelfOrderItem>
 	{
+		Task<IEnumerable<ShelfOrderItem>> GetByShelfOrderIdAsync(Guid shelfOrderId);
 	}
 }

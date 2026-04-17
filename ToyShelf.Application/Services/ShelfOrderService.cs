@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -166,72 +167,96 @@ namespace ToyShelf.Application.Services
 
 		public async Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrder(Guid shelfOrderId)
 		{
-			// 1. Lấy order
+			// 1. Lấy thông tin đơn hàng kệ
 			var order = await _repository.GetByIdWithItemsAsync(shelfOrderId);
 
 			if (order == null)
-				throw new AppException("Shelf order not found", 404);
+				throw new AppException("Không tìm thấy đơn đặt hàng kệ", 404);
 
-			if (order.Status != ShelfOrderStatus.Approved)
-				throw new AppException("Order must be approved", 400);
+			// Chỉ cho phép đơn đã Approved hoặc giao một phần (PartiallyFulfilled)
+			if (order.Status == ShelfOrderStatus.Pending)
+				throw new AppException("Đơn hàng đang chờ phê duyệt, không thể tạo chuyến giao", 400);
 
-			// 2. Lấy city của store
-			if (order.StoreLocation?.Store == null)
-				throw new AppException("Store not found", 500);
+			if (order.Status == ShelfOrderStatus.Fulfilled)
+				throw new AppException("Đơn hàng này đã hoàn tất", 400);
 
-			var cityId = order.StoreLocation.Store.CityId;
+			// 2. Xác định thành phố của Store để tìm kho lân cận
+			var cityId = order.StoreLocation?.Store?.CityId
+				?? throw new AppException("Thông tin vị trí cửa hàng không hợp lệ", 500);
 
-			// 3. Lấy warehouse locations cùng city
-			var warehouseLocations = await _locationRepository
-				.GetWarehouseLocationsByCityAsync(cityId);
+			// 3. Tìm danh sách địa điểm kho cùng thành phố
+			var warehouseLocations = await _locationRepository.GetWarehouseLocationsByCityAsync(cityId);
 
 			if (!warehouseLocations.Any())
 				return new List<WarehouseMatchShelfResponse>();
 
-			var locationIds = warehouseLocations.Select(x => x.Id).ToList();
+			var locationIds = warehouseLocations.Select(l => l.Id).ToList();
 
-			// 4. Lấy shelves
-			var shelves = _shelfRepository.GetQueryable()
-				.Where(s =>
-					locationIds.Contains(s.InventoryLocationId) &&
-					s.Status == ShelfStatus.Available)
+			// 4. Lấy tất cả kệ đang "Available" tại các kho đó
+			// Dùng IQueryable để tối ưu performance
+			var availableShelves = await _shelfRepository.GetQueryable()
+				.Include(s => s.ShelfType)
+				.Where(s => locationIds.Contains(s.InventoryLocationId) &&
+							s.Status == ShelfStatus.Available)
+				.ToListAsync();
+
+			// 5. Lấy nhu cầu từ đơn hàng (Chỉ lấy món chưa giao đủ)
+			var orderRequirements = order.Items
+				.Where(x => x.Quantity > x.FulfilledQuantity)
 				.ToList();
 
-			// 5. Map order items
-			var orderItems = order.Items.ToDictionary(
-				x => x.ShelfTypeId,
-				x => x.Quantity
-			);
+			if (!orderRequirements.Any())
+				return new List<WarehouseMatchShelfResponse>();
 
-			// 6. Group theo warehouse
-			var result = shelves
-				.Where(s => orderItems.ContainsKey(s.ShelfTypeId))
-				.GroupBy(s => s.InventoryLocation)
-				.Select(group =>
+			// 6. Thực hiện Matching
+			var result = warehouseLocations.Select(loc =>
+			{
+				// Lấy danh sách kệ thực tế đang nằm tại kho này
+				var locShelves = availableShelves
+					.Where(s => s.InventoryLocationId == loc.Id)
+					.ToList();
+
+				var matchedItems = new List<WarehouseShelfItemResponse>();
+
+				foreach (var req in orderRequirements)
 				{
-					var first = group.First();
-					var warehouse = first.InventoryLocation.Warehouse!;
+					// Đếm số lượng kệ có cùng ShelfTypeId tại kho này
+					var countInStock = locShelves.Count(s => s.ShelfTypeId == req.ShelfTypeId);
 
-					return new WarehouseMatchShelfResponse
+					if (countInStock > 0)
 					{
-						WarehouseId = warehouse.Id,
-						WarehouseLocationId = group.Key.Id,
-						WarehouseName = warehouse.Name,
-						WarehouseCode = warehouse.Code,
+						matchedItems.Add(new WarehouseShelfItemResponse
+						{
+							// ID của dòng item trong đơn hàng (CỰC KỲ QUAN TRỌNG)
+							ShelfOrderItemId = req.Id,
 
-						Items = group
-							.GroupBy(s => s.ShelfTypeId)
-							.Select(g => new WarehouseShelfItemResponse
-							{
-								ShelfTypeId = g.Key,
-								ShelfTypeName = g.First().ShelfType.Name,
-								ImageUrl = g.First().ShelfType.ImageUrl,
-								AvailableQuantity = g.Count()
-							})
-							.ToList()
-					};
-				})
-				.ToList();
+							ShelfTypeId = req.ShelfTypeId,
+							ShelfTypeName = req.ShelfType?.Name ?? "N/A",
+							ImageUrl = req.ShelfType?.ImageUrl,
+
+							AvailableQuantity = countInStock,
+
+							// Thông số đơn hàng để FE hiển thị gợi ý
+							OriginalQuantity = req.Quantity,
+							FulfilledQuantity = req.FulfilledQuantity,
+							RemainingQuantity = req.Quantity - req.FulfilledQuantity
+						});
+					}
+				}
+
+				return new { Location = loc, Items = matchedItems };
+			})
+			.Where(x => x.Items.Any()) // Bỏ qua kho không có món nào mình cần
+			.Select(x => new WarehouseMatchShelfResponse
+			{
+				WarehouseId = x.Location.WarehouseId ?? Guid.Empty,
+				WarehouseLocationId = x.Location.Id,
+				WarehouseName = x.Location.Warehouse?.Name ?? "N/A",
+				WarehouseCode = x.Location.Warehouse?.Code ?? "N/A",
+				Items = x.Items
+			})
+			.OrderBy(x => x.WarehouseName)
+			.ToList();
 
 			return result;
 		}
