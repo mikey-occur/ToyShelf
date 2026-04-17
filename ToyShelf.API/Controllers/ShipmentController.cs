@@ -62,6 +62,20 @@ namespace ToyShelf.API.Controllers
 			);
 		}
 
+		/// <summary>
+		/// Lấy danh sách shipment theo ShelfOrder
+		/// </summary>
+		[HttpGet("shelf-order/{shelfOrderId}")]
+		public async Task<BaseResponse<IEnumerable<ShipmentResponse>>> GetByShelfOrderId(Guid shelfOrderId)
+		{
+			var result = await _shipmentService.GetByShelfOrderIdAsync(shelfOrderId);
+
+			return BaseResponse<IEnumerable<ShipmentResponse>>.Ok(
+				result,
+				"Get shipments by shelf order successfully"
+			);
+		}
+
 		[HttpPost]
 		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<ShipmentResponse>> Create(

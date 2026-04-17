@@ -101,6 +101,16 @@ namespace ToyShelf.Application.Services
 
 			return shipments.Select(MapToResponse);
 		}
+
+		public async Task<IEnumerable<ShipmentResponse>> GetByShelfOrderIdAsync(Guid shelfOrderId)
+		{
+			var shipments = await _shipmentRepository.GetByShelfOrderIdAsync(shelfOrderId);
+
+			if (shipments == null || !shipments.Any())
+				throw new AppException("No shipments found for this shelf order", 404);
+
+			return shipments.Select(MapToResponse);
+		}
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
 			// 1. Validation & Load Data
