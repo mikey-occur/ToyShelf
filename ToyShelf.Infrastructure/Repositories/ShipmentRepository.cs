@@ -166,6 +166,15 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
+		public async Task<List<Shipment>> GetByDamageReportIdAsync(Guid damageReportId)
+		{
+			return await GetShipmentWithFullDetailsQuery()
+				.Where(x => x.ShipmentAssignment.AssignmentDamageReports
+					.Any(adr => adr.DamageReportId == damageReportId))
+				.OrderByDescending(x => x.CreatedAt)
+				.ToListAsync();
+		}
+
 		public async Task<Shipment?> GetByIdWithShelfItemsAsync(Guid id)
 		{
 			return await _context.Shipments
