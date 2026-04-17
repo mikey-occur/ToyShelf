@@ -6,7 +6,9 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
+using ToyShelf.Application.Models.StoreOrder.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Application.Services;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
@@ -98,14 +100,17 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<List<WarehouseMatchShelfResponse>>
 				.Ok(result, "Available warehouses retrieved successfully");
 		}
-		// ================= FULFILL =================
-		//[HttpPatch("{id}/fulfill")]
-		//[Authorize(Roles = "Admin")]
-		//public async Task<ActionResult<ActionResponse>> Fulfill(Guid id)
-		//{
-		//	await _shelfOrderService.FulfillAsync(id);
 
-		//	return ActionResponse.Ok("Shelf order fulfilled successfully");
-		//}
+		[HttpGet("by-partner/{partnerId}")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
+		public async Task<BaseResponse<IEnumerable<ShelfOrderResponse>>> GetByPartner(
+			Guid partnerId,
+			[FromQuery] ShelfOrderStatus? status)
+		{
+			var result = await _shelfOrderService.GetByPartnerAsync(partnerId, status);
+
+			return BaseResponse<IEnumerable<ShelfOrderResponse>>
+				.Ok(result, "Partner shelf orders retrieved successfully");
+		}
 	}
 }

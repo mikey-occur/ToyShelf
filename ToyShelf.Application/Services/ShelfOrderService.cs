@@ -280,6 +280,12 @@ namespace ToyShelf.Application.Services
 			return result;
 		}
 
+		public async Task<IEnumerable<ShelfOrderResponse>> GetByPartnerAsync(Guid partnerId, ShelfOrderStatus? status)
+		{
+			var orders = await _repository.GetOrdersByPartnerAsync(partnerId, status);
+			return orders.Select(MapToResponse);
+		}
+
 		// ================= FULFILL=================
 		//public async Task FulfillAsync(Guid orderId)
 		//{
@@ -342,6 +348,9 @@ namespace ToyShelf.Application.Services
 				RequestedByUserId = order.RequestedByUserId,
 				RequestName = order.RequestedByUser?.FullName ?? "",
 
+				PartnerAdminApprovedByUserId = order.PartnerAdminApprovedByUserId,
+				PartnerAdminName = order.PartnerAdminApprovedByUser?.FullName ?? string.Empty,
+
 				ApprovedByUserId = order.ApprovedByUserId,
 				ApproveName = order.ApprovedByUser?.FullName ?? "",
 
@@ -353,6 +362,7 @@ namespace ToyShelf.Application.Services
 				AdminNote = order.AdminNote,
 
 				CreatedAt = order.CreatedAt,
+				PartnerAdminApprovedAt = order.PartnerAdminApprovedAt,
 				ApprovedAt = order.ApprovedAt,
 				RejectedAt = order.RejectedAt,
 

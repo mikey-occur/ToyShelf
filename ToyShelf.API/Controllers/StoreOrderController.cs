@@ -89,5 +89,17 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<List<WarehouseMatchResponse>>
 				.Ok(result, "Available warehouses retrieved successfully");
 		}
+
+		[HttpGet("by-partner/{partnerId}")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
+		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetByPartner(
+			Guid partnerId,
+			[FromQuery] StoreOrderStatus? status)
+		{
+			var result = await _storeOrderService.GetOrdersForAdminAsync(partnerId, status);
+
+			return BaseResponse<IEnumerable<StoreOrderResponse>>
+				.Ok(result, "StoreOrder retrieved successfully");
+		}
 	}
 }

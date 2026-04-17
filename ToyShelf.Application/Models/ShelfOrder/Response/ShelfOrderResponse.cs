@@ -20,6 +20,9 @@ namespace ToyShelf.Application.Models.ShelfOrder.Response
 		public Guid RequestedByUserId { get; set; }
 		public string RequestName { get; set; } = string.Empty;
 
+		public Guid? PartnerAdminApprovedByUserId { get; set; }
+		public string PartnerAdminName { get; set; } = string.Empty;
+
 		public Guid? ApprovedByUserId { get; set; }
 		public string ApproveName { get; set; } = string.Empty;
 
@@ -32,6 +35,7 @@ namespace ToyShelf.Application.Models.ShelfOrder.Response
 		public string? AdminNote { get; set; }
 
 		public DateTime CreatedAt { get; set; }
+		public DateTime? PartnerAdminApprovedAt { get; set; }
 		public DateTime? ApprovedAt { get; set; }
 		public DateTime? RejectedAt { get; set; }
 
