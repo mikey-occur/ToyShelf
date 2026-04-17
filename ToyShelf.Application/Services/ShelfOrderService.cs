@@ -287,6 +287,11 @@ namespace ToyShelf.Application.Services
 			{
 				Id = order.Id,
 				Code = order.Code,
+
+				ShipmentAssignmentIds = order.AssignmentShelfOrders?
+					.Select(ash => ash.ShipmentAssignmentId)
+					.ToList() ?? new List<Guid>(),
+
 				StoreLocationId = order.StoreLocationId,
 				StoreName = order.StoreLocation?.Store?.Name ?? "",
 

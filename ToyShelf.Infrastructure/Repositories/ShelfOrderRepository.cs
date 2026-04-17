@@ -37,6 +37,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.RequestedByUser)
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
+				.Include(o => o.AssignmentShelfOrders)
+					.ThenInclude(ash => ash.ShipmentAssignment)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ShelfType)
 
@@ -55,6 +57,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.RequestedByUser)
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
+				.Include(o => o.AssignmentShelfOrders)
+					.ThenInclude(ash => ash.ShipmentAssignment)
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ShelfType)
 				.FirstOrDefaultAsync(x => x.Id == id);
