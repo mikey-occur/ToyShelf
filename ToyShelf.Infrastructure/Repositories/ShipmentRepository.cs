@@ -76,6 +76,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(x => x.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc!.Color)
+				.Include(x => x.Items)
+					.ThenInclude(i => i.DamageReportItem)
+						.ThenInclude(dri => dri!.DamageReport)
+				.Include(x => x.Items)
+					.ThenInclude(i => i.Shelf)
+						.ThenInclude(s => s!.ShelfType)
 
 				.Include(x => x.ShelfShipmentItems)
 					.ThenInclude(si => si.ShelfOrderItem)

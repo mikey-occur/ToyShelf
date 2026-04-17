@@ -71,7 +71,7 @@ namespace ToyShelf.API.Controllers
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> CreateAssignment(
 			Guid id,
-			[FromBody] Guid warehouseLocationId,
+			[FromQuery] Guid warehouseLocationId,
 			[FromServices] ICurrentUser currentUser)
 		{
 			await _damageReportService.CreateRecallAssignmentAsync(id, warehouseLocationId, currentUser);

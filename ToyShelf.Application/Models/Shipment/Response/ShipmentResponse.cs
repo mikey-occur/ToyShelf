@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.DamageReport.Response;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.Models.Shipment.Response
@@ -43,6 +44,8 @@ namespace ToyShelf.Application.Models.Shipment.Response
 
 		// Danh sách kệ tổng hợp (đã GroupBy theo ShelfType)
 		public List<ShipmentShelfItemResponse>? ShelfItems { get; set; }
+
+		public List<DamageReturnItemResponse>? DamageReturnItems { get; set; }
 
 		// Thêm thông tin Media (Bằng chứng lúc Pickup/Delivery) nếu FE cần hiển thị
 		public List<string>? MediaUrls { get; set; }

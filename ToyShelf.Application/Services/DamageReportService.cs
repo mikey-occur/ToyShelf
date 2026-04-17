@@ -106,7 +106,9 @@ namespace ToyShelf.Application.Services
 					CreatedAt = _dateTime.UtcNow
 				};
 
-				foreach (var itemReq in request.Items)
+				// --- BƯỚC 1: XỬ LÝ SẢN PHẨM (Giữ nguyên logic cũ) ---
+				var productItems = request.Items.Where(x => x.Type == DamageItemType.Product).ToList();
+				foreach (var itemReq in productItems)
 				{
 					var item = new DamageReportItem
 					{
@@ -114,75 +116,110 @@ namespace ToyShelf.Application.Services
 						DamageReportId = report.Id,
 						DamageItemType = itemReq.Type,
 						ProductColorId = itemReq.ProductColorId,
-						ShelfId = itemReq.ShelfId,
-						Quantity = itemReq.Type == DamageItemType.Shelf ? 1 : itemReq.Quantity
+						Quantity = itemReq.Quantity
 					};
 
-					// --- XỬ LÝ TỒN KHO PRODUCT (Tạm khóa) ---
-					if (itemReq.Type == DamageItemType.Product)
+					var invAvail = await _inventoryRepository.GetByLocationAndProductAsync(location.Id, itemReq.ProductColorId!.Value, InventoryStatus.Available);
+					if (invAvail == null || invAvail.Quantity < item.Quantity)
+						throw new AppException($"Sản phẩm mã {itemReq.ProductColorId} không đủ tồn kho để báo hỏng", 400);
+
+					invAvail.Quantity -= item.Quantity ?? 0;
+
+					var invPending = await _inventoryRepository.GetByLocationAndProductAsync(location.Id, itemReq.ProductColorId.Value, InventoryStatus.PendingDamaged);
+					if (invPending == null)
 					{
-						var invAvail = await _inventoryRepository.GetByLocationAndProductAsync(location.Id, itemReq.ProductColorId!.Value, InventoryStatus.Available);
-						if (invAvail == null || invAvail.Quantity < item.Quantity)
-							throw new AppException($"Sản phẩm mã {itemReq.ProductColorId} không đủ tồn kho để báo hỏng", 400);
-
-						invAvail.Quantity -= item.Quantity ?? 0; // Trừ Available
-
-						var invPending = await _inventoryRepository.GetByLocationAndProductAsync(location.Id, itemReq.ProductColorId.Value, InventoryStatus.PendingDamaged);
-						if (invPending == null)
-						{
-							invPending = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = location.Id, ProductColorId = itemReq.ProductColorId.Value, Status = InventoryStatus.PendingDamaged, Quantity = item.Quantity ?? 0 };
-							await _inventoryRepository.AddAsync(invPending);
-						}
-						else { invPending.Quantity += item.Quantity ?? 0; }
+						invPending = new Inventory { Id = Guid.NewGuid(), InventoryLocationId = location.Id, ProductColorId = itemReq.ProductColorId.Value, Status = InventoryStatus.PendingDamaged, Quantity = item.Quantity ?? 0 };
+						await _inventoryRepository.AddAsync(invPending);
 					}
-					// --- XỬ LÝ KỆ (Tạm khóa) ---
-					else
-					{
-						var shelf = await _shelfRepository.GetByIdAsync(itemReq.ShelfId!.Value);
-						if (shelf == null || shelf.Status != ShelfStatus.InUse) throw new AppException("Kệ không hợp lệ hoặc không ở trạng thái đang sử dụng", 400);
+					else { invPending.Quantity += item.Quantity ?? 0; }
 
-						var invInUse = await _inventoryShelfRepository.GetShelfWithStatusAsync(location.Id, shelf.ShelfTypeId, ShelfStatus.InUse);
-
-						if (invInUse == null || invInUse.Quantity < 1)
-							throw new AppException($"Không tìm thấy bản ghi tồn kho 'InUse' cho loại kệ {shelf.ShelfTypeId}", 400);
-
-						invInUse.RemoveQuantity(1);
-
-						var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(location.Id, shelf.ShelfTypeId, ShelfStatus.PendingMaintenance);
-						if (invPendingMaint == null)
-						{
-							invPendingMaint = new InventoryShelf(location.Id, shelf.ShelfTypeId, 1, ShelfStatus.PendingMaintenance);
-							await _inventoryShelfRepository.AddAsync(invPendingMaint);
-						}
-						else { invPendingMaint.AddQuantity(1); }
-
-						shelf.Status = ShelfStatus.PendingMaintenance; // Cập nhật tủ vật lý
-					}
-					// Thêm Media... (giữ nguyên logic cũ của bạn)
-					if (itemReq.MediaUrls != null)
-					{
-						foreach (var url in itemReq.MediaUrls)
-						{
-							item.DamageMedia.Add(new DamageMedia
-							{
-								Id = Guid.NewGuid(),
-								MediaUrl = url,
-								MediaType = "IMAGE",
-								CreatedAt = _dateTime.UtcNow
-							});
-						}
-					}
+					AddMedia(item, itemReq.MediaUrls);
 					report.Items.Add(item);
+				}
+
+				// --- BƯỚC 2: XỬ LÝ KỆ (Sửa logic GroupBy để tránh Duplicate Key) ---
+				var shelfItemsReq = request.Items.Where(x => x.Type == DamageItemType.Shelf).ToList();
+
+				// Lấy thông tin chi tiết các kệ trước
+				var shelfIds = shelfItemsReq.Select(x => x.ShelfId!.Value).ToList();
+				var shelves = await _shelfRepository.GetByIds(shelfIds);
+
+				// Group theo ShelfTypeId để cập nhật InventoryShelf (Sổ cái) 1 lần duy nhất mỗi loại
+				var shelfGroups = shelves.GroupBy(s => s.ShelfTypeId);
+
+				foreach (var group in shelfGroups)
+				{
+					var shelfTypeId = group.Key;
+					var quantityInGroup = group.Count();
+
+					// 1. Cập nhật InUse (Trừ tổng số lượng trong group)
+					var invInUse = await _inventoryShelfRepository.GetShelfWithStatusAsync(location.Id, shelfTypeId, ShelfStatus.InUse);
+					if (invInUse == null || invInUse.Quantity < quantityInGroup)
+						throw new AppException($"Không đủ số lượng kệ 'InUse' trong kho cho loại kệ này", 400);
+
+					invInUse.RemoveQuantity(quantityInGroup);
+
+					// 2. Cập nhật PendingMaintenance (Cộng tổng số lượng vào 1 dòng duy nhất)
+					var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(location.Id, shelfTypeId, ShelfStatus.PendingMaintenance);
+					if (invPendingMaint == null)
+					{
+						invPendingMaint = new InventoryShelf(location.Id, shelfTypeId, quantityInGroup, ShelfStatus.PendingMaintenance);
+						await _inventoryShelfRepository.AddAsync(invPendingMaint);
+					}
+					else { invPendingMaint.AddQuantity(quantityInGroup); }
+
+					// 3. Cập nhật từng thực thể kệ vật lý và tạo DamageReportItem
+					foreach (var shelf in group)
+					{
+						if (shelf.Status != ShelfStatus.InUse)
+							throw new AppException($"Kệ {shelf.Id} không ở trạng thái InUse", 400);
+
+						shelf.Status = ShelfStatus.PendingMaintenance;
+
+						var item = new DamageReportItem
+						{
+							Id = Guid.NewGuid(),
+							DamageReportId = report.Id,
+							DamageItemType = DamageItemType.Shelf,
+							ShelfId = shelf.Id,
+							Quantity = 1
+						};
+
+						// Lấy media từ request gốc tương ứng với shelfId này
+						var originalReq = shelfItemsReq.First(x => x.ShelfId == shelf.Id);
+						AddMedia(item, originalReq.MediaUrls);
+
+						report.Items.Add(item);
+					}
 				}
 
 				UpdateReportType(report);
 				await _repository.AddAsync(report);
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
+
 				var full = await _repository.GetByIdFullIncludeAsync(report.Id);
 				return MapToResponse(full!);
 			}
 			catch { await _unitOfWork.RollbackTransactionAsync(); throw; }
+		}
+
+		// Hàm phụ trợ để giữ nguyên logic Media cũ
+		private void AddMedia(DamageReportItem item, List<string>? urls)
+		{
+			if (urls != null)
+			{
+				foreach (var url in urls)
+				{
+					item.DamageMedia.Add(new DamageMedia
+					{
+						Id = Guid.NewGuid(),
+						MediaUrl = url,
+						MediaType = "IMAGE",
+						CreatedAt = DateTime.UtcNow
+					});
+				}
+			}
 		}
 
 		// ================= APPROVE (Admin duyệt xác nhận hàng hỏng) =================
@@ -195,90 +232,99 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.BeginTransactionAsync();
 			try
 			{
-				// 1. Cập nhật trạng thái báo cáo
+				// 1. Cập nhật thông tin chung của báo cáo
 				report.Status = DamageStatus.Approved;
 				report.AdminNote = adminNote;
 				report.ReviewedByUserId = currentUser.UserId;
 				report.ReviewedAt = _dateTime.UtcNow;
 
-				// 2. Xử lý logic tồn kho (Chuyển từ PENDING sang CHÍNH THỨC)
-				foreach (var item in report.Items)
+				// --- BƯỚC 2: XỬ LÝ SẢN PHẨM (Group theo ProductColorId) ---
+				var productItems = report.Items.Where(x => x.DamageItemType == DamageItemType.Product).ToList();
+				foreach (var group in productItems.GroupBy(x => x.ProductColorId))
 				{
-					// --- PRODUCT: PendingDamaged -> Damaged ---
-					if (item.DamageItemType == DamageItemType.Product)
+					var productColorId = group.Key!.Value;
+					var totalQty = group.Sum(x => x.Quantity ?? 0);
+
+					// Giảm số lượng ở kho Tạm (PendingDamaged)
+					var invPending = await _inventoryRepository.GetByLocationAndProductAsync(
+						report.InventoryLocationId, productColorId, InventoryStatus.PendingDamaged);
+
+					if (invPending != null)
 					{
-						if (!item.ProductColorId.HasValue) continue;
-
-						// Giảm số lượng ở kho Tạm (PendingDamaged)
-						var invPending = await _inventoryRepository.GetByLocationAndProductAsync(
-							report.InventoryLocationId, item.ProductColorId.Value, InventoryStatus.PendingDamaged);
-
-						if (invPending != null)
-						{
-							invPending.Quantity -= item.Quantity ?? 0;
-							_inventoryRepository.Update(invPending);
-						}
-
-						// Tăng số lượng ở kho Hỏng chính thức (Damaged)
-						var damagedInv = await _inventoryRepository.GetByLocationAndProductAsync(
-							report.InventoryLocationId, item.ProductColorId.Value, InventoryStatus.Damaged);
-
-						if (damagedInv == null)
-						{
-							damagedInv = new Inventory
-							{
-								Id = Guid.NewGuid(),
-								InventoryLocationId = report.InventoryLocationId,
-								ProductColorId = item.ProductColorId.Value,
-								Status = InventoryStatus.Damaged,
-								Quantity = item.Quantity ?? 0
-							};
-							await _inventoryRepository.AddAsync(damagedInv);
-						}
-						else
-						{
-							damagedInv.Quantity += item.Quantity ?? 0;
-							_inventoryRepository.Update(damagedInv);
-						}
+						invPending.Quantity -= totalQty;
+						if (invPending.Quantity < 0) invPending.Quantity = 0; // Bảo vệ số liệu không âm
+						_inventoryRepository.Update(invPending);
 					}
-					// --- SHELF: PendingMaintenance -> Maintenance ---
+
+					// Tăng số lượng ở kho Hỏng chính thức (Damaged)
+					var damagedInv = await _inventoryRepository.GetByLocationAndProductAsync(
+						report.InventoryLocationId, productColorId, InventoryStatus.Damaged);
+
+					if (damagedInv == null)
+					{
+						damagedInv = new Inventory
+						{
+							Id = Guid.NewGuid(),
+							InventoryLocationId = report.InventoryLocationId,
+							ProductColorId = productColorId,
+							Status = InventoryStatus.Damaged,
+							Quantity = totalQty
+						};
+						await _inventoryRepository.AddAsync(damagedInv);
+					}
 					else
 					{
-						if (item.Shelf == null) continue;
+						damagedInv.Quantity += totalQty;
+						_inventoryRepository.Update(damagedInv);
+					}
+				}
 
-						// Giảm ở Sổ cái Tạm (PendingMaintenance)
-						var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(
-							report.InventoryLocationId, item.Shelf.ShelfTypeId, ShelfStatus.PendingMaintenance);
+				// --- BƯỚC 3: XỬ LÝ KỆ (Group theo ShelfTypeId để khớp Unique Index) ---
+				var shelfItems = report.Items.Where(x => x.DamageItemType == DamageItemType.Shelf).ToList();
+				foreach (var group in shelfItems.GroupBy(x => x.Shelf?.ShelfTypeId))
+				{
+					if (group.Key == null) continue;
+					var shelfTypeId = group.Key.Value;
+					var count = group.Count();
 
-						if (invPendingMaint != null)
+					// 1. Giảm ở Sổ cái Tạm (PendingMaintenance)
+					var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						report.InventoryLocationId, shelfTypeId, ShelfStatus.PendingMaintenance);
+
+					if (invPendingMaint != null)
+					{
+						int qtyToRemove = Math.Min(invPendingMaint.Quantity, count);
+						invPendingMaint.RemoveQuantity(qtyToRemove);
+						_inventoryShelfRepository.Update(invPendingMaint);
+					}
+
+					// 2. Tăng ở Sổ cái Bảo trì chính thức (Maintenance)
+					var invMaintenance = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						report.InventoryLocationId, shelfTypeId, ShelfStatus.Maintenance);
+
+					if (invMaintenance == null)
+					{
+						invMaintenance = new InventoryShelf(report.InventoryLocationId, shelfTypeId, count, ShelfStatus.Maintenance);
+						await _inventoryShelfRepository.AddAsync(invMaintenance);
+					}
+					else
+					{
+						invMaintenance.AddQuantity(count);
+						_inventoryShelfRepository.Update(invMaintenance);
+					}
+
+					// 3. Cập nhật từng cái kệ vật lý
+					foreach (var item in group)
+					{
+						if (item.Shelf != null)
 						{
-							invPendingMaint.RemoveQuantity(1);
-							_inventoryShelfRepository.Update(invPendingMaint);
+							item.Shelf.Status = ShelfStatus.Maintenance;
+							_shelfRepository.Update(item.Shelf);
 						}
-
-						// Tăng ở Sổ cái Bảo trì chính thức (Maintenance)
-						var invMaintenance = await _inventoryShelfRepository.GetShelfWithStatusAsync(
-							report.InventoryLocationId, item.Shelf.ShelfTypeId, ShelfStatus.Maintenance);
-
-						if (invMaintenance == null)
-						{
-							invMaintenance = new InventoryShelf(report.InventoryLocationId, item.Shelf.ShelfTypeId, 1, ShelfStatus.Maintenance);
-							await _inventoryShelfRepository.AddAsync(invMaintenance);
-						}
-						else
-						{
-							invMaintenance.AddQuantity(1);
-							_inventoryShelfRepository.Update(invMaintenance);
-						}
-
-						// Cập nhật trạng thái thực tế của con chip/tủ vật lý
-						item.Shelf.Status = ShelfStatus.Maintenance;
-						_shelfRepository.Update(item.Shelf);
 					}
 				}
 
 				_repository.Update(report);
-
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
 			}
@@ -304,65 +350,105 @@ namespace ToyShelf.Application.Services
 			await _unitOfWork.SaveChangesAsync();
 		}
 
-		// ================= REJECT =================
+		// ================= REJECT (Admin từ chối báo cáo hàng hỏng) =================
 		public async Task RejectAsync(Guid id, string? adminNote, ICurrentUser currentUser)
 		{
-			var report = await _repository.GetByIdFullIncludeAsync(id); // Sử dụng Full Include để lấy Shelf info
-			if (report == null) throw new AppException("Report not found", 404);
-			if (report.Status != DamageStatus.Pending) throw new AppException("Report already processed", 400);
+			var report = await _repository.GetByIdFullIncludeAsync(id);
+			if (report == null) throw new AppException("Báo cáo hư hại không tồn tại", 404);
+			if (report.Status != DamageStatus.Pending) throw new AppException("Báo cáo này đã được xử lý trước đó", 400);
 
 			await _unitOfWork.BeginTransactionAsync();
 			try
 			{
+				// 1. Cập nhật thông tin chung của báo cáo
 				report.Status = DamageStatus.Rejected;
 				report.AdminNote = adminNote;
 				report.ReviewedByUserId = currentUser.UserId;
 				report.ReviewedAt = _dateTime.UtcNow;
 
-				foreach (var item in report.Items)
+				// --- BƯỚC 2: XỬ LÝ SẢN PHẨM (Group theo ProductColorId) ---
+				var productItems = report.Items.Where(x => x.DamageItemType == DamageItemType.Product).ToList();
+				foreach (var group in productItems.GroupBy(x => x.ProductColorId))
 				{
-					// --- PRODUCT: PendingDamaged -> Available ---
-					if (item.DamageItemType == DamageItemType.Product)
-					{
-						var invPending = await _inventoryRepository.GetByLocationAndProductAsync(report.InventoryLocationId, item.ProductColorId!.Value, InventoryStatus.PendingDamaged);
-						if (invPending != null) invPending.Quantity -= item.Quantity ?? 0;
+					var productColorId = group.Key!.Value;
+					var totalQty = group.Sum(x => x.Quantity ?? 0);
 
-						var invAvail = await _inventoryRepository.GetByLocationAndProductAsync(report.InventoryLocationId, item.ProductColorId.Value, InventoryStatus.Available);
-						if (invAvail != null) invAvail.Quantity += item.Quantity ?? 0;
+					// Giảm ở kho Tạm (PendingDamaged)
+					var invPending = await _inventoryRepository.GetByLocationAndProductAsync(
+						report.InventoryLocationId, productColorId, InventoryStatus.PendingDamaged);
+
+					if (invPending != null)
+					{
+						invPending.Quantity -= totalQty;
+						if (invPending.Quantity < 0) invPending.Quantity = 0;
+						_inventoryRepository.Update(invPending);
 					}
-					// --- SHELF: PendingMaintenance -> InUse ---
+
+					// Trả về kho Sẵn sàng (Available)
+					var invAvail = await _inventoryRepository.GetByLocationAndProductAsync(
+						report.InventoryLocationId, productColorId, InventoryStatus.Available);
+
+					if (invAvail == null)
+					{
+						invAvail = new Inventory
+						{
+							Id = Guid.NewGuid(),
+							InventoryLocationId = report.InventoryLocationId,
+							ProductColorId = productColorId,
+							Status = InventoryStatus.Available,
+							Quantity = totalQty
+						};
+						await _inventoryRepository.AddAsync(invAvail);
+					}
 					else
 					{
-						// 1. Tìm dòng tổng của loại kệ này đang chờ bảo trì
-						var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(
-							report.InventoryLocationId,
-							item.Shelf!.ShelfTypeId,
-							ShelfStatus.PendingMaintenance);
+						invAvail.Quantity += totalQty;
+						_inventoryRepository.Update(invAvail);
+					}
+				}
 
-						// Kiểm tra và trừ ở dòng tổng (Sổ cái)
-						if (invPendingMaint != null && invPendingMaint.Quantity > 0)
+				// --- BƯỚC 3: XỬ LÝ KỆ (Group theo ShelfTypeId để tránh Duplicate Key) ---
+				var shelfItems = report.Items.Where(x => x.DamageItemType == DamageItemType.Shelf).ToList();
+				foreach (var group in shelfItems.GroupBy(x => x.Shelf?.ShelfTypeId))
+				{
+					if (group.Key == null) continue;
+					var shelfTypeId = group.Key.Value;
+					var count = group.Count();
+
+					// 1. Giảm ở Sổ cái Tạm (PendingMaintenance)
+					var invPendingMaint = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						report.InventoryLocationId, shelfTypeId, ShelfStatus.PendingMaintenance);
+
+					if (invPendingMaint != null)
+					{
+						int qtyToRemove = Math.Min(invPendingMaint.Quantity, count);
+						invPendingMaint.RemoveQuantity(qtyToRemove);
+						_inventoryShelfRepository.Update(invPendingMaint);
+					}
+
+					// 2. Trả về Sổ cái Đang sử dụng (InUse)
+					var invInUse = await _inventoryShelfRepository.GetShelfWithStatusAsync(
+						report.InventoryLocationId, shelfTypeId, ShelfStatus.InUse);
+
+					if (invInUse == null)
+					{
+						invInUse = new InventoryShelf(report.InventoryLocationId, shelfTypeId, count, ShelfStatus.InUse);
+						await _inventoryShelfRepository.AddAsync(invInUse);
+					}
+					else
+					{
+						invInUse.AddQuantity(count);
+						_inventoryShelfRepository.Update(invInUse);
+					}
+
+					// 3. Trả lại trạng thái InUse cho từng cái kệ vật lý
+					foreach (var item in group)
+					{
+						if (item.Shelf != null)
 						{
-							invPendingMaint.RemoveQuantity(1);
+							item.Shelf.Status = ShelfStatus.InUse;
+							_shelfRepository.Update(item.Shelf);
 						}
-
-						// 2. Tìm hoặc tạo dòng tổng cho trạng thái InUse tại kho này
-						var invInUse = await _inventoryShelfRepository.GetShelfWithStatusAsync(
-							report.InventoryLocationId,
-							item.Shelf.ShelfTypeId,
-							ShelfStatus.InUse);
-
-						if (invInUse == null)
-						{
-							invInUse = new InventoryShelf(report.InventoryLocationId, item.Shelf.ShelfTypeId, 1, ShelfStatus.InUse);
-							await _inventoryShelfRepository.AddAsync(invInUse);
-						}
-						else
-						{
-							invInUse.AddQuantity(1);
-						}
-
-						// 3. Cập nhật trạng thái định danh vật lý (Cái này luôn là duy nhất)
-						item.Shelf.Status = ShelfStatus.InUse;
 					}
 				}
 
@@ -370,7 +456,11 @@ namespace ToyShelf.Application.Services
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
 			}
-			catch { await _unitOfWork.RollbackTransactionAsync(); throw; }
+			catch
+			{
+				await _unitOfWork.RollbackTransactionAsync();
+				throw;
+			}
 		}
 
 		// ================= MAPPER =================
