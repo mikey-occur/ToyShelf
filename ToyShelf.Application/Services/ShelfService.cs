@@ -89,7 +89,10 @@ namespace ToyShelf.Application.Services
 
 				await _unitOfWork.CommitTransactionAsync();
 
-				return createdShelves.Select(s => MapToResponse(s)).ToList();
+				var ids = createdShelves.Select(x => x.Id).ToList();
+				var shelvesWithData = await _shelfRepository.GetByIdsWithDetailsAsync(ids);
+
+				return shelvesWithData.Select(s => MapToResponse(s)).ToList();
 			}
 			catch (Exception)
 			{

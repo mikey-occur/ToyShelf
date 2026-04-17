@@ -66,6 +66,17 @@ namespace ToyShelf.Infrastructure.Repositories
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
+		public async Task<List<Shelf>> GetByIdsWithDetailsAsync(List<Guid> ids)
+		{
+			return await _context.Shelves
+				.Include(s => s.ShelfType)
+					.ThenInclude(st => st.ShelfTypeLevels)
+				.Include(s => s.InventoryLocation)
+					.ThenInclude(l => l.Store)
+				.Where(s => ids.Contains(s.Id))
+				.ToListAsync();
+		}
+
 		public async Task<List<Shelf>> GetAvailableShelvesByType(
 			Guid locationId,
 			Guid shelfTypeId,
