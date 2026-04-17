@@ -99,7 +99,7 @@ namespace ToyShelf.API.Controllers
 			var result = await _service.GetByStoreOrderId(storeOrderId);
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
-				.Ok(result, "Assignments retrieved successfully");
+				.Ok(result, "Store order assignments retrieved successfully");
 		}
 
 		[HttpGet("shelf-order/{shelfOrderId}")]
@@ -109,6 +109,15 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Shelf order assignments retrieved successfully");
+		}
+
+		[HttpGet("damage-report/{damageReportId}")]
+		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetByDamageReport(Guid damageReportId)
+		{
+			var result = await _service.GetByDamageReportId(damageReportId);
+
+			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
+				.Ok(result, "Damage report assignments retrieved successfully");
 		}
 
 		[HttpGet]
