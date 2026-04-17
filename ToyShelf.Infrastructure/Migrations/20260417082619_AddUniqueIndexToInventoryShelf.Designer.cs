@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260417082619_AddUniqueIndexToInventoryShelf")]
+    partial class AddUniqueIndexToInventoryShelf
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2565,17 +2568,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Partner");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.Notification", b =>
-                {
-                    b.HasOne("ToyShelf.Domain.Entities.User", "User")
-                        .WithMany("Notifications")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("ToyShelf.Domain.Entities.Order", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.User", "Staff")
@@ -3422,8 +3414,6 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("CreatedShipmentAssignments");
 
                     b.Navigation("CreatedStoreRequests");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("Orders");
 

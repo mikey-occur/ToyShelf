@@ -56,20 +56,28 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Damage report retrieved successfully");
 		}
 
-		// ================= APPROVE (Admin duyệt & Chỉ định kho thu hồi) =================
 		[HttpPatch("{id}/approve")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> Approve(
 			Guid id,
-			[FromBody] ApproveDamageRequest request, 
+			[FromBody] string? adminNote,
 			[FromServices] ICurrentUser currentUser)
 		{
-			await _damageReportService.ApproveAsync(id, request.WarehouseLocationId, request.AdminNote, currentUser);
-
-			return ActionResponse.Ok("Báo cáo đã được duyệt. Lệnh thu hồi đã được gửi tới Kho chỉ định.");
+			await _damageReportService.ApproveAsync(id, adminNote, currentUser);
+			return ActionResponse.Ok("Báo cáo đã duyệt. Hàng hóa đã chuyển sang trạng thái chờ thu hồi.");
 		}
 
-		// ================= REJECT (Admin từ chối báo cáo) =================
+		[HttpPost("{id}/create-assignment")]
+		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> CreateAssignment(
+			Guid id,
+			[FromQuery] Guid warehouseLocationId,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _damageReportService.CreateRecallAssignmentAsync(id, warehouseLocationId, currentUser);
+			return ActionResponse.Ok("Đã tạo lệnh thu hồi và gửi tới đội vận chuyển.");
+		}
+
 		[HttpPatch("{id}/reject")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> Reject(

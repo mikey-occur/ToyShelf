@@ -15,7 +15,8 @@ namespace ToyShelf.Application.IServices
 		Task<DamageReportResponse> CreateAsync(CreateDamageReportRequest request, ICurrentUser currentUser);
 		Task<IEnumerable<DamageReportResponse>> GetAllAsync(DamageStatus? status);
 		Task<DamageReportResponse> GetByIdAsync(Guid id);
-		Task ApproveAsync(Guid id, Guid warehouseLocationId, string? adminNote, ICurrentUser currentUser);
+		Task ApproveAsync(Guid id, string? adminNote, ICurrentUser currentUser);
+		Task CreateRecallAssignmentAsync(Guid id, Guid warehouseLocationId, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, string? adminNote, ICurrentUser currentUser);
 	}
 }

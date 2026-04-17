@@ -1336,6 +1336,8 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShelfTypeId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_InventoryShelf_ShelfType");
+
+				entity.HasIndex(e => new { e.InventoryLocationId, e.ShelfTypeId, e.Status }).IsUnique();
 			});
 
 			// ================== Shelf ==================

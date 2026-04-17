@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.DamageReport.Response;
 using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.Shipment.Response;
 using ToyShelf.Domain.Common.Time;
@@ -124,12 +125,19 @@ namespace ToyShelf.Application.Services
 		public async Task<ShipmentResponse> CreateAsync(CreateShipmentRequest request, ICurrentUser currentUser)
 		{
 			// 1. Validation & Load Data
-			// Kiểm tra xem có bất kỳ mặt hàng nào (sản phẩm hoặc kệ) được gửi lên không
-			if (!request.Products.Any() && !request.Shelves.Any())
-				throw new AppException("Shipment must contain at least one product or shelf", 400);
-
 			var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(request.ShipmentAssignmentId);
 			if (assignment == null) throw new AppException("Assignment not found", 404);
+
+			// Kiểm tra: Phải có ít nhất một thứ để vận chuyển
+			// (Hoặc là hàng mới từ request, hoặc là hàng hỏng có sẵn trong assignment)
+
+			var hasDamageToReturn = assignment.AssignmentDamageReports?.Any(x => x.DamageReport?.Items?.Any() ?? false) ?? false;
+			var hasNewItemsInRequest = request.Products.Any() || request.Shelves.Any();
+
+			if (!hasNewItemsInRequest && !hasDamageToReturn)
+			{
+				throw new AppException("Nhiệm vụ này không có hàng để giao và cũng không có hàng hỏng để thu hồi!", 400);
+			}
 
 			if (assignment.Status != AssignmentStatus.Accepted)
 				throw new AppException("Shipper must accept assignment before creating shipment", 400);
@@ -140,7 +148,7 @@ namespace ToyShelf.Application.Services
 			// Xác định đích đến (ToLocation)
 			var toLocationId = assignment.AssignmentStoreOrders.Select(x => (Guid?)x.StoreOrder.StoreLocationId).FirstOrDefault()
 							?? assignment.AssignmentShelfOrders.Select(x => (Guid?)x.ShelfOrder.StoreLocationId).FirstOrDefault()
-							?? assignment.AssignmentDamageReports.Select(x => (Guid?)x.DamageReport.InventoryLocationId).FirstOrDefault();
+							?? assignment.AssignmentDamageReports?.Select(x => (Guid?)x.DamageReport.InventoryLocationId).FirstOrDefault();
 
 			if (toLocationId == null) throw new AppException("Destination location could not be determined", 400);
 
@@ -215,7 +223,6 @@ namespace ToyShelf.Application.Services
 					throw new AppException("Shelf type not in this order", 400);
 
 				// --- LOGIC DỊCH CHUYỂN TỒN KHO TRÊN SỔ SÁCH (InventoryShelf) ---
-				// (Giữ nguyên logic của bạn)
 				var invAvailable = await _inventoryShelfRepository.GetShelfWithStatusAsync(
 					assignment.WarehouseLocationId, sReq.ShelfTypeId, ShelfStatus.Available);
 
@@ -1089,40 +1096,37 @@ namespace ToyShelf.Application.Services
 				WarehouseReceivedAt = shipment.WarehouseReceivedAt
 			};
 
-			// ================= MAPPING SẢN PHẨM =================
-			if (shipment.Items != null && shipment.Items.Any(x => x.ProductColorId.HasValue))
+			var deliveryItems = shipment.Items
+				.Where(x => x.StoreOrderItemId.HasValue)
+				.ToList();
+
+			if (deliveryItems.Any())
 			{
-				response.ProductItems = shipment.Items
-					.Where(x => x.ProductColorId.HasValue)
-					.Select(x => new ShipmentProductItemResponse
-					{
-						ProductColorId = x.ProductColorId!.Value,
-						SKU = x.ProductColor?.Product?.SKU ?? "N/A",
-						ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
-						Color = x.ProductColor?.Color?.Name ?? "N/A",
-						ImageUrl = x.ProductColor?.ImageUrl,
-						ExpectedQuantity = x.ExpectedQuantity,
-						ReceivedQuantity = x.ReceivedQuantity
-					}).ToList();
+				response.ProductItems = deliveryItems.Select(x => new ShipmentProductItemResponse
+				{
+					ProductColorId = x.ProductColorId!.Value,
+					SKU = x.ProductColor?.Product?.SKU ?? "N/A",
+					ProductName = x.ProductColor?.Product?.Name ?? "Unknown",
+					Color = x.ProductColor?.Color?.Name ?? "N/A",
+					ImageUrl = x.ProductColor?.ImageUrl,
+					ExpectedQuantity = x.ExpectedQuantity,
+					ReceivedQuantity = x.ReceivedQuantity
+				}).ToList();
 			}
 
-			// ================= MAPPING KỆ =================
-			// Gom nhóm kệ theo ShelfType để hiển thị gọn gàng (Ví dụ: 5 kệ loại A, 2 kệ loại B)
+			// ================= 2. KỆ ĐI GIAO (SHELF ORDER) =================
 			if (shipment.ShelfShipmentItems != null && shipment.ShelfShipmentItems.Any())
 			{
 				response.ShelfItems = shipment.ShelfShipmentItems
 					.Where(x => x.Shelf != null)
 					.GroupBy(x => x.Shelf!.ShelfTypeId)
-					.Select(g =>
-					{
-						var firstItem = g.First();
-						var shelfType = firstItem.Shelf?.ShelfType;
-
+					.Select(g => {
+						var shelfType = g.First().Shelf?.ShelfType;
 						return new ShipmentShelfItemResponse
 						{
 							ShelfTypeId = g.Key,
 							ShelfTypeName = shelfType?.Name ?? "Unknown",
-							ImageUrl = shelfType?.ImageUrl ?? string.Empty,
+							ImageUrl = shelfType?.ImageUrl,
 							Width = shelfType?.Width ?? 0,
 							Height = shelfType?.Height ?? 0,
 							Depth = shelfType?.Depth ?? 0,
@@ -1130,8 +1134,30 @@ namespace ToyShelf.Application.Services
 							ExpectedQuantity = g.Count(),
 							ReceivedQuantity = g.Count(x => x.Status == ShelfShipmentStatus.Received)
 						};
-					})
-					.ToList();
+					}).ToList();
+			}
+
+			// ================= 3. HÀNG THU HỒI (DAMAGE REPORT) =================
+			var returnItems = shipment.Items
+				.Where(x => x.DamageReportItemId.HasValue)
+				.ToList();
+
+			if (returnItems.Any())
+			{
+				response.DamageReturnItems = returnItems.Select(x => new DamageReturnItemResponse
+				{
+					DamageReportItemId = x.DamageReportItemId!.Value,
+					DamageReportId = x.DamageReportItem?.DamageReportId ?? Guid.Empty,
+					DamageCode = x.DamageReportItem?.DamageReport?.Code ?? "N/A",
+					// Phân loại nhanh: Sản phẩm hay Kệ
+					DamageType = x.ShelfId.HasValue ? "Shelf" : "Product",
+					Quantity = x.ExpectedQuantity,
+					// Nếu là kệ hiện mã kệ SH-..., nếu là SP hiện tên SP
+					TargetName = x.ShelfId.HasValue
+								 ? $"Kệ: {x.Shelf?.Code}"
+								 : x.ProductColor?.Product?.Name ?? "Unknown",
+					ImageUrl = x.ProductColor?.ImageUrl ?? x.Shelf?.ShelfType?.ImageUrl
+				}).ToList();
 			}
 
 			return response;

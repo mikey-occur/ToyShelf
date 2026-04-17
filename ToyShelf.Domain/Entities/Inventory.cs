@@ -10,6 +10,7 @@ namespace ToyShelf.Domain.Entities
 	{
 		Available,
 		InTransit,
+		PendingDamaged,
 		Damaged,
 		Sold
 	}
