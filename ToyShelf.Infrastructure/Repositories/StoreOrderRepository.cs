@@ -93,7 +93,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.Items)
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Color)
-				.Where(o => o.StoreLocation.Store.PartnerId == partnerId);
+				.Where(o => o.StoreLocation != null &&
+						o.StoreLocation.Store != null &&
+						o.StoreLocation.Store.PartnerId == partnerId);
 
 			if (status.HasValue)
 			{

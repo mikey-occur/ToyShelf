@@ -79,7 +79,9 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(i => i.ShelfType)
 				.Include(o => o.AssignmentShelfOrders)
 					.ThenInclude(ash => ash.ShipmentAssignment)
-				.Where(o => o.StoreLocation.Store.PartnerId == partnerId);
+				.Where(o => o.StoreLocation != null &&
+					o.StoreLocation.Store != null &&
+					o.StoreLocation.Store.PartnerId == partnerId);
 
 			if (status.HasValue)
 			{
