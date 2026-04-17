@@ -482,6 +482,8 @@ namespace ToyShelf.Application.Services
 
 					return new ShipmentAssignmentShelfItemResponse
 					{
+						ShelfOrderId = item.AssignmentShelfOrder?.ShelfOrderId ?? Guid.Empty,
+
 						ShelfTypeId = originalOrderItem?.ShelfTypeId ?? Guid.Empty,
 						ShelfTypeName = originalOrderItem?.ShelfTypeName ?? "Unknown",
 						ImageUrl = originalOrderItem?.ImageUrl,

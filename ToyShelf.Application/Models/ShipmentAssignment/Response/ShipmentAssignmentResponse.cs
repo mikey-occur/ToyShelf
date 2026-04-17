@@ -59,6 +59,7 @@ namespace ToyShelf.Application.Models.ShipmentAssignment.Response
 
 	public class ShipmentAssignmentShelfItemResponse
 	{
+		public Guid ShelfOrderId { get; set; }
 		public Guid ShelfTypeId { get; set; }
 		public string ShelfTypeName { get; set; } = null!;
 		public string? ImageUrl { get; set; }

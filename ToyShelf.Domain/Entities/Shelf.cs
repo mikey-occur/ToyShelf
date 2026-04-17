@@ -13,6 +13,7 @@ namespace ToyShelf.Domain.Entities
 		InTransit,
 		InUse,         // đang ở store và sử dụng
 		Recalled,      // bị thu hồi
+		PendingMaintenance,
 		Maintenance,   // bảo trì
 		Retired        // bỏ
 	}
