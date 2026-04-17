@@ -372,6 +372,7 @@ namespace ToyShelf.Application.Services
 
 			return assignments.Select(MapToResponse);
 		}
+
 		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync()
 		{
 			var assignments = await _assignmentRepository.GetAllWithDetailsAsync();
