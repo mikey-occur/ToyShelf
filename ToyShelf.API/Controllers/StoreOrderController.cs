@@ -54,8 +54,6 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Store order retrieved successfully");
 		}
 
-		// ================= PARTNER ADMIN APPROVE =================
-		// Bước 1: Đối tác duyệt đơn của cửa hàng họ
 		[HttpPatch("{id}/partner-approve")]
 		[Authorize(Roles = "PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> PartnerApprove(Guid id, [FromServices] ICurrentUser currentUser)
@@ -64,8 +62,6 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Partner has approved the order. Waiting for Admin final approval.");
 		}
 
-		// ================= ADMIN APPROVE =================
-		// Bước 2: Admin tổng duyệt cuối để xuất kho
 		[HttpPatch("{id}/admin-approve")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> AdminApprove(Guid id, [FromServices] ICurrentUser currentUser)
@@ -74,7 +70,6 @@ namespace ToyShelf.API.Controllers
 			return ActionResponse.Ok("Store order approved by Admin successfully.");
 		}
 
-		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
 		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(Guid id, [FromServices] ICurrentUser currentUser)
