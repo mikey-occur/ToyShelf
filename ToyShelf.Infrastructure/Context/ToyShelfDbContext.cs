@@ -1187,6 +1187,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShelfOrder_RejectedByUser");
 
+				entity.HasOne(e => e.PartnerAdminApprovedByUser)
+					  .WithMany(a => a.PartnerAdminShelfOrders)
+					  .HasForeignKey(e => e.PartnerAdminApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_PartnerAdminApprovedByUser");
+
 				// ================= RELATION =================
 
 				entity.HasMany(e => e.Items)

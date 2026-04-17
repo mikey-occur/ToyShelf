@@ -161,8 +161,10 @@ namespace ToyShelf.Application.Services
 			if (order == null)
 				throw new AppException("Order not found", 404);
 
-			if (order.Status != StoreOrderStatus.Pending)
-				throw new AppException("Order already processed", 400);
+			// Cho phép reject khi đang ở bước Pending hoặc PartnerApproved
+			var validStates = new[] { StoreOrderStatus.Pending, StoreOrderStatus.PartnerApproved };
+			if (!validStates.Contains(order.Status))
+				throw new AppException("Order already processed and cannot be rejected", 400);
 
 			order.Status = StoreOrderStatus.Rejected;
 			order.RejectedAt = _dateTime.UtcNow;

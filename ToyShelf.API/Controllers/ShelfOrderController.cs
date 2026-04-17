@@ -54,8 +54,18 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Shelf order retrieved successfully");
 		}
 
-		// ================= APPROVE =================
-		[HttpPatch("{id}/approve")]
+		[HttpPatch("{id}/partner-approve")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<ActionResponse>> PartnerApprove(
+			Guid id,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _shelfOrderService.PartnerAdminApproveAsync(id, currentUser);
+
+			return ActionResponse.Ok("Shelf order has been approved by Partner Admin. Pending final Admin approval.");
+		}
+
+		[HttpPatch("{id}/admin-approve")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> Approve(
 			Guid id,
@@ -63,12 +73,11 @@ namespace ToyShelf.API.Controllers
 		{
 			await _shelfOrderService.ApproveAsync(id, currentUser);
 
-			return ActionResponse.Ok("Shelf order approved successfully");
+			return ActionResponse.Ok("Shelf order fully approved by Admin.");
 		}
 
-		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(
 			Guid id,
 			[FromBody] string? adminNote,
@@ -76,7 +85,7 @@ namespace ToyShelf.API.Controllers
 		{
 			await _shelfOrderService.RejectAsync(id, adminNote, currentUser);
 
-			return ActionResponse.Ok("Shelf order rejected successfully");
+			return ActionResponse.Ok("Shelf order has been rejected.");
 		}
 
 		// ================= AVAILABLE WAREHOUSES =================
