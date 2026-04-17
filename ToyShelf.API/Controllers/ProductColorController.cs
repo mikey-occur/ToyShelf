@@ -62,14 +62,16 @@ namespace ToyShelf.API.Controllers
 		}
 
 		/// <summary>
-		/// Get ProductColor variant by sku.
+		/// Tìm kiếm ProductColor variant theo một phần của SKU. 
 		/// </summary>
-		// ===== Get PRODUCT =====
-		[HttpGet("variant/by-sku/{sku}")]
-		public async Task<BaseResponse<ProductBySkuResponse?>> GetByVariantSku(string sku)
+		[HttpGet("variant/search")]
+		public async Task<BaseResponse<List<ProductBySkuResponse>>> SearchByVariantSku([FromQuery] string keyword)
 		{
-			var result = await _productColorService.GetByVariantSkuAsync(sku);
-			return BaseResponse<ProductBySkuResponse?>.Ok(result);
+			// Gọi hàm Search thay vì hàm Get cũ
+			var result = await _productColorService.SearchByVariantSkuAsync(keyword);
+
+			// Trả về List kèm message thành công
+			return BaseResponse<List<ProductBySkuResponse>>.Ok(result, "Tìm kiếm biến thể thành công");
 		}
 
 		/// <summary>

@@ -23,14 +23,15 @@ namespace ToyShelf.Application.Services
 		private readonly IMonthlySettlementRepository _settlementRepository;
 		private readonly IExcelService _exportService;
 		private readonly INotificationService _notificationService;
-
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService)
+		private readonly INotificationBroadcaster _notificationBroadcaster;
+		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
 			_settlementRepository = settlementRepository;
 			_exportService = exportService;
 			_notificationService = notificationService;
+			_notificationBroadcaster = notificationBroadcaster;
 		}
 
 		// Tổng kết hoá đơn tháng
@@ -137,6 +138,12 @@ namespace ToyShelf.Application.Services
 				};
 
 				await _notificationService.CreateNotificationAsync(request);
+
+				await _notificationBroadcaster.SendNotificationToUserAsync(
+					settlement.PartnerId,
+					request.Title,
+					request.Content
+				);
 			}
 
 			return isSaved;

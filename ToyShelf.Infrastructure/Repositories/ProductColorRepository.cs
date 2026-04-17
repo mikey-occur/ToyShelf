@@ -43,5 +43,17 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(pc => pc.Product)
 				.FirstOrDefaultAsync(pc => pc.Id == id);
 		}
+
+		public async Task<List<ProductColor>> SearchColorsBySkuAsync(string keyword)
+		{
+			if (string.IsNullOrWhiteSpace(keyword))
+				return new List<ProductColor>();
+
+			return await _context.ProductColors
+				.Include(c => c.Product)
+				.Include(c => c.Color)
+				.Where(c => EF.Functions.ILike(c.Sku, $"%{keyword}%"))
+				.ToListAsync();
+		}
 	}
 }

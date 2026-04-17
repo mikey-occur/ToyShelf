@@ -19,9 +19,9 @@ namespace ToyShelf.API.Controllers
 
 		// GET: api/inventorylocation
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<InventoryLocationResponse>>> GetInventoryLocations([FromQuery] bool? isActive, Guid? StoreId, Guid? WarehouseId)
+		public async Task<BaseResponse<IEnumerable<InventoryLocationResponse>>> GetInventoryLocations([FromQuery] bool? isActive, Guid? StoreId, Guid? WarehouseId, string? locationType = null)
 		{
-			var result = await _inventoryLocationService.GetInventoryLocationsAsync(isActive, StoreId, WarehouseId);
+			var result = await _inventoryLocationService.GetInventoryLocationsAsync(isActive, StoreId, WarehouseId, locationType);
 
 			return BaseResponse<IEnumerable<InventoryLocationResponse>>
 				.Ok(result, "Inventory locations retrieved successfully");
