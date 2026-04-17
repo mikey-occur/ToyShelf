@@ -76,6 +76,20 @@ namespace ToyShelf.API.Controllers
 			);
 		}
 
+		/// <summary>
+		/// Lấy danh sách shipment theo DamageReport
+		/// </summary>
+		[HttpGet("damage-report/{damageReportId}")]
+		public async Task<BaseResponse<IEnumerable<ShipmentResponse>>> GetByDamageReportId(Guid damageReportId)
+		{
+			var result = await _shipmentService.GetByDamageReportIdAsync(damageReportId);
+
+			return BaseResponse<IEnumerable<ShipmentResponse>>.Ok(
+				result,
+				"Get shipments by damage report successfully"
+			);
+		}
+
 		[HttpPost]
 		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<ShipmentResponse>> Create(
