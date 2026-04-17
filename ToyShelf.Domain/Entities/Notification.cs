@@ -14,5 +14,7 @@ namespace ToyShelf.Domain.Entities
 		public string Content { get; set; } = null!;
 		public bool IsRead { get; set; } = false;
 		public DateTime CreatedAt { get; set; }
+
+		public virtual User User { get; set; } = null!;
 	}
 }
