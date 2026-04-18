@@ -57,6 +57,12 @@ namespace ToyShelf.Application.Services
 					u.UserStores.Any(us => us.Store.PartnerId == request.PartnerId.Value));
 			}
 
+			// ===== Filter theo Status =====
+			if (request.IsActive.HasValue)
+			{
+				query = query.Where(u => u.IsActive == request.IsActive.Value);
+			}
+
 			// ===== Filter theo Store =====
 
 			if (request.StoreId.HasValue)
