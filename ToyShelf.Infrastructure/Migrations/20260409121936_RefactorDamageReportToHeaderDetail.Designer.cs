@@ -345,7 +345,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("CommissionTableApplies");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
+            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedias", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -373,7 +373,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("DamageReportItemId");
 
-                    b.ToTable("DamageMedia");
+                    b.ToTable("DamageMedias");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
@@ -2207,10 +2207,10 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Partner");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
+            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedias", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.DamageReportItem", "DamageReportItem")
-                        .WithMany("DamageMedia")
+                        .WithMany("DamageMedias")
                         .HasForeignKey("DamageReportItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -2993,7 +2993,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReportItem", b =>
                 {
-                    b.Navigation("DamageMedia");
+                    b.Navigation("DamageMedias");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.InventoryLocation", b =>

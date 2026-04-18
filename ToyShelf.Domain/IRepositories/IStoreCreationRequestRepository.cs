@@ -9,7 +9,7 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IStoreCreationRequestRepository : IGenericRepository<StoreCreationRequest>
 	{
-		Task<IEnumerable<StoreCreationRequest>> GetRequestsAsync(StoreRequestStatus? status);
+		Task<IEnumerable<StoreCreationRequest>> GetRequestsAsync(StoreRequestStatus? status, Guid? partnerId);
 		Task<StoreCreationRequest?> GetByIdWithCityAsync(Guid id);
 	}
 }

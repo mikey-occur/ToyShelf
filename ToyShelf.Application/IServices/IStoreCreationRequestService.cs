@@ -14,7 +14,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<StoreCreationRequestResponse> CreateAsync(CreateStoreCreationRequest request, ICurrentUser currentUser);
 
-		Task<IEnumerable<StoreCreationRequestResponse>> GetRequestsAsync(StoreRequestStatus? status);
+		Task<IEnumerable<StoreCreationRequestResponse>> GetRequestsAsync(StoreRequestStatus? status, Guid? partnerId);
 
 		Task<StoreCreationRequestResponse> GetByIdAsync(Guid id);
 
