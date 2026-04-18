@@ -6,7 +6,9 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
+using ToyShelf.Application.Models.StoreOrder.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
+using ToyShelf.Application.Services;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
@@ -54,8 +56,18 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Shelf order retrieved successfully");
 		}
 
-		// ================= APPROVE =================
-		[HttpPatch("{id}/approve")]
+		[HttpPatch("{id}/partner-approve")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<ActionResponse>> PartnerApprove(
+			Guid id,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _shelfOrderService.PartnerAdminApproveAsync(id, currentUser);
+
+			return ActionResponse.Ok("Shelf order has been approved by Partner Admin. Pending final Admin approval.");
+		}
+
+		[HttpPatch("{id}/admin-approve")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> Approve(
 			Guid id,
@@ -63,12 +75,11 @@ namespace ToyShelf.API.Controllers
 		{
 			await _shelfOrderService.ApproveAsync(id, currentUser);
 
-			return ActionResponse.Ok("Shelf order approved successfully");
+			return ActionResponse.Ok("Shelf order fully approved by Admin.");
 		}
 
-		// ================= REJECT =================
 		[HttpPatch("{id}/reject")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(
 			Guid id,
 			[FromBody] string? adminNote,
@@ -76,7 +87,7 @@ namespace ToyShelf.API.Controllers
 		{
 			await _shelfOrderService.RejectAsync(id, adminNote, currentUser);
 
-			return ActionResponse.Ok("Shelf order rejected successfully");
+			return ActionResponse.Ok("Shelf order has been rejected.");
 		}
 
 		// ================= AVAILABLE WAREHOUSES =================
@@ -89,14 +100,17 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<List<WarehouseMatchShelfResponse>>
 				.Ok(result, "Available warehouses retrieved successfully");
 		}
-		// ================= FULFILL =================
-		//[HttpPatch("{id}/fulfill")]
-		//[Authorize(Roles = "Admin")]
-		//public async Task<ActionResult<ActionResponse>> Fulfill(Guid id)
-		//{
-		//	await _shelfOrderService.FulfillAsync(id);
 
-		//	return ActionResponse.Ok("Shelf order fulfilled successfully");
-		//}
+		[HttpGet("by-partner/{partnerId}")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
+		public async Task<BaseResponse<IEnumerable<ShelfOrderResponse>>> GetByPartner(
+			Guid partnerId,
+			[FromQuery] ShelfOrderStatus? status)
+		{
+			var result = await _shelfOrderService.GetByPartnerAsync(partnerId, status);
+
+			return BaseResponse<IEnumerable<ShelfOrderResponse>>
+				.Ok(result, "Partner shelf orders retrieved successfully");
+		}
 	}
 }

@@ -39,6 +39,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.RequestedByUser)
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
+				.Include(o => o.PartnerAdminApprovedByUser)
 				.Include(o => o.AssignmentStoreOrders)
 					.ThenInclude(aso => aso.ShipmentAssignment)
 						.ThenInclude(sa => sa.Shipper)
@@ -64,6 +65,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.RequestedByUser)
 				.Include(o => o.ApprovedByUser)
 				.Include(o => o.RejectedByUser)
+				.Include(o => o.PartnerAdminApprovedByUser)
 				.Include(o => o.AssignmentStoreOrders)
 					.ThenInclude(aso => aso.ShipmentAssignment)
 						.ThenInclude(sa => sa.Shipper)
@@ -74,6 +76,35 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(i => i.ProductColor)
 						.ThenInclude(pc => pc.Color)
 				.FirstOrDefaultAsync(o => o.Id == id);
+		}
+
+		public async Task<IEnumerable<StoreOrder>> GetOrdersByPartnerAsync(Guid partnerId, StoreOrderStatus? status)
+		{
+			var query = _context.StoreOrders
+				.Include(o => o.StoreLocation)
+					.ThenInclude(sl => sl.Store)
+				.Include(o => o.RequestedByUser)
+				.Include(o => o.ApprovedByUser)
+				.Include(o => o.RejectedByUser)
+				.Include(o => o.PartnerAdminApprovedByUser) 
+				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Product)
+				.Include(o => o.Items)
+					.ThenInclude(i => i.ProductColor)
+						.ThenInclude(pc => pc.Color)
+				.Where(o => o.StoreLocation != null &&
+						o.StoreLocation.Store != null &&
+						o.StoreLocation.Store.PartnerId == partnerId);
+
+			if (status.HasValue)
+			{
+				query = query.Where(o => o.Status == status.Value);
+			}
+
+			return await query
+				.OrderByDescending(o => o.CreatedAt)
+				.ToListAsync();
 		}
 	}
 }

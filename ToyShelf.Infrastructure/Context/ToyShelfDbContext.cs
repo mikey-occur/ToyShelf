@@ -454,6 +454,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ApprovedAt);
 
+				entity.Property(e => e.PartnerAdminApprovedAt);
+
 				entity.Property(e => e.RejectedAt);
 
 				// FK
@@ -485,6 +487,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.RejectedByUserId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_StoreOrder_RejectedByUser");
+
+				entity.HasOne(e => e.PartnerAdminApprovedByUser)
+					  .WithMany(a => a.PartnerAdminStoreOrders)
+					  .HasForeignKey(e => e.PartnerAdminApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_StoreOrder_PartnerApprovedByUser");
 			});
 
 			// ================== StoreOrderItem ==================
@@ -1145,6 +1153,8 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.ApprovedAt);
 
+				entity.Property(e => e.PartnerAdminApprovedAt);
+
 				entity.Property(e => e.RejectedAt);
 
 				entity.Property(e => e.Note)
@@ -1178,6 +1188,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.RejectedByUserId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_ShelfOrder_RejectedByUser");
+
+				entity.HasOne(e => e.PartnerAdminApprovedByUser)
+					  .WithMany(a => a.PartnerAdminShelfOrders)
+					  .HasForeignKey(e => e.PartnerAdminApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_ShelfOrder_PartnerAdminApprovedByUser");
 
 				// ================= RELATION =================
 
@@ -1336,6 +1352,8 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ShelfTypeId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_InventoryShelf_ShelfType");
+
+				entity.HasIndex(e => new { e.InventoryLocationId, e.ShelfTypeId, e.Status }).IsUnique();
 			});
 
 			// ================== Shelf ==================
@@ -1474,6 +1492,8 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+				entity.Property(e => e.PartnerAdminApprovedAt);
+
 				entity.Property(e => e.ReviewedAt);
 				entity.Property(e => e.WarrantyExpirationDate);
 
@@ -1492,6 +1512,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .HasForeignKey(e => e.ReportedByUserId)
 					  .OnDelete(DeleteBehavior.Restrict)
 					  .HasConstraintName("FK_DamageReport_ReportedByUser");
+
+				entity.HasOne(e => e.PartnerAdminApprovedByUser)
+					  .WithMany(u => u.PartnerAdminDamageReports)
+					  .HasForeignKey(e => e.PartnerAdminApprovedByUserId)
+					  .OnDelete(DeleteBehavior.Restrict)
+					  .HasConstraintName("FK_DamageReport_PartnerAdminApprovedByUser");
 
 				entity.HasOne(e => e.ReviewedByUser)
 					  .WithMany(u => u.ReviewedDamageReports)

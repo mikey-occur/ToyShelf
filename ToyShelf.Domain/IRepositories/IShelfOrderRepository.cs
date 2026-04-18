@@ -12,5 +12,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<int> GetMaxSequenceAsync();
 		Task<IEnumerable<ShelfOrder>> GetAllWithItemsAsync(ShelfOrderStatus? status);
 		Task<ShelfOrder?> GetByIdWithItemsAsync(Guid id);
+		Task<IEnumerable<ShelfOrder>> GetOrdersByPartnerAsync(Guid partnerId, ShelfOrderStatus? status);
 	}
 }

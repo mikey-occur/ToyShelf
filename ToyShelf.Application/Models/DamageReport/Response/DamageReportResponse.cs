@@ -27,11 +27,16 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 		// Thông tin nhân sự (Đúng yêu cầu của bồ)
 		public Guid ReportedByUserId { get; set; }
 		public string ReportedByName { get; set; } = string.Empty;
+
+		public Guid? PartnerAdminApprovedByUserId { get; set; }
+		public string PartnerAdminName { get; set; } = string.Empty;
+
 		public Guid? ReviewedByUserId { get; set; }
 		public string ReviewedByName { get; set; } = string.Empty;
 
 		// Thời gian
 		public DateTime CreatedAt { get; set; }
+		public DateTime? PartnerAdminApprovedAt { get; set; }
 		public DateTime? ReviewedAt { get; set; }
 
 		// Danh sách chi tiết các món hỏng (1-N)

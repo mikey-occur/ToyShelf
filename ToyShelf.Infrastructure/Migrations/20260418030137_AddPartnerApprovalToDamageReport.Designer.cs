@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using ToyShelf.Infrastructure.Context;
@@ -11,9 +12,11 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    partial class ToyShelfDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260418030137_AddPartnerApprovalToDamageReport")]
+    partial class AddPartnerApprovalToDamageReport
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -414,7 +417,7 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.ToTable("CommissionTableApplies");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedias", b =>
+            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,7 +445,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasIndex("DamageReportItemId");
 
-                    b.ToTable("DamageMedias");
+                    b.ToTable("DamageMedia");
                 });
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReport", b =>
@@ -2418,10 +2421,10 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Partner");
                 });
 
-            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedias", b =>
+            modelBuilder.Entity("ToyShelf.Domain.Entities.DamageMedia", b =>
                 {
                     b.HasOne("ToyShelf.Domain.Entities.DamageReportItem", "DamageReportItem")
-                        .WithMany("DamageMedias")
+                        .WithMany("DamageMedia")
                         .HasForeignKey("DamageReportItemId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
@@ -3273,7 +3276,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
             modelBuilder.Entity("ToyShelf.Domain.Entities.DamageReportItem", b =>
                 {
-                    b.Navigation("DamageMedias");
+                    b.Navigation("DamageMedia");
 
                     b.Navigation("ShipmentItems");
                 });

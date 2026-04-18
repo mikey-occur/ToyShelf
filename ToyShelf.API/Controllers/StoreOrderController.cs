@@ -54,19 +54,24 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Store order retrieved successfully");
 		}
 
-		// ================= APPROVE =================
-		[HttpPatch("{id}/approve")]
-		[Authorize(Roles = "Admin")]
-		public async Task<ActionResult<ActionResponse>> Approve(Guid id, [FromServices] ICurrentUser currentUser)
+		[HttpPatch("{id}/partner-approve")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<ActionResponse>> PartnerApprove(Guid id, [FromServices] ICurrentUser currentUser)
 		{
-			await _storeOrderService.ApproveAsync(id, currentUser);
-
-			return ActionResponse.Ok("Store order approved successfully");
+			await _storeOrderService.PartnerAdminApproveAsync(id, currentUser);
+			return ActionResponse.Ok("Partner has approved the order. Waiting for Admin final approval.");
 		}
 
-		// ================= REJECT =================
-		[HttpPatch("{id}/reject")]
+		[HttpPatch("{id}/admin-approve")]
 		[Authorize(Roles = "Admin")]
+		public async Task<ActionResult<ActionResponse>> AdminApprove(Guid id, [FromServices] ICurrentUser currentUser)
+		{
+			await _storeOrderService.AdminApproveAsync(id, currentUser);
+			return ActionResponse.Ok("Store order approved by Admin successfully.");
+		}
+
+		[HttpPatch("{id}/reject")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(Guid id, [FromServices] ICurrentUser currentUser)
 		{
 			await _storeOrderService.RejectAsync(id, currentUser);
@@ -83,6 +88,18 @@ namespace ToyShelf.API.Controllers
 
 			return BaseResponse<List<WarehouseMatchResponse>>
 				.Ok(result, "Available warehouses retrieved successfully");
+		}
+
+		[HttpGet("by-partner/{partnerId}")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
+		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetByPartner(
+			Guid partnerId,
+			[FromQuery] StoreOrderStatus? status)
+		{
+			var result = await _storeOrderService.GetOrdersForAdminAsync(partnerId, status);
+
+			return BaseResponse<IEnumerable<StoreOrderResponse>>
+				.Ok(result, "StoreOrder retrieved successfully");
 		}
 	}
 }

@@ -116,25 +116,44 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(order);
 		}
 
-		public async Task ApproveAsync(Guid id, ICurrentUser currentUser)
+		public async Task PartnerAdminApproveAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
 
 			if (order == null)
-				throw new AppException("Order not found", 404);
+				throw new AppException("Store order not found", 404);
 
+			// Chỉ đơn ở trạng thái Pending mới được PartnerAdmin duyệt
 			if (order.Status != StoreOrderStatus.Pending)
-				throw new AppException("Order already processed", 400);
+				throw new AppException("Order is not in a state to be approved by PartnerAdmin", 400);
+
+			order.Status = StoreOrderStatus.PartnerApproved;
+			order.PartnerAdminApprovedAt = _dateTime.UtcNow;
+			order.PartnerAdminApprovedByUserId = currentUser.UserId;
+
+			_storeOrderRepository.Update(order);
+			await _unitOfWork.SaveChangesAsync();
+		}
+
+		public async Task AdminApproveAsync(Guid id, ICurrentUser currentUser)
+		{
+			var order = await _storeOrderRepository.GetByIdAsync(id);
+
+			if (order == null)
+				throw new AppException("Store order not found", 404);
+
+			// Chỉ đơn đã qua bước PartnerApproved mới được Admin duyệt
+			if (order.Status != StoreOrderStatus.PartnerApproved)
+				throw new AppException("Order must be approved by PartnerAdmin before Admin approval", 400);
 
 			order.Status = StoreOrderStatus.Approved;
 			order.ApprovedAt = _dateTime.UtcNow;
 			order.ApprovedByUserId = currentUser.UserId;
 
 			_storeOrderRepository.Update(order);
-
 			await _unitOfWork.SaveChangesAsync();
 		}
-			
+
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
 		{
 			var order = await _storeOrderRepository.GetByIdAsync(id);
@@ -142,8 +161,10 @@ namespace ToyShelf.Application.Services
 			if (order == null)
 				throw new AppException("Order not found", 404);
 
-			if (order.Status != StoreOrderStatus.Pending)
-				throw new AppException("Order already processed", 400);
+			// Cho phép reject khi đang ở bước Pending hoặc PartnerApproved
+			var validStates = new[] { StoreOrderStatus.Pending, StoreOrderStatus.PartnerApproved };
+			if (!validStates.Contains(order.Status))
+				throw new AppException("Order already processed and cannot be rejected", 400);
 
 			order.Status = StoreOrderStatus.Rejected;
 			order.RejectedAt = _dateTime.UtcNow;
@@ -338,6 +359,12 @@ namespace ToyShelf.Application.Services
 			return result;
 		}
 
+		public async Task<IEnumerable<StoreOrderResponse>> GetOrdersForAdminAsync(Guid partnerId, StoreOrderStatus? status)
+		{
+			var orders = await _storeOrderRepository.GetOrdersByPartnerAsync(partnerId, status);
+
+			return orders.Select(MapToResponse);
+		}
 		private static StoreOrderResponse MapToResponse(StoreOrder order)
 		{
 			return new StoreOrderResponse
@@ -352,12 +379,19 @@ namespace ToyShelf.Application.Services
 				StoreAddress = order.StoreLocation?.Store?.StoreAddress ?? string.Empty,
 				RequestedByUserId = order.RequestedByUserId,
 				RequestName = order.RequestedByUser?.FullName ?? string.Empty,
+
+				PartnerAdminApprovedByUserId = order.PartnerAdminApprovedByUserId,
+				PartnerAdminName = order.PartnerAdminApprovedByUser?.FullName ?? string.Empty,
+
 				ApprovedByUserId = order.ApprovedByUserId,
 				ApproveName = order.ApprovedByUser?.FullName ?? string.Empty,
+
 				RejectedByUserId = order.RejectedByUserId,
 				RejectName = order.RejectedByUser?.FullName ?? string.Empty,
+
 				Status = order.Status,
 				CreatedAt = order.CreatedAt,
+				PartnerAdminApprovedAt = order.PartnerAdminApprovedAt,
 				ApprovedAt = order.ApprovedAt,
 				RejectedAt = order.RejectedAt,
 				Items = order.Items.Select(i => new StoreOrderItemResponse

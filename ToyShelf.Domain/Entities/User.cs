@@ -21,6 +21,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<Account> Accounts { get; set; } = new List<Account>();
 		public virtual ICollection<StoreInvitation> StoreInvitations { get; set; } = new List<StoreInvitation>();
 		public virtual ICollection<DamageReport> ReportedDamageReports { get; set; } = new List<DamageReport>();
+		public virtual ICollection<DamageReport> PartnerAdminDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<DamageReport> ReviewedDamageReports { get; set; } = new List<DamageReport>();
 		public virtual ICollection<Shipment> RequestedShipments { get; set; } = new List<Shipment>();
 		public virtual ICollection<ShipmentMedia> UploadedShipmentMedia { get; set; } = new List<ShipmentMedia>();
@@ -29,6 +30,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<StoreCreationRequest> ReviewedStoreRequests { get; set; } = new List<StoreCreationRequest>();
 		public virtual ICollection<StoreOrder> RequestStoreOrders { get; set; } = new List<StoreOrder>();
 		public virtual ICollection<StoreOrder> ApprovedStoreOrders { get; set; } = new List<StoreOrder>();
+		public virtual ICollection<StoreOrder> PartnerAdminStoreOrders { get; set; } = new List<StoreOrder>();
 		public virtual ICollection<StoreOrder> RejectedStoreOrders { get; set; } = new List<StoreOrder>();
 		public virtual ICollection<ShipmentAssignment> Shippers { get; set; } = new List<ShipmentAssignment>();
 		public virtual ICollection<ShipmentAssignment> AssignedShipmentAssignments { get; set; } = new List<ShipmentAssignment>();
@@ -36,6 +38,7 @@ namespace ToyShelf.Domain.Entities
 		public virtual ICollection<Shipment> Shipments { get; set; } = new List<Shipment>();
 		public virtual ICollection<UserWarehouse> UserWarehouses { get; set; } = new List<UserWarehouse>();
 		public virtual ICollection<ShelfOrder> RequestShelfOrders { get; set; } = new List<ShelfOrder>();
+		public virtual ICollection<ShelfOrder> PartnerAdminShelfOrders { get; set; } = new List<ShelfOrder>();
 		public virtual ICollection<ShelfOrder> ApprovedShelfOrders { get; set; } = new List<ShelfOrder>();
 		public virtual ICollection<ShelfOrder> RejectedShelfOrders { get; set; } = new List<ShelfOrder>();
 		public virtual ICollection<Notification> Notifications { get; set; } = new List<Notification>();
