@@ -166,6 +166,7 @@ namespace ToyShelf.Application.Services
 				InventoryLocationId = x.InventoryLocationId,
 				InventoryLocationName = x.InventoryLocation?.Name ?? "N/A",
 				Quantity = x.Quantity,
+				Status = x.Status,
 				Shelf = new ShelfDetailResponse
 				{
 					ShelfTypeId = x.ShelfTypeId,

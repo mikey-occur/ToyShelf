@@ -99,9 +99,9 @@ namespace ToyShelf.Application.Services
 			return MapToResponse(orderFull);
 		}
 
-		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status)
+		public async Task<IEnumerable<StoreOrderResponse>> GetAllAsync(StoreOrderStatus? status, Guid? storeId, Guid? partnerId)
 		{
-			var orders = await _storeOrderRepository.GetAllWithItemsAsync(status);
+			var orders = await _storeOrderRepository.GetAllWithItemsAsync(status, storeId, partnerId);
 
 			return orders.Select(MapToResponse);
 		}

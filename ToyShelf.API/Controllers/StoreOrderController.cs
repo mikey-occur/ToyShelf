@@ -37,9 +37,9 @@ namespace ToyShelf.API.Controllers
 
 		// ================= GET =================
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetAll(StoreOrderStatus? status)
+		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetAll(StoreOrderStatus? status, Guid? storeId, Guid? partnerId)
 		{
-			var result = await _storeOrderService.GetAllAsync(status);
+			var result = await _storeOrderService.GetAllAsync(status, storeId, partnerId);
 
 			return BaseResponse<IEnumerable<StoreOrderResponse>>
 				.Ok(result, "Store orders retrieved successfully");
