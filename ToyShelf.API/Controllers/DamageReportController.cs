@@ -56,7 +56,18 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Damage report retrieved successfully");
 		}
 
-		[HttpPatch("{id}/approve")]
+
+		[HttpPatch("{id}/partner-approve")]
+		[Authorize(Roles = "PartnerAdmin")]
+		public async Task<ActionResult<ActionResponse>> PartnerApprove(
+			Guid id,
+			[FromServices] ICurrentUser currentUser)
+		{
+			await _damageReportService.PartnerApproveAsync(id, currentUser);
+			return Ok(ActionResponse.Ok("Đối tác đã xác nhận báo cáo. Đang chờ Admin hệ thống phê duyệt cuối cùng."));
+		}
+
+		[HttpPatch("{id}/admin-approve")]
 		[Authorize(Roles = "Admin")]
 		public async Task<ActionResult<ActionResponse>> Approve(
 			Guid id,
@@ -79,7 +90,7 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpPatch("{id}/reject")]
-		[Authorize(Roles = "Admin")]
+		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<ActionResult<ActionResponse>> Reject(
 			Guid id,
 			[FromBody] string? adminNote,

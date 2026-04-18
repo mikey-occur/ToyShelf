@@ -222,12 +222,30 @@ namespace ToyShelf.Application.Services
 			}
 		}
 
+		public async Task PartnerApproveAsync(Guid id, ICurrentUser currentUser)
+		{
+			var report = await _repository.GetByIdAsync(id);
+			if (report == null) throw new AppException("Báo cáo không tồn tại", 404);
+
+			if (report.Status != DamageStatus.Pending)
+				throw new AppException("Báo cáo phải ở trạng thái chờ (Pending)", 400);
+
+			// Chỉ cập nhật thông tin duyệt, KHÔNG cập nhật số lượng kho ở bước này
+			report.Status = DamageStatus.PartnerApproved;
+			report.PartnerAdminApprovedAt = _dateTime.UtcNow;
+			report.PartnerAdminApprovedByUserId = currentUser.UserId;
+
+			_repository.Update(report);
+			await _unitOfWork.SaveChangesAsync();
+		}
+
 		// ================= APPROVE (Admin duyệt xác nhận hàng hỏng) =================
 		public async Task ApproveAsync(Guid id, string? adminNote, ICurrentUser currentUser)
 		{
 			var report = await _repository.GetByIdFullIncludeAsync(id);
 			if (report == null) throw new AppException("Báo cáo hư hại không tồn tại", 404);
-			if (report.Status != DamageStatus.Pending) throw new AppException("Báo cáo này đã được xử lý trước đó", 400);
+			if (report.Status != DamageStatus.PartnerApproved)
+				throw new AppException("Báo cáo cần được phía Đối tác duyệt trước khi Admin hệ thống chốt", 400);
 
 			await _unitOfWork.BeginTransactionAsync();
 			try
@@ -355,7 +373,8 @@ namespace ToyShelf.Application.Services
 		{
 			var report = await _repository.GetByIdFullIncludeAsync(id);
 			if (report == null) throw new AppException("Báo cáo hư hại không tồn tại", 404);
-			if (report.Status != DamageStatus.Pending) throw new AppException("Báo cáo này đã được xử lý trước đó", 400);
+			if (report.Status != DamageStatus.Pending && report.Status != DamageStatus.PartnerApproved)
+				throw new AppException("Báo cáo đã ở trạng thái không thể từ chối", 400);
 
 			await _unitOfWork.BeginTransactionAsync();
 			try
@@ -490,11 +509,16 @@ namespace ToyShelf.Application.Services
 				// Thông tin nhân sự
 				ReportedByUserId = report.ReportedByUserId,
 				ReportedByName = report.ReportedByUser?.FullName ?? "Unknown",
+
+				PartnerAdminApprovedByUserId = report.PartnerAdminApprovedByUserId,
+				PartnerAdminName = report.PartnerAdminApprovedByUser?.FullName ?? "Unknown",
+
 				ReviewedByUserId = report.ReviewedByUserId,
 				ReviewedByName = report.ReviewedByUser?.FullName ?? "Unknown",
 
 				// Thời gian
 				CreatedAt = report.CreatedAt,
+				PartnerAdminApprovedAt = report.PartnerAdminApprovedAt,
 				ReviewedAt = report.ReviewedAt,
 
 				// Map danh sách Items lồng bên trong

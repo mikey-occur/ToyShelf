@@ -25,6 +25,7 @@ namespace ToyShelf.Domain.Entities
 	public enum DamageStatus
 	{
 		Pending,      // Chờ Admin duyệt
+		PartnerApproved,
 		Approved,     // Đã duyệt, chờ tạo/gán vận đơn thu hồi
 		InTransit,    // Shipper đang chở hàng/kệ về kho
 		Returned,     // Đã về đến kho tổng (Kết thúc quy trình tại Store)
@@ -53,6 +54,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid ReportedByUserId { get; set; }
 		public DateTime CreatedAt { get; set; }
 
+		public Guid? PartnerAdminApprovedByUserId { get; set; }
+		public DateTime? PartnerAdminApprovedAt { get; set; }
+
 		public Guid? ReviewedByUserId { get; set; }
 		public DateTime? ReviewedAt { get; set; }
 
@@ -66,6 +70,7 @@ namespace ToyShelf.Domain.Entities
 		// Navigation
 		public virtual InventoryLocation InventoryLocation { get; set; } = null!;
 		public virtual User ReportedByUser { get; set; } = null!;
+		public virtual User? PartnerAdminApprovedByUser { get; set; }
 		public virtual User? ReviewedByUser { get; set; }
 		public virtual ICollection<DamageReportItem> Items { get; set; } = new List<DamageReportItem>();
 		public virtual ICollection<AssignmentDamageReport> AssignmentDamageReports { get; set; } = new List<AssignmentDamageReport>();
