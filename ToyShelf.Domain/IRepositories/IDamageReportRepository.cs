@@ -10,7 +10,7 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IDamageReportRepository : IGenericRepository<DamageReport>
 	{
 		Task<int> GetMaxSequenceAsync();
-		Task<IEnumerable<DamageReport>> GetAllWithIncludeAsync(DamageStatus? status);
+		Task<IEnumerable<DamageReport>> GetAllWithIncludeAsync(DamageStatus? status, Guid? partnerId = null, Guid? storeId = null);
 		Task<DamageReport?> GetByIdFullIncludeAsync(Guid id);
 	}
 }

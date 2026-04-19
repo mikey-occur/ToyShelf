@@ -37,9 +37,9 @@ namespace ToyShelf.API.Controllers
 		// ================= GET LIST =================
 		[HttpGet]
 		public async Task<BaseResponse<IEnumerable<StoreCreationRequestResponse>>> GetRequests(
-			[FromQuery] StoreRequestStatus? status)
+			[FromQuery] StoreRequestStatus? status, Guid? partnerId)
 		{
-			var result = await _service.GetRequestsAsync(status);
+			var result = await _service.GetRequestsAsync(status, partnerId);
 
 			return BaseResponse<IEnumerable<StoreCreationRequestResponse>>
 				.Ok(result, "Get store creation requests successfully");

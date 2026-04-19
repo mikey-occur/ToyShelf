@@ -142,6 +142,7 @@ namespace ToyShelf.Application.Services
 			return colors.Select(color => new ProductBySkuResponse
 			{
 				ProductId = color.Product.Id,
+				ProductColorId = color.Id,
 				ProductName = color.Product.Name,
 				ProductSku = color.Product.SKU,
 				BasePrice = color.Product.BasePrice,

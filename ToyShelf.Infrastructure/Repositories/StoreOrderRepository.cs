@@ -31,7 +31,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				})
 				.Max();
 		}
-		public async Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus? status)
+		public async Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus? status, Guid? storeId, Guid? partnerId)
 		{
 			var query = _context.StoreOrders
 				.Include(o => o.StoreLocation)
@@ -53,6 +53,12 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			if (status.HasValue)
 				query = query.Where(x => x.Status == status);
+
+			if (storeId.HasValue)
+				query = query.Where(x => x.StoreLocation.StoreId == storeId.Value);
+
+			if (partnerId.HasValue)
+				query = query.Where(x => x.StoreLocation!.Store!.PartnerId == partnerId.Value);
 
 			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 		}

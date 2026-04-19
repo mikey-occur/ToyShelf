@@ -48,7 +48,8 @@ namespace ToyShelf.Application.Services
 				Depth = s.ShelfType.Depth,
 				DisplayGuideline = s.ShelfType.DisplayGuideline,
 				Quantity = s.Quantity,
-				TotalLevels = s.ShelfType.TotalLevels
+				TotalLevels = s.ShelfType.TotalLevels,
+				Status = s.Status
 			}).ToList();
 		}
 
@@ -165,6 +166,7 @@ namespace ToyShelf.Application.Services
 				InventoryLocationId = x.InventoryLocationId,
 				InventoryLocationName = x.InventoryLocation?.Name ?? "N/A",
 				Quantity = x.Quantity,
+				Status = x.Status,
 				Shelf = new ShelfDetailResponse
 				{
 					ShelfTypeId = x.ShelfTypeId,

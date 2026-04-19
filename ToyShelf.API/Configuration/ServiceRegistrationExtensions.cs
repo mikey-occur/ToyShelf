@@ -14,6 +14,7 @@ using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.IRepositories;
 using ToyShelf.Infrastructure.Auth;
+using ToyShelf.Infrastructure.Common.BackgroundJob;
 using ToyShelf.Infrastructure.Common.ExportExcel;
 using ToyShelf.Infrastructure.Common.Payment;
 using ToyShelf.Infrastructure.Common.QrCode;
@@ -186,6 +187,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IDamageReportService, DamageReportService>();
 			services.AddScoped<ICommissionHistoryService, CommissionHistoryService>();
 			services.AddScoped<IInventoryShelfService, InventoryShelfService>();
+			services.AddScoped<ISmsService, SmsService>();
+			services.AddScoped<IJobQueueService, HangfireJobQueueService>();
 		}
     }
 }

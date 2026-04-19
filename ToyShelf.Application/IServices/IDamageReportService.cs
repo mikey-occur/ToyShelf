@@ -13,7 +13,7 @@ namespace ToyShelf.Application.IServices
 	public interface IDamageReportService
 	{
 		Task<DamageReportResponse> CreateAsync(CreateDamageReportRequest request, ICurrentUser currentUser);
-		Task<IEnumerable<DamageReportResponse>> GetAllAsync(DamageStatus? status);
+		Task<IEnumerable<DamageReportResponse>> GetAllAsync(DamageStatus? status, Guid? partnerId, Guid? storeId);
 		Task<DamageReportResponse> GetByIdAsync(Guid id);
 		Task PartnerApproveAsync(Guid id, ICurrentUser currentUser);
 		Task ApproveAsync(Guid id, string? adminNote, ICurrentUser currentUser);

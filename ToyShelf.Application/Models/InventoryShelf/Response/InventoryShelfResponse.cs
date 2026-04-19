@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.Models.InventoryShelf.Response
 {
@@ -20,6 +21,7 @@ namespace ToyShelf.Application.Models.InventoryShelf.Response
     	public string? DisplayGuideline { get; set; }
     	public int TotalLevels { get; set; }
 		public int Quantity { get; set; }
+		public ShelfStatus Status { get; set; }
 
 	}
 }

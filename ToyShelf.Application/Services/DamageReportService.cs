@@ -61,9 +61,9 @@ namespace ToyShelf.Application.Services
 		}
 
 		// ================= GET =================
-		public async Task<IEnumerable<DamageReportResponse>> GetAllAsync(DamageStatus? status)
+		public async Task<IEnumerable<DamageReportResponse>> GetAllAsync(DamageStatus? status, Guid? partnerId, Guid? storeId )
 		{
-			var reports = await _repository.GetAllWithIncludeAsync(status);
+			var reports = await _repository.GetAllWithIncludeAsync(status, partnerId, storeId);
 			return reports.Select(MapToResponse);
 		}
 

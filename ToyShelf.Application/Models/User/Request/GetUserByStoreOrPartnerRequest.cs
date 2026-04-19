@@ -14,5 +14,7 @@ namespace ToyShelf.Application.Models.User.Request
 		public Guid? StoreId { get; set; }
 
 		public StoreRole? StoreRole { get; set; }
+
+		public bool? IsActive { get; set; }
 	}
 }
