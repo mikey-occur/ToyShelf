@@ -7,6 +7,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Order;
+using ToyShelf.Application.Notifications;
 using ToyShelf.Application.Payment;
 using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
@@ -25,9 +26,10 @@ namespace ToyShelf.Application.Services
 		private readonly ICommissionService _commissionService;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepository;
 		private readonly IInventoryService _inventoryService;
-		IInventoryRepository _inventoryRepository;
+	    private readonly IInventoryRepository _inventoryRepository;
+		private readonly IJobQueueService _jobQueueService;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository )
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -38,6 +40,7 @@ namespace ToyShelf.Application.Services
 			_commissionHistoryRepository = commissionHistoryRepsitory;
 			_inventoryService = inventoryService;
 			_inventoryRepository = inventoryRepository;
+			_jobQueueService = jobQueueService;
 		}
 		public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
@@ -252,6 +255,11 @@ namespace ToyShelf.Application.Services
 			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
+			var phoneToSend = order.CustomerPhone;
+			if (!string.IsNullOrWhiteSpace(phoneToSend))
+			{
+				_jobQueueService.EnqueuePaymentSms(phoneToSend, orderCode);
+			}
 			return order.Id;
 		}
 	}

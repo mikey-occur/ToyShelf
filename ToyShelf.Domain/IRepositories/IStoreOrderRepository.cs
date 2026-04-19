@@ -10,7 +10,8 @@ namespace ToyShelf.Domain.IRepositories
 	public interface IStoreOrderRepository : IGenericRepository<StoreOrder>
 	{
 		Task<int> GetMaxSequenceAsync();
-		Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus? status);
+		Task<IEnumerable<StoreOrder>> GetAllWithItemsAsync(StoreOrderStatus? status, Guid? storeId,
+	Guid? partnerId);
 		Task<StoreOrder?> GetByIdWithItemsAsync(Guid id);
 		Task<IEnumerable<StoreOrder>> GetOrdersByPartnerAsync(Guid partnerId, StoreOrderStatus? status);
 	}

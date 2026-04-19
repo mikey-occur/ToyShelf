@@ -46,7 +46,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // ===== HttpContext =====
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddHttpClient();
 //===== SignalR =====
 builder.Services.AddSignalR();
 

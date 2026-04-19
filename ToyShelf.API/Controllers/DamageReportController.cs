@@ -37,9 +37,9 @@ namespace ToyShelf.API.Controllers
 		// ================= GET ALL (Admin hoặc Partner xem danh sách) =================
 		[HttpGet]
 		[Authorize]
-		public async Task<BaseResponse<IEnumerable<DamageReportResponse>>> GetAll([FromQuery] DamageStatus? status)
+		public async Task<BaseResponse<IEnumerable<DamageReportResponse>>> GetAll([FromQuery] DamageStatus? status, [FromQuery] Guid? partnerId, [FromQuery] Guid? storeId)
 		{
-			var result = await _damageReportService.GetAllAsync(status);
+			var result = await _damageReportService.GetAllAsync(status, partnerId, storeId);
 
 			return BaseResponse<IEnumerable<DamageReportResponse>>
 				.Ok(result, "Damage reports retrieved successfully");

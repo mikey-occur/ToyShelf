@@ -33,23 +33,54 @@ namespace ToyShelf.Application.Services
 			_unitOfWork = unitOfWork;
 		}
 
-		public async Task<List<InventoryShelfResponse>> GetShelvesByLocationAsync(Guid locationId)
+		public async Task<LocationShelvesResponse?> GetShelvesByLocationAsync(Guid locationId)
 		{
+			// 1. Kéo toàn bộ kệ của Location này lên
 			var shelves = await _shelfRepo.GetShelvesByLocationAsync(locationId);
-			return shelves.Select(s => new InventoryShelfResponse
+
+			if (!shelves.Any())
 			{
-				InventoryLocationId = s.InventoryLocationId,
-				LocationName = s.InventoryLocation.Name,
-				ShelfTypeId = s.ShelfTypeId,
-				ShelfTypeName = s.ShelfType.Name,
-				ImageUrl = s.ShelfType.ImageUrl,
-				Width = s.ShelfType.Width,
-				Height = s.ShelfType.Height,
-				Depth = s.ShelfType.Depth,
-				DisplayGuideline = s.ShelfType.DisplayGuideline,
-				Quantity = s.Quantity,
-				TotalLevels = s.ShelfType.TotalLevels
-			}).ToList();
+				return null;
+			}
+
+			// 2. Lấy thông tin chung của Location từ phần tử đầu tiên
+			var firstShelf = shelves.First();
+
+			var response = new LocationShelvesResponse
+			{
+				LocationId = firstShelf.InventoryLocationId,
+				LocationName = firstShelf.InventoryLocation.Name,
+				Type = firstShelf.InventoryLocation.Type.ToString(),
+
+				// 3. Gom nhóm theo loại kệ và cộng dồn số lượng
+				Shelves = shelves
+					.GroupBy(s => s.ShelfType)
+					.Select(g => new ShelfGroupResponse
+					{
+						// Map thông tin của ShelfType
+						ShelfTypeId = g.Key.Id,
+						ShelfTypeName = g.Key.Name,
+						ImageUrl = g.Key.ImageUrl,
+						Width = g.Key.Width,
+						Height = g.Key.Height,
+						Depth = g.Key.Depth,
+						DisplayGuideline = g.Key.DisplayGuideline,
+						TotalLevels = g.Key.TotalLevels,
+
+						// Map tổng số lượng cho từng Status
+						// Lưu ý: Đổi chữ 'ShelfStatus' thành tên Enum thực tế của sếp
+						Available = g.Where(x => x.Status == ShelfStatus.Available).Sum(x => x.Quantity),
+						Reserved = g.Where(x => x.Status == ShelfStatus.Reserved).Sum(x => x.Quantity),
+						InTransit = g.Where(x => x.Status == ShelfStatus.InTransit).Sum(x => x.Quantity),
+						InUse = g.Where(x => x.Status == ShelfStatus.InUse).Sum(x => x.Quantity),
+						Recalled = g.Where(x => x.Status == ShelfStatus.Recalled).Sum(x => x.Quantity),
+						PendingMaintenance = g.Where(x => x.Status == ShelfStatus.PendingMaintenance).Sum(x => x.Quantity),
+						Maintenance = g.Where(x => x.Status == ShelfStatus.Maintenance).Sum(x => x.Quantity),
+						Retired = g.Where(x => x.Status == ShelfStatus.Retired).Sum(x => x.Quantity)
+					}).ToList()
+			};
+
+			return response;
 		}
 
 		// goi ham nay de add quantity vao ke, neu ke chua co thi tao moi, sau do update so luong va luu vao db
@@ -165,6 +196,7 @@ namespace ToyShelf.Application.Services
 				InventoryLocationId = x.InventoryLocationId,
 				InventoryLocationName = x.InventoryLocation?.Name ?? "N/A",
 				Quantity = x.Quantity,
+				Status = x.Status,
 				Shelf = new ShelfDetailResponse
 				{
 					ShelfTypeId = x.ShelfTypeId,

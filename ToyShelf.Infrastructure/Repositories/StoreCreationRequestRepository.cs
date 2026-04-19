@@ -13,7 +13,7 @@ namespace ToyShelf.Infrastructure.Repositories
 	public class StoreCreationRequestRepository : GenericRepository<StoreCreationRequest>, IStoreCreationRequestRepository
 	{
 		public StoreCreationRequestRepository(ToyShelfDbContext context) : base(context) { }
-		public async Task<IEnumerable<StoreCreationRequest>> GetRequestsAsync(StoreRequestStatus? status)
+		public async Task<IEnumerable<StoreCreationRequest>> GetRequestsAsync(StoreRequestStatus? status, Guid? partnerId)
 		{
 			var query = _context.StoreCreationRequests
 				.Include(x => x.City)
@@ -25,6 +25,11 @@ namespace ToyShelf.Infrastructure.Repositories
 			if (status.HasValue)
 			{
 				query = query.Where(x => x.Status == status.Value);
+			}
+
+			if (partnerId.HasValue)
+			{
+				query = query.Where(x => x.PartnerId == partnerId.Value);
 			}
 
 			return await query

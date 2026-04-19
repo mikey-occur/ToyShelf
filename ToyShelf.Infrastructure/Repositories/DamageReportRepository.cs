@@ -33,7 +33,8 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Max();
 		}
 
-		public async Task<IEnumerable<DamageReport>> GetAllWithIncludeAsync(DamageStatus? status)
+		public async Task<IEnumerable<DamageReport>> GetAllWithIncludeAsync(DamageStatus? status, Guid? partnerId = null,
+	Guid? storeId = null)
 		{
 			var query = _context.DamageReports
 				.Include(x => x.InventoryLocation)
@@ -59,6 +60,12 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			if (status.HasValue)
 				query = query.Where(x => x.Status == status.Value);
+
+			if (storeId.HasValue)
+				query = query.Where(x => x.InventoryLocation.StoreId == storeId.Value);
+
+			if (partnerId.HasValue)
+				query = query.Where(x => x.InventoryLocation!.Store!.PartnerId == partnerId.Value);
 
 			return await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
 		}

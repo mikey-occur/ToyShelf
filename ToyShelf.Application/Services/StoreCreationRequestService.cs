@@ -72,9 +72,9 @@ namespace ToyShelf.Application.Services
 
 
 		// ================= GET =================
-		public async Task<IEnumerable<StoreCreationRequestResponse>> GetRequestsAsync(StoreRequestStatus? status)
+		public async Task<IEnumerable<StoreCreationRequestResponse>> GetRequestsAsync(StoreRequestStatus? status, Guid? partnerId)
 		{
-			var requests = await _requestRepository.GetRequestsAsync(status);
+			var requests = await _requestRepository.GetRequestsAsync(status, partnerId);
 
 			return requests.Select(MapToResponse);
 		}
