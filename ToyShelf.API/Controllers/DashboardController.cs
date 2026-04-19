@@ -199,7 +199,7 @@ namespace ToyShelf.API.Controllers
 		/// Lấy thông tin thống kê (Stat Card) cho Shipper đang đăng nhập
 		/// </summary>
 		[HttpGet("shipper/stat-card")]
-		[Authorize(Roles = "Shipper")] 
+		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<ShipperStatCardResponse>> GetShipperStatCard([FromServices] ICurrentUser currentUser)
 		{
 			var shipperId = currentUser.UserId;
