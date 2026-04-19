@@ -91,6 +91,17 @@ namespace ToyShelf.API.Controllers
 				.Ok(result, "Available warehouses retrieved successfully");
 		}
 
+		[HttpGet("{id}/available-warehouses-V2")]
+		//[Authorize(Roles = "Admin")]
+		public async Task<BaseResponse<List<WarehouseMatchResponse>>> GetAvailableWarehousesV2(Guid id)
+		{
+			var result = await _storeOrderService.GetAvailableWarehousesV2Async(id);
+
+			return BaseResponse<List<WarehouseMatchResponse>>
+				.Ok(result, "Available warehouses retrieved successfully");
+		}
+
+
 		[HttpGet("by-partner/{partnerId}")]
 		[Authorize(Roles = "Admin,PartnerAdmin")]
 		public async Task<BaseResponse<IEnumerable<StoreOrderResponse>>> GetByPartner(
