@@ -14,7 +14,7 @@ namespace ToyShelf.Application.IServices
 	public interface IShelfOrderService
 	{
 		Task<ShelfOrderResponse> CreateAsync(CreateShelfOrderRequest request, ICurrentUser currentUser);
-		Task<IEnumerable<ShelfOrderResponse>> GetAllAsync(ShelfOrderStatus? status);
+		Task<IEnumerable<ShelfOrderResponse>> GetAllAsync(ShelfOrderStatus? status, Guid? storeId, Guid? partnerId);
 		Task<ShelfOrderResponse> GetByIdAsync(Guid id);
 
 		Task PartnerAdminApproveAsync(Guid id, ICurrentUser currentUser);
