@@ -22,6 +22,7 @@ namespace ToyShelf.Application.IServices
 		Task RejectAsync(Guid id, string? adminNote, ICurrentUser currentUser);
 		//Task FulfillAsync(Guid orderId);
 		Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrder(Guid shelfOrderId);
+		Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrderV2(Guid shelfOrderId);
 		Task<IEnumerable<ShelfOrderResponse>> GetByPartnerAsync(Guid partnerId, ShelfOrderStatus? status);
 	}
 }

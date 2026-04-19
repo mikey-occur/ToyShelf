@@ -24,6 +24,7 @@ namespace ToyShelf.Application.Services
 		private readonly IShelfOrderItemRepository _shelfOrderItemRepository;
 		private readonly IShelfTypeRepository _shelfTypeRepository;
 		private readonly IShelfRepository _shelfRepository;
+		private readonly IShipmentAssignmentRepository _assignmentRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -36,6 +37,7 @@ namespace ToyShelf.Application.Services
 			IShelfOrderItemRepository shelfOrderItemRepository,
 			IShelfTypeRepository shelfTypeRepository,
 			IShelfRepository shelfRepository,
+			IShipmentAssignmentRepository assignmentRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -45,6 +47,7 @@ namespace ToyShelf.Application.Services
 			_shelfOrderItemRepository = shelfOrderItemRepository;
 			_shelfTypeRepository = shelfTypeRepository;
 			_shelfRepository = shelfRepository;
+			_assignmentRepository = assignmentRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -266,6 +269,105 @@ namespace ToyShelf.Application.Services
 				return new { Location = loc, Items = matchedItems };
 			})
 			.Where(x => x.Items.Any()) // Bỏ qua kho không có món nào mình cần
+			.Select(x => new WarehouseMatchShelfResponse
+			{
+				WarehouseId = x.Location.WarehouseId ?? Guid.Empty,
+				WarehouseLocationId = x.Location.Id,
+				WarehouseName = x.Location.Warehouse?.Name ?? "N/A",
+				WarehouseCode = x.Location.Warehouse?.Code ?? "N/A",
+				Items = x.Items
+			})
+			.OrderBy(x => x.WarehouseName)
+			.ToList();
+
+			return result;
+		}
+
+		public async Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrderV2(Guid shelfOrderId)
+		{
+			var order = await _repository.GetByIdWithItemsAsync(shelfOrderId);
+
+			if (order == null)
+				throw new AppException("Không tìm thấy đơn đặt hàng kệ", 404);
+
+			if (order.Status == ShelfOrderStatus.Pending)
+				throw new AppException("Đơn hàng đang chờ phê duyệt", 400);
+
+			if (order.Status == ShelfOrderStatus.Fulfilled)
+				throw new AppException("Đơn hàng đã hoàn tất", 400);
+
+			var cityId = order.StoreLocation?.Store?.CityId
+				?? throw new AppException("Thông tin vị trí cửa hàng không hợp lệ", 500);
+
+			var warehouseLocations = await _locationRepository.GetWarehouseLocationsByCityAsync(cityId);
+
+			if (!warehouseLocations.Any())
+				return new List<WarehouseMatchShelfResponse>();
+
+			var locationIds = warehouseLocations.Select(l => l.Id).ToList();
+
+			var availableShelves = await _shelfRepository.GetQueryable()
+				.Include(s => s.ShelfType)
+				.Where(s =>
+					locationIds.Contains(s.InventoryLocationId) &&
+					s.Status == ShelfStatus.Available
+				)
+				.ToListAsync();
+
+			var orderRequirements = order.Items
+				.Where(x => x.Quantity > x.FulfilledQuantity)
+				.ToList();
+
+			if (!orderRequirements.Any())
+				return new List<WarehouseMatchShelfResponse>();
+
+			var shelfTypeIds = orderRequirements
+				.Select(x => x.ShelfTypeId)
+				.Distinct()
+				.ToList();
+
+			var allocatedDict = await _assignmentRepository
+				.GetAllocatedShelfQuantitiesAsync(locationIds, shelfTypeIds);
+
+			// MATCH
+			var result = warehouseLocations.Select(loc =>
+			{
+				var locShelves = availableShelves
+					.Where(s => s.InventoryLocationId == loc.Id)
+					.ToList();
+
+				var matchedItems = new List<WarehouseShelfItemResponse>();
+
+				foreach (var req in orderRequirements)
+				{
+					var countInStock = locShelves.Count(s => s.ShelfTypeId == req.ShelfTypeId);
+
+					var key = (loc.Id, req.ShelfTypeId);
+					var allocated = allocatedDict.ContainsKey(key) ? allocatedDict[key] : 0;
+
+					var realAvailable = countInStock - allocated;
+
+					if (realAvailable <= 0) continue;
+
+					matchedItems.Add(new WarehouseShelfItemResponse
+					{
+						ShelfOrderItemId = req.Id,
+
+						ShelfTypeId = req.ShelfTypeId,
+						ShelfTypeName = req.ShelfType?.Name ?? "N/A",
+						ImageUrl = req.ShelfType?.ImageUrl,
+
+						AvailableQuantity = realAvailable,
+
+						OriginalQuantity = req.Quantity,
+						FulfilledQuantity = req.FulfilledQuantity,
+						RemainingQuantity = req.Quantity - req.FulfilledQuantity
+					});
+				}
+
+				return new { Location = loc, Items = matchedItems };
+			})
+			.Where(x => x.Items.Any())
 			.Select(x => new WarehouseMatchShelfResponse
 			{
 				WarehouseId = x.Location.WarehouseId ?? Guid.Empty,
