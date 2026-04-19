@@ -9,6 +9,7 @@ namespace ToyShelf.Application.Models.ProductColor.Response
 	public class ProductBySkuResponse
 	{
 		public Guid ProductId { get; set; }
+		public Guid ProductColorId { get; set; }
 		public string ProductSku { get; set; } = null!;
 		public string ProductName { get; set; } = null!;
 		public decimal BasePrice { get; set; }
