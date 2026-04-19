@@ -13,7 +13,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task AddShelfQuantityAsync(Guid locationId, Guid shelfTypeId, int quantity);
 		Task RemoveShelfQuantityAsync(Guid locationId, Guid shelfTypeId, int quantity);
-		Task<List<InventoryShelfResponse>> GetShelvesByLocationAsync(Guid locationId);
+		Task<LocationShelvesResponse?> GetShelvesByLocationAsync(Guid locationId);
 		Task<List<ShelfDistributionResponse>> GetShelfDistributionsAsync(Guid shelfTypeId);
 	}
 }
