@@ -102,6 +102,38 @@ namespace ToyShelf.Infrastructure.Repositories
 		}
 
 
+		public async Task<Dictionary<(Guid locationId, Guid productColorId), int>> GetAllocatedQuantitiesAsync(List<Guid> locationIds, List<Guid> productColorIds)
+		{
+			var result = await _context.AssignmentStoreOrderItems
+				.AsNoTracking()
+				.Where(x =>
+					locationIds.Contains(x.AssignmentStoreOrder.ShipmentAssignment.WarehouseLocationId) &&
+					productColorIds.Contains(x.StoreOrderItem.ProductColorId) &&
+					(
+						 x.AssignmentStoreOrder.ShipmentAssignment.Status != AssignmentStatus.Cancelled &&
+						 x.AssignmentStoreOrder.ShipmentAssignment.Status != AssignmentStatus.Completed
+					)
+				)
+				.GroupBy(x => new
+				{
+					x.AssignmentStoreOrder.ShipmentAssignment.WarehouseLocationId,
+					x.StoreOrderItem.ProductColorId
+				})
+				.Select(g => new
+				{
+					LocationId = g.Key.WarehouseLocationId,
+					ProductColorId = g.Key.ProductColorId,
+					Total = g.Sum(x => x.AllocatedQuantity)
+				})
+				.ToListAsync();
+
+			return result.ToDictionary(
+				x => (x.LocationId, x.ProductColorId),
+				x => x.Total
+			);
+		}
+
+
 		// Helper để tái sử dụng các Include cho DamageReport và Order
 		private IQueryable<ShipmentAssignment> GetAssignmentWithFullDetailsQuery()
 		{
