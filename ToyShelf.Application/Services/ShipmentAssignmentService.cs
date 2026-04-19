@@ -22,6 +22,8 @@ namespace ToyShelf.Application.Services
 		private readonly IUserWarehouseRepository _userWarehouseRepository;
 		private readonly IShelfOrderRepository _repositoryShelfOrder;
 		private readonly IDamageReportRepository _damageReportRepository;
+		private readonly IAssignmentStoreOrderRepository _assignmentStoreOrderRepository;
+		private readonly IAssignmentShelfOrderRepository _assignmentShelfOrderRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -31,6 +33,8 @@ namespace ToyShelf.Application.Services
 			IUserWarehouseRepository userWarehouseRepository,
 			IShelfOrderRepository repositoryShelfOrder,
 			IDamageReportRepository damageReportRepository,
+			IAssignmentStoreOrderRepository assignmentStoreOrderRepository,
+			IAssignmentShelfOrderRepository assignmentShelfOrderRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -39,6 +43,8 @@ namespace ToyShelf.Application.Services
 			_userWarehouseRepository = userWarehouseRepository;
 			_repositoryShelfOrder = repositoryShelfOrder;
 			_damageReportRepository = damageReportRepository;
+			_assignmentStoreOrderRepository = assignmentStoreOrderRepository;
+			_assignmentShelfOrderRepository = assignmentShelfOrderRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -56,131 +62,162 @@ namespace ToyShelf.Application.Services
 
 		public async Task<ShipmentAssignmentResponse> CreateAsync(CreateShipmentAssignmentRequest request, ICurrentUser currentUser)
 		{
-			// 1. Validation cơ bản: Phải có ít nhất một loại đơn hàng
-			if (!request.StoreOrderId.HasValue && !request.ShelfOrderId.HasValue)
-				throw new AppException("Ít nhất một đơn hàng (Hàng hoặc Kệ) là bắt buộc", 400);
+			await _unitOfWork.BeginTransactionAsync();
 
-			Guid storeLocationId;
-
-			// 2. XÁC ĐỊNH STORE LOCATION (Cùng 1 xe phải đến cùng 1 chỗ)
-			if (request.StoreOrderId.HasValue)
+			try
 			{
-				var storeOrder = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId.Value);
-				if (storeOrder == null || storeOrder.Status != StoreOrderStatus.Approved)
-					throw new AppException("Đơn hàng Store không tồn tại hoặc chưa được duyệt", 400);
-				storeLocationId = storeOrder.StoreLocationId;
-			}
-			else
-			{
-				var shelfOrder = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId!.Value);
-				if (shelfOrder == null || shelfOrder.Status != ShelfOrderStatus.Approved)
-					throw new AppException("Đơn hàng Shelf không tồn tại hoặc chưa được duyệt", 400);
-				storeLocationId = shelfOrder.StoreLocationId;
-			}
+				if (!request.StoreOrderId.HasValue && !request.ShelfOrderId.HasValue)
+					throw new AppException("Ít nhất một đơn hàng (Hàng hoặc Kệ) là bắt buộc", 400);
 
-			// 3. TÌM HOẶC TẠO ASSIGNMENT (LOGIC GOM ĐƠN)
-			var assignment = await _assignmentRepository.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId);
+				Guid storeLocationId;
 
-			if (assignment == null)
-			{
-				assignment = new ShipmentAssignment
+				// Xác định location
+				if (request.StoreOrderId.HasValue)
 				{
-					Id = Guid.NewGuid(),
-					WarehouseLocationId = request.WarehouseLocationId,
-					Status = AssignmentStatus.Pending,
-					Type = AssignmentType.Delivery, // Mặc định là Delivery, sẽ update sau
-					CreatedAt = _dateTime.UtcNow,
-					CreatedByUserId = currentUser.UserId,
-					AssignmentStoreOrders = new List<AssignmentStoreOrder>(),
-					AssignmentShelfOrders = new List<AssignmentShelfOrder>()
-				};
-				await _assignmentRepository.AddAsync(assignment);
-			}
+					var storeOrder = await _storeOrderRepository.GetByIdAsync(request.StoreOrderId.Value);
+					if (storeOrder == null || storeOrder.Status != StoreOrderStatus.Approved)
+						throw new AppException("Đơn hàng Store không hợp lệ", 400);
 
-			// 4. XỬ LÝ STORE ORDER
-			if (request.StoreOrderId.HasValue && request.StoreItems != null && request.StoreItems.Any())
-			{
-				var order = await _storeOrderRepository.GetByIdWithItemsAsync(request.StoreOrderId.Value);
-				if (order == null) throw new AppException("Không tìm thấy StoreOrder", 404);
-
-				var aso = assignment.AssignmentStoreOrders.FirstOrDefault(x => x.StoreOrderId == request.StoreOrderId.Value);
-				if (aso == null)
+					storeLocationId = storeOrder.StoreLocationId;
+				}
+				else
 				{
-					aso = new AssignmentStoreOrder { Id = Guid.NewGuid(), StoreOrderId = request.StoreOrderId.Value, ShipmentAssignmentId = assignment.Id };
-					assignment.AssignmentStoreOrders.Add(aso);
+					var shelfOrder = await _repositoryShelfOrder.GetByIdAsync(request.ShelfOrderId!.Value);
+					if (shelfOrder == null || shelfOrder.Status != ShelfOrderStatus.Approved)
+						throw new AppException("Đơn hàng Shelf không hợp lệ", 400);
+
+					storeLocationId = shelfOrder.StoreLocationId;
 				}
 
-				foreach (var itemReq in request.StoreItems)
+				var assignment = await _assignmentRepository
+					.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId);
+
+				if (assignment == null)
 				{
-					var originalItem = order.Items.FirstOrDefault(x => x.Id == itemReq.ItemId);
-					if (originalItem == null) throw new AppException($"Sản phẩm ID {itemReq.ItemId} không có trong StoreOrder", 400);
+					assignment = await _assignmentRepository
+						.GetPendingByLocationAsync(request.WarehouseLocationId, storeLocationId);
 
-					int alreadyAllocated = await _assignmentRepository.GetTotalAllocatedQuantityAsync(request.StoreOrderId.Value, itemReq.ItemId);
-
-					if (alreadyAllocated + itemReq.Quantity > originalItem.Quantity)
+					if (assignment == null)
 					{
-						// Lấy tên sản phẩm thông qua ProductColor -> Product
-						string productName = originalItem.ProductColor?.Product?.Name ?? "Sản phẩm";
+						assignment = new ShipmentAssignment
+						{
+							Id = Guid.NewGuid(),
+							WarehouseLocationId = request.WarehouseLocationId,
+							Status = AssignmentStatus.Pending,
+							Type = AssignmentType.Delivery,
+							CreatedAt = _dateTime.UtcNow,
+							CreatedByUserId = currentUser.UserId,
+							AssignmentStoreOrders = new List<AssignmentStoreOrder>(),
+							AssignmentShelfOrders = new List<AssignmentShelfOrder>()
+						};
 
-						throw new AppException($"{productName} vượt quá số lượng đặt. " +
-							$"Đã phân bổ: {alreadyAllocated}/{originalItem.Quantity}. Nhập thêm: {itemReq.Quantity}", 400);
+						await _assignmentRepository.AddAsync(assignment);
+					}
+				}
+
+				// ===== STORE ORDER =====
+				if (request.StoreOrderId.HasValue && request.StoreItems?.Any() == true)
+				{
+					var order = await _storeOrderRepository.GetByIdWithItemsAsync(request.StoreOrderId.Value);
+					if (order == null) throw new AppException("Không tìm thấy StoreOrder", 404);
+
+					var aso = await _unitOfWork.Repository<AssignmentStoreOrder>()
+						.GetAsync(x =>
+							x.ShipmentAssignmentId == assignment.Id &&
+							x.StoreOrderId == request.StoreOrderId.Value);
+
+					if (aso == null)
+					{
+						aso = new AssignmentStoreOrder
+						{
+							Id = Guid.NewGuid(),
+							StoreOrderId = request.StoreOrderId.Value,
+							ShipmentAssignmentId = assignment.Id
+						};
+
+						await _assignmentStoreOrderRepository.AddAsync(aso);
 					}
 
-					aso.AssignmentStoreOrderItems.Add(new AssignmentStoreOrderItem
+					foreach (var itemReq in request.StoreItems)
 					{
-						Id = Guid.NewGuid(),
-						AssignmentStoreOrderId = aso.Id,
-						StoreOrderItemId = itemReq.ItemId,
-						AllocatedQuantity = itemReq.Quantity
-					});
+						var originalItem = order.Items.FirstOrDefault(x => x.Id == itemReq.ItemId);
+						if (originalItem == null)
+							throw new AppException($"Item không tồn tại", 400);
+
+						int alreadyAllocated = await _assignmentRepository
+							.GetTotalAllocatedQuantityAsync(request.StoreOrderId.Value, itemReq.ItemId);
+
+						if (alreadyAllocated + itemReq.Quantity > originalItem.Quantity)
+							throw new AppException("Vượt số lượng", 400);
+
+						await _unitOfWork.Repository<AssignmentStoreOrderItem>().AddAsync(new AssignmentStoreOrderItem
+						{
+							Id = Guid.NewGuid(),
+							AssignmentStoreOrderId = aso.Id,
+							StoreOrderItemId = itemReq.ItemId,
+							AllocatedQuantity = itemReq.Quantity
+						});
+					}
 				}
-			}
 
-			// 5. XỬ LÝ SHELF ORDER
-			if (request.ShelfOrderId.HasValue && request.ShelfItems != null && request.ShelfItems.Any())
-			{
-				var shelfOrder = await _repositoryShelfOrder.GetByIdWithItemsAsync(request.ShelfOrderId.Value);
-				if (shelfOrder == null) throw new AppException("Không tìm thấy ShelfOrder", 404);
-
-				var asho = assignment.AssignmentShelfOrders.FirstOrDefault(x => x.ShelfOrderId == request.ShelfOrderId.Value);
-				if (asho == null)
+				// ===== SHELF ORDER =====
+				if (request.ShelfOrderId.HasValue && request.ShelfItems?.Any() == true)
 				{
-					asho = new AssignmentShelfOrder { Id = Guid.NewGuid(), ShelfOrderId = request.ShelfOrderId.Value, ShipmentAssignmentId = assignment.Id };
-					assignment.AssignmentShelfOrders.Add(asho);
-				}
+					var shelfOrder = await _repositoryShelfOrder.GetByIdWithItemsAsync(request.ShelfOrderId.Value);
+					if (shelfOrder == null) throw new AppException("Không tìm thấy ShelfOrder", 404);
 
-				foreach (var itemReq in request.ShelfItems)
-				{
-					var originalItem = shelfOrder.Items.FirstOrDefault(x => x.Id == itemReq.ItemId);
-					if (originalItem == null) throw new AppException($"Mục kệ ID {itemReq.ItemId} không có trong ShelfOrder", 400);
+					var asho = await _unitOfWork.Repository<AssignmentShelfOrder>()
+						.GetAsync(x =>
+							x.ShipmentAssignmentId == assignment.Id &&
+							x.ShelfOrderId == request.ShelfOrderId.Value);
 
-					int alreadyAllocated = await _assignmentRepository.GetTotalShelfAllocatedQuantityAsync(request.ShelfOrderId.Value, itemReq.ItemId);
-
-					if (alreadyAllocated + itemReq.Quantity > originalItem.Quantity)
+					if (asho == null)
 					{
-						// Lấy tên loại kệ qua ShelfType
-						string shelfName = originalItem.ShelfType?.Name ?? "Kệ";
+						asho = new AssignmentShelfOrder
+						{
+							Id = Guid.NewGuid(),
+							ShelfOrderId = request.ShelfOrderId.Value,
+							ShipmentAssignmentId = assignment.Id
+						};
 
-						throw new AppException($"Loại kệ '{shelfName}' vượt quá số lượng đặt. " +
-							$"Đã phân bổ: {alreadyAllocated}/{originalItem.Quantity}", 400);
+						await _assignmentShelfOrderRepository.AddAsync(asho);
 					}
 
-					asho.AssignmentShelfOrderItems.Add(new AssignmentShelfOrderItem
+					foreach (var itemReq in request.ShelfItems)
 					{
-						Id = Guid.NewGuid(),
-						AssignmentShelfOrderId = asho.Id,
-						ShelfOrderItemId = itemReq.ItemId,
-						AllocatedQuantity = itemReq.Quantity
-					});
+						var originalItem = shelfOrder.Items.FirstOrDefault(x => x.Id == itemReq.ItemId);
+						if (originalItem == null)
+							throw new AppException("Item không tồn tại", 400);
+
+						int alreadyAllocated = await _assignmentRepository
+							.GetTotalShelfAllocatedQuantityAsync(request.ShelfOrderId.Value, itemReq.ItemId);
+
+						if (alreadyAllocated + itemReq.Quantity > originalItem.Quantity)
+							throw new AppException("Vượt số lượng", 400);
+
+						await _unitOfWork.Repository<AssignmentShelfOrderItem>().AddAsync(new AssignmentShelfOrderItem
+						{
+							Id = Guid.NewGuid(),
+							AssignmentShelfOrderId = asho.Id,
+							ShelfOrderItemId = itemReq.ItemId,
+							AllocatedQuantity = itemReq.Quantity
+						});
+					}
 				}
+
+				UpdateAssignmentType(assignment);
+
+				await _unitOfWork.SaveChangesAsync();
+				await _unitOfWork.CommitTransactionAsync();
+
+				var result = await _assignmentRepository.GetByIdWithDetailsAsync(assignment.Id);
+				return MapToResponse(result!);
 			}
-
-			// 6. Cập nhật Type (Delivery/Combined) và Save
-			UpdateAssignmentType(assignment);
-			await _unitOfWork.SaveChangesAsync();
-
-			var result = await _assignmentRepository.GetByIdWithDetailsAsync(assignment.Id);
-			return MapToResponse(result!);
+			catch
+			{
+				await _unitOfWork.RollbackTransactionAsync();
+				throw;
+			}
 		}
 
 		// Gôm đơn 1 - N

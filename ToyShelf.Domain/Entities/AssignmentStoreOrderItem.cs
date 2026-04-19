@@ -12,7 +12,7 @@ namespace ToyShelf.Domain.Entities
 		public Guid AssignmentStoreOrderId { get; set; }
 		public Guid StoreOrderItemId { get; set; } 
 
-		public int AllocatedQuantity { get; set; } 
+		public int AllocatedQuantity { get; set; } // Admin yêu cầu cho chuyến xe
 
 		public virtual AssignmentStoreOrder AssignmentStoreOrder { get; set; } = null!;
 		public virtual StoreOrderItem StoreOrderItem { get; set; } = null!;
