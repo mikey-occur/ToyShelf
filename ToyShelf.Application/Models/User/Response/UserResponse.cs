@@ -19,6 +19,7 @@ namespace ToyShelf.Application.Models.User.Response
 		public string? StoreName { get; set; }
 
 		public StoreRole? StoreRole { get; set; }
+		public bool IsActive { get; set; } = true;
 	}
 
 }

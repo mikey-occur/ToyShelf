@@ -93,7 +93,8 @@ namespace ToyShelf.Application.Services
 							PartnerId = us.Store.PartnerId,
 							StoreId = us.StoreId,
 							StoreName = us.Store.Name,
-							StoreRole = us.StoreRole
+							StoreRole = us.StoreRole,
+							IsActive = u.IsActive
 						});
 					}
 
@@ -105,6 +106,7 @@ namespace ToyShelf.Application.Services
 							FullName = u.FullName,
 							Email = u.Email,
 							PartnerId = u.PartnerId,
+							IsActive = u.IsActive,
 							StoreId = null,
 							StoreName = null,
 							StoreRole = null
