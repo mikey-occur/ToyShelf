@@ -21,6 +21,7 @@ namespace ToyShelf.Application.Services
 		private readonly IInventoryLocationRepository _locationRepository;
 		private readonly IUserStoreRepository _userStoreRepository;
 		private readonly IInventoryRepository _inventoryRepository;
+		private readonly IShipmentAssignmentRepository _assignmentRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -31,6 +32,7 @@ namespace ToyShelf.Application.Services
 			IInventoryLocationRepository locationRepository,
 			IUserStoreRepository userStoreRepository,
 			IInventoryRepository inventoryRepository,
+			IShipmentAssignmentRepository assignmentRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -38,6 +40,7 @@ namespace ToyShelf.Application.Services
 			_locationRepository = locationRepository;
 			_userStoreRepository = userStoreRepository;
 			_inventoryRepository = inventoryRepository;
+			_assignmentRepository = assignmentRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -358,6 +361,111 @@ namespace ToyShelf.Application.Services
 
 			return result;
 		}
+
+		public async Task<List<WarehouseMatchResponse>> GetAvailableWarehousesV2Async(Guid storeOrderId)
+		{
+			var order = await _storeOrderRepository.GetByIdWithItemsAsync(storeOrderId);
+
+			if (order == null)
+				throw new AppException("Không tìm thấy đơn đặt hàng của cửa hàng", 404);
+
+			if (order.Status == StoreOrderStatus.Pending)
+				throw new AppException("Đơn hàng đang chờ phê duyệt", 400);
+
+			if (order.Status == StoreOrderStatus.Fulfilled)
+				throw new AppException("Đơn hàng đã hoàn tất", 400);
+
+			if (order.StoreLocation?.Store == null)
+				throw new AppException("Thông tin vị trí cửa hàng không hợp lệ", 500);
+
+			var cityId = order.StoreLocation.Store.CityId;
+
+			var warehouseLocations = await _locationRepository.GetWarehouseLocationsByCityAsync(cityId);
+			if (!warehouseLocations.Any())
+				return new List<WarehouseMatchResponse>();
+
+			var locationIds = warehouseLocations.Select(l => l.Id).ToList();
+
+			// inventory
+			var inventories = await _inventoryRepository.GetByLocationIdsAsync(locationIds);
+
+			// requirement
+			var orderRequirement = order.Items
+				.Where(x => x.Quantity > x.FulfilledQuantity)
+				.Select(x => new
+				{
+					Id = x.Id,
+					ProductColorId = x.ProductColorId,
+					TotalRequested = x.Quantity,
+					AlreadyFulfilled = x.FulfilledQuantity,
+					RemainingNeeded = x.Quantity - x.FulfilledQuantity
+				})
+				.ToList();
+
+			if (!orderRequirement.Any())
+				return new List<WarehouseMatchResponse>();
+
+			var productIds = orderRequirement.Select(x => x.ProductColorId).Distinct().ToList();
+
+			var allocatedDict = await _assignmentRepository
+				.GetAllocatedQuantitiesAsync(locationIds, productIds);
+
+			// MATCH
+			var result = warehouseLocations.Select(loc =>
+			{
+				var locInventories = inventories
+					.Where(i => i.InventoryLocationId == loc.Id && i.Status == InventoryStatus.Available)
+					.ToList();
+
+				var matchedItems = new List<WarehouseItemResponse>();
+
+				foreach (var req in orderRequirement)
+				{
+					var inv = locInventories.FirstOrDefault(i => i.ProductColorId == req.ProductColorId);
+					if (inv == null) continue;
+
+					// lấy allocated
+					var key = (loc.Id, req.ProductColorId);
+					var allocated = allocatedDict.ContainsKey(key) ? allocatedDict[key] : 0;
+
+					var realAvailable = inv.Quantity - allocated;
+
+					if (realAvailable <= 0) continue;
+
+					matchedItems.Add(new WarehouseItemResponse
+					{
+						StoreOrderItemId = req.Id,
+						ProductColorId = inv.ProductColorId,
+						SKU = inv.ProductColor?.Product?.SKU ?? "N/A",
+						ProductName = inv.ProductColor?.Product?.Name ?? "N/A",
+						Color = inv.ProductColor?.Color?.Name ?? "N/A",
+						ImageUrl = inv.ProductColor?.ImageUrl,
+
+						AvailableQuantity = realAvailable,
+
+						OriginalQuantity = req.TotalRequested,
+						FulfilledQuantity = req.AlreadyFulfilled,
+						RemainingQuantity = req.RemainingNeeded
+					});
+				}
+
+				return new { Location = loc, Items = matchedItems };
+			})
+			.Where(x => x.Items.Any())
+			.Select(x => new WarehouseMatchResponse
+			{
+				WarehouseId = x.Location.WarehouseId ?? Guid.Empty,
+				WarehouseLocationId = x.Location.Id,
+				WarehouseName = x.Location.Warehouse?.Name ?? "N/A",
+				WarehouseCode = x.Location.Warehouse?.Code ?? "N/A",
+				Items = x.Items
+			})
+			.OrderBy(x => x.WarehouseName)
+			.ToList();
+
+			return result;
+		}
+
 
 		public async Task<IEnumerable<StoreOrderResponse>> GetOrdersForAdminAsync(Guid partnerId, StoreOrderStatus? status)
 		{
