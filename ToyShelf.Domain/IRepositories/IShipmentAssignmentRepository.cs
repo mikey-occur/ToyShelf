@@ -19,5 +19,8 @@ namespace ToyShelf.Domain.IRepositories
 		Task<int> GetTotalAllocatedQuantityAsync(Guid storeOrderId, Guid storeOrderItemId);
 		Task<int> GetTotalShelfAllocatedQuantityAsync(Guid shelfOrderId, Guid shelfOrderItemId);
 		Task<Dictionary<(Guid locationId, Guid productColorId), int>> GetAllocatedQuantitiesAsync(List<Guid> locationIds, List<Guid> productColorIds);
+		Task<Dictionary<(Guid locationId, Guid shelfTypeId), int>> GetAllocatedShelfQuantitiesAsync(
+			List<Guid> locationIds,
+			List<Guid> shelfTypeIds);
 	}
 }
