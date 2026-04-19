@@ -22,10 +22,10 @@ namespace ToyShelf.API.Controllers
 		/// </summary>
 		/// <param name="locationId">ID của kho (InventoryLocationId)</param>
 		[HttpGet("location/{locationId}")]
-		public async Task<BaseResponse<IEnumerable<InventoryShelfResponse>>> GetByLocation(Guid locationId)
+		public async Task<BaseResponse<LocationShelvesResponse?>> GetByLocation(Guid locationId)
 		{
 			var result = await _inventoryShelfService.GetShelvesByLocationAsync(locationId);
-			return BaseResponse<IEnumerable<InventoryShelfResponse>>
+			return BaseResponse<LocationShelvesResponse?>
 				.Ok(result, "Danh sách kệ theo vị trí đã được tải thành công.");
 		}
 
