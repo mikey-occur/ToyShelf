@@ -146,6 +146,8 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<INotificationBroadcaster, SignalRService>();
 			services.AddScoped<IDamageReportRepository, DamageReportRepository>();
 			services.AddScoped<IInventoryShelfRepository, InventoryShelfRepository>();
+			services.AddScoped<IAssignmentStoreOrderRepository, AssignmentStoreOrderRepository>();
+			services.AddScoped<IAssignmentShelfOrderRepository, AssignmentShelfOrderRepository>();
 
 			// ===== Services =====
 			services.AddScoped<IRoleService, RoleService>();
