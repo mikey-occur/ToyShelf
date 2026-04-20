@@ -34,7 +34,7 @@ namespace ToyShelf.API.Controllers
 
 
 		[HttpGet("store-users")]
-		[Authorize(Roles = "Admin,PartnerAdmin")]
+		[Authorize(Roles = "Admin,PartnerAdmin,Partner")]
 		public async Task<BaseResponse<List<UserResponse>>> GetUsersByStoreOrPartner(
 			[FromQuery] GetUserByStoreOrPartnerRequest request,
 			[FromServices] ICurrentUser currentUser)
