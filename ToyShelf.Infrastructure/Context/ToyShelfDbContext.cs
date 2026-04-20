@@ -2431,9 +2431,21 @@ namespace ToyShelf.Infrastructure.Context
 
 			modelBuilder.Entity<Notification>(entity =>
 			{
-				entity.HasKey(n => n.Id); 
+				entity.HasKey(n => n.Id);
+				entity.Property(n => n.Id)
+					  .ValueGeneratedOnAdd();
+
 				entity.Property(n => n.Title).IsRequired().HasMaxLength(255);
 				entity.Property(n => n.Content).IsRequired();
+
+				entity.Property(n => n.RefType)
+					  .HasMaxLength(100);
+
+				entity.Property(e => e.CreatedAt)
+					  .IsRequired();
+
+				entity.Property(e => e.ReadAt);
+
 				entity.HasIndex(n => new { n.UserId, n.CreatedAt }).IsDescending(false, true);
 
 				// --- THÊM QUAN HỆ VÀO ĐÂY ---
