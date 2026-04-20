@@ -265,12 +265,12 @@ namespace ToyShelf.Application.Services
 			{
 				throw new Exception("Không tìm thấy phiếu đối soát!");
 			}
-			Guid currentPartnerId = currentUser.UserId;
+			//Guid currentPartnerId = currentUser.UserId;
 
-			if (settlement.PartnerId != currentPartnerId)
-			{
-				throw new Exception("Bạn không có quyền xác nhận phiếu đối soát này!");
-			}
+			//if (settlement.PartnerId != currentPartnerId)
+			//{
+			//	throw new Exception("Bạn không có quyền xác nhận phiếu đối soát này!");
+			//}
 			if (settlement.Status != "PAID")
 			{
 				throw new Exception("Phiếu đối soát chưa được chuyển khoản hoặc đã được xác nhận rồi.");

@@ -25,55 +25,6 @@ namespace ToyShelf.Infrastructure.Email
 			_httpClientFactory = httpClientFactory;
 		}
 
-		//public async Task SendPaymentSuccessSmsAsync(string phoneNumber, long orderCode)
-		//{
-		//	// 1. Kéo data hóa đơn từ DB lên (Kéo luôn OrderItems và ProductColor)
-		//	var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
-		//	if (order == null) return;
-
-		//	// 2. Lấy cấu hình Twilio
-		//	var accountSid = _configuration["TwilioSms:AccountSid"];
-		//	var authToken = _configuration["TwilioSms:AuthToken"];
-		//	var fromNumber = _configuration["TwilioSms:FromPhoneNumber"];
-
-		//	TwilioClient.Init(accountSid, authToken);
-
-		//	// 3. Chuẩn bị nội dung hóa đơn bằng StringBuilder để xuống dòng
-		//	var sb = new StringBuilder();
-		//	sb.AppendLine($"ToyShelf: Thanh toan thanh cong don {orderCode}");
-		//	sb.AppendLine("Chi tiet:");
-
-		//	// Lặp qua từng món hàng
-		//	foreach (var item in order.OrderItems)
-		//	{
-
-		//		var itemTotal = item.Price * item.Quantity;
-		//		sb.AppendLine($"- {item.Quantity}x {item.ProductColor?.Sku}: {itemTotal:N0}d");
-		//	}
-
-		//	sb.AppendLine($"Tong tien: {order.TotalAmount:N0}d");
-		//	sb.Append("Cam on quy khach!");
-
-		//	var messageContent = sb.ToString();
-
-		//	phoneNumber = phoneNumber.Replace(" ", "").Replace("-", "").Trim();
-
-		//	if (phoneNumber.StartsWith("0"))
-		//	{
-		//		phoneNumber = "+84" + phoneNumber.Substring(1);
-		//	}
-		//	else if (!phoneNumber.StartsWith("+"))
-		//	{
-		//		phoneNumber = "+" + phoneNumber;
-		//	}
-
-		//	// 5. Gửi SMS
-		//	await MessageResource.CreateAsync(
-		//		body: messageContent,
-		//		from: new PhoneNumber(fromNumber),
-		//		to: new PhoneNumber(phoneNumber)
-		//	);
-		//}
 
 		public async Task SendPaymentSuccessSmsAsync(string phoneNumber, long orderCode)
 		{
@@ -153,6 +104,62 @@ namespace ToyShelf.Infrastructure.Email
 				throw;
 			}
 		}
+
+		//public async Task SendPaymentSuccessSmsAsync(string phoneNumber, long orderCode)
+		//{
+		//	var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
+		//	if (order == null) return;
+
+
+		//	var apiKey = _configuration["eSms:ApiKey"];
+		//	var secretKey = _configuration["eSms:SecretKey"];
+
+
+		//	var sb = new StringBuilder();
+		//	sb.AppendLine($"ToyShelf: Thanh toan thanh cong #{orderCode}");
+		//	foreach (var item in order.OrderItems)
+		//	{
+		//		var itemTotal = item.Price * item.Quantity;
+		//		sb.AppendLine($"- {item.Quantity}x {item.ProductColor?.Sku}: {itemTotal:N0}d");
+		//	}
+		//	sb.AppendLine($"Tong: {order.TotalAmount:N0}d");
+		//	var messageContent = sb.ToString();
+
+
+		//	var targetPhone = phoneNumber.Replace(" ", "").Replace("-", "").Trim();
+		//	if (targetPhone.StartsWith("+84")) targetPhone = "0" + targetPhone.Substring(3);
+		//	if (targetPhone.StartsWith("84")) targetPhone = "0" + targetPhone.Substring(2);
+
+		//	var client = _httpClientFactory.CreateClient();
+
+
+		//	var url = $"http://rest.esms.vn/MainService.svc/json/SendMultipleMessage_V4_get?Phone={targetPhone}&Content={Uri.EscapeDataString(messageContent)}&ApiKey={apiKey}&SecretKey={secretKey}&SmsType=4";
+
+		//	try
+		//	{
+		//		var response = await client.GetAsync(url);
+		//		var resultString = await response.Content.ReadAsStringAsync();
+
+		//		// eSMS trả về chuỗi JSON, nếu thành công thì "CodeResult":"100"
+		//		if (response.IsSuccessStatusCode && resultString.Contains("\"CodeResult\":\"100\""))
+		//		{
+		//			Console.ForegroundColor = ConsoleColor.Green;
+		//			Console.WriteLine($"[eSMS] Gửi thành công cho đơn #{orderCode}");
+		//			Console.ResetColor();
+		//		}
+		//		else
+		//		{
+		//			throw new Exception($"eSMS Error: {resultString}");
+		//		}
+		//	}
+		//	catch (Exception ex)
+		//	{
+		//		Console.ForegroundColor = ConsoleColor.Red;
+		//		Console.WriteLine($"[SMS ERROR] {ex.Message}");
+		//		Console.ResetColor();
+		//		throw;
+		//	}
+	//}
 	}
 }
 
