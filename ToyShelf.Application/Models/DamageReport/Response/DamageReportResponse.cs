@@ -69,5 +69,7 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 	{
 		public Guid? ShelfId { get; set; }
 		public string? ShelfCode { get; set; }
+		public string? ShelfName { get; set; }
+		public string? ImageUrl { get; set; }
 	}
 }
