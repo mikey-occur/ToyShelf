@@ -27,6 +27,9 @@ namespace ToyShelf.Infrastructure.Repositories
 					.ThenInclude(a => a!.Shipper)
 
 				.Include(x => x.ShipmentAssignment)
+					.ThenInclude(a => a!.Shipments)
+
+				.Include(x => x.ShipmentAssignment)
 					.ThenInclude(a => a!.AssignmentStoreOrders)
 						.ThenInclude(aso => aso.StoreOrder)
 							.ThenInclude(o => o.Items)
@@ -153,6 +156,14 @@ namespace ToyShelf.Infrastructure.Repositories
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 
+		public async Task<bool> AreAllShipmentsCompletedAsync(Guid assignmentId)
+		{
+			return !await _context.Shipments
+				.AsNoTracking()
+				.AnyAsync(s =>
+					s.ShipmentAssignmentId == assignmentId &&
+					s.Status != ShipmentStatus.Completed);
+		}
 
 		public async Task<List<Shipment>> GetByStoreOrderIdAsync(Guid storeOrderId)
 		{
