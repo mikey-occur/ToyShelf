@@ -819,15 +819,15 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("CustomerEmail")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CustomerPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<long>("OrderCode")
                         .HasColumnType("bigint");
@@ -854,8 +854,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerPhone")
-                        .HasDatabaseName("IX_Orders_UserPhone");
+                    b.HasIndex("CustomerEmail")
+                        .HasDatabaseName("IX_Orders_UserEmail");
 
                     b.HasIndex("OrderCode")
                         .IsUnique();

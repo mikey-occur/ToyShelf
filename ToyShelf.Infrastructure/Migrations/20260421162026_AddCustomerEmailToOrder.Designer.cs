@@ -12,8 +12,8 @@ using ToyShelf.Infrastructure.Context;
 namespace ToyShelf.Infrastructure.Migrations
 {
     [DbContext(typeof(ToyShelfDbContext))]
-    [Migration("20260417184714_AddPartnerApprovalFlowToShelfOrder")]
-    partial class AddPartnerApprovalFlowToShelfOrder
+    [Migration("20260421162026_AddCustomerEmailToOrder")]
+    partial class AddCustomerEmailToOrder
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -478,6 +478,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("boolean")
                         .HasDefaultValue(false);
 
+                    b.Property<DateTime?>("PartnerAdminApprovedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("PartnerAdminApprovedByUserId")
+                        .HasColumnType("uuid");
+
                     b.Property<Guid>("ReportedByUserId")
                         .HasColumnType("uuid");
 
@@ -508,6 +514,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("InventoryLocationId");
+
+                    b.HasIndex("PartnerAdminApprovedByUserId");
 
                     b.HasIndex("ReportedByUserId");
 
@@ -777,6 +785,16 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<bool>("IsRead")
                         .HasColumnType("boolean");
 
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("RefId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RefType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -804,15 +822,15 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<string>("CustomerEmail")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<string>("CustomerName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
-
-                    b.Property<string>("CustomerEamail")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)");
 
                     b.Property<long>("OrderCode")
                         .HasColumnType("bigint");
@@ -839,8 +857,8 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerEamail")
-                        .HasDatabaseName("IX_Orders_UserPhone");
+                    b.HasIndex("CustomerEmail")
+                        .HasDatabaseName("IX_Orders_UserEmail");
 
                     b.HasIndex("OrderCode")
                         .IsUnique();
@@ -1623,6 +1641,9 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Property<Guid?>("AssignedByUserId")
                         .HasColumnType("uuid");
 
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("timestamp with time zone")
@@ -1630,6 +1651,9 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.Property<Guid>("CreatedByUserId")
                         .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("InProgressAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("RespondedAt")
                         .HasColumnType("timestamp with time zone");
@@ -2434,6 +2458,12 @@ namespace ToyShelf.Infrastructure.Migrations
                         .IsRequired()
                         .HasConstraintName("FK_DamageReport_InventoryLocation");
 
+                    b.HasOne("ToyShelf.Domain.Entities.User", "PartnerAdminApprovedByUser")
+                        .WithMany("PartnerAdminDamageReports")
+                        .HasForeignKey("PartnerAdminApprovedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_DamageReport_PartnerAdminApprovedByUser");
+
                     b.HasOne("ToyShelf.Domain.Entities.User", "ReportedByUser")
                         .WithMany("ReportedDamageReports")
                         .HasForeignKey("ReportedByUserId")
@@ -2448,6 +2478,8 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasConstraintName("FK_DamageReport_ReviewedByUser");
 
                     b.Navigation("InventoryLocation");
+
+                    b.Navigation("PartnerAdminApprovedByUser");
 
                     b.Navigation("ReportedByUser");
 
@@ -3461,6 +3493,8 @@ namespace ToyShelf.Infrastructure.Migrations
                     b.Navigation("Notifications");
 
                     b.Navigation("Orders");
+
+                    b.Navigation("PartnerAdminDamageReports");
 
                     b.Navigation("PartnerAdminShelfOrders");
 

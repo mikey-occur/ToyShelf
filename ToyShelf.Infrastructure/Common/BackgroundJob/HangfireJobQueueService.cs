@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Notifications;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Infrastructure.Common.BackgroundJob
 {
@@ -17,10 +18,10 @@ namespace ToyShelf.Infrastructure.Common.BackgroundJob
 			_backgroundJobClient = backgroundJobClient;
 		}
 
-		public void EnqueuePaymentSms(string phoneNumber, long orderCode)
+		public void EnqueuePaymentEmail(string toEmail, long orderCode)
 		{
-			_backgroundJobClient.Enqueue<ISmsService>(sms =>
-				sms.SendPaymentSuccessSmsAsync(phoneNumber, orderCode));
+			_backgroundJobClient.Enqueue<IEmailService>(emailService =>
+		        emailService.SendPaymentSuccessEmailAsync(toEmail, orderCode));
 		}
 	}
 }

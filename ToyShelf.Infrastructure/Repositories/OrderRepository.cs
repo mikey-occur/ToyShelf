@@ -17,7 +17,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone)
+		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? email)
 		{
 			
 			var query = _context.Orders
@@ -37,10 +37,10 @@ namespace ToyShelf.Infrastructure.Repositories
 				query = query.Where(o => o.Store != null && o.Store.PartnerId == partnerId.Value);
 			}
 
-			if (!string.IsNullOrWhiteSpace(phone))
+			if (!string.IsNullOrWhiteSpace(email))
 			{
-				var cleanPhone = phone.Trim();
-				query = query.Where(o => o.CustomerPhone.Contains(cleanPhone));
+				var cleanEmail = email.Trim();
+				query = query.Where(o => o.CustomerEmail.Contains(cleanEmail));
 			}
 
 			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
@@ -52,7 +52,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.OrderItems)
 				.ThenInclude(oi => oi.ProductColor) 
 				.Include(o => o.Store)
-				.Where(o => o.CustomerPhone.Contains(phone)) 
+				.Where(o => o.CustomerEmail.Contains(phone)) 
 				.OrderByDescending(o => o.CreatedAt) 
 				.ToListAsync();
 		}

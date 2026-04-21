@@ -2221,12 +2221,12 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(100);
 
-				entity.Property(e => e.CustomerPhone)
+				entity.Property(e => e.CustomerEmail)
 					  .IsRequired()
 					  .HasMaxLength(20);
 
-				entity.HasIndex(e => e.CustomerPhone)
-		              .HasDatabaseName("IX_Orders_UserPhone");
+				entity.HasIndex(e => e.CustomerEmail)
+		              .HasDatabaseName("IX_Orders_UserEmail");
 
 
 				entity.Property(e => e.TotalAmount)
