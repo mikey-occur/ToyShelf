@@ -10,7 +10,7 @@ namespace ToyShelf.Application.Models.Order
 	{
 		public Guid Id { get; set; }
 		public string CustomerName { get; set; } = string.Empty;
-		public string CustomerPhone { get; set; } = string.Empty;
+		public string CustomerEmail { get; set; } = string.Empty;
 		public long OrderCode { get; set; }
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = string.Empty;

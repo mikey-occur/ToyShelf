@@ -40,7 +40,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			if (!string.IsNullOrWhiteSpace(phone))
 			{
 				var cleanPhone = phone.Trim();
-				query = query.Where(o => o.CustomerPhone.Contains(cleanPhone));
+				query = query.Where(o => o.CustomerEmail.Contains(cleanPhone));
 			}
 
 			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
@@ -52,7 +52,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.OrderItems)
 				.ThenInclude(oi => oi.ProductColor) 
 				.Include(o => o.Store)
-				.Where(o => o.CustomerPhone.Contains(phone)) 
+				.Where(o => o.CustomerEmail.Contains(phone)) 
 				.OrderByDescending(o => o.CreatedAt) 
 				.ToListAsync();
 		}

@@ -758,7 +758,7 @@ namespace ToyShelf.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
-                    b.Property<string>("CustomerPhone")
+                    b.Property<string>("CustomerEamail")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
@@ -788,7 +788,7 @@ namespace ToyShelf.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CustomerPhone")
+                    b.HasIndex("CustomerEamail")
                         .HasDatabaseName("IX_Orders_UserPhone");
 
                     b.HasIndex("OrderCode")
