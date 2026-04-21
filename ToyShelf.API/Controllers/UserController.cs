@@ -25,10 +25,12 @@ namespace ToyShelf.API.Controllers
 		// ===== GET =====
 		[HttpGet]
 		public async Task<BaseResponse<List<UserProfileResponse>>> GetUsers(
-			[FromQuery] bool? isActive
+			[FromQuery] bool? isActive,
+			[FromQuery] string? role,
+			[FromQuery] string? roleBusiness
 		)
 		{
-			var rs = await _userService.GetUsersAsync(isActive);
+			var rs = await _userService.GetUsersAsync(isActive, role, roleBusiness);
 			return BaseResponse<List<UserProfileResponse>>.Ok(rs, "Get users successfully");
 		}
 
