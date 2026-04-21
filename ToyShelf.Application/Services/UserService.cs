@@ -25,10 +25,23 @@ namespace ToyShelf.Application.Services
 
 		// ================= GET =================
 
-		public async Task<List<UserProfileResponse>> GetUsersAsync(bool? isActive)
+		public async Task<List<UserProfileResponse>> GetUsersAsync(
+			bool? isActive,
+			string? role,
+			string? roleBusiness)
 		{
-			var users = await _userRepository.GetUsersAsync(isActive);
-			return users.Select(MapToProfile).ToList();
+			var users = await _userRepository.GetUsersAsync(isActive, role);
+
+			var mapped = users.Select(MapToProfile);
+
+			if (!string.IsNullOrEmpty(roleBusiness))
+			{
+				mapped = mapped.Where(u =>
+					u.BusinessRole == roleBusiness
+				);
+			}
+
+			return mapped.ToList();
 		}
 
 		public async Task<List<UserResponse>> GetUsersByStoreOrPartnerAsync(
@@ -309,7 +322,15 @@ namespace ToyShelf.Application.Services
 
 		private static string DetermineBusinessRole(User user)
 		{
-		
+			var isAdmin = user.Accounts?
+				.SelectMany(a => a.AccountRoles)
+				.Any(ar => ar.Role.Name == "Admin") ?? false;
+
+			if (isAdmin)
+			{
+				return "admin";
+			}
+
 			var warehouseAssignment = user.UserWarehouses?.FirstOrDefault();
 			if (warehouseAssignment != null)
 			{
@@ -328,6 +349,7 @@ namespace ToyShelf.Application.Services
 			{
 				return "partner_admin";
 			}
+
 
 			return "customer";
 		}

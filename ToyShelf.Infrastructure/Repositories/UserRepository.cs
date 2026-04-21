@@ -13,19 +13,31 @@ namespace ToyShelf.Infrastructure.Repositories
 	public class UserRepository : GenericRepository<User>, IUserRepository
 	{
 		public UserRepository(ToyShelfDbContext context) : base(context){}
-		public async Task<List<User>> GetUsersAsync(bool? isActive)
+		public async Task<List<User>> GetUsersAsync(
+			bool? isActive,
+			string? role)
 		{
 			var query = _context.Users
 				.Include(u => u.Accounts)
 					.ThenInclude(a => a.AccountRoles)
 						.ThenInclude(ar => ar.Role)
 				.Include(u => u.UserStores)
-		        .Include(u => u.UserWarehouses)
+				.Include(u => u.UserWarehouses)
 				.AsQueryable();
 
 			if (isActive.HasValue)
 			{
 				query = query.Where(u => u.IsActive == isActive.Value);
+			}
+
+			if (!string.IsNullOrEmpty(role))
+			{
+				query = query.Where(u =>
+					u.Accounts.Any(a =>
+						a.AccountRoles.Any(ar =>
+							ar.Role.Name == role)
+					)
+				);
 			}
 
 			return await query.ToListAsync();

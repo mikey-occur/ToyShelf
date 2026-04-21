@@ -12,7 +12,10 @@ namespace ToyShelf.Application.IServices
 {
 	public interface IUserService
 	{
-		Task<List<UserProfileResponse>> GetUsersAsync(bool? isActive);
+		Task<List<UserProfileResponse>> GetUsersAsync(
+			bool? isActive,
+			string? role,
+			string? roleBusiness);
 		Task<List<UserResponse>> GetUsersByStoreOrPartnerAsync(
 			GetUserByStoreOrPartnerRequest request,
 			ICurrentUser currentUser);
