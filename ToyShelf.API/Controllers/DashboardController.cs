@@ -251,9 +251,9 @@ namespace ToyShelf.API.Controllers
 
 		// ================= WAREHOUSE DASHBOARD =================
 		[HttpGet("warehouse/{warehouseId}")]
-		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId)
+		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
 		{
-			var result = await _dashboardService.GetWarehouseDashboard(warehouseId);
+			var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
 
 			return BaseResponse<WarehouseDashboardResponse>
 				.Ok(result, "Warehouse dashboard retrieved successfully");

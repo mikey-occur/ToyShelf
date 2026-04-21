@@ -46,9 +46,43 @@ namespace ToyShelf.Application.Services
 		}
 
 
-		public async Task<WarehouseDashboardResponse> GetWarehouseDashboard(Guid warehouseId)
+		public async Task<WarehouseDashboardResponse> GetWarehouseDashboard(Guid warehouseId, StoreChartRequest request)
 		{
-			// ===== STAT CARD (Giữ nguyên vì không liên quan đến Shipment) =====
+			var now = DateTime.UtcNow.Date;
+			DateTime startDate;
+			DateTime endDate;
+			var viewType = (request?.ViewType ?? "month").ToLower();
+
+			if (viewType == "year" && request?.Month != null) viewType = "month";
+
+			switch (viewType)
+			{
+				case "week":
+					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+					startDate = now.AddDays(-1 * diff).Date;
+					startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+					endDate = startDate.AddDays(7).AddTicks(-1);
+					endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
+					break;
+
+				case "month":
+					int m = request?.Month ?? now.Month;
+					int y = request?.Year ?? now.Year;
+					startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
+					endDate = startDate.AddMonths(1).AddTicks(-1);
+					break;
+
+				case "year":
+				default:
+					int year = request?.Year ?? now.Year;
+					startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+					endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+					break;
+			}
+
+			// ====================================================================
+			// 2. STAT CARD TĨNH (KHÔNG bị ảnh hưởng bởi Filter ngày)
+			// ====================================================================
 			var totalShelves = await _shelfRepository.GetQueryable()
 				.CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
 
@@ -59,19 +93,23 @@ namespace ToyShelf.Application.Services
 			var totalEmployees = await _userWarehouseRepository.GetQueryable()
 				.CountAsync(x => x.WarehouseId == warehouseId);
 
-			// ===== SHIPMENT BASE (Dựa trên Warehouse xuất phát) =====
-			var shipmentQuery = _shipmentRepository.GetQueryable()
-				.Where(x => x.FromLocation.WarehouseId == warehouseId);
+			// ====================================================================
+			// 3. STAT CARD ĐỘNG (BỊ ảnh hưởng bởi startDate và endDate)
+			// ====================================================================
 
-			// ===== ORDER =====
-			// 4. Total Orders: Phải đi qua AssignmentStoreOrder vì không còn Link trực tiếp
+			// Ép Filter thời gian ngay từ gốc Shipment Query
+			var shipmentQuery = _shipmentRepository.GetQueryable()
+				.Where(x => x.FromLocation.WarehouseId == warehouseId
+						 && x.CreatedAt >= startDate
+						 && x.CreatedAt <= endDate);
+
+			// Lấy Total Orders thông qua Shipment đã được lọc
 			var totalOrders = await shipmentQuery
 				.SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
 				.Select(aso => aso.StoreOrderId)
 				.Distinct()
 				.CountAsync();
 
-			// ===== SHIPMENT STATS (Giữ nguyên logic status) =====
 			var totalInProgress = await shipmentQuery.CountAsync(x =>
 					x.Status == ShipmentStatus.Draft ||
 					x.Status == ShipmentStatus.Shipping ||
@@ -82,19 +120,19 @@ namespace ToyShelf.Application.Services
 				x.Status == ShipmentStatus.Completed
 			);
 
-			// 7. Shipment Chart
+			// Chart Shipment (Dựa trên query đã lọc)
 			var shipmentChart = await shipmentQuery
 				.GroupBy(x => x.Status)
 				.Select(g => new ChartItem
 				{
-					Label = g.Key.ToString(), // Đổi Status thành Label cho đúng chuẩn Chart
+					Label = g.Key.ToString(),
 					Value = g.Count()
 				})
 				.ToListAsync();
 
-			// ===== STORE ORDER CHART (SỬA LẠI CHỖ NÀY) =====
-			// Lấy tất cả các đơn hàng có liên quan đến kho này thông qua Assignment
+			// Chart Order: Kẹp thêm điều kiện CreatedAt
 			var orderChart = await _storeOrderRepository.GetQueryable()
+				.Where(o => o.CreatedAt >= startDate && o.CreatedAt <= endDate)
 				.Where(o => o.AssignmentStoreOrders
 					.Any(aso => aso.ShipmentAssignment.WarehouseLocationId == warehouseId))
 				.GroupBy(o => o.Status)
