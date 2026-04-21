@@ -248,12 +248,16 @@ namespace ToyShelf.Application.Services
 			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
-			//var phoneToSend = order.CustomerEmail;
-			//if (!string.IsNullOrWhiteSpace(phoneToSend))
-			//{
-			//	_jobQueueService.EnqueuePaymentSms(phoneToSend, orderCode);
-			//}
+			var targetEmail = order.CustomerEmail;
+
+			if (!string.IsNullOrWhiteSpace(targetEmail))
+			{
+				
+				_jobQueueService.EnqueuePaymentEmail(targetEmail, orderCode);
+			}
+
 			return order.Id;
+
 		}
 	}
 }

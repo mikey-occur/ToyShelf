@@ -15,5 +15,7 @@ namespace ToyShelf.Application.Notifications
 			OtpPurpose purpose,
 			DateTime expiredAt,
 			string? fullName = null);
+
+		Task SendPaymentSuccessEmailAsync(string toEmail, long order);
 	}
 }
