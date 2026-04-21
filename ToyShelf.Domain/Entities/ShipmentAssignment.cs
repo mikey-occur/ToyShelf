@@ -38,6 +38,9 @@ namespace ToyShelf.Domain.Entities
 		public DateTime CreatedAt { get; set; }
 		public DateTime? RespondedAt { get; set; }
 
+		public DateTime? InProgressAt { get; set; }
+		public DateTime? CompletedAt { get; set; }
+
 		public Guid CreatedByUserId { get; set; }
 		public Guid? AssignedByUserId { get; set; }
 

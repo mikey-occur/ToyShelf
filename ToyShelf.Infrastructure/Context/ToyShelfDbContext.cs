@@ -2045,6 +2045,10 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.RespondedAt);
 
+				entity.Property(e => e.InProgressAt);
+
+				entity.Property(e => e.CompletedAt);
+
 				entity.HasOne(e => e.Shipper)
 				  .WithMany(s => s.Shippers)
 				  .HasForeignKey(e => e.ShipperId)
