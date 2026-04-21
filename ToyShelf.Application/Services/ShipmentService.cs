@@ -454,6 +454,22 @@ namespace ToyShelf.Application.Services
 
 				_shipmentRepository.Update(shipment);
 
+				// 5. Update Status Of Assignment
+				var assignment = await _assignmentRepository
+							.GetByIdAsync(shipment.ShipmentAssignmentId);
+
+				if (assignment != null && assignment.Status != AssignmentStatus.InProgress)
+				{
+					assignment.Status = AssignmentStatus.InProgress;
+
+					if (!assignment.InProgressAt.HasValue)
+					{
+						assignment.InProgressAt = _dateTime.UtcNow;
+					}
+
+					_assignmentRepository.Update(assignment);
+				}
+
 				// Lưu toàn bộ thay đổi (Inventory, InventoryShelf, Shelf, Transactions)
 				await _unitOfWork.SaveChangesAsync();
 			}
