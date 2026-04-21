@@ -40,7 +40,8 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 		public DateTime? ReviewedAt { get; set; }
 
 		// Danh sách chi tiết các món hỏng (1-N)
-		public List<DamageItemResponse> Items { get; set; } = new List<DamageItemResponse>();
+		//public List<DamageItemResponse> Items { get; set; } = new List<DamageItemResponse>();
+		public List<DamageItemResponse> Items { get; set; } = new();
 	}
 
 	public class DamageItemResponse
@@ -49,18 +50,24 @@ namespace ToyShelf.Application.Models.DamageReport.Response
 		public DamageItemType Type { get; set; }
 		public int? Quantity { get; set; }
 
-		// Thông tin Sản phẩm
+		public ProductInfo? Product { get; set; }
+		public ShelfInfo? Shelf { get; set; }
+
+		public List<string> MediaUrls { get; set; } = new();
+	}
+
+	public class ProductInfo
+	{
 		public Guid? ProductColorId { get; set; }
 		public string? ProductName { get; set; }
 		public string? SKU { get; set; }
 		public string? ColorName { get; set; }
 		public string? ImageUrl { get; set; }
+	}
 
-		// Thông tin Kệ
+	public class ShelfInfo
+	{
 		public Guid? ShelfId { get; set; }
 		public string? ShelfCode { get; set; }
-
-		// Media bằng chứng gắn theo từng món
-		public List<string> MediaUrls { get; set; } = new List<string>();
 	}
 }

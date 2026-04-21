@@ -528,18 +528,25 @@ namespace ToyShelf.Application.Services
 					Type = i.DamageItemType,
 					Quantity = i.Quantity,
 
-					// Product info
+					Product = i.DamageItemType == DamageItemType.Product
+				? new ProductInfo
+				{
 					ProductColorId = i.ProductColorId,
 					ProductName = i.ProductColor?.Product?.Name,
 					SKU = i.ProductColor?.Product?.SKU,
 					ColorName = i.ProductColor?.Color?.Name,
-					ImageUrl = i.ProductColor?.ImageUrl,
+					ImageUrl = i.ProductColor?.ImageUrl
+				}
+				: null,
 
-					// Shelf info
+					Shelf = i.DamageItemType == DamageItemType.Shelf
+				? new ShelfInfo
+				{
 					ShelfId = i.ShelfId,
-					ShelfCode = i.Shelf?.Code,
+					ShelfCode = i.Shelf?.Code
+				}
+				: null,
 
-					// Media theo món
 					MediaUrls = i.DamageMedia.Select(m => m.MediaUrl).ToList()
 				}).ToList()
 			};
