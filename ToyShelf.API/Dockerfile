@@ -1,4 +1,4 @@
-# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
+﻿# See https://aka.ms/customizecontainer to learn how to customize your debug container and how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
@@ -6,7 +6,7 @@ USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
-
+	
 
 # This stage is used to build the service project
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
@@ -29,5 +29,15 @@ RUN dotnet publish "./ToyShelf.API.csproj" -c $BUILD_CONFIGURATION -o /app/publi
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
+
 COPY --from=publish /app/publish .
+
+# sang root cấp quyền cho thư mục wwwroot để ứng dụng có thể ghi vào đó nếu cần thiết (ví dụ: upload file, tạo log, v.v.)	
+USER root
+RUN mkdir -p /app/wwwroot \
+    && chown -R $APP_UID:$APP_UID /app/wwwroot
+
+# quay lại user app
+USER $APP_UID
+
 ENTRYPOINT ["dotnet", "ToyShelf.API.dll"]
