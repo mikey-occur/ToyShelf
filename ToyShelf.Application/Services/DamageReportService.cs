@@ -543,7 +543,9 @@ namespace ToyShelf.Application.Services
 				? new ShelfInfo
 				{
 					ShelfId = i.ShelfId,
-					ShelfCode = i.Shelf?.Code
+					ShelfCode = i.Shelf?.Code,
+					ShelfName = i.Shelf?.ShelfType?.Name,
+					ImageUrl = i.Shelf?.ShelfType?.ImageUrl
 				}
 				: null,
 

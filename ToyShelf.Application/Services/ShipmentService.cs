@@ -674,6 +674,16 @@ namespace ToyShelf.Application.Services
 				// TRƯỜNG HỢP 1: KHÔNG CÓ HÀNG HỎNG
 				// Xe về không -> Đóng đơn luôn, Shipper xong nhiệm vụ
 				shipment.Status = ShipmentStatus.Completed;
+
+				var assignment = shipment.ShipmentAssignment;
+
+				if (assignment != null &&
+					assignment.Shipments.All(s => s.Id == shipment.Id || s.Status == ShipmentStatus.Completed))
+				{
+					assignment.Status = AssignmentStatus.Completed;
+					assignment.CompletedAt = _dateTime.UtcNow;
+				}
+
 			}
 			else
 			{
@@ -956,6 +966,17 @@ namespace ToyShelf.Application.Services
 				shipment.WarehouseReceivedAt = _dateTime.UtcNow;
 
 				_shipmentRepository.Update(shipment);
+
+				var assignment = shipment.ShipmentAssignment;
+
+				if (assignment != null &&
+					assignment.Status != AssignmentStatus.Completed &&
+					assignment.Shipments.All(s => s.Id == shipment.Id || s.Status == ShipmentStatus.Completed))
+				{
+					assignment.Status = AssignmentStatus.Completed;
+					assignment.CompletedAt = _dateTime.UtcNow;
+				}
+
 				await _unitOfWork.SaveChangesAsync();
 			}
 			catch (Exception ex)
@@ -963,6 +984,25 @@ namespace ToyShelf.Application.Services
 				throw new AppException($"Warehouse return receiving failed: {ex.Message}", 500);
 			}
 		}
+
+		// Hàm kiểm tra Shipment -> Completed, để update ShipmentAssignment tương ứng nếu có
+		//private async Task TryCompleteAssignmentAsync(Guid assignmentId)
+		//{
+		//	var assignment = await _assignmentRepository.GetByIdWithDetailsAsync(assignmentId);
+		//	if (assignment == null) return;
+
+		//	// Check tất cả shipment đã Completed chưa
+		//	var allCompleted = assignment.Shipments
+		//		.All(s => s.Status == ShipmentStatus.Completed);
+
+		//	if (!allCompleted) return;
+
+		//	assignment.Status = AssignmentStatus.Completed;
+		//	assignment.CompletedAt = _dateTime.UtcNow;
+
+		//	_assignmentRepository.Update(assignment);
+		//}
+
 		public async Task<IEnumerable<ShelfSimpleResponse>> GetShelvesByShipmentAsync(Guid shipmentId)
 		{
 			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
