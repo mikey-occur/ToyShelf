@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ToyShelf.Application.Common;
+﻿using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
-using ToyShelf.Application.Models.Dashboard.Response;
 using ToyShelf.Application.Models.Order;
 using ToyShelf.Application.Notifications;
-using ToyShelf.Application.Payment;
 using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
@@ -51,7 +44,7 @@ namespace ToyShelf.Application.Services
 				StoreId = request.StoreId,
 				StaffId = request.StaffId,
 				CustomerName = request.CustomerName,
-				CustomerPhone = request.CustomerPhone,
+				CustomerEmail = request.CustomerEmail,
 				OrderCode = orderCode,
 				TotalAmount = 0,
 				PaymentMethod = "QR",
@@ -132,7 +125,7 @@ namespace ToyShelf.Application.Services
 				Id = order.Id,
 				StoreId = order.StoreId,
 				CustomerName = order.CustomerName,
-				CustomerPhone = order.CustomerPhone,
+				CustomerEmail = order.CustomerEmail,
 				StaffId = order.StaffId,
 				StaffName = order.Staff?.FullName ?? "N/A",
 				StaffEmail = order.Staff?.Email ?? "N/A",
@@ -156,10 +149,10 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone)
+		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? Email)
 		{
 			
-			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, phone);
+			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, Email);
 
 			
 			var responseList = orders.Select(o => new OrderResponse
@@ -167,7 +160,7 @@ namespace ToyShelf.Application.Services
 				Id = o.Id,
 				OrderCode = o.OrderCode,
 				CustomerName = o.CustomerName,
-				CustomerPhone = o.CustomerPhone,
+				CustomerEmail = o.CustomerEmail,
 				TotalAmount = o.TotalAmount,
 				PaymentMethod = o.PaymentMethod,
 				Status = o.Status,
@@ -178,14 +171,14 @@ namespace ToyShelf.Application.Services
 			return responseList;
 		}
 
-		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string phone)
+		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string Email)
 		{
-			var cleanPhone = phone?.Trim();
+			var cleanEmail = Email?.Trim();
 
-			if (string.IsNullOrEmpty(cleanPhone))
+			if (string.IsNullOrEmpty(cleanEmail))
 				return new List<OrderResponse>();
 
-			var orders = await _orderRepository.GetOrdersByCustomerPhoneAsync(cleanPhone);
+			var orders = await _orderRepository.GetOrdersByCustomerPhoneAsync(cleanEmail);
 
 			
 			var response = orders.Select(o => new OrderResponse
@@ -193,7 +186,7 @@ namespace ToyShelf.Application.Services
 				Id = o.Id,
 				OrderCode = o.OrderCode, 
 				CustomerName = o.CustomerName,
-				CustomerPhone = o.CustomerPhone,
+				CustomerEmail = o.CustomerEmail,
 				Status = o.Status,
 				TotalAmount = o.TotalAmount,
 				CreatedAt = o.CreatedAt,
@@ -255,12 +248,16 @@ namespace ToyShelf.Application.Services
 			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
-			var phoneToSend = order.CustomerPhone;
-			if (!string.IsNullOrWhiteSpace(phoneToSend))
+			var targetEmail = order.CustomerEmail;
+
+			if (!string.IsNullOrWhiteSpace(targetEmail))
 			{
-				_jobQueueService.EnqueuePaymentSms(phoneToSend, orderCode);
+				
+				_jobQueueService.EnqueuePaymentEmail(targetEmail, orderCode);
 			}
+
 			return order.Id;
+
 		}
 	}
 }

@@ -8,6 +8,6 @@ namespace ToyShelf.Application.Notifications
 {
 	public interface IJobQueueService
 	{
-		void EnqueuePaymentSms(string phoneNumber, long orderCode);
+		void EnqueuePaymentEmail(string Email, long orderCode);
 	}
 }
