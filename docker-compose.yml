@@ -12,11 +12,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT}
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Host=postgrestoyshelf;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
-    volumes:
-      - ./ToyShelf.API/wwwroot:/app/wwwroot
+    # volumes:
+    #   - ./ToyShelf.API/wwwroot:/app/wwwroot
     networks:
       - toyshelfnetwork
-    restart: on-failure
+    restart: on-failure 
 
   postgres:
     image: postgres:15
