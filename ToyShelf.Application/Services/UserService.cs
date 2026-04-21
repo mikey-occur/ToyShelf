@@ -206,7 +206,6 @@ namespace ToyShelf.Application.Services
 			if (user == null)
 				throw new Exception("User not found");
 
-			// Không có warehouse
 			if (!user.UserWarehouses.Any())
 			{
 				return new List<WarehouseDetailByUserResponse>
@@ -216,25 +215,37 @@ namespace ToyShelf.Application.Services
 				UserId = user.Id,
 				Email = user.Email,
 				FullName = user.FullName,
+				UserIsActive = user.IsActive,
+				UserCreatedAt = user.CreatedAt,
+
 				WarehouseId = null,
-				WarehouseLocationIds = new List<Guid>(),
 				WarehouseName = null,
-				WarehouseRole = null
+				WarehouseIsActive = null,
+				WarehouseCreatedAt = null,
+				WarehouseRole = null,
+				WarehouseLocationIds = new List<Guid>()
 			}
 		};
 			}
 
+			// Có warehouse → map giống hệt hàm trên
 			return user.UserWarehouses.Select(uw => new WarehouseDetailByUserResponse
 			{
 				UserId = user.Id,
 				Email = user.Email,
 				FullName = user.FullName,
+				UserIsActive = user.IsActive,
+				UserCreatedAt = user.CreatedAt,
+
 				WarehouseId = uw.WarehouseId,
-				WarehouseLocationIds = uw.Warehouse.InventoryLocations
+				WarehouseName = uw.Warehouse?.Name,
+				WarehouseIsActive = uw.Warehouse?.IsActive,
+				WarehouseCreatedAt = uw.Warehouse?.CreatedAt,
+				WarehouseRole = uw.Role,
+
+				WarehouseLocationIds = uw.Warehouse?.InventoryLocations?
 					.Select(x => x.Id)
-					.ToList(),
-				WarehouseName = uw.Warehouse.Name,
-				WarehouseRole = uw.Role
+					.ToList() ?? new List<Guid>()
 
 			}).ToList();
 		}
