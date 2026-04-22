@@ -446,6 +446,7 @@ namespace ToyShelf.Application.Services
 
 				StoreLocationId = order.StoreLocationId,
 				StoreName = order.StoreLocation?.Store?.Name ?? "",
+				StoreAddress = order.StoreLocation?.Store?.StoreAddress ?? "",
 
 				RequestedByUserId = order.RequestedByUserId,
 				RequestName = order.RequestedByUser?.FullName ?? "",

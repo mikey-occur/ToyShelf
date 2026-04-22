@@ -16,6 +16,7 @@ namespace ToyShelf.Application.Models.ShelfOrder.Response
 
 		public Guid StoreLocationId { get; set; }
 		public string StoreName { get; set; } = string.Empty;
+		public string StoreAddress { get; set; } = string.Empty;
 
 		public Guid RequestedByUserId { get; set; }
 		public string RequestName { get; set; } = string.Empty;
