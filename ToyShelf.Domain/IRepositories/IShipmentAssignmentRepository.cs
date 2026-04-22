@@ -9,7 +9,11 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IShipmentAssignmentRepository : IGenericRepository<ShipmentAssignment>
 	{
-		Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(Guid shipperId);
+		Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(
+				Guid shipperId,
+				AssignmentType? type,
+				AssignmentStatus? status);
+
 		Task<ShipmentAssignment?> GetByIdWithDetailsAsync(Guid id);
 		Task<IEnumerable<ShipmentAssignment>> GetByStoreOrderIdWithDetailsAsync(Guid storeOrderId);
 		Task<IEnumerable<ShipmentAssignment>> GetByShelfOrderIdWithDetailsAsync(Guid shelfOrderId);

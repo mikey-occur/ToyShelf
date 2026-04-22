@@ -18,7 +18,10 @@ namespace ToyShelf.Application.IServices
 		Task AssignShipperAsync(AssignShipperRequest request, ICurrentUser currentUser);
 		Task AcceptAsync(Guid id, ICurrentUser currentUser);
 		Task RejectAsync(Guid id, ICurrentUser currentUser);
-		Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(ICurrentUser currentUser);
+		Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(
+				ICurrentUser currentUser,
+				AssignmentType? type,
+				AssignmentStatus? status);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetByStoreOrderId(Guid storeOrderId);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetByShelfOrderId(Guid shelfOrderId);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetByDamageReportId(Guid damageReportId);

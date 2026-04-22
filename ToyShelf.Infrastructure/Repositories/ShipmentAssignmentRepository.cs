@@ -42,12 +42,31 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await query.ToListAsync();
 		}
 
-		public async Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(Guid shipperId)
+		public async Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(
+				Guid shipperId,
+				AssignmentType? type,
+				AssignmentStatus? status)
 		{
-			return await GetAssignmentWithFullDetailsQuery()
-				.Where(x => x.ShipperId == shipperId)
-				.ToListAsync();
+			var query = GetAssignmentWithFullDetailsQuery()
+				.Where(x => x.ShipperId == shipperId);
+
+			if (type.HasValue)
+			{
+				query = query.Where(x => x.Type == type.Value);
+			}
+
+			if (status.HasValue)
+			{
+				query = query.Where(x => x.Status == status.Value);
+			}
+
+			query = query
+				.OrderByDescending(x => x.CreatedAt)
+				.ThenByDescending(x => x.Id);
+
+			return await query.ToListAsync();
 		}
+
 		public async Task<IEnumerable<ShipmentAssignment>> GetByStoreOrderIdWithDetailsAsync(Guid storeOrderId)
 		{
 			return await GetAssignmentWithFullDetailsQuery()

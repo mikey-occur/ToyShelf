@@ -86,9 +86,11 @@ namespace ToyShelf.API.Controllers
 		[HttpGet("my")]
 		[Authorize(Roles = "Warehouse")]
 		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetMy(
-			[FromServices] ICurrentUser currentUser)
+				[FromServices] ICurrentUser currentUser,
+				[FromQuery] AssignmentType? type,
+				[FromQuery] AssignmentStatus? status)
 		{
-			var result = await _service.GetMyAssignments(currentUser);
+			var result = await _service.GetMyAssignments(currentUser, type, status);
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Assignments retrieved");

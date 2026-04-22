@@ -12,20 +12,27 @@ namespace ToyShelf.Infrastructure.Repositories
 {
 	public class WarehouseRepository : GenericRepository<Warehouse>, IWarehouseRepository
 	{
-		public WarehouseRepository(ToyShelfDbContext context) : base(context) { }	
-		public async Task<IEnumerable<Warehouse>> GetWarehousesAsync(bool? isActive)
+		public WarehouseRepository(ToyShelfDbContext context) : base(context) { }
+		public async Task<IEnumerable<Warehouse>> GetWarehousesAsync(
+			bool? isActive,
+			Guid? cityId)
 		{
 			var query = _context.Warehouses
 								.Include(w => w.City)
 								.AsQueryable();
 
 			if (isActive.HasValue)
-				query = query.Where(s => s.IsActive == isActive.Value);
+				query = query.Where(w => w.IsActive == isActive.Value);
+
+			if (cityId.HasValue)
+				query = query.Where(w => w.CityId == cityId.Value);
 
 			return await query
-					.OrderByDescending(w => w.CreatedAt)
-					.ToListAsync();
+				.OrderByDescending(w => w.CreatedAt)
+				.ThenByDescending(w => w.Id)
+				.ToListAsync();
 		}
+
 		public async Task<Warehouse?> GetByIdWithCityAsync(Guid id)
 		{
 			return await _context.Warehouses
