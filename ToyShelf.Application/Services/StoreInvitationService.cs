@@ -206,6 +206,7 @@ namespace ToyShelf.Application.Services
 				StoreId = x.StoreId,
 				UserId = x.UserId,
 				Email = x.User.Email,
+				StoreName = x.Store.Name,
 				StoreRole = x.StoreRole,
 				Status = x.Status,
 				CreatedAt = x.CreatedAt,
