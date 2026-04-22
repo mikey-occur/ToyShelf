@@ -13,6 +13,7 @@ namespace ToyShelf.Application.Models.StoreInvitation.Response
 		public Guid StoreId { get; set; }
 		public Guid UserId { get; set; }
 		public string Email { get; set; } = string.Empty;
+		public string StoreName { get; set; } = string.Empty;	
 		public StoreRole StoreRole { get; set; }
 		public InvitationStatus Status { get; set; }
 		public DateTime CreatedAt { get; set; }
