@@ -11,7 +11,7 @@ namespace ToyShelf.Infrastructure.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.RenameColumn(
-                name: "CustomerEmail",
+                name: "CustomerPhone",
                 table: "Orders",
                 newName: "CustomerEmail");
 
@@ -27,7 +27,7 @@ namespace ToyShelf.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "CustomerEmail",
                 table: "Orders",
-                newName: "CustomerEmail");
+                newName: "CustomerPhone");
 
             migrationBuilder.RenameIndex(
                 name: "IX_Orders_UserEmail",
