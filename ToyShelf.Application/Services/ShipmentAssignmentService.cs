@@ -379,12 +379,17 @@ namespace ToyShelf.Application.Services
 
 
 		// ================= GET MY ASSIGNMENTS =================
-		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(ICurrentUser currentUser)
+		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetMyAssignments(
+				ICurrentUser currentUser,
+				AssignmentType? type,
+				AssignmentStatus? status)
 		{
-			var assignments = await _assignmentRepository.GetByShipperIdWithOrderAsync(currentUser.UserId);
+			var assignments = await _assignmentRepository
+				.GetByShipperIdWithOrderAsync(currentUser.UserId, type, status);
 
 			return assignments.Select(MapToResponse);
 		}
+
 
 		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetByStoreOrderId(Guid storeOrderId)
 		{
