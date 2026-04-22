@@ -2223,7 +2223,7 @@ namespace ToyShelf.Infrastructure.Context
 
 				entity.Property(e => e.CustomerEmail)
 					  .IsRequired()
-					  .HasMaxLength(20);
+					  .HasMaxLength(100);
 
 				entity.HasIndex(e => e.CustomerEmail)
 		              .HasDatabaseName("IX_Orders_UserEmail");

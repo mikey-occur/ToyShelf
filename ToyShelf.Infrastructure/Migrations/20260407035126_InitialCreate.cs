@@ -1535,7 +1535,7 @@ namespace ToyShelf.Infrastructure.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Orders_UserPhone",
                 table: "Orders",
-                column: "CustomerEmail");
+                column: "CustomerPhone");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Partners_Code",
