@@ -9,7 +9,10 @@ namespace ToyShelf.Domain.IRepositories
 {
 	public interface IWarehouseRepository : IGenericRepository<Warehouse>
 	{
-		Task<IEnumerable<Warehouse>> GetWarehousesAsync(bool? isActive);
+		Task<IEnumerable<Warehouse>> GetWarehousesAsync(
+			bool? isActive,
+			Guid? cityId);
+
 		Task<Warehouse?> GetByIdWithCityAsync(Guid id);
 		Task<int> CountByCityAsync(Guid cityId);
 		Task<bool> ExistsByCodeInCityAsync(string code, Guid cityId);

@@ -13,7 +13,9 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<WarehouseResponse> CreateAsync(CreateWarehouseRequest request);
 
-		Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(bool? isActive);
+		Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(
+			bool? isActive,
+			Guid? cityId);
 		Task<WarehouseResponse> GetByIdAsync(Guid id);
 		Task<WarehouseDetailResponse> GetWarehouseDetailAsync(
 			Guid warehouseId,

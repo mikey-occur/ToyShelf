@@ -105,9 +105,12 @@ namespace ToyShelf.Application.Services
 
 
 		// ================= GET =================
-		public async Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(bool? isActive)
+		public async Task<IEnumerable<WarehouseResponse>> GetWarehousesAsync(
+			bool? isActive,
+			Guid? cityId)
 		{
-			var warehouses = await _warehouseRepository.GetWarehousesAsync(isActive);
+			var warehouses = await _warehouseRepository
+				.GetWarehousesAsync(isActive, cityId);
 
 			var result = new List<WarehouseResponse>();
 
@@ -121,6 +124,7 @@ namespace ToyShelf.Application.Services
 
 			return result;
 		}
+
 
 		public async Task<WarehouseResponse> GetByIdAsync(Guid id)
 		{
