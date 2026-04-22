@@ -66,12 +66,11 @@ namespace ToyShelf.API.Controllers
 		[HttpGet("partner/{partnerId:guid}/stat-card")]
 		public async Task<IActionResult> GetPartnerStatCard(
 			[FromRoute] Guid partnerId,
-			[FromQuery] DateTime? startDate,
-			[FromQuery] DateTime? endDate)
+			[FromQuery] DateTime? fromDate,
+			[FromQuery] DateTime? toDate)
 		{
 			// 1. Gọi Service để kéo cái data mỏng dính lên
-			var result = await _dashboardService.GetPartnerStatCardAsync(partnerId, startDate, endDate);
-
+			var result = await _dashboardService.GetPartnerStatCardAsync(partnerId, fromDate, toDate);
 			// 2. Trả về JSON chuẩn form sếp hay xài
 			return Ok(new
 			{
@@ -252,9 +251,9 @@ namespace ToyShelf.API.Controllers
 
 		// ================= WAREHOUSE DASHBOARD =================
 		[HttpGet("warehouse/{warehouseId}")]
-		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId)
+		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
 		{
-			var result = await _dashboardService.GetWarehouseDashboard(warehouseId);
+			var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
 
 			return BaseResponse<WarehouseDashboardResponse>
 				.Ok(result, "Warehouse dashboard retrieved successfully");
