@@ -19,11 +19,29 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await GetAssignmentWithFullDetailsQuery()
 				.FirstOrDefaultAsync(x => x.Id == id);
 		}
-		public async Task<IEnumerable<ShipmentAssignment>> GetAllWithDetailsAsync()
+		public async Task<IEnumerable<ShipmentAssignment>> GetAllWithDetailsAsync(
+				AssignmentType? type,
+				AssignmentStatus? status)
 		{
-			return await GetAssignmentWithFullDetailsQuery()
-				.ToListAsync();
+			var query = GetAssignmentWithFullDetailsQuery();
+
+			if (type.HasValue)
+			{
+				query = query.Where(x => x.Type == type.Value);
+			}
+
+			if (status.HasValue)
+			{
+				query = query.Where(x => x.Status == status.Value);
+			}
+
+			query = query
+				.OrderByDescending(x => x.CreatedAt)
+				.ThenByDescending(x => x.Id);
+
+			return await query.ToListAsync();
 		}
+
 		public async Task<IEnumerable<ShipmentAssignment>> GetByShipperIdWithOrderAsync(Guid shipperId)
 		{
 			return await GetAssignmentWithFullDetailsQuery()

@@ -9,6 +9,7 @@ using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
 using ToyShelf.Application.Services;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -121,13 +122,16 @@ namespace ToyShelf.API.Controllers
 		}
 
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetAll()
+		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetAll(
+			[FromQuery] AssignmentType? type,
+			[FromQuery] AssignmentStatus? status)
 		{
-			var result = await _service.GetAllAsync();
+			var result = await _service.GetAllAsync(type, status);
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Get all assignments successfully");
 		}
+
 
 		[HttpGet("{id}")]
 		public async Task<BaseResponse<ShipmentAssignmentResponse>> GetById(Guid id)

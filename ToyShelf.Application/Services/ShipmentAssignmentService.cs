@@ -410,12 +410,16 @@ namespace ToyShelf.Application.Services
 			return assignments.Select(MapToResponse);
 		}
 
-		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync()
+		public async Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync(
+			AssignmentType? type,
+			AssignmentStatus? status)
 		{
-			var assignments = await _assignmentRepository.GetAllWithDetailsAsync();
+			var assignments = await _assignmentRepository
+				.GetAllWithDetailsAsync(type, status);
 
-			return assignments.Select(MapToResponse);
+			return assignments.Select(MapToResponse);	
 		}
+
 
 		public async Task<ShipmentAssignmentResponse> GetByIdAsync(Guid id)
 		{
