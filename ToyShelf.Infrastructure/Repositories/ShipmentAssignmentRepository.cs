@@ -21,7 +21,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		}
 		public async Task<IEnumerable<ShipmentAssignment>> GetAllWithDetailsAsync(
 				AssignmentType? type,
-				AssignmentStatus? status)
+				AssignmentStatus? status, 
+				Guid? warehouseLocationId)
 		{
 			var query = GetAssignmentWithFullDetailsQuery();
 
@@ -33,6 +34,11 @@ namespace ToyShelf.Infrastructure.Repositories
 			if (status.HasValue)
 			{
 				query = query.Where(x => x.Status == status.Value);
+			}
+
+			if (warehouseLocationId.HasValue)
+			{
+				query = query.Where(x => x.WarehouseLocationId == warehouseLocationId.Value);
 			}
 
 			query = query

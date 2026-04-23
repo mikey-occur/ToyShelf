@@ -27,7 +27,8 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetByDamageReportId(Guid damageReportId);
 		Task<IEnumerable<ShipmentAssignmentResponse>> GetAllAsync(
 			AssignmentType? type,
-			AssignmentStatus? status);
+			AssignmentStatus? status,
+			Guid? warehouseLocationId);
 		Task<ShipmentAssignmentResponse> GetByIdAsync(Guid id);
 	}
 }

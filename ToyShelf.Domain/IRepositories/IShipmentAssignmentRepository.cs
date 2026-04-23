@@ -20,7 +20,8 @@ namespace ToyShelf.Domain.IRepositories
 		Task<IEnumerable<ShipmentAssignment>> GetByDamageReportIdWithDetailsAsync(Guid damageReportId);
 		Task<IEnumerable<ShipmentAssignment>> GetAllWithDetailsAsync(
 				AssignmentType? type,
-				AssignmentStatus? status);
+				AssignmentStatus? status,
+				Guid? warehouseLocationId);
 		Task<ShipmentAssignment?> GetPendingByLocationAsync(Guid warehouseLocationId, Guid storeLocationId);
 		Task<int> GetTotalAllocatedQuantityAsync(Guid storeOrderId, Guid storeOrderItemId);
 		Task<int> GetTotalShelfAllocatedQuantityAsync(Guid shelfOrderId, Guid shelfOrderItemId);
