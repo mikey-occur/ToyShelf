@@ -22,6 +22,8 @@ namespace ToyShelf.API.Controllers
         /// Upload asset bundle product color.
         /// </summary>
         [HttpPost("upload")]
+        [RequestSizeLimit(524288000)] // 200 MB in bytes
+        [RequestFormLimits(MultipartBodyLengthLimit = 524288000)]
         public async Task<ActionResult<ActionResponse>> UploadBundle([FromForm] FileUploadRequest request)
         {
             var isSuccess = await _fileUploadService.UploadBundleAsync(request.File);          
