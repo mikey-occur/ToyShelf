@@ -191,6 +191,7 @@ namespace ToyShelf.API.Configuration
 			services.AddScoped<IInventoryShelfService, InventoryShelfService>();
 			services.AddScoped<ISmsService, SmsService>();
 			services.AddScoped<IJobQueueService, HangfireJobQueueService>();
+			services.AddScoped<IFileUploadService,FileUploadService>();
 		}
     }
 }
