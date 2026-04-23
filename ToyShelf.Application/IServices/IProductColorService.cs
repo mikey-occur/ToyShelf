@@ -1,8 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ToyShelf.Application.Models.AssetBundle.Request;
 using ToyShelf.Application.Models.Product.Request;
 using ToyShelf.Application.Models.Product.Response;
 using ToyShelf.Application.Models.ProductColor.Request;
@@ -21,5 +23,6 @@ namespace ToyShelf.Application.IServices
 		Task<bool> RestoreProductColorAsync(Guid id);
 		Task<bool> DisableProductColorAsync(Guid id);
 		Task<bool> UpdateFileProductColorAsync(string sku , bool hasFile);
+     
     }
 }
