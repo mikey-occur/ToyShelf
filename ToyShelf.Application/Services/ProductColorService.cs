@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Http;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,8 +19,8 @@ namespace ToyShelf.Application.Services
 {
 	public class ProductColorService : IProductColorService
 	{
-
-		private readonly IProductColorRepository _productColorRepository;
+        private readonly string _targetFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot");
+        private readonly IProductColorRepository _productColorRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly IProductRepository _productRepository;
@@ -189,6 +190,6 @@ namespace ToyShelf.Application.Services
             };
 		}
 
-       
+     
     }
 }
