@@ -88,6 +88,15 @@ namespace ToyShelf.Infrastructure.Repositories
 						a.AccountRoles.Any(ar =>
 							ar.Role.Name == "PartnerAdmin")));
 		}
+		public async Task<List<User>> GetUsersByRoleAndPartnerAsync(string roleName, Guid partnerId)
+		{
+			return await _context.Users
+				.Where(u => u.PartnerId == partnerId)
+				.Where(u => u.Accounts.Any(a =>
+					a.AccountRoles.Any(ar =>
+						ar.Role.Name == roleName)))
+				.ToListAsync();
+		}
 		public async Task<User?> GetUserWithRolesAsync(Guid userId)
 		{
 			return await _context.Users
