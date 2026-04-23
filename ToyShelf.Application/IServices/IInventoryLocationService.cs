@@ -10,7 +10,7 @@ namespace ToyShelf.Application.IServices
 {
 	public interface IInventoryLocationService
 	{
-		Task<IEnumerable<InventoryLocationResponse>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId, string? locationType = null);
+		Task<IEnumerable<InventoryLocationResponse>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId, string? locationType = null, Guid? partnerId = null);
 		Task<InventoryLocationResponse> GetByIdAsync(Guid id);
 		Task DisableAsync(Guid id);
 		Task RestoreAsync(Guid id);

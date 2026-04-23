@@ -23,12 +23,11 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await _context.InventoryLocations
 				.FirstOrDefaultAsync(x => x.StoreId == storeId);
 		}
-		public async Task<List<InventoryLocation>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId, string? locationType = null)
+		public async Task<List<InventoryLocation>> GetInventoryLocationsAsync(bool? isActive, Guid? StoreId, Guid? WarehouseId, string? locationType = null, Guid? partnerId = null)
 		{
 			var query = _context.InventoryLocations
 				.Include(x => x.Inventories)
 					.ThenInclude(i => i.ProductColor)
-				.Include(x => x.Inventories)
 				.Include(x => x.Warehouse)
 				.Include(x => x.Store)
 				.AsQueryable();
@@ -40,7 +39,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			if (StoreId.HasValue)
 			{
-							query = query.Where(x => x.StoreId == StoreId);
+				query = query.Where(x => x.StoreId == StoreId);
 			}
 
 			if (WarehouseId.HasValue)
@@ -63,6 +62,13 @@ namespace ToyShelf.Infrastructure.Repositories
 				}
 			}
 
+			if (partnerId.HasValue)
+			{
+				query = query.Where(x =>
+					x.Store != null && x.Store.PartnerId == partnerId.Value);
+			}
+
+
 			return await query.ToListAsync();
 		}
 
@@ -75,7 +81,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.InventoryLocations
 				.Include(l => l.Warehouse)
-				.Where(l => l.WarehouseId != null && l.Warehouse.CityId == cityId)
+				.Where(l => l.WarehouseId != null && l.Warehouse!.CityId == cityId)
 				.ToListAsync();
 		}
 	}
