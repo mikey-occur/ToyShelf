@@ -12,6 +12,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<List<NotificationResponse>> GetUserNotificationsAsync(Guid userId);
 		Task CreateNotificationAsync(CreateNotificationRequest request);
+		Task CreateInternalNotificationAsync(InternalCreateNotificationRequest request);
 		Task MarkAsReadAsync(Guid notificationId, Guid userId);
 		Task CleanupOldNotificationsAsync(int daysToKeep = 30);
 	}

@@ -9,5 +9,6 @@ namespace ToyShelf.Application.IServices
 	public interface INotificationBroadcaster
 	{
 		Task SendNotificationToUserAsync(Guid userId, string title, string content);
+		Task SendNotificationToUserAsync(Guid userId, object payload);
 	}
 }

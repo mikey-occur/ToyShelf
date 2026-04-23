@@ -24,5 +24,15 @@ namespace ToyShelf.API.Configuration
 			string userRoom = $"noti:user:{userId}";
 			await _notificationHubContext.Clients.Group(userRoom).SendAsync("ReceiveNewNotification", title, content);
 		}
+
+		public async Task SendNotificationToUserAsync(Guid userId, object payload)
+		{
+			string userRoom = $"noti:user:{userId}";
+
+			await _notificationHubContext
+				.Clients
+				.Group(userRoom)
+				.SendAsync("ReceiveNewNotification", payload);
+		}
 	}
 }

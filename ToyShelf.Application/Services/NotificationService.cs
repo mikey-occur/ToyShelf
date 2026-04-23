@@ -50,6 +50,41 @@ namespace ToyShelf.Application.Services
 			await _notificationBroadcaster.SendNotificationToUserAsync(request.UserId, notification.Title, notification.Content);
 		}
 
+		public async Task CreateInternalNotificationAsync(InternalCreateNotificationRequest request)
+		{
+			var notification = new Notification
+			{
+				UserId = request.UserId,
+				Title = request.Title,
+				Content = request.Content,
+				RefType = request.RefType,
+				RefId = request.RefId,
+				IsRead = false,
+				CreatedAt = DateTime.UtcNow
+			};
+
+			// 1. Save DB
+			await _notificationRepository.AddAsync(notification);
+			await _unitOfWork.SaveChangesAsync();
+
+			// 2. Clear cache
+			string redisKey = $"noti:user:{request.UserId}";
+			await _redisCacheService.RemoveAsync(redisKey);
+
+			// 3. SignalR realtime
+			await _notificationBroadcaster.SendNotificationToUserAsync(
+				request.UserId,
+				new NotificationResponse
+				{
+					Id = notification.Id,
+					Title = notification.Title,
+					Content = notification.Content,
+					IsRead = notification.IsRead,
+					CreatedAt = notification.CreatedAt
+				}
+			);
+		}
+
 		public async Task<List<NotificationResponse>> GetUserNotificationsAsync(Guid userId)
 		{
 			string redisKey = $"noti:user:{userId}";
