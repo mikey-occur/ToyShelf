@@ -24,7 +24,8 @@ namespace ToyShelf.Application.Services
 		private readonly IExcelService _exportService;
 		private readonly INotificationService _notificationService;
 		private readonly INotificationBroadcaster _notificationBroadcaster;
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster)
+		private readonly IUserRepository _userRepository;
+		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster, IUserRepository userRepository)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
@@ -32,6 +33,7 @@ namespace ToyShelf.Application.Services
 			_exportService = exportService;
 			_notificationService = notificationService;
 			_notificationBroadcaster = notificationBroadcaster;
+			_userRepository = userRepository;
 		}
 
 		// Tổng kết hoá đơn tháng
@@ -128,23 +130,29 @@ namespace ToyShelf.Application.Services
 
 			// Lưu vào DB
 			var isSaved = await _unitOfWork.SaveChangesAsync() > 0;
+			var partner = await _userRepository.GetByIdAsync(settlement.PartnerId);
 
+			if (partner == null)
+			{
+				// Tùy logic hệ thống, sếp có thể văng lỗi hoặc return thoát hàm luôn
+				throw new AppException("Không tìm thấy thông tin Partner để gửi thông báo", 404);
+			}
 			// BẮN NOTIFICATION CHO PARTNER
 			if (isSaved)
 			{
-				// Giả sử trong MonthlySettlement của sếp có trường PartnerId (hoặc UserId)
+				
 				var request = new CreateNotificationRequest
 				{
-					UserId = settlement.PartnerId, // Gửi đúng cho ông Partner đó
+					UserId = partner.Id, 
 					Title = "Thanh toán đối soát thành công",
-					// Dặn Partner vào xác nhận, Frontend có thể dính kèm ID này để làm nút bấm
+					
 					Content = $"Kỳ đối soát tháng này đã được chuyển khoản. Vui lòng bấm Xác Nhận khi bạn đã nhận được."
 				};
 
 				await _notificationService.CreateNotificationAsync(request);
 
 				await _notificationBroadcaster.SendNotificationToUserAsync(
-					settlement.PartnerId,
+					partner.Id,
 					request.Title,
 					request.Content
 				);
