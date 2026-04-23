@@ -1081,7 +1081,12 @@ namespace ToyShelf.Application.Services
 					ShelfShipmentItemId = x.Id,
 					ShelfId = x.ShelfId,
 					ShelfCode = x.Shelf?.Code ?? "N/A",
-					ShelfTypeName = x.Shelf?.ShelfType?.Name ?? "N/A"
+					ShelfTypeName = x.Shelf?.ShelfType?.Name ?? "N/A",
+				    ImageUrl = x.Shelf?.ShelfType?.ImageUrl,
+					Width = x.Shelf?.ShelfType?.Width ?? 0,
+					Height = x.Shelf?.ShelfType?.Height ?? 0,
+					Depth = x.Shelf?.ShelfType?.Depth ?? 0,
+					TotalLevels = x.Shelf?.ShelfType?.TotalLevels ?? 0
 				}).ToList()
 			};
 		}

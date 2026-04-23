@@ -36,5 +36,10 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public Guid ShelfId { get; set; }
 		public string ShelfCode { get; set; } = null!;
 		public string ShelfTypeName { get; set; } = null!;
+		public string? ImageUrl { get; set; }
+		public double Width { get; set; }
+		public double Height { get; set; }
+		public double Depth { get; set; }
+		public int TotalLevels { get; set; }
 	}
 }
