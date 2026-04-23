@@ -126,13 +126,15 @@ namespace ToyShelf.API.Controllers
 		[HttpGet]
 		public async Task<BaseResponse<IEnumerable<ShipmentAssignmentResponse>>> GetAll(
 			[FromQuery] AssignmentType? type,
-			[FromQuery] AssignmentStatus? status)
+			[FromQuery] AssignmentStatus? status,
+			[FromQuery] Guid? warehouseLocationId)
 		{
-			var result = await _service.GetAllAsync(type, status);
+			var result = await _service.GetAllAsync(type, status, warehouseLocationId);
 
 			return BaseResponse<IEnumerable<ShipmentAssignmentResponse>>
 				.Ok(result, "Get all assignments successfully");
 		}
+
 
 
 		[HttpGet("{id}")]
