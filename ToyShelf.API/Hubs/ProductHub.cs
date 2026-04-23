@@ -20,7 +20,5 @@ namespace ToyShelf.API.Hubs
         {
             await Clients.All.SendAsync("ReceiveMessage", text);
         }
-
-
     }
 }
