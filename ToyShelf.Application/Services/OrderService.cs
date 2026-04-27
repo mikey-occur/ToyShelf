@@ -210,7 +210,11 @@ namespace ToyShelf.Application.Services
             var response = new PartnerOrderDetailResponse
             {
                 Id = order.Id,
+				PartnerName = order.Store?.Partner?.CompanyName ?? "N/A",
                 OrderCode = order.OrderCode,
+                StaffId = order.StaffId,
+                StaffName = order.Staff?.FullName ?? "N/A",
+                StaffEmail = order.Staff?.Email ?? "N/A",
                 CustomerName = order.CustomerName,
                 CustomerEmail = order.CustomerEmail,
                 BankReference = order.BankReference,
@@ -232,8 +236,6 @@ namespace ToyShelf.Application.Services
                         ImageUrl = oi.ProductColor.ImageUrl,
                         Price = oi.Price,
                         Quantity = oi.Quantity,
-
-                        // Trả về 0 nếu đơn chưa thanh toán hoặc lỗi không có hoa hồng
                         CommissionRate = commission?.AppliedRate ?? 0,
                         CommissionAmount = commission?.CommissionAmount ?? 0
                     };

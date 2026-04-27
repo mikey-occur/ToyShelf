@@ -9,6 +9,10 @@ namespace ToyShelf.Application.Models.Order
     public class PartnerOrderDetailResponse
     {
         public Guid Id { get; set; }
+        public string PartnerName { get; set; }
+        public Guid StaffId { get; set; }
+        public string StaffName { get; set; } = string.Empty;
+        public string StaffEmail { get; set; } = string.Empty;
         public long OrderCode { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public string? CustomerEmail { get; set; }
@@ -31,6 +35,7 @@ namespace ToyShelf.Application.Models.Order
             public string? ImageUrl { get; set; }
             public decimal Price { get; set; }
             public int Quantity { get; set; }
+            public decimal SubTotal => Price * Quantity;
             public decimal CommissionRate { get; set; }
             public decimal CommissionAmount { get; set; }
         }
