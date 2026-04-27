@@ -17,7 +17,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm)
+		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm, DateTime? date)
 		{
 			
 			var query = _context.Orders
@@ -52,11 +52,21 @@ namespace ToyShelf.Infrastructure.Repositories
                 else
                 {
                     // Nếu là chữ: Tìm tương đối trong BankRef hoặc Email, 
-                    // kèm theo convert OrderCode sang chuỗi để tìm một phần (hỗ trợ EF Core 5+)
                     query = query.Where(o => o.OrderCode.ToString().Contains(cleanTerm)
                                           || (o.BankReference != null && o.BankReference.Contains(cleanTerm))
                                           || (o.CustomerEmail != null && o.CustomerEmail.Contains(cleanTerm)));
                 }
+            
+            }
+            if (date.HasValue)
+            {
+
+                var utcDate = DateTime.SpecifyKind(date.Value.Date, DateTimeKind.Utc);
+
+                var startOfDay = utcDate;
+                var endOfDay = startOfDay.AddDays(1).AddTicks(-1);
+
+                query = query.Where(o => o.CreatedAt >= startOfDay && o.CreatedAt <= endOfDay);
             }
 
             return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
