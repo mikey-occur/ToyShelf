@@ -40,6 +40,19 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<StoreDashboardResponse>.Ok(result, "Stat card data retrieved successfully");
 		}
 
+		/// <summary>
+		/// Get (Total Shelves, Total Products) for Store Dashboard.
+		/// </summary>
+		[HttpGet("stat-card/store/{storeId:guid}/inventory")]
+		public async Task<BaseResponse<StoreInventoryDashboardResponse>> GetInventoryStatCard(
+			[FromRoute] Guid storeId)
+		{
+			var result = await _dashboardService.GetStoreInventoryStatsAsync(storeId);
+
+			return BaseResponse<StoreInventoryDashboardResponse>
+				.Ok(result, "Inventory stat card retrieved successfully");
+		}
+
 		// ===== GET STAT CARD =====
 		/// <summary>
 		/// Get store revenue for chart. Nếu Truyền week thì chỉ lấy week hiện tại

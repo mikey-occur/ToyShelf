@@ -172,6 +172,19 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
+		public async Task<StoreInventoryDashboardResponse> GetStoreInventoryStatsAsync(Guid storeId)
+		{
+			var (totalShelves, totalProducts) =
+				await _inventoryRepository.GetStoreInventoryStatsAsync(storeId);
+
+			return new StoreInventoryDashboardResponse
+			{
+				StoreId = storeId,
+				TotalShelves = totalShelves,
+				TotalProducts = totalProducts
+			};
+		}
+
 		public async Task<PartnerStatCardResponse> GetPartnerStatCardAsync(Guid partnerId, DateTime? startDate, DateTime? endDate)
 		{
 			var now = DateTime.UtcNow;
