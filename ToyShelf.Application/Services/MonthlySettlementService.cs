@@ -93,26 +93,49 @@ namespace ToyShelf.Application.Services
 		// lấy chi tiết kê khai tháng
 		public async Task<MonthlySettlementResponse?> GetByIdAsync(Guid id)
 		{
-			var settlement = await _settlementRepository.GetSettlementWithDetailsByIdAsync(id);
+            var settlement = await _settlementRepository.GetSettlementWithDetailsByIdAsync(id);
 
-			if (settlement == null) throw new AppException($"Settlement Not Found.", 404); ;
+            if (settlement == null) throw new AppException("Settlement Not Found.", 404);
 
-			var response = MapToResponse(settlement);
-			response.Histories = settlement.CommissionHistories.Select(ch => new CommissionHistoryResponse
-			{
-				Id = ch.Id,
-				OrderItemId = ch.OrderItemId,
-				AppliedRate = ch.AppliedRate,
-				CommissionAmount = ch.CommissionAmount,
-				Quantity = ch.OrderItem?.Quantity ?? 0,
-				OrderCode = ch.OrderItem?.Order?.OrderCode ?? 0,
-				PaymentMethod = ch.OrderItem?.Order?.PaymentMethod ?? "Unknown",
-				OrderDate = ch.OrderItem?.Order?.CreatedAt ?? DateTime.MinValue,
-				CreatedAt = ch.CreatedAt
-			}).ToList();
+            var response = MapToResponse(settlement); 
 
-			return response;
-		}
+            
+            response.DailySummaries = settlement.CommissionHistories
+                // Lấy ngày (cắt bỏ phần giờ phút giây) để group
+                .GroupBy(ch => ch.OrderItem?.Order?.CreatedAt.Date ?? ch.CreatedAt.Date)
+                .Select(group => new DailySettlementSummaryResponse
+                {
+                    // Format ngày ra chuỗi cho Front-end dễ hiển thị 
+                    Date = group.Key.ToString("yyyy-MM-dd"),
+
+                 
+                    TotalOrders = group.Select(ch => ch.OrderItem?.OrderId).Distinct().Count(),
+
+                   
+                    TotalProductsSold = group.Sum(ch => ch.OrderItem?.Quantity ?? 0),
+                    TotalSalesAmount = group.Sum(ch => ch.SalesAmount),
+                    TotalCommissionAmount = group.Sum(ch => ch.CommissionAmount),
+
+                    
+                    Transactions = group.Select(ch => new CommissionHistoryResponse
+                    {
+                        Id = ch.Id,
+                        OrderId = ch.OrderItem?.OrderId ?? Guid.Empty, // Đã lấy được OrderId
+                        OrderItemId = ch.OrderItemId,
+                        AppliedRate = ch.AppliedRate,
+                        CommissionAmount = ch.CommissionAmount,
+                        Quantity = ch.OrderItem?.Quantity ?? 0,
+                        OrderCode = ch.OrderItem?.Order?.OrderCode ?? 0,
+                        PaymentMethod = ch.OrderItem?.Order?.PaymentMethod ?? "Unknown",
+                        OrderDate = ch.OrderItem?.Order?.CreatedAt ?? DateTime.MinValue,
+                        CreatedAt = ch.CreatedAt
+                    }).ToList()
+                })
+                .OrderByDescending(d => d.Date) 
+                .ToList();
+
+            return response;
+        }
 
 		public async Task<bool> PayAsync(Guid id)
 		{

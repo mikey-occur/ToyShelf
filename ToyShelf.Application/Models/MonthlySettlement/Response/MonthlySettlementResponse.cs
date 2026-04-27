@@ -25,5 +25,6 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
 		public DateTime CreatedAt { get; set; }
 
 		public List<CommissionHistoryResponse> Histories { get; set; } = new List<CommissionHistoryResponse>();
-	}
+        public List<DailySettlementSummaryResponse> DailySummaries { get; set; } = new();
+    }
 }
