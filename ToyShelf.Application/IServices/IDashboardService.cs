@@ -15,6 +15,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<WarehouseDashboardResponse> GetWarehouseDashboard(Guid warehouseId, StoreChartRequest request);
 		Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null);
+		Task<StoreInventoryDashboardResponse> GetStoreInventoryStatsAsync(Guid storeId);
 		Task<List<PartnerChartItemResponse>> GetPartnerChartAsync(Guid partnerId, PartnerChartRequest request);
 		Task<PartnerStatCardResponse> GetPartnerStatCardAsync(Guid partnerId, DateTime? startDate, DateTime? endDate);
 		Task<List<StoreChartItemResponse>> GetStoreRevenueChartAsync(Guid storeId, StoreChartRequest request);
@@ -25,5 +26,11 @@ namespace ToyShelf.Application.IServices
 		Task<List<TopStoreResponse>> GetTopStoresByRevenueAsync(int? month = null, int? year = null, Guid? partnerId = null);
 		Task<List<TopPartnerResponse>> GetTopPartnersByRevenueAsync(int? month = null, int? year = null);
 		Task<ShipperStatCardResponse> GetShipperStatCardAsync(Guid shipperId);
+		Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(
+			Guid warehouseId,
+			StoreChartRequest request);
+		Task<WarehouseChartResponse> GetWarehouseChartAsync(
+			Guid warehouseId,
+			StoreChartRequest request);
 	}
 }
