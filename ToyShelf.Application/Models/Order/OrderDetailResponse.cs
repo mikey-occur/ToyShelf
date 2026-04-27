@@ -16,6 +16,7 @@ namespace ToyShelf.Application.Models.Order
 		public string StaffEmail { get; set; } = string.Empty;
 		public string CustomerName { get; set; } = string.Empty;
 		public string CustomerEmail { get; set; } = string.Empty;
+		public string? BankReference { get; set; }
 		public long OrderCode { get; set; }
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = string.Empty;

@@ -6,6 +6,7 @@ using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
+using static ToyShelf.Application.Models.Order.PartnerOrderDetailResponse;
 
 namespace ToyShelf.Application.Services
 {
@@ -126,7 +127,8 @@ namespace ToyShelf.Application.Services
 				StoreId = order.StoreId,
 				CustomerName = order.CustomerName,
 				CustomerEmail = order.CustomerEmail,
-				StaffId = order.StaffId,
+				BankReference = order.BankReference,
+                StaffId = order.StaffId,
 				StaffName = order.Staff?.FullName ?? "N/A",
 				StaffEmail = order.Staff?.Email ?? "N/A",
 				OrderCode = order.OrderCode,
@@ -149,10 +151,10 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? Email)
+		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm)
 		{
 			
-			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, Email);
+			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, searchTerm);
 
 			
 			var responseList = orders.Select(o => new OrderResponse
@@ -161,7 +163,8 @@ namespace ToyShelf.Application.Services
 				OrderCode = o.OrderCode,
 				CustomerName = o.CustomerName,
 				CustomerEmail = o.CustomerEmail,
-				TotalAmount = o.TotalAmount,
+				BankReference = o.BankReference,
+                TotalAmount = o.TotalAmount,
 				PaymentMethod = o.PaymentMethod,
 				Status = o.Status,
 				CreatedAt = o.CreatedAt,
@@ -171,7 +174,7 @@ namespace ToyShelf.Application.Services
 			return responseList;
 		}
 
-		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string Email)
+		public async Task<IEnumerable<OrderResponse>> GetOrdersByEmailAsync(string Email)
 		{
 			var cleanEmail = Email?.Trim();
 
@@ -187,6 +190,7 @@ namespace ToyShelf.Application.Services
 				OrderCode = o.OrderCode, 
 				CustomerName = o.CustomerName,
 				CustomerEmail = o.CustomerEmail,
+				BankReference = o.BankReference,		
 				Status = o.Status,
 				TotalAmount = o.TotalAmount,
 				CreatedAt = o.CreatedAt,
@@ -196,7 +200,53 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
+        public async Task<PartnerOrderDetailResponse?> GetPartnerOrderDetailsAsync(long orderCode)
+        {
+            var order = await _orderRepository.GetOrderWithDetailsByCodeAsync(orderCode);
+
+            if (order == null)
+                throw new AppException("Order not Exist.", 404);
+
+            var response = new PartnerOrderDetailResponse
+            {
+                Id = order.Id,
+                OrderCode = order.OrderCode,
+                CustomerName = order.CustomerName,
+                CustomerEmail = order.CustomerEmail,
+                BankReference = order.BankReference,
+                TotalAmount = order.TotalAmount,
+                PaymentMethod = order.PaymentMethod,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                StoreName = order.Store?.Name,
+                Items = order.OrderItems.Select(oi =>
+                {
+                    // Lấy thẳng record hoa hồng đầu tiên (vì 1 món hàng thường chỉ map 1 cục hoa hồng cho store đó)
+                    var commission = oi.CommissionHistories.FirstOrDefault();
+
+                    return new PartnerOrderItemDetailResponse
+                    {
+                        ProductColorId = oi.ProductColorId,
+                        ProductName = oi.ProductColor.Product.Name,
+                        Sku = oi.ProductColor.Sku,
+                        ImageUrl = oi.ProductColor.ImageUrl,
+                        Price = oi.Price,
+                        Quantity = oi.Quantity,
+
+                        // Trả về 0 nếu đơn chưa thanh toán hoặc lỗi không có hoa hồng
+                        CommissionRate = commission?.AppliedRate ?? 0,
+                        CommissionAmount = commission?.CommissionAmount ?? 0
+                    };
+                }).ToList()
+            };
+
+            
+            response.TotalCommission = response.Items.Sum(i => i.CommissionAmount);
+
+            return response;
+        }
+
+        public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode, string? bankReference)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
 
@@ -243,8 +293,9 @@ namespace ToyShelf.Application.Services
 				await _commissionHistoryRepository.AddAsync(commissionHistory);
 			}
 
-			// 4. Cập nhật trạng thái cuối cùng cho đơn hàng
-			order.Status = "PAID";
+            // 4. Cập nhật trạng thái cuối cùng cho đơn hàng
+            order.BankReference = bankReference;
+            order.Status = "PAID";
 			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();

@@ -17,7 +17,7 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? email)
+		public async Task<List<Order>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm)
 		{
 			
 			var query = _context.Orders
@@ -37,13 +37,29 @@ namespace ToyShelf.Infrastructure.Repositories
 				query = query.Where(o => o.Store != null && o.Store.PartnerId == partnerId.Value);
 			}
 
-			if (!string.IsNullOrWhiteSpace(email))
-			{
-				var cleanEmail = email.Trim();
-				query = query.Where(o => o.CustomerEmail.Contains(cleanEmail));
-			}
+            if (!string.IsNullOrWhiteSpace(searchTerm))
+            {
+                var cleanTerm = searchTerm.Trim();
 
-			return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
+                // Kiểm tra xem chuỗi nhập vào có phải là số không (để ưu tiên OrderCode)
+                if (long.TryParse(cleanTerm, out long parsedOrderCode))
+                {
+                    // Nếu là số: Tìm chính xác OrderCode HOẶC tìm tương đối trong BankRef/Email
+                    query = query.Where(o => o.OrderCode == parsedOrderCode
+                                          || (o.BankReference != null && o.BankReference.Contains(cleanTerm))
+                                          || (o.CustomerEmail != null && o.CustomerEmail.Contains(cleanTerm)));
+                }
+                else
+                {
+                    // Nếu là chữ: Tìm tương đối trong BankRef hoặc Email, 
+                    // kèm theo convert OrderCode sang chuỗi để tìm một phần (hỗ trợ EF Core 5+)
+                    query = query.Where(o => o.OrderCode.ToString().Contains(cleanTerm)
+                                          || (o.BankReference != null && o.BankReference.Contains(cleanTerm))
+                                          || (o.CustomerEmail != null && o.CustomerEmail.Contains(cleanTerm)));
+                }
+            }
+
+            return await query.OrderByDescending(o => o.CreatedAt).ToListAsync();
 		}
 
 		public async Task<IEnumerable<Order>> GetOrdersByCustomerPhoneAsync(string phone)
@@ -83,7 +99,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				.Include(o => o.OrderItems)
 					.ThenInclude(oi => oi.ProductColor)
 						.ThenInclude(pc => pc.Product)
-				.FirstOrDefaultAsync(o => o.OrderCode == orderCode);
+                .Include(o => o.OrderItems)
+                       .ThenInclude(oi => oi.CommissionHistories)
+                .FirstOrDefaultAsync(o => o.OrderCode == orderCode);
 		}
 
 		public async Task<Order?> GetOrderWithItemsAndStoreAsync(long orderCode)

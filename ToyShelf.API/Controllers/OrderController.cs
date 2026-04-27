@@ -23,9 +23,9 @@ namespace ToyShelf.API.Controllers
 		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrders(
 			[FromQuery] Guid? storeId,
 			[FromQuery] Guid? partnerId,
-			[FromQuery] string? phone) 
+			[FromQuery] string? searchTerm) 
 		{
-			var result = await _orderService.GetOrdersAsync(storeId, partnerId, phone);
+			var result = await _orderService.GetOrdersAsync(storeId, partnerId, searchTerm);
 
 			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
 		}
@@ -41,6 +41,18 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<OrderDetailResponse?>
 				.Ok(result, "Order retrieved successfully");
 		}
-	}
+
+        /// <summary>
+        /// Lấy detail order kèm thông tin hoa hồng dành riêng cho Partner
+        /// </summary>
+        [HttpGet("partner/{ordercode}")]
+        public async Task<BaseResponse<PartnerOrderDetailResponse?>> GetPartnerOrderDetails(long ordercode)
+        {
+            var result = await _orderService.GetPartnerOrderDetailsAsync(ordercode);
+
+            return BaseResponse<PartnerOrderDetailResponse?>
+                .Ok(result, "Partner order details retrieved successfully");
+        }
+    }
 }
 

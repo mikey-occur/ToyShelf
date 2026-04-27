@@ -12,10 +12,11 @@ namespace ToyShelf.Application.IServices
 	public interface IOrderService
 	{
 		Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request);
-		Task<Guid?> HandlePaymentSuccessAsync(long orderCode);
+		Task<Guid?> HandlePaymentSuccessAsync(long orderCode, string? bankReference);
 		Task<OrderDetailResponse?> GetOrderDetailsAsync(long orderCode);
-		Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? phone);
-		Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string phone);
+		Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm);
+		Task<IEnumerable<OrderResponse>> GetOrdersByEmailAsync(string phone);
 
-	}
+        Task<PartnerOrderDetailResponse?> GetPartnerOrderDetailsAsync(long orderCode);
+    }
 }
