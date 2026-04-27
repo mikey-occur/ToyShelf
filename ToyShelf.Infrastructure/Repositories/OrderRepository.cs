@@ -87,7 +87,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.Orders
 				.Include(o => o.Store)
-				.Include(o => o.Staff)
+				.Include(o => o.Store.Partner)	
+                .Include(o => o.Staff)
 
 				.Include(o => o.OrderItems)
 					.ThenInclude(oi => oi.ProductColor)
@@ -167,7 +168,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (totalOrders, totalRevenue);
 		}
 
-		public async Task<(int TotalOrders, decimal TotalRevenue, int TotalPartners, int TotalStores)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
+		public async Task<(int TotalOrders, decimal TotalRevenue)> GetSystemStatsAsync(DateTime? fromDate = null, DateTime? toDate = null)
 		{
 			var orderQuery = _context.Orders.Where(o => o.Status.ToUpper() == "PAID").AsQueryable();
 			var partnerQuery = _context.Partners.AsQueryable();
@@ -190,11 +191,10 @@ namespace ToyShelf.Infrastructure.Repositories
 			// 3. Thực thi lấy số liệu song song (hoặc tuần tự)
 			var totalOrders = await orderQuery.CountAsync();
 			var totalRevenue = await orderQuery.SumAsync(o => (decimal?)o.TotalAmount) ?? 0m;
-			var totalPartners = await partnerQuery.CountAsync();
-			var totalStores = await storeQuery.CountAsync();
+		
 
 			// Trả về Tuple 4 món
-			return (totalOrders, totalRevenue, totalPartners, totalStores);
+			return (totalOrders, totalRevenue);
 		}
 
 		public async Task<List<IOrderRepository.DailyStatResult>> GetSystemChartDataAsync(DateTime startDate, DateTime endDate)
@@ -377,7 +377,15 @@ namespace ToyShelf.Infrastructure.Repositories
 				))
 				.ToList();
 		}
-	}
+
+        public async Task<(int TotalPartners, int TotalStores)> GetSystemEntitiesCountAsync()
+        {
+            var totalPartners = await _context.Partners.CountAsync();
+            var totalStores = await _context.Stores.CountAsync();
+
+            return (totalPartners, totalStores);
+        }
+    }
 }
 
 

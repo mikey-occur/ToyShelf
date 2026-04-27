@@ -256,5 +256,35 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<WarehouseChartResponse>
 				.Ok(result, "Warehouse chart retrieved successfully");
 		}
-	}
+
+
+        /// <summary>
+        /// Get total active stores count for a Partner start card.
+        /// </summary>
+        [HttpGet("partner/{partnerId:guid}/stores-count")]
+        public async Task<IActionResult> GetPartnerStoresCount([FromRoute] Guid partnerId)
+        {
+            var count = await _dashboardService.GetPartnerStoreCountAsync(partnerId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Partner store count retrieved successfully",
+                data = new
+                {
+                    TotalStores = count
+                }
+            });
+        }
+
+        /// <summary>
+        /// Lấy tổng số lượng Partner và Store hiện có (Không quan tâm ngày tháng)
+        /// </summary>
+        [HttpGet("admin/stat-card-count")]
+        public async Task<IActionResult> GetAdminStatCardCount()
+        {
+            var result = await _dashboardService.GetSystemStartCardCountAsync();
+            return Ok(new { success = true, message = "System entities count retrieved", data = result });
+        }
+    }
 }

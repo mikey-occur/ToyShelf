@@ -10,7 +10,6 @@ namespace ToyShelf.Application.Models.Dashboard.Response
 	{
 		public int TotalOrders { get; set; }
 		public decimal TotalRevenue { get; set; }
-		public int TotalPartners { get; set; } 
-		public int TotalStores { get; set; }
+	
 	}
 }

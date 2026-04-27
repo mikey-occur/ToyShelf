@@ -16,7 +16,9 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 		}
 
-		public async Task<(IEnumerable<CommissionHistory> Items, int TotalCount)> GetHistoriesPaginatedAsync(int pageNumber = 1, int pageSize = 10, Guid? partnerId = null, string? searchItem = null)
+		public async Task<(IEnumerable<CommissionHistory> Items, int TotalCount)> GetHistoriesPaginatedAsync(int pageNumber = 1, int pageSize = 10, Guid? partnerId = null, string? searchItem = null, Guid? storeId = null,
+    DateTime? fromDate = null,
+    DateTime? toDate = null)
 		{
 			var query = _context.CommissionHistories.AsQueryable();
 
@@ -25,7 +27,10 @@ namespace ToyShelf.Infrastructure.Repositories
 				query = query.Where(c => c.PartnerId == partnerId.Value);
 			}
 
-			if (!string.IsNullOrWhiteSpace(searchItem))
+            if (storeId.HasValue)
+                query = query.Where(c => c.OrderItem.Order.StoreId == storeId.Value);
+
+            if (!string.IsNullOrWhiteSpace(searchItem))
 			{
 				var keyword = searchItem.Trim().ToLower();
 				query = query.Where(c =>
@@ -34,7 +39,20 @@ namespace ToyShelf.Infrastructure.Repositories
 				);
 			}
 
-			var totalCount = await query.CountAsync();
+            if (fromDate.HasValue)
+            {
+                var utcFrom = DateTime.SpecifyKind(fromDate.Value.Date, DateTimeKind.Utc);
+                query = query.Where(c => c.CreatedAt >= utcFrom);
+            }
+
+            if (toDate.HasValue)
+            {
+                var utcTo = DateTime.SpecifyKind(toDate.Value.Date, DateTimeKind.Utc);
+                var endOfDayTo = utcTo.AddDays(1).AddTicks(-1);
+                query = query.Where(c => c.CreatedAt <= endOfDayTo);
+            }
+
+            var totalCount = await query.CountAsync();
 
 			if (!string.IsNullOrWhiteSpace(searchItem))
 			{

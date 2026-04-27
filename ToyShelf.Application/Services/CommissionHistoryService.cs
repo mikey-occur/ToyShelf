@@ -22,10 +22,12 @@ namespace ToyShelf.Application.Services
 			int pageNumber = 1,
 			int pageSize = 10,
 			Guid? partnerId = null,
-			string? searchItem = null)
+			string? searchItem = null, Guid? storeId = null,
+			DateTime? fromDate = null,
+			DateTime? toDate = null)
 		{
 
-			var (entities, totalCount) = await _commissionRepo.GetHistoriesPaginatedAsync(pageNumber, pageSize, partnerId, searchItem);
+			var (entities, totalCount) = await _commissionRepo.GetHistoriesPaginatedAsync(pageNumber, pageSize, partnerId, searchItem, storeId, fromDate, toDate);
 
 			var items = entities.Select(c => new CommissionHistoryResponse
 			{
