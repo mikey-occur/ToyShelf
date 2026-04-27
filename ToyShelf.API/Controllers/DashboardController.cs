@@ -40,6 +40,19 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<StoreDashboardResponse>.Ok(result, "Stat card data retrieved successfully");
 		}
 
+		/// <summary>
+		/// Get (Total Shelves, Total Products) for Store Dashboard.
+		/// </summary>
+		[HttpGet("stat-card/store/{storeId:guid}/inventory")]
+		public async Task<BaseResponse<StoreInventoryDashboardResponse>> GetInventoryStatCard(
+			[FromRoute] Guid storeId)
+		{
+			var result = await _dashboardService.GetStoreInventoryStatsAsync(storeId);
+
+			return BaseResponse<StoreInventoryDashboardResponse>
+				.Ok(result, "Inventory stat card retrieved successfully");
+		}
+
 		// ===== GET STAT CARD =====
 		/// <summary>
 		/// Get store revenue for chart. Nếu Truyền week thì chỉ lấy week hiện tại
@@ -208,74 +221,40 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<ShipperStatCardResponse>.Ok(result, "Lấy thông tin Stat Card thành công!");
 		}
 
+		//// ================= WAREHOUSE DASHBOARD =================
+		//[HttpGet("warehouse/{warehouseId}")]
+		//public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
+		//{
+		//	var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
+
+		//	return BaseResponse<WarehouseDashboardResponse>
+		//		.Ok(result, "Warehouse dashboard retrieved successfully");
+		//}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// ================= WAREHOUSE DASHBOARD =================
-		[HttpGet("warehouse/{warehouseId}")]
-		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
+		// ================= WAREHOUSE STAT CARD =================
+		[HttpGet("warehouse/{warehouseId}/stat-card")]
+		public async Task<BaseResponse<WarehouseStatCardResponse>> GetWarehouseStatCard(
+			Guid warehouseId,
+			[FromQuery] StoreChartRequest request)
 		{
-			var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
+			var result = await _dashboardService.GetWarehouseStatCardAsync(warehouseId, request);
 
-			return BaseResponse<WarehouseDashboardResponse>
-				.Ok(result, "Warehouse dashboard retrieved successfully");
+			return BaseResponse<WarehouseStatCardResponse>
+				.Ok(result, "Warehouse stat card retrieved successfully");
 		}
 
 
+		// ================= WAREHOUSE CHART =================
+		[HttpGet("warehouse/{warehouseId}/chart")]
+		public async Task<BaseResponse<WarehouseChartResponse>> GetWarehouseChart(
+			Guid warehouseId,
+			[FromQuery] StoreChartRequest request)
+		{
+			var result = await _dashboardService.GetWarehouseChartAsync(warehouseId, request);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		///////////////////////////
+			return BaseResponse<WarehouseChartResponse>
+				.Ok(result, "Warehouse chart retrieved successfully");
+		}
 	}
 }

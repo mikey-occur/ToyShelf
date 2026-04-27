@@ -171,4 +171,22 @@ public class InventoryRepository : GenericRepository<Inventory>, IInventoryRepos
 			)
 			.ToListAsync();
 	}
+
+	public async Task<(int TotalShelves, int TotalProducts)> GetStoreInventoryStatsAsync(Guid storeId)
+	{
+		// Total Shelves
+		var totalShelves = await _context.InventoryShelves
+			.Where(s => s.InventoryLocation.StoreId == storeId
+				&& s.InventoryLocation.Type == InventoryLocationType.Store)
+			.SumAsync(s => (int?)s.Quantity) ?? 0;
+
+		// Total Products
+		var totalProducts = await _context.Inventories
+			.Where(i => i.InventoryLocation.StoreId == storeId
+				&& i.InventoryLocation.Type == InventoryLocationType.Store
+				&& i.Status == InventoryStatus.Available)
+			.SumAsync(i => (int?)i.Quantity) ?? 0;
+
+		return (totalShelves, totalProducts);
+	}
 }
