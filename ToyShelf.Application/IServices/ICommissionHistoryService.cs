@@ -13,6 +13,6 @@ namespace ToyShelf.Application.IServices
 			int pageNumber = 1,
 			int pageSize = 10,
 			Guid? partnerId = null,
-			string? searchItem = null);
+			string? searchItem = null, Guid? storeId = null, DateTime? fromDate = null,DateTime? toDate = null);
 	}
 }
