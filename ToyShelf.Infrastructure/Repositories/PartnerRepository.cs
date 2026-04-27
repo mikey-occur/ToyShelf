@@ -52,7 +52,7 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ToListAsync();
 		}
 
-		public async Task<(decimal Revenue, int Orders, decimal Commission, int Stores)> GetPartnerStatsByDateAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null)
+		public async Task<(decimal Revenue, int Orders, decimal Commission)> GetPartnerStatsByDateAsync(Guid partnerId, DateTime? startDate = null, DateTime? endDate = null)
 		{
 			var query = _context.CommissionHistories
 				.Include(c => c.OrderItem)     
@@ -75,9 +75,7 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			var ordersCount = await query.Select(c => c.OrderItem.OrderId).Distinct().CountAsync();
 
-			var storesCount = await query.Select(c => c.OrderItem.Order.StoreId).Distinct().CountAsync();
-
-			return (revenue, ordersCount, commission, storesCount);
+			return (revenue, ordersCount, commission);
 		}
 
 
@@ -102,5 +100,10 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return groupedData;
 		}
-	}
+
+        public async Task<int> GetTotalStoresByPartnerAsync(Guid partnerId)
+        {
+            return await _context.Stores.CountAsync(s => s.PartnerId == partnerId);
+        }
+    }
 }

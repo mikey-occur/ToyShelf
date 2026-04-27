@@ -256,5 +256,25 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<WarehouseChartResponse>
 				.Ok(result, "Warehouse chart retrieved successfully");
 		}
-	}
+
+
+        /// <summary>
+        /// Get total active stores count for a Partner start card.
+        /// </summary>
+        [HttpGet("partner/{partnerId:guid}/stores-count")]
+        public async Task<IActionResult> GetPartnerStoresCount([FromRoute] Guid partnerId)
+        {
+            var count = await _dashboardService.GetPartnerStoreCountAsync(partnerId);
+
+            return Ok(new
+            {
+                success = true,
+                message = "Partner store count retrieved successfully",
+                data = new
+                {
+                    TotalStores = count
+                }
+            });
+        }
+    }
 }

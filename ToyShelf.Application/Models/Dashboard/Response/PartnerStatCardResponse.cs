@@ -12,6 +12,5 @@ namespace ToyShelf.Application.Models.Dashboard.Response
 		public decimal Revenue { get; set; }     
 		public int Orders { get; set; }          
 		public decimal Commission { get; set; }  
-		public int Stores { get; set; }
 	}
 }

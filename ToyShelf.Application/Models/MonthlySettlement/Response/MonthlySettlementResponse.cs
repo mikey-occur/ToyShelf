@@ -23,7 +23,6 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
 		public string? Note { get; set; }
 		public string Status { get; set; } = string.Empty;
 		public DateTime CreatedAt { get; set; }
-
         public List<DailySettlementSummaryResponse> DailySummaries { get; set; } = new();
     }
 }

@@ -13,7 +13,7 @@ namespace ToyShelf.Domain.IRepositories
 		Task<Partner?> GetByIdWithTierAsync(Guid id);
 		Task<IEnumerable<Partner>> GetByCodePrefixAsync(string prefix);
 
-		Task<(decimal Revenue, int Orders, decimal Commission, int Stores)> GetPartnerStatsByDateAsync(
+		Task<(decimal Revenue, int Orders, decimal Commission)> GetPartnerStatsByDateAsync(
 			Guid partnerId,
 			DateTime? startDate = null,
 			DateTime? endDate = null);
@@ -27,5 +27,8 @@ namespace ToyShelf.Domain.IRepositories
 			public decimal TotalRevenue { get; set; }
 			public decimal TotalCommission { get; set; }
 		}
-	}
+
+		Task<int> GetTotalStoresByPartnerAsync(Guid partnerId);
+
+    }
 }

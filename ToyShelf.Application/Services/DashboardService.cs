@@ -310,36 +310,35 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		public async Task<PartnerStatCardResponse> GetPartnerStatCardAsync(Guid partnerId, DateTime? startDate, DateTime? endDate)
-		{
-			var now = DateTime.UtcNow;
+        public async Task<PartnerStatCardResponse> GetPartnerStatCardAsync(Guid partnerId, DateTime? startDate, DateTime? endDate)
+        {
+            var now = DateTime.UtcNow;
 
 
-			var currentEndDate = endDate ?? now;
-			var currentStartDate = startDate ?? new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+            var currentEndDate = endDate ?? now;
+            var currentStartDate = startDate ?? new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			if (currentStartDate > currentEndDate)
-			{
-				(currentStartDate, currentEndDate) = (currentEndDate, currentStartDate);
-			}
-
-
-			var stats = await _partnerRepository.GetPartnerStatsByDateAsync(partnerId, currentStartDate, currentEndDate);
+            if (currentStartDate > currentEndDate)
+            {
+                (currentStartDate, currentEndDate) = (currentEndDate, currentStartDate);
+            }
 
 
-			return new PartnerStatCardResponse
-			{
-				PartnerId = partnerId,
-				Revenue = stats.Revenue,
-				Orders = stats.Orders,
-				Commission = stats.Commission,
-				Stores = stats.Stores
-			};
-		}
+            var stats = await _partnerRepository.GetPartnerStatsByDateAsync(partnerId, currentStartDate, currentEndDate);
 
-		
 
-		public async Task<List<StoreChartItemResponse>> GetStoreRevenueChartAsync(Guid storeId, StoreChartRequest request)
+            return new PartnerStatCardResponse
+            {
+                PartnerId = partnerId,
+                Revenue = stats.Revenue,
+                Orders = stats.Orders,
+                Commission = stats.Commission,
+            };
+        }
+
+
+
+        public async Task<List<StoreChartItemResponse>> GetStoreRevenueChartAsync(Guid storeId, StoreChartRequest request)
 		{
 			var now = DateTime.UtcNow.Date;
 			DateTime startDate;
@@ -708,5 +707,10 @@ namespace ToyShelf.Application.Services
 				TotalAll = statsTuple.TotalAll
 			};
 		}
-	}
+
+        public async Task<int> GetPartnerStoreCountAsync(Guid partnerId)
+        {
+            return await _partnerRepository.GetTotalStoresByPartnerAsync(partnerId);
+        }
+    }
 }
