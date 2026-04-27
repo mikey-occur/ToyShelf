@@ -33,5 +33,8 @@ namespace ToyShelf.Application.IServices
 		Task<WarehouseChartResponse> GetWarehouseChartAsync(
 			Guid warehouseId,
 			StoreChartRequest request);
-	}
+
+		Task<object> GetSystemStartCardCountAsync();
+
+    }
 }

@@ -276,5 +276,15 @@ namespace ToyShelf.API.Controllers
                 }
             });
         }
+
+        /// <summary>
+        /// Lấy tổng số lượng Partner và Store hiện có (Không quan tâm ngày tháng)
+        /// </summary>
+        [HttpGet("admin/stat-card-count")]
+        public async Task<IActionResult> GetAdminStatCardCount()
+        {
+            var result = await _dashboardService.GetSystemStartCardCountAsync();
+            return Ok(new { success = true, message = "System entities count retrieved", data = result });
+        }
     }
 }

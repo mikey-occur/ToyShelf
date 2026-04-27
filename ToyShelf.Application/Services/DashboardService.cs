@@ -543,8 +543,6 @@ namespace ToyShelf.Application.Services
 			{
 				TotalOrders = stats.TotalOrders,
 				TotalRevenue = stats.TotalRevenue,
-				TotalPartners = stats.TotalPartners, 
-				TotalStores = stats.TotalStores
 			};
 		}
 
@@ -711,6 +709,18 @@ namespace ToyShelf.Application.Services
         public async Task<int> GetPartnerStoreCountAsync(Guid partnerId)
         {
             return await _partnerRepository.GetTotalStoresByPartnerAsync(partnerId);
+        }
+
+        public async Task<object> GetSystemStartCardCountAsync()
+        {
+            var counts = await _orderRepository.GetSystemEntitiesCountAsync();
+
+          
+            return new
+            {
+                TotalPartners = counts.TotalPartners,
+                TotalStores = counts.TotalStores
+            };
         }
     }
 }
