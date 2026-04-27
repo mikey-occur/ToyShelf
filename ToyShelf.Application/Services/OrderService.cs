@@ -126,7 +126,8 @@ namespace ToyShelf.Application.Services
 				StoreId = order.StoreId,
 				CustomerName = order.CustomerName,
 				CustomerEmail = order.CustomerEmail,
-				StaffId = order.StaffId,
+				BankReference = order.BankReference,
+                StaffId = order.StaffId,
 				StaffName = order.Staff?.FullName ?? "N/A",
 				StaffEmail = order.Staff?.Email ?? "N/A",
 				OrderCode = order.OrderCode,
@@ -161,7 +162,8 @@ namespace ToyShelf.Application.Services
 				OrderCode = o.OrderCode,
 				CustomerName = o.CustomerName,
 				CustomerEmail = o.CustomerEmail,
-				TotalAmount = o.TotalAmount,
+				BankReference = o.BankReference,
+                TotalAmount = o.TotalAmount,
 				PaymentMethod = o.PaymentMethod,
 				Status = o.Status,
 				CreatedAt = o.CreatedAt,
@@ -171,7 +173,7 @@ namespace ToyShelf.Application.Services
 			return responseList;
 		}
 
-		public async Task<IEnumerable<OrderResponse>> GetOrdersByPhoneAsync(string Email)
+		public async Task<IEnumerable<OrderResponse>> GetOrdersByEmailAsync(string Email)
 		{
 			var cleanEmail = Email?.Trim();
 
@@ -187,6 +189,7 @@ namespace ToyShelf.Application.Services
 				OrderCode = o.OrderCode, 
 				CustomerName = o.CustomerName,
 				CustomerEmail = o.CustomerEmail,
+				BankReference = o.BankReference,		
 				Status = o.Status,
 				TotalAmount = o.TotalAmount,
 				CreatedAt = o.CreatedAt,
@@ -196,7 +199,7 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode)
+		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode, string? bankReference)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
 
@@ -243,8 +246,9 @@ namespace ToyShelf.Application.Services
 				await _commissionHistoryRepository.AddAsync(commissionHistory);
 			}
 
-			// 4. Cập nhật trạng thái cuối cùng cho đơn hàng
-			order.Status = "PAID";
+            // 4. Cập nhật trạng thái cuối cùng cho đơn hàng
+            order.BankReference = bankReference;
+            order.Status = "PAID";
 			await _inventoryService.UpdateStockAfterPaymentAsync(order);
 			// Lưu tất cả thay đổi (Status Order và CommissionHistory) 
 			await _unitOfWork.SaveChangesAsync();
