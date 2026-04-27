@@ -150,10 +150,10 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? Email)
+		public async Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm)
 		{
 			
-			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, Email);
+			var orders = await _orderRepository.GetOrdersAsync(storeId, partnerId, searchTerm);
 
 			
 			var responseList = orders.Select(o => new OrderResponse

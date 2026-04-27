@@ -23,9 +23,9 @@ namespace ToyShelf.API.Controllers
 		public async Task<BaseResponse<IEnumerable<OrderResponse>>> GetOrders(
 			[FromQuery] Guid? storeId,
 			[FromQuery] Guid? partnerId,
-			[FromQuery] string? phone) 
+			[FromQuery] string? searchTerm) 
 		{
-			var result = await _orderService.GetOrdersAsync(storeId, partnerId, phone);
+			var result = await _orderService.GetOrdersAsync(storeId, partnerId, searchTerm);
 
 			return BaseResponse<IEnumerable<OrderResponse>>.Ok(result);
 		}
