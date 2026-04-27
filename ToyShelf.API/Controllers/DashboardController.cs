@@ -221,74 +221,40 @@ namespace ToyShelf.API.Controllers
 			return BaseResponse<ShipperStatCardResponse>.Ok(result, "Lấy thông tin Stat Card thành công!");
 		}
 
+		//// ================= WAREHOUSE DASHBOARD =================
+		//[HttpGet("warehouse/{warehouseId}")]
+		//public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
+		//{
+		//	var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
+
+		//	return BaseResponse<WarehouseDashboardResponse>
+		//		.Ok(result, "Warehouse dashboard retrieved successfully");
+		//}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		// ================= WAREHOUSE DASHBOARD =================
-		[HttpGet("warehouse/{warehouseId}")]
-		public async Task<BaseResponse<WarehouseDashboardResponse>> GetWarehouseDashboard(Guid warehouseId, [FromQuery] StoreChartRequest request)
+		// ================= WAREHOUSE STAT CARD =================
+		[HttpGet("warehouse/{warehouseId}/stat-card")]
+		public async Task<BaseResponse<WarehouseStatCardResponse>> GetWarehouseStatCard(
+			Guid warehouseId,
+			[FromQuery] StoreChartRequest request)
 		{
-			var result = await _dashboardService.GetWarehouseDashboard(warehouseId, request);
+			var result = await _dashboardService.GetWarehouseStatCardAsync(warehouseId, request);
 
-			return BaseResponse<WarehouseDashboardResponse>
-				.Ok(result, "Warehouse dashboard retrieved successfully");
+			return BaseResponse<WarehouseStatCardResponse>
+				.Ok(result, "Warehouse stat card retrieved successfully");
 		}
 
 
+		// ================= WAREHOUSE CHART =================
+		[HttpGet("warehouse/{warehouseId}/chart")]
+		public async Task<BaseResponse<WarehouseChartResponse>> GetWarehouseChart(
+			Guid warehouseId,
+			[FromQuery] StoreChartRequest request)
+		{
+			var result = await _dashboardService.GetWarehouseChartAsync(warehouseId, request);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-		///////////////////////////
+			return BaseResponse<WarehouseChartResponse>
+				.Ok(result, "Warehouse chart retrieved successfully");
+		}
 	}
 }
