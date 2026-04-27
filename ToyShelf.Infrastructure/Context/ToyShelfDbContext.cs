@@ -2247,7 +2247,11 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(20);
 
-				entity.Property(e => e.CreatedAt)
+                entity.Property(e => e.BankReference)
+					  .IsRequired(false) 
+					  .HasMaxLength(50);
+
+                entity.Property(e => e.CreatedAt)
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
