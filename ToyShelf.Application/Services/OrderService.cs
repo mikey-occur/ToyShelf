@@ -6,6 +6,7 @@ using ToyShelf.Domain.Common.Commission;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
+using static ToyShelf.Application.Models.Order.PartnerOrderDetailResponse;
 
 namespace ToyShelf.Application.Services
 {
@@ -199,7 +200,53 @@ namespace ToyShelf.Application.Services
 			return response;
 		}
 
-		public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode, string? bankReference)
+        public async Task<PartnerOrderDetailResponse?> GetPartnerOrderDetailsAsync(long orderCode)
+        {
+            var order = await _orderRepository.GetOrderWithDetailsByCodeAsync(orderCode);
+
+            if (order == null)
+                throw new AppException("Order not Exist.", 404);
+
+            var response = new PartnerOrderDetailResponse
+            {
+                Id = order.Id,
+                OrderCode = order.OrderCode,
+                CustomerName = order.CustomerName,
+                CustomerEmail = order.CustomerEmail,
+                BankReference = order.BankReference,
+                TotalAmount = order.TotalAmount,
+                PaymentMethod = order.PaymentMethod,
+                Status = order.Status,
+                CreatedAt = order.CreatedAt,
+                StoreName = order.Store?.Name,
+                Items = order.OrderItems.Select(oi =>
+                {
+                    // Lấy thẳng record hoa hồng đầu tiên (vì 1 món hàng thường chỉ map 1 cục hoa hồng cho store đó)
+                    var commission = oi.CommissionHistories.FirstOrDefault();
+
+                    return new PartnerOrderItemDetailResponse
+                    {
+                        ProductColorId = oi.ProductColorId,
+                        ProductName = oi.ProductColor.Product.Name,
+                        Sku = oi.ProductColor.Sku,
+                        ImageUrl = oi.ProductColor.ImageUrl,
+                        Price = oi.Price,
+                        Quantity = oi.Quantity,
+
+                        // Trả về 0 nếu đơn chưa thanh toán hoặc lỗi không có hoa hồng
+                        CommissionRate = commission?.AppliedRate ?? 0,
+                        CommissionAmount = commission?.CommissionAmount ?? 0
+                    };
+                }).ToList()
+            };
+
+            
+            response.TotalCommission = response.Items.Sum(i => i.CommissionAmount);
+
+            return response;
+        }
+
+        public async Task<Guid?> HandlePaymentSuccessAsync(long orderCode, string? bankReference)
 		{
 			var order = await _orderRepository.GetOrderWithItemsAndStoreAsync(orderCode);
 

@@ -17,5 +17,6 @@ namespace ToyShelf.Application.IServices
 		Task<List<OrderResponse>> GetOrdersAsync(Guid? storeId, Guid? partnerId, string? searchTerm);
 		Task<IEnumerable<OrderResponse>> GetOrdersByEmailAsync(string phone);
 
-	}
+        Task<PartnerOrderDetailResponse?> GetPartnerOrderDetailsAsync(long orderCode);
+    }
 }
