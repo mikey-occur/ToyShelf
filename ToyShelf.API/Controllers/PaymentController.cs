@@ -65,7 +65,7 @@ namespace ToyShelf.API.Controllers
 						Console.WriteLine("[PAYOS] Đã chặn thành công cái request test ping!");
 						return Ok(new { message = "Test webhook success" });
 					}
-					await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode);
+					await _orderService.HandlePaymentSuccessAsync(verifiedData.OrderCode, verifiedData.Reference);
 				}
 
 				return Ok(new { message = "Webhook processed successfully" });
@@ -117,13 +117,13 @@ namespace ToyShelf.API.Controllers
 		/// Giúp test nhanh logic tính hoa hồng mà không cần thanh toán thật.
 		/// </summary>
 		[HttpPost("mock-webhook/{orderCode}")]
-		public async Task<IActionResult> MockPaymentSuccess(long orderCode)
+		public async Task<IActionResult> MockPaymentSuccess(long orderCode, string? bankReference = null)
 		{
 			try
 			{
 				// Bỏ qua toàn bộ bước xác thực chữ ký của PayOS.
 				// Đâm thẳng vào hàm xử lý cập nhật trạng thái PAID và TÍNH HOA HỒNG!
-				await _orderService.HandlePaymentSuccessAsync(orderCode);
+				await _orderService.HandlePaymentSuccessAsync(orderCode, bankReference);
 
 				return Ok(new
 				{
