@@ -967,7 +967,19 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(200);
 
-				entity.Property(e => e.Address)
+                entity.Property(e => e.BankName)
+					  .HasMaxLength(100)
+					  .IsRequired(false);
+
+                entity.Property(e => e.BankAccountNumber)
+					  .HasMaxLength(50)
+					  .IsRequired(false);
+
+                entity.Property(e => e.BankAccountName)
+					  .HasMaxLength(150)
+					  .IsRequired(false);
+
+                entity.Property(e => e.Address)
 					  .IsRequired()
 					  .HasMaxLength(300);
 

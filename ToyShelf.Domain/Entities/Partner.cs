@@ -12,6 +12,9 @@ namespace ToyShelf.Domain.Entities
 		public Guid PartnerTierId { get; set; }
 		public string Code { get; set; } = string.Empty; // PARTNER-001
 		public string CompanyName { get; set; } = string.Empty;
+		public string? BankName { get; set; }          
+		public string? BankAccountNumber { get; set; } 
+		public string? BankAccountName { get; set; }
 		public string Address { get; set; } = string.Empty;
 		public double? Latitude { get; set; }
 		public double? Longitude { get; set; }
