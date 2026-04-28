@@ -14,6 +14,6 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
         public int TotalProductsSold { get; set; }       
         public decimal TotalSalesAmount { get; set; }    
         public decimal TotalCommissionAmount { get; set; } 
-        public List<CommissionHistoryResponse> Transactions { get; set; } = new();
+        public List<OrderTransactionResponse> Transactions { get; set; } = new();
     }
 }
