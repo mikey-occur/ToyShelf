@@ -9,6 +9,7 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.DamageReport.Response;
 using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.Shipment.Response;
+using ToyShelf.Application.Models.ShipmentAssignment.Response;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -102,7 +103,6 @@ namespace ToyShelf.Application.Services
 
 			return shipments.Select(MapToResponse);
 		}
-
 		public async Task<IEnumerable<ShipmentResponse>> GetByShelfOrderIdAsync(Guid shelfOrderId)
 		{
 			var shipments = await _shipmentRepository.GetByShelfOrderIdAsync(shelfOrderId);
@@ -112,7 +112,6 @@ namespace ToyShelf.Application.Services
 
 			return shipments.Select(MapToResponse);
 		}
-
 		public async Task<IEnumerable<ShipmentResponse>> GetByDamageReportIdAsync(Guid damageReportId)
 		{
 			var shipments = await _shipmentRepository.GetByDamageReportIdAsync(damageReportId);
@@ -1002,7 +1001,6 @@ namespace ToyShelf.Application.Services
 
 		//	_assignmentRepository.Update(assignment);
 		//}
-
 		public async Task<IEnumerable<ShelfSimpleResponse>> GetShelvesByShipmentAsync(Guid shipmentId)
 		{
 			var shipment = await _shipmentRepository.GetByIdAsync(shipmentId);
@@ -1135,9 +1133,27 @@ namespace ToyShelf.Application.Services
 				OrderType = orderType,
 
 				// Trả về danh sách IDs để FE có thể link tới chi tiết từng đơn con
-				StoreOrderIds = storeOrdersFromAssignment.Select(x => x.Id).ToList(),
-				ShelfOrderIds = shelfOrdersFromAssignment.Select(x => x.Id).ToList(),
-				DamageReportIds = damageReports.Select(x => x.Id).ToList(),
+				StoreOrders = storeOrdersFromAssignment
+					.Select(x => new OrderReferenceResponse
+					{
+						Id = x.Id,
+						Code = x.Code
+					}).ToList(),
+
+				ShelfOrders = shelfOrdersFromAssignment
+					.Select(x => new OrderReferenceResponse
+					{
+						Id = x.Id,
+						Code = x.Code
+					}).ToList(),
+
+				DamageReports = damageReports
+					.Select(x => new OrderReferenceResponse
+					{
+						Id = x.Id,
+						Code = x.Code
+					}).ToList(),
+
 
 				FromLocationId = shipment.FromLocationId,
 				FromLocationName = shipment.FromLocation?.Name ?? "Unknown",
