@@ -129,7 +129,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				query = query.Where(x => x.Status == shipmentStatus.Value);
 			}
 
-			return await query.ToListAsync();
+			return await query
+				.OrderByDescending(x => x.CreatedAt)
+				.ToListAsync();
 		}
 		public async Task<Shipment?> GetByIdWithItemsAsync(Guid id)
 		{
