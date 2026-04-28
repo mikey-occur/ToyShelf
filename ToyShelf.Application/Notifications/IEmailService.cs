@@ -17,5 +17,6 @@ namespace ToyShelf.Application.Notifications
 			string? fullName = null);
 
 		Task SendPaymentSuccessEmailAsync(string toEmail, long order);
-	}
+        Task SendSettlementPaymentEmailAsync(string toEmail, MonthlySettlement settlement, Partner partner, User partnerAdmin);
+    }
 }

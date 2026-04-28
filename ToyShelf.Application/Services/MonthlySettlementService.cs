@@ -12,6 +12,7 @@ using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
 using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
+using ToyShelf.Application.Notifications;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 
@@ -27,8 +28,8 @@ namespace ToyShelf.Application.Services
 		private readonly INotificationBroadcaster _notificationBroadcaster;
 		private readonly IUserRepository _userRepository;
 		private readonly ILogger<MonthlySettlementService> _logger;
-
-        public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster, IUserRepository userRepository, ILogger<MonthlySettlementService> logger)
+        private readonly IEmailService _emailService;
+        public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster, IUserRepository userRepository, ILogger<MonthlySettlementService> logger, IEmailService emailService)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
@@ -38,7 +39,7 @@ namespace ToyShelf.Application.Services
 			_notificationBroadcaster = notificationBroadcaster;
 			_userRepository = userRepository;
             _logger = logger;
-
+		    _emailService = emailService;
         }
 
 		// Tổng kết hoá đơn tháng
@@ -165,7 +166,12 @@ namespace ToyShelf.Application.Services
                 throw new AppException("Không tìm thấy thông tin Quản lý của Đối tác (PartnerAdmin) để gửi thông báo", 404);
             }
 
-       
+            var partner = await _unitOfWork.Repository<Partner>().GetByIdAsync(settlement.PartnerId);
+            if (partner == null)
+            {
+                throw new AppException("Không tìm thấy dữ liệu Công ty của đối tác này!", 404);
+            }
+
             settlement.Status = "PAID";
             settlement.PaidAt = DateTime.UtcNow;
             _unitOfWork.Repository<MonthlySettlement>().Update(settlement);
@@ -201,7 +207,27 @@ namespace ToyShelf.Application.Services
                 );
             }
 
-         
+            try
+            {
+                await _emailService.SendSettlementPaymentEmailAsync(
+                    partnerAdmin.Email, 
+                    settlement,
+                    partner,
+                    partnerAdmin
+                );
+            }
+            catch (Exception ex)
+            {
+                
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi gửi email Biên lai thanh toán tới {Email} cho phiếu {SettlementId}. Lỗi: {ErrorMessage}",
+                    partnerAdmin.Email,
+                    id,
+                    ex.Message
+                );
+            }
+
             return true;
         }
 
