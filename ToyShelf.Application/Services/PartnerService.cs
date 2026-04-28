@@ -90,6 +90,9 @@ namespace ToyShelf.Application.Services
 				Code = code,
 				PartnerTierId = request.PartnerTierId,
 				CompanyName = request.CompanyName.Trim(),
+				BankName = request.BankName?.Trim(),
+				BankAccountNumber = request.BankAccountNumber?.Trim(),
+				BankAccountName = request.BankAccountName?.Trim(),
 				Address = request.Address.Trim(),
 				Latitude = request.Latitude,
 				Longitude = request.Longitude,
@@ -156,6 +159,9 @@ namespace ToyShelf.Application.Services
 			partner.Latitude = request.Latitude;
 			partner.Longitude = request.Longitude;
 			partner.PartnerTierId = request.PartnerTierId;
+			partner.BankName = request.BankName?.Trim();
+			partner.BankAccountNumber = request.BankAccountNumber?.Trim();
+			partner.BankAccountName = request.BankAccountName?.Trim();
 			partner.UpdatedAt = _dateTime.UtcNow;
 
 			_partnerRepository.Update(partner);
@@ -222,7 +228,10 @@ namespace ToyShelf.Application.Services
 				Id = partner.Id,
 				Code = partner.Code,
 				CompanyName = partner.CompanyName,
-				Address = partner.Address,
+				BankName = partner.BankName,
+				BankAccountNumber = partner.BankAccountNumber,
+				BankAccountName = partner.BankAccountName,
+                Address = partner.Address,
 				Latitude = partner.Latitude,
 				Longitude = partner.Longitude,
 
@@ -259,7 +268,10 @@ namespace ToyShelf.Application.Services
 				Id = partner.Id,
 				Code = partner.Code,
 				CompanyName = partner.CompanyName,
-				Address = partner.Address,
+				BankAccountName = partner.BankAccountName,
+				BankName = partner.BankName,
+				BankAccountNumber = partner.BankAccountNumber,
+                Address = partner.Address,
 				Latitude = partner.Latitude,
 				Longitude = partner.Longitude,
 				PartnerTierId = partner.PartnerTierId,
@@ -296,7 +308,10 @@ namespace ToyShelf.Application.Services
 				Id = partner.Id,
 				Code = partner.Code,
 				CompanyName = partner.CompanyName,
-				Address = partner.Address,
+				BankAccountName = partner.BankAccountName,
+				BankName = partner.BankName,
+				BankAccountNumber = partner.BankAccountNumber,
+                Address = partner.Address,
 				Latitude = partner.Latitude,
 				Longitude = partner.Longitude,
 				PartnerTierId = partner.PartnerTierId,

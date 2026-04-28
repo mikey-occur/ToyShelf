@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,7 @@ using ToyShelf.Application.Models.MonthlySettlement.Request;
 using ToyShelf.Application.Models.MonthlySettlement.Response;
 using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
+using ToyShelf.Application.Notifications;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
 
@@ -25,7 +27,9 @@ namespace ToyShelf.Application.Services
 		private readonly INotificationService _notificationService;
 		private readonly INotificationBroadcaster _notificationBroadcaster;
 		private readonly IUserRepository _userRepository;
-		public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster, IUserRepository userRepository)
+		private readonly ILogger<MonthlySettlementService> _logger;
+        private readonly IEmailService _emailService;
+        public MonthlySettlementService(IUnitOfWork unitOfWork, ICommissionHistoryRepsitory commissionHistoryRepsitory, IMonthlySettlementRepository settlementRepository, IExcelService exportService, INotificationService notificationService, INotificationBroadcaster notificationBroadcaster, IUserRepository userRepository, ILogger<MonthlySettlementService> logger, IEmailService emailService)
 		{
 			_unitOfWork = unitOfWork;
 			_commissionHistoryRepsitory = commissionHistoryRepsitory;
@@ -34,7 +38,9 @@ namespace ToyShelf.Application.Services
 			_notificationService = notificationService;
 			_notificationBroadcaster = notificationBroadcaster;
 			_userRepository = userRepository;
-		}
+            _logger = logger;
+		    _emailService = emailService;
+        }
 
 		// Tổng kết hoá đơn tháng
 		public async Task<List<MonthlySettlementResponse>> GenerateMonthlySettlementAsync(int month, int year)
@@ -138,52 +144,93 @@ namespace ToyShelf.Application.Services
             return response;
         }
 
-		public async Task<bool> PayAsync(Guid id)
+		public async Task<bool> PayAsync(Guid id, string transferReceiptUrl)
 		{
-			var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(id);
+            var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(id);
 
-			// Thêm check xem đã Paid hoặc đã Received chưa
-			if (settlement == null || settlement.Status == "PAID" || settlement.Status == "RECEIVED")
-			{
-				return false;
-			}
+           
+            if (settlement == null)
+            {
+                throw new AppException("Không tìm thấy phiếu đối soát này!", 404);
+            }
 
-			settlement.Status = "PAID";
-			settlement.PaidAt = DateTime.UtcNow;
-			_unitOfWork.Repository<MonthlySettlement>().Update(settlement);
+           
+            if (settlement.Status == "PAID" || settlement.Status == "RECEIVED")
+            {
+                throw new AppException($"Phiếu này đã được thanh toán hoặc xác nhận (Trạng thái hiện tại: {settlement.Status})", 400);
+            }
 
-			// Lưu vào DB
-			var isSaved = await _unitOfWork.SaveChangesAsync() > 0;
-			var partner = await _userRepository.GetByIdAsync(settlement.PartnerId);
+            var partnerAdmin = await _userRepository.GetPartnerAdminAsync(settlement.PartnerId);
+            if (partnerAdmin == null)
+            {
+                throw new AppException("Không tìm thấy thông tin Quản lý của Đối tác (PartnerAdmin) để gửi thông báo", 404);
+            }
 
-			if (partner == null)
-			{
-				// Tùy logic hệ thống, sếp có thể văng lỗi hoặc return thoát hàm luôn
-				throw new AppException("Không tìm thấy thông tin Partner để gửi thông báo", 404);
-			}
-			// BẮN NOTIFICATION CHO PARTNER
-			if (isSaved)
-			{
-				
-				var request = new CreateNotificationRequest
-				{
-					UserId = partner.Id, 
-					Title = "Thanh toán đối soát thành công",
-					
-					Content = $"Kỳ đối soát tháng này đã được chuyển khoản. Vui lòng bấm Xác Nhận khi bạn đã nhận được."
-				};
+            var partner = await _unitOfWork.Repository<Partner>().GetByIdAsync(settlement.PartnerId);
+            if (partner == null)
+            {
+                throw new AppException("Không tìm thấy dữ liệu Công ty của đối tác này!", 404);
+            }
 
-				await _notificationService.CreateNotificationAsync(request);
+            settlement.Status = "PAID";
+            settlement.PaidAt = DateTime.UtcNow;
+            settlement.TransferReceiptUrl = transferReceiptUrl;
+            _unitOfWork.Repository<MonthlySettlement>().Update(settlement);
 
-				await _notificationBroadcaster.SendNotificationToUserAsync(
-					partner.Id,
-					request.Title,
-					request.Content
-				);
-			}
+            var request = new CreateNotificationRequest
+            {
+                UserId = partnerAdmin.Id,
+                Title = "Thanh toán đối soát thành công",
+                Content = "Kỳ đối soát tháng này đã được chuyển khoản. Vui lòng bấm Xác Nhận khi bạn đã nhận được."
+            };
+            await _notificationService.CreateNotificationAsync(request);
 
-			return isSaved;
-		}
+         
+            await _unitOfWork.SaveChangesAsync();
+
+        
+            try
+            {
+                await _notificationBroadcaster.SendNotificationToUserAsync(
+                    partnerAdmin.Id,
+                    request.Title,
+                    request.Content
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi push notification realtime tới PartnerAdmin {PartnerAdminId} cho Settlement {SettlementId}. Lỗi: {ErrorMessage}",
+                    partnerAdmin.Id,
+                    id,
+                    ex.Message
+                );
+            }
+
+            try
+            {
+                await _emailService.SendSettlementPaymentEmailAsync(
+                    partnerAdmin.Email, 
+                    settlement,
+                    partner,
+                    partnerAdmin
+                );
+            }
+            catch (Exception ex)
+            {
+                
+                _logger.LogError(
+                    ex,
+                    "Lỗi khi gửi email Biên lai thanh toán tới {Email} cho phiếu {SettlementId}. Lỗi: {ErrorMessage}",
+                    partnerAdmin.Email,
+                    id,
+                    ex.Message
+                );
+            }
+
+            return true;
+        }
 
 		public async Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter)
 		{
@@ -247,7 +294,10 @@ namespace ToyShelf.Application.Services
 				PartnerId = settlement.PartnerId,
 				PartnerName = settlement.Partner?.CompanyName,
 				PartnerCode = settlement.Partner?.Code ?? string.Empty,
-				Month = settlement.Month,
+				BankName = settlement.Partner?.BankName,
+				BankAccountName = settlement.Partner?.BankAccountName,
+				BankAccountNumber = settlement.Partner?.BankAccountNumber,
+                Month = settlement.Month,
 				Year = settlement.Year,
 				TotalItems = settlement.TotalItems,
 				TotalSalesAmount = settlement.TotalSalesAmount,
@@ -297,12 +347,12 @@ namespace ToyShelf.Application.Services
 			{
 				throw new Exception("Không tìm thấy phiếu đối soát!");
 			}
-			//Guid currentPartnerId = currentUser.UserId;
 
-			//if (settlement.PartnerId != currentPartnerId)
-			//{
-			//	throw new Exception("Bạn không có quyền xác nhận phiếu đối soát này!");
-			//}
+			if (!currentUser.PartnerId.HasValue || settlement.PartnerId != currentUser.PartnerId.Value)
+			{
+				throw new AppException("Bạn không có quyền truy cập hoặc xác nhận phiếu đối soát này!", 403);
+			}
+
 			if (settlement.Status != "PAID")
 			{
 				throw new Exception("Phiếu đối soát chưa được chuyển khoản hoặc đã được xác nhận rồi.");
@@ -315,6 +365,17 @@ namespace ToyShelf.Application.Services
 			return true;
 		}
 
+        public async Task<UnpaidWalletResponse> GetTotalPendingAmountAsync(Guid partnerId)
+        {
+           
+            var unsettledAmount = await _commissionHistoryRepsitory.GetTotalUnsettledAmountAsync(partnerId);
+            var pendingAmount = await _settlementRepository.GetTotalPendingAmountAsync(partnerId);
 
-	}
+            return new UnpaidWalletResponse
+            {
+                UnsettledAmount = unsettledAmount,
+                PendingSettlementAmount = pendingAmount
+            };
+        }
+    }
 }

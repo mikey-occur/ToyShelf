@@ -967,7 +967,19 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasMaxLength(200);
 
-				entity.Property(e => e.Address)
+                entity.Property(e => e.BankName)
+					  .HasMaxLength(100)
+					  .IsRequired(false);
+
+                entity.Property(e => e.BankAccountNumber)
+					  .HasMaxLength(50)
+					  .IsRequired(false);
+
+                entity.Property(e => e.BankAccountName)
+					  .HasMaxLength(150)
+					  .IsRequired(false);
+
+                entity.Property(e => e.Address)
 					  .IsRequired()
 					  .HasMaxLength(300);
 
@@ -2372,7 +2384,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.FinalAmount)
 				      .HasColumnType("decimal(18,2)");
 
-				entity.Property(e => e.Note)
+                entity.Property(e => e.TransferReceiptUrl)
+					  .HasMaxLength(500) 
+					  .IsRequired(false);
+
+                entity.Property(e => e.Note)
 				      .HasMaxLength(500);
 
 				entity.Property(e => e.Status)

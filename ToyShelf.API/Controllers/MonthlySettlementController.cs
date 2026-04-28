@@ -40,10 +40,10 @@ namespace ToyShelf.API.Controllers
 		/// Kế toán xác nhận đã chuyển khoản thành công cho đối tác
 		/// </summary>
 		[HttpPatch("{id}/pay")]
-		public async Task<ActionResult<ActionResponse>> Pay(Guid id)
+		public async Task<ActionResult<ActionResponse>> Pay(Guid id, [FromBody] PayRequest request)
 		{
 			// Gọi thẳng hàm PayAsync chỉ với ID
-			var isSuccess = await _settlementService.PayAsync(id);
+			var isSuccess = await _settlementService.PayAsync(id, request.ReceiptUrl);
 
 			if (!isSuccess)
 				throw new AppException("Monthly settlement not found or already paid", 404);
@@ -170,5 +170,36 @@ namespace ToyShelf.API.Controllers
 				});
 			}
 		}
-	}
+
+        ///// <summary>
+        ///// Xem số dư ví hoa hồng (Những khoản chưa được nhận) của chính đối tác đang đăng nhập
+        ///// GET: api/MonthlySettlement/my-wallet
+        ///// </summary>
+        //[HttpGet("my-wallet")]
+        //[Authorize(Roles = "PartnerAdmin")] 
+        //public async Task<BaseResponse<UnpaidWalletResponse>> GetMyWalletBalance([FromServices] ICurrentUser currentUser)
+        //{
+        //    // Lấy ID của người dùng từ Token đăng nhập
+        //    Guid currentPartnerId = currentUser.UserId;
+
+        //    // Gọi Service tính toán (Đảm bảo bạn đã thêm hàm này vào IMonthlySettlementService)
+        //    var result = await _settlementService.GetTotalPendingAmountAsync(currentPartnerId);
+
+        //    return BaseResponse<UnpaidWalletResponse>.Ok(result, "Lấy thông tin số dư ví thành công!");
+        //}
+
+        /// <summary>
+        /// Xem số dư ví hoa hồng (Những khoản chưa được nhận) của chính đối tác đang đăng nhập
+        /// GET: api/MonthlySettlement/my-wallet
+        /// </summary>
+        [HttpGet("test-wallet/{partnerId}")]
+        [AllowAnonymous] // Lệnh này giúp bypass mọi cái [Authorize] ở trên (nếu có)
+        public async Task<BaseResponse<UnpaidWalletResponse>> TestGetWallet(Guid partnerId)
+        {
+           
+            var result = await _settlementService.GetTotalPendingAmountAsync(partnerId);
+
+            return BaseResponse<UnpaidWalletResponse>.Ok(result, "Lấy thông tin ví thành công!");
+        }
+    }
 }

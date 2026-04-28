@@ -46,5 +46,12 @@ namespace ToyShelf.Infrastructure.Repositories
 				.ThenInclude(oi => oi.Order)
 				.FirstOrDefaultAsync(ms => ms.Id == id);
 		}
-	}
+
+        public async Task<decimal> GetTotalPendingAmountAsync(Guid partnerId)
+        {
+            return await _context.MonthlySettlements
+                 .Where(ms => ms.PartnerId == partnerId && ms.Status == "PENDING")
+                 .SumAsync(ms => ms.FinalAmount);
+        }
+    }
 }

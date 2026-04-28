@@ -13,7 +13,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<List<MonthlySettlementResponse>> GenerateMonthlySettlementAsync(int month, int year);
 		Task<MonthlySettlementResponse?> GetByIdAsync(Guid id);
-		Task<bool> PayAsync(Guid id);
+		Task<bool> PayAsync(Guid id, string transferReceiptUrl);
 		Task<IEnumerable<MonthlySettlementResponse>> GetAllAsync();
 		Task<IEnumerable<MonthlySettlementResponse>> GetAllFilterAsync(SettlementFilterRequest filter);
 		Task GenerateLastMonthSettlementAutoAsync();
@@ -21,6 +21,8 @@ namespace ToyShelf.Application.IServices
 		Task<byte[]> ExportSettlementsToExcelAsync(SettlementFilterRequest filter);
 
 		Task<bool> ConfirmReceiptAsync(Guid settlementId, ICurrentUser currentUser);
-	}
+        Task<UnpaidWalletResponse> GetTotalPendingAmountAsync(Guid partnerId);
+
+    }
 }
 
