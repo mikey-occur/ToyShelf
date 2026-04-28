@@ -22,7 +22,8 @@ namespace ToyShelf.Domain.Entities
 		public decimal TotalSalesAmount { get; set; }
 		public decimal TotalCommissionAmount { get; set; }
 		public decimal DeductionAmount { get; set; } = 0;
-		public string? Note { get; set; }
+        public string? TransferReceiptUrl { get; set; }
+        public string? Note { get; set; }
 		public decimal FinalAmount { get; set; }
 
 		// Trạng thái: PENDING (Chờ chuyển tiền), PAID (Đã chuyển khoản xong), 

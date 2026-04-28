@@ -144,7 +144,7 @@ namespace ToyShelf.Application.Services
             return response;
         }
 
-		public async Task<bool> PayAsync(Guid id)
+		public async Task<bool> PayAsync(Guid id, string transferReceiptUrl)
 		{
             var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(id);
 
@@ -174,6 +174,7 @@ namespace ToyShelf.Application.Services
 
             settlement.Status = "PAID";
             settlement.PaidAt = DateTime.UtcNow;
+            settlement.TransferReceiptUrl = transferReceiptUrl;
             _unitOfWork.Repository<MonthlySettlement>().Update(settlement);
 
             var request = new CreateNotificationRequest

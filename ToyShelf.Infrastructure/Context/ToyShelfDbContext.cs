@@ -2384,7 +2384,11 @@ namespace ToyShelf.Infrastructure.Context
 				entity.Property(e => e.FinalAmount)
 				      .HasColumnType("decimal(18,2)");
 
-				entity.Property(e => e.Note)
+                entity.Property(e => e.TransferReceiptUrl)
+					  .HasMaxLength(500) 
+					  .IsRequired(false);
+
+                entity.Property(e => e.Note)
 				      .HasMaxLength(500);
 
 				entity.Property(e => e.Status)

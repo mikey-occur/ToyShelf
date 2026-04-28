@@ -40,10 +40,10 @@ namespace ToyShelf.API.Controllers
 		/// Kế toán xác nhận đã chuyển khoản thành công cho đối tác
 		/// </summary>
 		[HttpPatch("{id}/pay")]
-		public async Task<ActionResult<ActionResponse>> Pay(Guid id)
+		public async Task<ActionResult<ActionResponse>> Pay(Guid id, [FromBody] PayRequest request)
 		{
 			// Gọi thẳng hàm PayAsync chỉ với ID
-			var isSuccess = await _settlementService.PayAsync(id);
+			var isSuccess = await _settlementService.PayAsync(id, request.ReceiptUrl);
 
 			if (!isSuccess)
 				throw new AppException("Monthly settlement not found or already paid", 404);
