@@ -17,5 +17,7 @@ namespace ToyShelf.Domain.IRepositories
 			string? searchItem = null, Guid? storeId = null,
 			DateTime? fromDate = null,
 			DateTime? toDate = null);
-	}
+
+        Task<decimal> GetTotalUnsettledAmountAsync(Guid partnerId);
+    }
 }

@@ -114,5 +114,15 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(w => w.InventoryLocations)
 				.ToListAsync();
 		}
-	}
+
+        public async Task<User?> GetPartnerAdminAsync(Guid partnerId)
+        {
+            return await _context.Users
+                 .Where(u => u.PartnerId == partnerId && u.IsActive)
+                 .Where(u => u.Accounts.Any(acc =>
+                     acc.AccountRoles.Any(ar => ar.Role.Name == "PartnerAdmin")
+                 ))
+                 .FirstOrDefaultAsync();
+        }
+    }
 }

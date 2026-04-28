@@ -79,7 +79,14 @@ namespace ToyShelf.Infrastructure.Repositories
 			return (items, totalCount);
 		}
 
-		public async Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth)
+        public async Task<decimal> GetTotalUnsettledAmountAsync(Guid partnerId)
+        {
+            return await _context.CommissionHistories
+                .Where(ch => ch.PartnerId == partnerId && ch.MonthlySettlementId == null)
+                .SumAsync(ch => ch.CommissionAmount);
+        }
+
+        public async Task<List<CommissionHistory>> GetUnsettledHistoriesAsync(DateTime endOfMonth)
 		{
 			return await _context.CommissionHistories
 				.Include(ch => ch.Partner)

@@ -21,6 +21,8 @@ namespace ToyShelf.Application.IServices
 		Task<byte[]> ExportSettlementsToExcelAsync(SettlementFilterRequest filter);
 
 		Task<bool> ConfirmReceiptAsync(Guid settlementId, ICurrentUser currentUser);
-	}
+        Task<UnpaidWalletResponse> GetTotalPendingAmountAsync(Guid partnerId);
+
+    }
 }
 
