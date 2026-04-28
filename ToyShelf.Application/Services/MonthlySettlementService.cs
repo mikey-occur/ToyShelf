@@ -97,41 +97,42 @@ namespace ToyShelf.Application.Services
 
             if (settlement == null) throw new AppException("Settlement Not Found.", 404);
 
-            var response = MapToResponse(settlement); 
+            var response = MapToResponse(settlement);
 
             
             response.DailySummaries = settlement.CommissionHistories
-                // Lấy ngày (cắt bỏ phần giờ phút giây) để group
-                .GroupBy(ch => ch.OrderItem?.Order?.CreatedAt.Date ?? ch.CreatedAt.Date)
-                .Select(group => new DailySettlementSummaryResponse
+                .Where(ch => ch.OrderItem?.Order != null) 
+                .GroupBy(ch => ch.OrderItem!.Order!.CreatedAt.Date)
+                .Select(dayGroup => new DailySettlementSummaryResponse
                 {
-                    // Format ngày ra chuỗi cho Front-end dễ hiển thị 
-                    Date = group.Key.ToString("yyyy-MM-dd"),
+                    Date = dayGroup.Key.ToString("yyyy-MM-dd"),
 
-                 
-                    TotalOrders = group.Select(ch => ch.OrderItem?.OrderId).Distinct().Count(),
+                    TotalOrders = dayGroup.Select(ch => ch.OrderItem!.OrderId).Distinct().Count(),
+                    TotalProductsSold = dayGroup.Sum(ch => ch.OrderItem!.Quantity),
+                    TotalSalesAmount = dayGroup.Sum(ch => ch.SalesAmount),
+                    TotalCommissionAmount = dayGroup.Sum(ch => ch.CommissionAmount),
 
-                   
-                    TotalProductsSold = group.Sum(ch => ch.OrderItem?.Quantity ?? 0),
-                    TotalSalesAmount = group.Sum(ch => ch.SalesAmount),
-                    TotalCommissionAmount = group.Sum(ch => ch.CommissionAmount),
+              
+                    Transactions = dayGroup
+                        .GroupBy(ch => ch.OrderItem!.Order)
+                        .Select(orderGroup => new OrderTransactionResponse
+                        {
+                           
+                            Id = orderGroup.Key!.Id,
+                            OrderId = orderGroup.Key.Id,
+                            OrderCode = orderGroup.Key.OrderCode,
+                            TotalAmount = orderGroup.Key.TotalAmount, // Tổng tiền hóa đơn
 
-                    
-                    Transactions = group.Select(ch => new CommissionHistoryResponse
-                    {
-                        Id = ch.Id,
-                        OrderId = ch.OrderItem?.OrderId ?? Guid.Empty, // Đã lấy được OrderId
-                        OrderItemId = ch.OrderItemId,
-                        AppliedRate = ch.AppliedRate,
-                        CommissionAmount = ch.CommissionAmount,
-                        Quantity = ch.OrderItem?.Quantity ?? 0,
-                        OrderCode = ch.OrderItem?.Order?.OrderCode ?? 0,
-                        PaymentMethod = ch.OrderItem?.Order?.PaymentMethod ?? "Unknown",
-                        OrderDate = ch.OrderItem?.Order?.CreatedAt ?? DateTime.MinValue,
-                        CreatedAt = ch.CreatedAt
-                    }).ToList()
+                            TotalCommission = orderGroup.Sum(x => x.CommissionAmount),
+
+                            Status = orderGroup.Key.Status,
+                            CreatedAt = orderGroup.Key.CreatedAt,
+                            OrderDate = orderGroup.Key.CreatedAt
+                        })
+                        .OrderByDescending(t => t.OrderDate) 
+                        .ToList()
                 })
-                .OrderByDescending(d => d.Date) 
+                .OrderByDescending(d => d.Date)
                 .ToList();
 
             return response;
