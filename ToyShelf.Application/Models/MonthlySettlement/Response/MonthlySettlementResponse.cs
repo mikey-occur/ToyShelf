@@ -13,7 +13,10 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
 		public Guid PartnerId { get; set; }
 		public string? PartnerName { get; set; }
 		public string PartnerCode { get; set; } = string.Empty;
-		public int Month { get; set; }
+        public string? BankName { get; set; }
+        public string? BankAccountNumber { get; set; }
+        public string? BankAccountName { get; set; }
+        public int Month { get; set; }
 		public int Year { get; set; }
 		public int TotalItems { get; set; }
 		public decimal TotalSalesAmount { get; set; }
