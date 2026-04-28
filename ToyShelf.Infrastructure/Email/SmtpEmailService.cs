@@ -227,19 +227,19 @@ namespace ToyShelf.Infrastructure.Email
             var paidAtVn = TimeZoneInfo.ConvertTimeFromUtc(settlement.PaidAt ?? DateTime.UtcNow, vietnamTimeZone);
             var paymentDate = paidAtVn.ToString("dddd, dd 'tháng' MM, yyyy", new System.Globalization.CultureInfo("vi-VN"));
 
-          //  // 2. Xử lý nút Xem ảnh Biên lai (Chỉ hiện khi có link ảnh)
-          //  var receiptHtml = string.IsNullOrEmpty(settlement.TransferReceiptUrl)
-          //      ? ""
-          //      : $@"
-          //<table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""margin-top:16px;"">
-          //  <tr>
-          //    <td align=""center"">
-          //      <a href=""{settlement.TransferReceiptUrl}"" target=""_blank"" style=""display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#1a3a8f; text-decoration:none; border: 1.5px solid #1a3a8f; padding: 10px 24px; border-radius: 6px; letter-spacing: 0.5px;"">
-          //        📎 XEM ẢNH BIÊN LAI CHUYỂN KHOẢN
-          //      </a>
-          //    </td>
-          //  </tr>
-          //</table>";
+            // 2. Xử lý nút Xem ảnh Biên lai (Chỉ hiện khi có link ảnh)
+            var receiptHtml = string.IsNullOrEmpty(settlement.TransferReceiptUrl)
+                ? ""
+                : $@"
+          <table role=""presentation"" cellspacing=""0"" cellpadding=""0"" border=""0"" width=""100%"" style=""margin-top:16px;"">
+            <tr>
+              <td align=""center"">
+                <a href=""{settlement.TransferReceiptUrl}"" target=""_blank"" style=""display:inline-block; font-family:Arial, Helvetica, sans-serif; font-size:12px; font-weight:700; color:#1a3a8f; text-decoration:none; border: 1.5px solid #1a3a8f; padding: 10px 24px; border-radius: 6px; letter-spacing: 0.5px;"">
+                  📎 XEM ẢNH BIÊN LAI CHUYỂN KHOẢN
+                </a>
+              </td>
+            </tr>
+          </table>";
 
             // 3. Render HTML
             var htmlContent = $"""
@@ -396,6 +396,8 @@ namespace ToyShelf.Infrastructure.Email
                     </tr>
                   </table>
 
+                  {receiptHtml}
+
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:32px;">
                     <tr>
                       <td style="border-top:1px solid #eaedf5;"></td>
@@ -405,7 +407,7 @@ namespace ToyShelf.Infrastructure.Email
                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;margin-bottom:36px;">
                     <tr>
                       <td align="center">
-                        <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;text-align:center;">Vui lòng đăng nhập vào hệ thống để xác nhận giao dịch.</p>
+                        <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;text-align:center;">Vui lòng đăng nhập vào hệ thống để xác nhận giao dịch và lưu trữ biên lai.</p>
                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
                           <tr>
                             <td style="border-radius:8px;background-color:#1a3a8f;text-align:center;">
