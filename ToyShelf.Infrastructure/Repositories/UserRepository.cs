@@ -135,5 +135,25 @@ namespace ToyShelf.Infrastructure.Repositories
 						ar.Role.Name == roleName)))
 				.ToListAsync();
 		}
+		public async Task<List<User>> GetWarehouseManagersAsync()
+		{
+			return await _context.Users
+				.AsNoTracking()
+				.Where(u => u.IsActive)
+				.Where(u => u.UserWarehouses.Any(uw =>
+					uw.IsActive && uw.Role == WarehouseRole.Manager))
+				.ToListAsync();
+		}
+		public async Task<List<User>> GetWarehouseManagersByWarehouseIdAsync(Guid warehouseId)
+		{
+			return await _context.Users
+				.AsNoTracking()
+				.Where(u => u.IsActive)
+				.Where(u => u.UserWarehouses.Any(uw =>
+					uw.WarehouseId == warehouseId &&
+					uw.Role == WarehouseRole.Manager &&
+					uw.IsActive))
+				.ToListAsync();
+		}
 	}
 }
