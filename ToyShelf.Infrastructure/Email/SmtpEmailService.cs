@@ -286,7 +286,7 @@ namespace ToyShelf.Infrastructure.Email
                                        <tr>
                                          <td>
                                            <span style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">BIÊN LAI CHUYỂN KHOẢN</span>
-                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);display:block;margin-top:3px;letter-spacing:0.3px;">Hoa hồng kí gửi</span>
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);display:block;margin-top:3px;letter-spacing:0.3px;">Thanh toán hoa hồng kỳ đối soát</span>
                                          </td>
                                          <td style="text-align:right;white-space:nowrap;">
                                            <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.55);">Ngày phát hành</span>
