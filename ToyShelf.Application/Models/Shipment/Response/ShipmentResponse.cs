@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Models.DamageReport.Response;
+using ToyShelf.Application.Models.ShipmentAssignment.Response;
 using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.Models.Shipment.Response
@@ -14,9 +15,10 @@ namespace ToyShelf.Application.Models.Shipment.Response
 		public string Code { get; set; } = null!;
 
 		// Thay vì 1 ID lẻ, ta trả về danh sách để FE biết chuyến này gom những đơn nào
-		public List<Guid> StoreOrderIds { get; set; } = new();
-		public List<Guid> ShelfOrderIds { get; set; } = new();
-		public List<Guid> DamageReportIds { get; set; } = new();
+		public List<OrderReferenceResponse> StoreOrders { get; set; } = new();
+		public List<OrderReferenceResponse> ShelfOrders { get; set; } = new();
+		public List<OrderReferenceResponse> DamageReports { get; set; } = new();
+
 
 		// Flag quan trọng để Shipper biết là đi giao hay đi thu hồi
 		public bool IsReturn { get; set; }

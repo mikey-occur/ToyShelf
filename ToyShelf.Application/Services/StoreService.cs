@@ -261,6 +261,7 @@ namespace ToyShelf.Application.Services
 
 				Code = store.Code,
 				Name = store.Name,
+				MaxShelvesPerStore = store.Partner?.PartnerTier?.MaxShelvesPerStore,
 				StoreAddress = store.StoreAddress,
 
 				CityId = store.CityId,

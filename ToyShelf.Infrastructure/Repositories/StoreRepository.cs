@@ -28,6 +28,8 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(u => u.Accounts)
 							.ThenInclude(a => a.AccountRoles)
 								.ThenInclude(ar => ar.Role)
+				.Include(s => s.Partner)
+					.ThenInclude(p => p.PartnerTier)
 				.AsQueryable();
 
 			if (isActive.HasValue)
@@ -68,6 +70,8 @@ namespace ToyShelf.Infrastructure.Repositories
 						.ThenInclude(u => u.Accounts)
 							.ThenInclude(a => a.AccountRoles)
 								.ThenInclude(ar => ar.Role)
+				.Include(s => s.Partner)
+					.ThenInclude(p => p.PartnerTier)
 				.FirstOrDefaultAsync(s => s.Id == id);
 		}
 

@@ -14,6 +14,7 @@ namespace ToyShelf.Application.Models.Store.Response
 		public Guid InventoryLocationId { get; set; }
 		public string Code { get; set; } = string.Empty;
 		public string Name { get; set; } = string.Empty;
+		public int? MaxShelvesPerStore { get; set; }
 		public string StoreAddress { get; set; } = string.Empty;
 		public Guid CityId { get; set; }
 		public string CityName { get; set; } = string.Empty;
