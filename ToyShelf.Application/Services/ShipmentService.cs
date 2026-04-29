@@ -366,8 +366,8 @@ namespace ToyShelf.Application.Services
 					new InternalCreateNotificationRequest
 					{
 						UserId = shipment.ShipperId.Value,
-						Title = "Shipment mới được tạo",
-						Content = $"Shipment {shipment.Code} đã được tạo, vui lòng đến kho lấy hàng",
+						Title = "Hàng đã sẵn sàng để lấy",
+						Content = $"Kho đã chuẩn bị xong hàng cho shipment {shipment.Code}, vui lòng đến kho để nhận hàng",
 						RefType = "Shipment",
 						RefId = shipment.Id
 					}
@@ -537,13 +537,11 @@ namespace ToyShelf.Application.Services
 
 				await NotifyUsersAsync(
 					warehouseManagers,
-					"Shipper đã lấy hàng",
-					$"Shipment {shipment.Code} đã được lấy khỏi kho và đang vận chuyển",
+					"Xe đã rời kho",
+					$"Shipment {shipment.Code} đã rời kho và đang vận chuyển đến điểm giao",
 					"Shipment",
 					shipment.Id
 				);
-
-
 			}
 			catch (Exception)
 			{
@@ -778,8 +776,8 @@ namespace ToyShelf.Application.Services
 
 			await NotifyUsersAsync(
 				warehouseManagers,
-				"Shipper đã về kho",
-				$"Shipment {shipment.Code} đã về đến kho",
+				"Xe đã về kho",
+				$"Shipment {shipment.Code} đã giao xong và xe đã về kho",
 				"Shipment",
 				shipment.Id
 			);
