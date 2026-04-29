@@ -221,7 +221,7 @@ namespace ToyShelf.Application.Services
 			await NotifyUsersAsync(
 				admins,
 				"Đơn hàng cần duyệt",
-				$"Đơn hàng {order.Code} đã được Partner duyệt",
+				$"Đơn hàng {order.Code} đã được đối tác duyệt",
 				"StoreOrder",
 				order.Id
 			);
@@ -231,7 +231,7 @@ namespace ToyShelf.Application.Services
 				{
 					UserId = order.RequestedByUserId,
 					Title = "Đơn hàng đang được xử lý",
-					Content = $"Đơn hàng {order.Code} đã được công ty duyệt và đang chờ nhà sản xuất xác nhận",
+					Content = $"Đơn hàng {order.Code} đã được công ty duyệt và đang chờ xác nhận",
 					RefType = "StoreOrder",
 					RefId = order.Id
 				}
