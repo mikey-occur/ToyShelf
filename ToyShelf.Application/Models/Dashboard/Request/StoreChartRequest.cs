@@ -8,7 +8,8 @@ namespace ToyShelf.Application.Models.Dashboard.Request
 {
 	public class StoreChartRequest
 	{
-		public string ViewType { get; set; } = "month"; 
+		public string ViewType { get; set; } = "month";
+		public DateTime? Date { get; set; }
 		public int? Month { get; set; }
 		public int? Year { get; set; }
 	}
