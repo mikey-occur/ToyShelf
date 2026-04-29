@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,6 +7,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Request;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
@@ -24,6 +26,9 @@ namespace ToyShelf.Application.Services
 		private readonly IDamageReportRepository _damageReportRepository;
 		private readonly IAssignmentStoreOrderRepository _assignmentStoreOrderRepository;
 		private readonly IAssignmentShelfOrderRepository _assignmentShelfOrderRepository;
+		private readonly IUserRepository _userRepository;
+		private readonly INotificationService _notificationService;
+		private readonly ILogger<ShipmentAssignmentService> _logger;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -35,6 +40,9 @@ namespace ToyShelf.Application.Services
 			IDamageReportRepository damageReportRepository,
 			IAssignmentStoreOrderRepository assignmentStoreOrderRepository,
 			IAssignmentShelfOrderRepository assignmentShelfOrderRepository,
+			IUserRepository userRepository,
+			INotificationService notificationService,
+			ILogger<ShipmentAssignmentService> logger,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -45,8 +53,42 @@ namespace ToyShelf.Application.Services
 			_damageReportRepository = damageReportRepository;
 			_assignmentStoreOrderRepository = assignmentStoreOrderRepository;
 			_assignmentShelfOrderRepository = assignmentShelfOrderRepository;
+			_userRepository = userRepository;
+			_notificationService = notificationService;
+			_logger = logger;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+		}
+
+		private async Task NotifyUsersAsync(
+			List<User> users,
+			string title,
+			string content,
+			string refType,
+			Guid refId)
+		{
+			var tasks = users.Select(async user =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = user.Id,
+							Title = title,
+							Content = content,
+							RefType = refType,
+							RefId = refId
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho user {user.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
 		}
 
 		// Thông minh : Cập nhật loại đơn
@@ -305,6 +347,16 @@ namespace ToyShelf.Application.Services
 
 			_assignmentRepository.Update(assignment);
 			await _unitOfWork.SaveChangesAsync();
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = request.ShipperId,
+					Title = "Bạn có nhiệm vụ mới",
+					Content = $"Bạn đã được phân công một nhiệm vụ vận chuyển",
+					RefType = "Assignment",
+					RefId = assignment.Id
+				}
+			);
 		}
 
 		public async Task AcceptAsync(Guid id, ICurrentUser currentUser)
@@ -340,6 +392,17 @@ namespace ToyShelf.Application.Services
 
 			_assignmentRepository.Update(assignment);
 			await _unitOfWork.SaveChangesAsync();
+
+			var warehouseManagers = await _userRepository
+					.GetWarehouseManagersByWarehouseIdAsync(warehouseId);
+
+			await NotifyUsersAsync(
+				warehouseManagers,
+				"Shipper đã nhận nhiệm vụ",
+				$"Shipper đã chấp nhận nhiệm vụ {assignment.Id}",
+				"Assignment",
+				assignment.Id
+			);
 		}
 
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
@@ -375,6 +438,17 @@ namespace ToyShelf.Application.Services
 
 			_assignmentRepository.Update(assignment);
 			await _unitOfWork.SaveChangesAsync();
+
+			var warehouseManagers = await _userRepository
+				.GetWarehouseManagersByWarehouseIdAsync(warehouseId);
+
+			await NotifyUsersAsync(
+				warehouseManagers,
+				"Shipper từ chối nhiệm vụ",
+				$"Shipper đã từ chối nhiệm vụ {assignment.Id}",
+				"Assignment",
+				assignment.Id
+			);
 		}
 
 
