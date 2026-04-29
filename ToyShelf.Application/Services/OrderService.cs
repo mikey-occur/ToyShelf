@@ -125,7 +125,8 @@ namespace ToyShelf.Application.Services
 			{
 				Id = order.Id,
 				StoreId = order.StoreId,
-				CustomerName = order.CustomerName,
+				PartnerName = order.Store?.Partner?.CompanyName ?? "N/A",
+                CustomerName = order.CustomerName,
 				CustomerEmail = order.CustomerEmail,
 				BankReference = order.BankReference,
                 StaffId = order.StaffId,

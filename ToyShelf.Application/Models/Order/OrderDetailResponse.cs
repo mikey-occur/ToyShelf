@@ -11,6 +11,7 @@ namespace ToyShelf.Application.Models.Order
 		public Guid Id { get; set; }
 		public Guid StoreId { get; set; }
 		public string? StoreName { get; set; }
+		public string? PartnerName { get; set; }	
 		public Guid StaffId { get; set; }
 		public string StaffName { get; set; } = string.Empty;
 		public string StaffEmail { get; set; } = string.Empty;

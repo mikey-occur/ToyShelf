@@ -243,218 +243,220 @@ namespace ToyShelf.Infrastructure.Email
 
             // 3. Render HTML
             var htmlContent = $"""
-    <!DOCTYPE html>
-    <html lang="vi" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <meta name="x-apple-disable-message-reformatting">
-      <title>Biên Lai Chuyển Khoản Hoa Hồng - ToyShelf</title>
-      </head>
-    <body style="margin:0;padding:0;background-color:#f4f6fb;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+                 <!DOCTYPE html>
+                 <html lang="vi" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+                 <head>
+                   <meta charset="UTF-8">
+                   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                   <meta name="x-apple-disable-message-reformatting">
+                   <title>Biên Lai Chuyển Khoản Hoa Hồng - ToyShelf</title>
+                   </head>
+                 <body style="margin:0;padding:0;background-color:#f4f6fb;font-family:Arial,Helvetica,sans-serif;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
 
-      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f6fb;margin:0;padding:0;">
-        <tr>
-          <td align="center" style="padding:32px 16px;">
+                   <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f4f6fb;margin:0;padding:0;">
+                     <tr>
+                       <td align="center" style="padding:32px 16px;">
 
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(26,58,143,0.10);">
+                         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width:600px;width:100%;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(26,58,143,0.10);">
 
-              <tr>
-                <td style="background-color:#1a3a8f;padding:0;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tr>
-                      <td style="padding:28px 40px 24px 40px;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                          <tr>
-                            <td style="vertical-align:middle;">
-                              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                                <tr>
-                                  <td style="vertical-align:middle;">
-                                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">ToyShelf</span>
-                                  </td>
-                                </tr>
-                              </table>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td style="background-color:rgba(0,0,0,0.18);padding:16px 40px;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                          <tr>
-                            <td>
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">BIÊN LAI CHUYỂN KHOẢN</span>
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);display:block;margin-top:3px;letter-spacing:0.3px;">Hoa hồng đại lý phân phối</span>
-                            </td>
-                            <td style="text-align:right;white-space:nowrap;">
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.55);">Ngày phát hành</span>
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#ffffff;display:block;font-weight:600;">{paymentDate}</span>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
+                           <tr>
+                             <td style="background-color:#1a3a8f;padding:0;">
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                 <tr>
+                                   <td style="padding:28px 40px 24px 40px;">
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                       <tr>
+                                         <td style="vertical-align:middle;">
+                                           <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                             <tr>
+                                               <td style="vertical-align:middle;">
+                                                 <span style="font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;">ToyShelf</span>
+                                               </td>
+                                             </tr>
+                                           </table>
+                                         </td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                                 <tr>
+                                   <td style="background-color:rgba(0,0,0,0.18);padding:16px 40px;">
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                       <tr>
+                                         <td>
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:18px;font-weight:700;color:#ffffff;letter-spacing:1px;text-transform:uppercase;">BIÊN LAI CHUYỂN KHOẢN</span>
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:rgba(255,255,255,0.65);display:block;margin-top:3px;letter-spacing:0.3px;">Thanh toán hoa hồng kỳ đối soát</span>
+                                         </td>
+                                         <td style="text-align:right;white-space:nowrap;">
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.55);">Ngày phát hành</span>
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#ffffff;display:block;font-weight:600;">{paymentDate}</span>
+                                         </td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                               </table>
+                             </td>
+                           </tr>
 
-              <tr>
-                <td style="padding:36px 40px 0 40px;">
+                           <tr>
+                             <td style="padding:36px 40px 0 40px;">
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tr>
-                      <td style="padding-bottom:28px;border-bottom:1px solid #eaedf5;">
-                        <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#555555;">Kính gửi Đối tác,</p>
-                        <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#1a3a8f;">{partner.CompanyName}</p>
-                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">
-                          Người nhận:&nbsp;
-                          <span style="color:#1a1a1a;font-weight:600;">{partnerAdmin.FullName}</span>
-                        </p>
-                        <p style="margin:12px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;line-height:1.7;">
-                          ToyShelf xin trân trọng thông báo đã hoàn tất giao dịch chuyển khoản hoa hồng kỳ đối soát&nbsp;<strong style="color:#1a3a8f;">Tháng {settlement.Month}/{settlement.Year}</strong>&nbsp;đến tài khoản ngân hàng đã đăng ký của quý đối tác.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                 <tr>
+                                   <td style="padding-bottom:28px;border-bottom:1px solid #eaedf5;">
+                                     <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;color:#555555;">Kính gửi Đối tác,</p>
+                                     <p style="margin:0 0 4px 0;font-family:Arial,Helvetica,sans-serif;font-size:20px;font-weight:700;color:#1a3a8f;">{partner.CompanyName}</p>
+                                     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">
+                                       Người nhận:&nbsp;
+                                       <span style="color:#1a1a1a;font-weight:600;">{partnerAdmin.FullName}</span>
+                                     </p>
+                                     <p style="margin:12px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;line-height:1.7;">
+                                       ToyShelf xin trân trọng thông báo đã hoàn tất giao dịch chuyển khoản hoa hồng kỳ đối soát&nbsp;<strong style="color:#1a3a8f;">Tháng {settlement.Month}/{settlement.Year}</strong>&nbsp;đến tài khoản ngân hàng đã đăng ký của quý đối tác.
+                                     </p>
+                                   </td>
+                                 </tr>
+                               </table>
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
-                    <tr>
-                      <td>
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f0f4ff;border-radius:10px;border:1.5px solid #d0dbf5;overflow:hidden;">
-                          <tr>
-                            <td width="5" style="background-color:#1a3a8f;border-radius:10px 0 0 10px;">&nbsp;</td>
-                            <td style="padding:20px 24px;">
-                              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                                <tr>
-                                  <td style="vertical-align:middle;padding-right:16px;">
-                                    <div style="width:44px;height:44px;background-color:#1a3a8f;border-radius:50%;text-align:center;line-height:44px;font-size:20px;display:inline-block;">🏦</div>
-                                  </td>
-                                  <td style="vertical-align:middle;">
-                                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#777777;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Tài khoản nhận tiền</span>
-                                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#1a3a8f;">{partner.BankName}</span>
-                                  </td>
-                                  <td style="text-align:right;vertical-align:middle;">
-                                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#777777;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Số tài khoản</span>
-                                    <span style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:1px;">{partner.BankAccountNumber}</span>
-                                  </td>
-                                </tr>
-                              </table>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
+                                 <tr>
+                                   <td>
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#f0f4ff;border-radius:10px;border:1.5px solid #d0dbf5;overflow:hidden;">
+                                       <tr>
+                                         <td width="5" style="background-color:#1a3a8f;border-radius:10px 0 0 10px;">&nbsp;</td>
+                                         <td style="padding:20px 24px;">
+                                           <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                             <tr>
+                                               <td width="44" style="vertical-align:top;padding-right:16px;">
+                                                 <div style="width:44px;height:44px;background-color:#1a3a8f;border-radius:50%;text-align:center;line-height:44px;font-size:20px;display:inline-block;">🏦</div>
+                                               </td>
+                                               <td style="vertical-align:middle;">
+                                                 <div style="margin-bottom: 12px;">
+                                                   <span style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#777777;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Tài khoản nhận tiền</span>
+                                                   <span style="font-family:Arial,Helvetica,sans-serif;font-size:15px;font-weight:700;color:#1a3a8f;">{partner.BankName}</span>
+                                                 </div>
+                                                 <div>
+                                                   <span style="font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#777777;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:4px;">Số tài khoản</span>
+                                                   <span style="font-family:Arial,Helvetica,sans-serif;font-size:16px;font-weight:700;color:#1a1a1a;letter-spacing:1px;word-break:break-all;">{partner.BankAccountNumber}</span>
+                                                 </div>
+                                               </td>
+                                             </tr>
+                                           </table>
+                                         </td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                               </table>
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
-                    <tr>
-                      <td>
-                        <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;color:#999999;letter-spacing:2px;text-transform:uppercase;">Chi tiết giao dịch</p>
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid #eaedf5;border-radius:8px;overflow:hidden;">
-                          <tr style="background-color:#fafbfe;">
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;width:55%;">Kỳ đối soát</td>
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">Tháng {settlement.Month}/{settlement.Year}</td>
-                          </tr>
-                          <tr style="background-color:#ffffff;">
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng đơn hàng</td>
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalItems} đơn</td>
-                          </tr>
-                          <tr style="background-color:#fafbfe;">
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng doanh thu</td>
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalSalesAmount:N0}₫</td>
-                          </tr>
-                          <tr style="background-color:#ffffff;">
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng hoa hồng</td>
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a3a8f;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalCommissionAmount:N0}₫</td>
-                          </tr>
-                          <tr style="background-color:#fafbfe;">
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">Khấu trừ</td>
-                            <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#d0021b;text-align:right;">-{settlement.DeductionAmount:N0}₫</td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
+                                 <tr>
+                                   <td>
+                                     <p style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;font-weight:700;color:#999999;letter-spacing:2px;text-transform:uppercase;">Chi tiết giao dịch</p>
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid #eaedf5;border-radius:8px;overflow:hidden;">
+                                       <tr style="background-color:#fafbfe;">
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;width:55%;">Kỳ đối soát</td>
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">Tháng {settlement.Month}/{settlement.Year}</td>
+                                       </tr>
+                                       <tr style="background-color:#ffffff;">
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng đơn hàng</td>
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalItems} đơn</td>
+                                       </tr>
+                                       <tr style="background-color:#fafbfe;">
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng doanh thu</td>
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a1a1a;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalSalesAmount:N0}₫</td>
+                                       </tr>
+                                       <tr style="background-color:#ffffff;">
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;border-bottom:1px solid #eaedf5;">Tổng hoa hồng</td>
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#1a3a8f;border-bottom:1px solid #eaedf5;text-align:right;">{settlement.TotalCommissionAmount:N0}₫</td>
+                                       </tr>
+                                       <tr style="background-color:#fafbfe;">
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">Khấu trừ</td>
+                                         <td style="padding:13px 20px;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;color:#d0021b;text-align:right;">-{settlement.DeductionAmount:N0}₫</td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                               </table>
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:24px;">
-                    <tr>
-                      <td style="background:linear-gradient(135deg, #1a3a8f 0%, #2352c8 100%);border-radius:10px;padding:26px 28px;">
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                          <tr>
-                            <td style="vertical-align:middle;">
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.65);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px;">Số tiền thực nhận</span>
-                              <span style="font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">{settlement.FinalAmount:N0}₫</span>
-                            </td>
-                            <td style="text-align:right;vertical-align:middle;">
-                              <div style="display:inline-block;background-color:rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;text-align:center;line-height:52px;font-size:26px;">✓</div>
-                            </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:24px;">
+                                 <tr>
+                                   <td style="background:linear-gradient(135deg, #1a3a8f 0%, #2352c8 100%);border-radius:10px;padding:26px 28px;">
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                       <tr>
+                                         <td style="vertical-align:middle;">
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:11px;color:rgba(255,255,255,0.65);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:6px;">Số tiền thực nhận</span>
+                                           <span style="font-family:Arial,Helvetica,sans-serif;font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">{settlement.FinalAmount:N0}₫</span>
+                                         </td>
+                                         <td style="text-align:right;vertical-align:middle;">
+                                           <div style="display:inline-block;background-color:rgba(255,255,255,0.15);border-radius:50%;width:52px;height:52px;text-align:center;line-height:52px;font-size:26px;">✓</div>
+                                         </td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                               </table>
 
-                  {receiptHtml}
+                               {receiptHtml}
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:32px;">
-                    <tr>
-                      <td style="border-top:1px solid #eaedf5;"></td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:32px;">
+                                 <tr>
+                                   <td style="border-top:1px solid #eaedf5;"></td>
+                                 </tr>
+                               </table>
 
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;margin-bottom:36px;">
-                    <tr>
-                      <td align="center">
-                        <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;text-align:center;">Vui lòng đăng nhập vào hệ thống để xác nhận giao dịch và lưu trữ biên lai.</p>
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
-                          <tr>
-                            <td style="border-radius:8px;background-color:#1a3a8f;text-align:center;">
-                              <a href="https://toy-shelf-management.vercel.app/" target="_blank" style="display:inline-block;background-color:#1a3a8f;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:14px 40px;border-radius:8px;text-transform:uppercase;">ĐĂNG NHẬP ĐỂ XÁC NHẬN</a>
-                              </td>
-                          </tr>
-                        </table>
-                      </td>
-                    </tr>
-                  </table>
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;margin-bottom:36px;">
+                                 <tr>
+                                   <td align="center">
+                                     <p style="margin:0 0 16px 0;font-family:Arial,Helvetica,sans-serif;font-size:13.5px;color:#555555;text-align:center;">Vui lòng đăng nhập vào hệ thống để xác nhận giao dịch và lưu trữ biên lai.</p>
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;">
+                                       <tr>
+                                         <td style="border-radius:8px;background-color:#1a3a8f;text-align:center;">
+                                           <a href="https://toy-shelf-management.vercel.app/" target="_blank" style="display:inline-block;background-color:#1a3a8f;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:14px 40px;border-radius:8px;text-transform:uppercase;">ĐĂNG NHẬP ĐỂ XÁC NHẬN</a>
+                                           </td>
+                                       </tr>
+                                     </table>
+                                   </td>
+                                 </tr>
+                               </table>
 
-                </td>
-              </tr>
+                             </td>
+                           </tr>
 
-              <tr>
-                <td style="background-color:#f4f6fb;border-top:1px solid #eaedf5;padding:24px 40px;border-radius:0 0 12px 12px;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                    <tr>
-                      <td style="text-align:center;">
-                        <p style="margin:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#1a3a8f;">ToyShelf</p>
-                        <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#999999;line-height:1.6;">
-                          Cảm ơn quý đối tác đã đồng hành cùng ToyShelf.<br>
-                          Mọi thắc mắc vui lòng liên hệ <a href="mailto:support@toyshelf.vn" style="color:#1a3a8f;text-decoration:none;">support@toyshelf.vn</a>
-                        </p>
-                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="80%" style="margin:12px auto;">
-                          <tr><td style="border-top:1px solid #dde2ee;"></td></tr>
-                        </table>
-                        <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#bbbbbb;font-style:italic;">
-                          Đây là email tự động được gửi bởi hệ thống ToyShelf. Vui lòng không reply trực tiếp email này.
-                        </p>
-                        <p style="margin:6px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#cccccc;">
-                          © {DateTime.Now.Year} ToyShelf. All rights reserved.
-                        </p>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
+                           <tr>
+                             <td style="background-color:#f4f6fb;border-top:1px solid #eaedf5;padding:24px 40px;border-radius:0 0 12px 12px;">
+                               <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                 <tr>
+                                   <td style="text-align:center;">
+                                     <p style="margin:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;font-weight:700;color:#1a3a8f;">ToyShelf</p>
+                                     <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#999999;line-height:1.6;">
+                                       Cảm ơn quý đối tác đã đồng hành cùng ToyShelf.<br>
+                                       Mọi thắc mắc vui lòng liên hệ <a href="mailto:support@toyshelf.vn" style="color:#1a3a8f;text-decoration:none;">support@toyshelf.vn</a>
+                                     </p>
+                                     <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="80%" style="margin:12px auto;">
+                                       <tr><td style="border-top:1px solid #dde2ee;"></td></tr>
+                                     </table>
+                                     <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;color:#bbbbbb;font-style:italic;">
+                                       Đây là email tự động được gửi bởi hệ thống ToyShelf. Vui lòng không reply trực tiếp email này.
+                                     </p>
+                                     <p style="margin:6px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;color:#cccccc;">
+                                       © {DateTime.Now.Year} ToyShelf. All rights reserved.
+                                     </p>
+                                   </td>
+                                 </tr>
+                               </table>
+                             </td>
+                           </tr>
 
-            </table>
-          </td>
-        </tr>
-      </table>
+                         </table>
+                       </td>
+                     </tr>
+                   </table>
 
-    </body>
-    </html>
-    """;
+                 </body>
+                 </html>
+                 """;
 
             return htmlContent;
         }
