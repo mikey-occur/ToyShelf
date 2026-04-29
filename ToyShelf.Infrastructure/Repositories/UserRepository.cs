@@ -124,5 +124,16 @@ namespace ToyShelf.Infrastructure.Repositories
                  ))
                  .FirstOrDefaultAsync();
         }
-    }
+
+		public async Task<List<User>> GetUsersByRoleAsync(string roleName)
+		{
+			return await _context.Users
+				.AsNoTracking()
+				.Where(u => u.IsActive)
+				.Where(u => u.Accounts.Any(a =>
+					a.AccountRoles.Any(ar =>
+						ar.Role.Name == roleName)))
+				.ToListAsync();
+		}
+	}
 }

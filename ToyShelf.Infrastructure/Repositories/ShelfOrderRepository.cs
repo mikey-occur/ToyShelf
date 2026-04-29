@@ -59,7 +59,9 @@ namespace ToyShelf.Infrastructure.Repositories
 				query = query.Where(x => x.StoreLocation!.Store!.PartnerId == partnerId.Value);
 			}
 
-			return await query.ToListAsync();
+			return await query
+			.OrderByDescending(x => x.CreatedAt)
+			.ToListAsync();
 		}
 
 		public async Task<ShelfOrder?> GetByIdWithItemsAsync(Guid id)

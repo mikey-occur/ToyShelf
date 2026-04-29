@@ -1,12 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
@@ -25,6 +28,9 @@ namespace ToyShelf.Application.Services
 		private readonly IShelfTypeRepository _shelfTypeRepository;
 		private readonly IShelfRepository _shelfRepository;
 		private readonly IShipmentAssignmentRepository _assignmentRepository;
+		private readonly IUserRepository _userRepository;
+		private readonly INotificationService _notificationService;
+		private readonly ILogger<ShelfOrderService> _logger;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -38,6 +44,9 @@ namespace ToyShelf.Application.Services
 			IShelfTypeRepository shelfTypeRepository,
 			IShelfRepository shelfRepository,
 			IShipmentAssignmentRepository assignmentRepository,
+			IUserRepository userRepository,
+			INotificationService notificationService,
+			ILogger<ShelfOrderService> logger,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -48,8 +57,42 @@ namespace ToyShelf.Application.Services
 			_shelfTypeRepository = shelfTypeRepository;
 			_shelfRepository = shelfRepository;
 			_assignmentRepository = assignmentRepository;
+			_userRepository = userRepository;
+			_notificationService = notificationService;
+			_logger = logger;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+		}
+
+		private async Task NotifyUsersAsync(
+			List<User> users,
+			string title,
+			string content,
+			string refType,
+			Guid refId)
+		{
+			var tasks = users.Select(async user =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = user.Id,
+							Title = title,
+							Content = content,
+							RefType = refType,
+							RefId = refId
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho user {user.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
 		}
 
 		// ================= CREATE =================
@@ -104,6 +147,39 @@ namespace ToyShelf.Application.Services
 			await _repository.AddAsync(order);
 			await _unitOfWork.SaveChangesAsync();
 
+
+			var currentUserEntity = await _userRepository.GetByIdAsync(currentUser.UserId);
+
+			if (currentUserEntity?.PartnerId == null)
+				throw new AppException("User has no Partner", 400);
+
+			var admins = await _userRepository
+				.GetUsersByRoleAndPartnerAsync("PartnerAdmin", currentUserEntity.PartnerId.Value);
+
+			var tasks = admins.Select(async admin =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = admin.Id,
+							Title = "Đơn hàng mới cần duyệt",
+							Content = $"Đơn hàng {order.Code} đang chờ bạn duyệt",
+							RefType = "ShelfOrder",
+							RefId = order.Id
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho PartnerAdmin {admin.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
+
+
 			var full = await _repository.GetByIdWithItemsAsync(order.Id);
 
 			if (full == null)
@@ -145,6 +221,27 @@ namespace ToyShelf.Application.Services
 
 			_repository.Update(order);
 			await _unitOfWork.SaveChangesAsync();
+
+			var admins = await _userRepository.GetUsersByRoleAsync("Admin");
+
+			await NotifyUsersAsync(
+				admins,
+				"Đơn kệ cần duyệt",
+				$"Đơn kệ {order.Code} đã được đối tác duyệt",
+				"ShelfOrder",
+				order.Id
+			);
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn kệ đang được xử lý",
+					Content = $"Đơn kệ {order.Code} đã được công ty duyệt và đang chờ xác nhận",
+					RefType = "ShelfOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		public async Task ApproveAsync(Guid id, ICurrentUser currentUser)
@@ -164,6 +261,17 @@ namespace ToyShelf.Application.Services
 
 			_repository.Update(order);
 			await _unitOfWork.SaveChangesAsync();
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn kệ đã được duyệt",
+					Content = $"Đơn kệ {order.Code} đã được phê duyệt",
+					RefType = "ShelfOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		public async Task RejectAsync(Guid id, string? adminNote, ICurrentUser currentUser)
@@ -185,6 +293,17 @@ namespace ToyShelf.Application.Services
 
 			_repository.Update(order);
 			await _unitOfWork.SaveChangesAsync();
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn kệ bị từ chối",
+					Content = $"Đơn kệ {order.Code} đã bị từ chối",
+					RefType = "ShelfOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		public async Task<List<WarehouseMatchShelfResponse>> GetAvailableWarehousesForShelfOrder(Guid shelfOrderId)
