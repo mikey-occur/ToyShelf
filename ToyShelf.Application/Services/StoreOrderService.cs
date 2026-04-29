@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,6 +56,39 @@ namespace ToyShelf.Application.Services
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
+
+
+		private async Task NotifyUsersAsync(
+			List<User> users,
+			string title,
+			string content,
+			string refType,
+			Guid refId)
+		{
+			var tasks = users.Select(async user =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = user.Id,
+							Title = title,
+							Content = content,
+							RefType = refType,
+							RefId = refId
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho user {user.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
+		}
+
 
 		public async Task<StoreOrderResponse> CreateAsync(CreateStoreOrderRequest request, ICurrentUser currentUser)
 		{
@@ -180,6 +214,28 @@ namespace ToyShelf.Application.Services
 
 			_storeOrderRepository.Update(order);
 			await _unitOfWork.SaveChangesAsync();
+
+			var admins = await _userRepository
+						.GetUsersByRoleAsync("Admin");
+
+			await NotifyUsersAsync(
+				admins,
+				"Đơn hàng cần duyệt",
+				$"Đơn hàng {order.Code} đã được đối tác duyệt",
+				"StoreOrder",
+				order.Id
+			);
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn hàng đang được xử lý",
+					Content = $"Đơn hàng {order.Code} đã được công ty duyệt và đang chờ xác nhận",
+					RefType = "StoreOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		public async Task AdminApproveAsync(Guid id, ICurrentUser currentUser)
@@ -199,6 +255,17 @@ namespace ToyShelf.Application.Services
 
 			_storeOrderRepository.Update(order);
 			await _unitOfWork.SaveChangesAsync();
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn hàng đã được duyệt",
+					Content = $"Đơn hàng {order.Code} đã được phê duyệt",
+					RefType = "StoreOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		public async Task RejectAsync(Guid id, ICurrentUser currentUser)
@@ -220,6 +287,17 @@ namespace ToyShelf.Application.Services
 			_storeOrderRepository.Update(order);
 
 			await _unitOfWork.SaveChangesAsync();
+
+			await _notificationService.CreateInternalNotificationAsync(
+				new InternalCreateNotificationRequest
+				{
+					UserId = order.RequestedByUserId,
+					Title = "Đơn hàng bị từ chối",
+					Content = $"Đơn hàng {order.Code} đã bị từ chối",
+					RefType = "StoreOrder",
+					RefId = order.Id
+				}
+			);
 		}
 
 		//public async Task<List<WarehouseMatchResponse>> GetAvailableWarehousesAsync(Guid storeOrderId)

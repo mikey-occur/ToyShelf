@@ -1,5 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +10,7 @@ using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.DamageReport.Request;
 using ToyShelf.Application.Models.DamageReport.Response;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Domain.Common.Time;
 using ToyShelf.Domain.Entities;
 using ToyShelf.Domain.IRepositories;
@@ -23,6 +26,9 @@ namespace ToyShelf.Application.Services
 		private readonly IUserStoreRepository _userStoreRepository;
 		private readonly IShipmentAssignmentService _shipmentAssignmentService;
 		private readonly IInventoryShelfRepository _inventoryShelfRepository;
+		private readonly IUserRepository _userRepository;
+		private readonly INotificationService _notificationService;
+		private readonly ILogger<DamageReportService> _logger;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -36,6 +42,9 @@ namespace ToyShelf.Application.Services
 			IUserStoreRepository userStoreRepository,
 			IShipmentAssignmentService shipmentAssignmentService,
 			IInventoryShelfRepository inventoryShelfRepository,
+			IUserRepository userRepository,
+			INotificationService notificationService,
+			ILogger<DamageReportService> logger,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -46,8 +55,63 @@ namespace ToyShelf.Application.Services
 			_userStoreRepository = userStoreRepository;
 			_shipmentAssignmentService = shipmentAssignmentService;
 			_inventoryShelfRepository = inventoryShelfRepository;
+			_userRepository = userRepository;
+			_notificationService = notificationService;
+			_logger = logger;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+		}
+
+		private async Task NotifyUsersAsync(
+		List<User> users,
+		string title,
+		string content,
+		string refType,
+		Guid refId)
+		{
+			var tasks = users.Select(async user =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = user.Id,
+							Title = title,
+							Content = content,
+							RefType = refType,
+							RefId = refId
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho user {user.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
+		}
+
+
+		private async Task SafeNotifyAsync(Guid userId, string title, string content, Guid refId)
+		{
+			try
+			{
+				await _notificationService.CreateInternalNotificationAsync(
+					new InternalCreateNotificationRequest
+					{
+						UserId = userId,
+						Title = title,
+						Content = content,
+						RefType = "DamageReport",
+						RefId = refId
+					});
+			}
+			catch (Exception ex)
+			{
+				_logger.LogError(ex, $"Notify failed for user {userId}");
+			}
 		}
 
 		private void UpdateReportType(DamageReport report)
@@ -198,6 +262,25 @@ namespace ToyShelf.Application.Services
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
 
+				var currentUserEntity = await _userRepository.GetByIdAsync(currentUser.UserId);
+
+				if (currentUserEntity?.PartnerId == null)
+					throw new AppException("User has no Partner", 400);
+
+				var admins = await _userRepository
+					.GetUsersByRoleAndPartnerAsync("PartnerAdmin", currentUserEntity.PartnerId.Value);
+
+				var tasks = admins.Select(admin =>
+					SafeNotifyAsync(
+						admin.Id,
+						"Báo cáo hư hại mới cần duyệt",
+						$"Báo cáo {report.Code} đang chờ bạn duyệt",
+						report.Id
+					)
+				);
+				await Task.WhenAll(tasks);
+
+
 				var full = await _repository.GetByIdFullIncludeAsync(report.Id);
 				return MapToResponse(full!);
 			}
@@ -237,6 +320,23 @@ namespace ToyShelf.Application.Services
 
 			_repository.Update(report);
 			await _unitOfWork.SaveChangesAsync();
+
+			var admins = await _userRepository.GetUsersByRoleAsync("Admin");
+
+			await NotifyUsersAsync(
+				admins,
+				"Báo cáo cần xử lý",
+				$"Báo cáo {report.Code} đã được đối tác duyệt",
+				"DamageReport",
+				report.Id
+			);
+
+			await SafeNotifyAsync(
+				report.ReportedByUserId,
+				"Báo cáo đang được xử lý",
+				$"Báo cáo {report.Code} đã được công ty duyệt và đang chờ xử lý tiếp",
+				report.Id
+			);
 		}
 
 		// ================= APPROVE (Admin duyệt xác nhận hàng hỏng) =================
@@ -345,6 +445,13 @@ namespace ToyShelf.Application.Services
 				_repository.Update(report);
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
+				await SafeNotifyAsync(
+					report.ReportedByUserId,
+					"Báo cáo đã được duyệt",
+					$"Báo cáo {report.Code} đã được xác nhận xử lý",
+					report.Id
+				);
+
 			}
 			catch
 			{
@@ -474,6 +581,12 @@ namespace ToyShelf.Application.Services
 				_repository.Update(report);
 				await _unitOfWork.SaveChangesAsync();
 				await _unitOfWork.CommitTransactionAsync();
+				await SafeNotifyAsync(
+					report.ReportedByUserId,
+					"Báo cáo bị từ chối",
+					$"Báo cáo {report.Code} đã bị từ chối",
+					report.Id
+				);
 			}
 			catch
 			{
