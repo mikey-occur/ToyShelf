@@ -6,17 +6,15 @@ using System.Threading.Tasks;
 
 namespace ToyShelf.Application.Models.CommissionHistory.Response
 {
-	public class CommissionHistoryResponse
-	{
-		public Guid Id { get; set; }
+    public class CommissionHistoryResponse
+    {
+        public Guid Id { get; set; }
         public Guid OrderId { get; set; }
-        public Guid OrderItemId { get; set; }
-		public decimal AppliedRate { get; set; }
-		public decimal CommissionAmount { get; set; }
-		public DateTime CreatedAt { get; set; }
-		public int Quantity { get; set; } 
-		public long OrderCode { get; set; } 
-		public string PaymentMethod { get; set; } = string.Empty;
-		public DateTime OrderDate { get; set; }
-	}
+        public long OrderCode { get; set; }
+        public decimal TotalAmount { get; set; }
+        public decimal TotalCommission { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime OrderDate { get; set; }
+    }
 }
