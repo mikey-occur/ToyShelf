@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.ShelfOrder.Request;
 using ToyShelf.Application.Models.ShelfOrder.Response;
 using ToyShelf.Application.Models.Warehouse.Response;
@@ -25,6 +27,9 @@ namespace ToyShelf.Application.Services
 		private readonly IShelfTypeRepository _shelfTypeRepository;
 		private readonly IShelfRepository _shelfRepository;
 		private readonly IShipmentAssignmentRepository _assignmentRepository;
+		private readonly IUserRepository _userRepository;
+		private readonly INotificationService _notificationService;
+		private readonly ILogger<ShelfOrderService> _logger;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -38,6 +43,9 @@ namespace ToyShelf.Application.Services
 			IShelfTypeRepository shelfTypeRepository,
 			IShelfRepository shelfRepository,
 			IShipmentAssignmentRepository assignmentRepository,
+			IUserRepository userRepository,
+			INotificationService notificationService,
+			ILogger<ShelfOrderService> logger,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -48,6 +56,9 @@ namespace ToyShelf.Application.Services
 			_shelfTypeRepository = shelfTypeRepository;
 			_shelfRepository = shelfRepository;
 			_assignmentRepository = assignmentRepository;
+			_userRepository = userRepository;
+			_notificationService = notificationService;
+			_logger = logger;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -103,6 +114,39 @@ namespace ToyShelf.Application.Services
 
 			await _repository.AddAsync(order);
 			await _unitOfWork.SaveChangesAsync();
+
+
+			var currentUserEntity = await _userRepository.GetByIdAsync(currentUser.UserId);
+
+			if (currentUserEntity?.PartnerId == null)
+				throw new AppException("User has no Partner", 400);
+
+			var admins = await _userRepository
+				.GetUsersByRoleAndPartnerAsync("PartnerAdmin", currentUserEntity.PartnerId.Value);
+
+			var tasks = admins.Select(async admin =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = admin.Id,
+							Title = "Đơn hàng mới cần duyệt",
+							Content = $"Đơn hàng {order.Code} đang chờ bạn duyệt",
+							RefType = "ShelfOrder",
+							RefId = order.Id
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho PartnerAdmin {admin.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
+
 
 			var full = await _repository.GetByIdWithItemsAsync(order.Id);
 
