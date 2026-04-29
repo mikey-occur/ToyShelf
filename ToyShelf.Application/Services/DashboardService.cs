@@ -161,16 +161,28 @@ namespace ToyShelf.Application.Services
 			var now = DateTime.UtcNow.Date;
 			DateTime startDate;
 			DateTime endDate;
+
 			var viewType = (request?.ViewType ?? "month").ToLower();
 
-			if (viewType == "year" && request?.Month != null) viewType = "month";
+			// tránh conflict logic cũ
+			if (viewType == "year" && request?.Month != null)
+				viewType = "month";
 
 			switch (viewType)
 			{
+				case "day":
+					var date = request?.Date?.Date ?? now;
+
+					startDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+					endDate = startDate.AddDays(1).AddTicks(-1);
+					break;
+
 				case "week":
 					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+
 					startDate = now.AddDays(-1 * diff).Date;
 					startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+
 					endDate = startDate.AddDays(7).AddTicks(-1);
 					endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
 					break;
@@ -178,6 +190,7 @@ namespace ToyShelf.Application.Services
 				case "month":
 					int m = request?.Month ?? now.Month;
 					int y = request?.Year ?? now.Year;
+
 					startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
 					endDate = startDate.AddMonths(1).AddTicks(-1);
 					break;
@@ -185,6 +198,7 @@ namespace ToyShelf.Application.Services
 				case "year":
 				default:
 					int year = request?.Year ?? now.Year;
+
 					startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 					endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
 					break;
@@ -192,6 +206,7 @@ namespace ToyShelf.Application.Services
 
 			return (startDate, endDate);
 		}
+
 
 		public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(
 			Guid warehouseId,

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,6 +8,7 @@ using ToyShelf.Application.Auth;
 using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.DamageReport.Response;
+using ToyShelf.Application.Models.Notification.Request;
 using ToyShelf.Application.Models.Shipment.Request;
 using ToyShelf.Application.Models.Shipment.Response;
 using ToyShelf.Application.Models.ShipmentAssignment.Response;
@@ -31,6 +33,9 @@ namespace ToyShelf.Application.Services
 		private readonly IStoreOrderRepository _storeOrderRepository;
 		private readonly IShelfOrderRepository _shelfOrderRepository;
 		private readonly IInventoryShelfRepository _inventoryShelfRepository; 
+		private readonly IUserRepository _userRepository;
+		private readonly INotificationService _notificationService;
+		private readonly ILogger<ShipmentService> _logger;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -50,6 +55,9 @@ namespace ToyShelf.Application.Services
 			IStoreOrderRepository storeOrderRepository,
 			IShelfOrderRepository shelfOrderRepository,
 			IInventoryShelfRepository inventoryShelfRepository,
+			IUserRepository userRepository,
+			INotificationService notificationService,
+			ILogger<ShipmentService> logger,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -66,8 +74,41 @@ namespace ToyShelf.Application.Services
 			_storeOrderRepository = storeOrderRepository;
 			_shelfOrderRepository = shelfOrderRepository;
 			_inventoryShelfRepository = inventoryShelfRepository;
+			_userRepository = userRepository;
+			_notificationService = notificationService;
+			_logger = logger;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
+		}
+		private async Task NotifyUsersAsync(
+			List<User> users,
+			string title,
+			string content,
+			string refType,
+			Guid refId)
+		{
+			var tasks = users.Select(async user =>
+			{
+				try
+				{
+					await _notificationService.CreateInternalNotificationAsync(
+						new InternalCreateNotificationRequest
+						{
+							UserId = user.Id,
+							Title = title,
+							Content = content,
+							RefType = refType,
+							RefId = refId
+						}
+					);
+				}
+				catch (Exception ex)
+				{
+					_logger.LogError(ex, $"Gửi thông báo thất bại cho user {user.Id}");
+				}
+			});
+
+			await Task.WhenAll(tasks);
 		}
 
 		public async Task<IEnumerable<ShipmentResponse>> GetAllAsync(ShipmentStatus? shipmentStatus)
@@ -318,6 +359,21 @@ namespace ToyShelf.Application.Services
 			await _shipmentRepository.AddAsync(shipment);
 			await _unitOfWork.SaveChangesAsync();
 
+			// Notify Shipper
+			if (shipment.ShipperId.HasValue)
+			{
+				await _notificationService.CreateInternalNotificationAsync(
+					new InternalCreateNotificationRequest
+					{
+						UserId = shipment.ShipperId.Value,
+						Title = "Hàng đã sẵn sàng để lấy",
+						Content = $"Kho đã chuẩn bị xong hàng cho shipment {shipment.Code}, vui lòng đến kho để nhận hàng",
+						RefType = "Shipment",
+						RefId = shipment.Id
+					}
+				);
+			}
+
 			var result = await _shipmentRepository.GetByIdWithDetailsAsync(shipment.Id);
 			return MapToResponse(result!);
 		}
@@ -469,8 +525,23 @@ namespace ToyShelf.Application.Services
 					_assignmentRepository.Update(assignment);
 				}
 
-				// Lưu toàn bộ thay đổi (Inventory, InventoryShelf, Shelf, Transactions)
 				await _unitOfWork.SaveChangesAsync();
+
+				var warehouseId = shipment.FromLocation?.WarehouseId;
+
+				if (!warehouseId.HasValue)
+					throw new AppException("Warehouse not found for FromLocation", 400);
+
+				var warehouseManagers = await _userRepository
+					.GetWarehouseManagersByWarehouseIdAsync(warehouseId.Value);
+
+				await NotifyUsersAsync(
+					warehouseManagers,
+					"Xe đã rời kho",
+					$"Shipment {shipment.Code} đã rời kho và đang vận chuyển đến điểm giao",
+					"Shipment",
+					shipment.Id
+				);
 			}
 			catch (Exception)
 			{
@@ -694,6 +765,22 @@ namespace ToyShelf.Application.Services
 
 			_shipmentRepository.Update(shipment);
 			await _unitOfWork.SaveChangesAsync();
+
+			var warehouseId = shipment.FromLocation?.WarehouseId;
+
+			if (!warehouseId.HasValue)
+				throw new AppException("Warehouse not found for FromLocation", 400);
+
+			var warehouseManagers = await _userRepository
+				.GetWarehouseManagersByWarehouseIdAsync(warehouseId.Value);
+
+			await NotifyUsersAsync(
+				warehouseManagers,
+				"Xe đã về kho",
+				$"Shipment {shipment.Code} đã giao xong và xe đã về kho",
+				"Shipment",
+				shipment.Id
+			);
 		}
 		public async Task StoreReceiveAsync(Guid shipmentId, StoreReceiveRequest request)
 		{
