@@ -192,8 +192,7 @@ namespace ToyShelf.API.Controllers
         /// Xem số dư ví hoa hồng (Những khoản chưa được nhận) của chính đối tác đang đăng nhập
         /// GET: api/MonthlySettlement/my-wallet
         /// </summary>
-        [HttpGet("test-wallet/{partnerId}")]
-        [AllowAnonymous] // Lệnh này giúp bypass mọi cái [Authorize] ở trên (nếu có)
+        [HttpGet("wallet/{partnerId}")]
         public async Task<BaseResponse<UnpaidWalletResponse>> TestGetWallet(Guid partnerId)
         {
            
