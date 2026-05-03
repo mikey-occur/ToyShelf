@@ -125,6 +125,13 @@ using (var scope = app.Services.CreateScope())
 		Cron.Daily(2, 0),
 		new RecurringJobOptions { TimeZone = tz }
 	);
+
+    recurringJobManager.AddOrUpdate<IOrderService>(
+    "Cancel-Expired-Orders",
+    service => service.CancelExpiredOrdersAsync(15),
+    "*/5 * * * *", 
+    new RecurringJobOptions { TimeZone = tz }
+    );
 }
 
 app.UseHttpsRedirection();

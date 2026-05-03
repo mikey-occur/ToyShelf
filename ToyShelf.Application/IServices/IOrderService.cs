@@ -18,5 +18,7 @@ namespace ToyShelf.Application.IServices
 		Task<IEnumerable<OrderResponse>> GetOrdersByEmailAsync(string phone);
 
         Task<PartnerOrderDetailResponse?> GetPartnerOrderDetailsAsync(long orderCode);
+
+		Task CancelExpiredOrdersAsync(int timeoutInMinutes = 15);
     }
 }
