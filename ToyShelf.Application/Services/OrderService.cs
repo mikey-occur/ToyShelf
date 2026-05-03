@@ -15,7 +15,7 @@ namespace ToyShelf.Application.Services
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IOrderRepository _orderRepository;
 		private readonly IProductColorRepository _productColorRepository;
-		private readonly IServices.IPaymentService _paymentService;
+		private readonly IPaymentService _paymentService;
 		private readonly IDateTimeProvider _dateTime;
 		private readonly ICommissionService _commissionService;
 		private readonly ICommissionHistoryRepsitory _commissionHistoryRepository;
@@ -23,7 +23,7 @@ namespace ToyShelf.Application.Services
 	    private readonly IInventoryRepository _inventoryRepository;
 		private readonly IJobQueueService _jobQueueService;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IServices.IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService )
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -36,7 +36,26 @@ namespace ToyShelf.Application.Services
 			_inventoryRepository = inventoryRepository;
 			_jobQueueService = jobQueueService;
 		}
-		public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
+
+        public async Task CancelExpiredOrdersAsync(int timeoutInMinutes = 15)
+        {
+            var timeoutTime = _dateTime.UtcNow.AddMinutes(-timeoutInMinutes);
+
+           
+            var expiredOrders = await _orderRepository.GetExpiredOrdersAsync(timeoutTime);
+
+            if (!expiredOrders.Any())
+                return;
+
+            foreach (var order in expiredOrders)
+            {
+                order.Status = "CANCELLED";
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+        }
+
+        public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
 		{
 			var orderCode = long.Parse(DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString());
 			var order = new Order

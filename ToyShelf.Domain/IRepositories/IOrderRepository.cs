@@ -44,5 +44,7 @@ namespace ToyShelf.Domain.IRepositories
 		int top = 3,
 		int? month = null,
 		int? year = null);
-	}
+
+        Task<IEnumerable<Order>> GetExpiredOrdersAsync(DateTime timeoutTime);
+    }
 }

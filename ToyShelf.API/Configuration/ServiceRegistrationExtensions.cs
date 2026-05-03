@@ -63,7 +63,7 @@ namespace ToyShelf.API.Configuration
 			// QUAN TRỌNG: Giới hạn số lượng Worker chạy ngầm
 			services.AddHangfireServer(options =>
 			{
-				options.WorkerCount = 2;
+				options.WorkerCount = 3;
 			});
 
 			// 1. Lấy chuỗi kết nối
