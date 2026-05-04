@@ -1,4 +1,5 @@
-﻿using ToyShelf.Application.Common;
+﻿using Microsoft.Extensions.Logging;
+using ToyShelf.Application.Common;
 using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.Order;
 using ToyShelf.Application.Notifications;
@@ -22,8 +23,9 @@ namespace ToyShelf.Application.Services
 		private readonly IInventoryService _inventoryService;
 	    private readonly IInventoryRepository _inventoryRepository;
 		private readonly IJobQueueService _jobQueueService;
+		private readonly ILogger _logger;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService )
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService, ILogger logger )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -35,7 +37,8 @@ namespace ToyShelf.Application.Services
 			_inventoryService = inventoryService;
 			_inventoryRepository = inventoryRepository;
 			_jobQueueService = jobQueueService;
-		}
+			_logger = logger;
+        }
 
         public async Task CancelExpiredOrdersAsync(int timeoutInMinutes = 15)
         {
@@ -47,12 +50,28 @@ namespace ToyShelf.Application.Services
             if (!expiredOrders.Any())
                 return;
 
-            foreach (var order in expiredOrders)
-            {
-                order.Status = "CANCELLED";
-            }
+             await _unitOfWork.BeginTransactionAsync();
+			try
+			{
+				foreach (var order in expiredOrders)
+				{
+					order.Status = "CANCELLED";
+					_unitOfWork.Repository<Order>().Update(order);
+				}
 
-            await _unitOfWork.SaveChangesAsync();
+				await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+
+                // Log số lượng đơn đã hủy để tiện theo dõi trên server
+                _logger.LogInformation("Đã hủy thành công {Count} đơn hàng quá hạn lúc {Time}", 
+					expiredOrders.Count(), DateTime.UtcNow);
+			}
+			catch (Exception ex)
+			{
+                await _unitOfWork.RollbackTransactionAsync();
+                _logger.LogError(ex, "Lỗi khi chạy job tự động hủy đơn hàng quá hạn");
+				throw; // Ném lại lỗi để hệ thống Job Scheduler (ví dụ Hangfire) có thể retry
+			}
         }
 
         public async Task<CreateOrderResponse> CreateOrderAndGetPaymentLinkAsync(CreateOrderRequest request)
