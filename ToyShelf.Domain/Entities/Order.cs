@@ -20,8 +20,9 @@ namespace ToyShelf.Domain.Entities
 		public long OrderCode { get; set; }
         public string? BankReference { get; set; }
         public DateTime CreatedAt { get; set; }
-
-		public virtual Store Store { get; set; } = null!;
+        public bool IsLocked { get; set; } = false;
+        public DateTime? LockedAt { get; set; }
+        public virtual Store Store { get; set; } = null!;
 		public virtual User Staff { get; set; } = null!;
 
 		public virtual ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
