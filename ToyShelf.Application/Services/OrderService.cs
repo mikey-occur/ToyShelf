@@ -62,7 +62,7 @@ namespace ToyShelf.Application.Services
 				await _unitOfWork.SaveChangesAsync();
                 await _unitOfWork.CommitTransactionAsync();
 
-                // Log số lượng đơn đã hủy để tiện theo dõi trên server
+                
                 _logger.LogInformation("Đã hủy thành công {Count} đơn hàng quá hạn lúc {Time}", 
 					expiredOrders.Count(), DateTime.UtcNow);
 			}
@@ -70,7 +70,7 @@ namespace ToyShelf.Application.Services
 			{
                 await _unitOfWork.RollbackTransactionAsync();
                 _logger.LogError(ex, "Lỗi khi chạy job tự động hủy đơn hàng quá hạn");
-				throw; // Ném lại lỗi để hệ thống Job Scheduler (ví dụ Hangfire) có thể retry
+				throw; 
 			}
         }
 
