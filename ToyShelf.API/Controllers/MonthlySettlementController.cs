@@ -171,23 +171,6 @@ namespace ToyShelf.API.Controllers
 			}
 		}
 
-        ///// <summary>
-        ///// Xem số dư ví hoa hồng (Những khoản chưa được nhận) của chính đối tác đang đăng nhập
-        ///// GET: api/MonthlySettlement/my-wallet
-        ///// </summary>
-        //[HttpGet("my-wallet")]
-        //[Authorize(Roles = "PartnerAdmin")] 
-        //public async Task<BaseResponse<UnpaidWalletResponse>> GetMyWalletBalance([FromServices] ICurrentUser currentUser)
-        //{
-        //    // Lấy ID của người dùng từ Token đăng nhập
-        //    Guid currentPartnerId = currentUser.UserId;
-
-        //    // Gọi Service tính toán (Đảm bảo bạn đã thêm hàm này vào IMonthlySettlementService)
-        //    var result = await _settlementService.GetTotalPendingAmountAsync(currentPartnerId);
-
-        //    return BaseResponse<UnpaidWalletResponse>.Ok(result, "Lấy thông tin số dư ví thành công!");
-        //}
-
         /// <summary>
         /// Xem số dư ví hoa hồng (Những khoản chưa được nhận) của chính đối tác đang đăng nhập
         /// GET: api/MonthlySettlement/my-wallet
@@ -199,6 +182,20 @@ namespace ToyShelf.API.Controllers
             var result = await _settlementService.GetTotalPendingAmountAsync(partnerId);
 
             return BaseResponse<UnpaidWalletResponse>.Ok(result, "Lấy thông tin ví thành công!");
+        }
+
+        /// <summary>
+        /// Admin xác nhận chốt đối soát tháng này. 
+        /// Sau khi chốt, dữ liệu không thể chỉnh sửa và đơn hàng sẽ bị khóa.
+        /// </summary>
+        [HttpPost("{id}/finalize")]
+        [Authorize(Roles = "Admin")] // Chỉ Admin mới có quyền chốt sổ
+        public async Task<BaseResponse<bool>> Finalize(Guid id)
+        {
+            // Gọi hàm Finalize mà chúng ta đã thiết kế ở bước trước
+            await _settlementService.FinalizeSettlementAsync(id);
+
+            return BaseResponse<bool>.Ok(true, "Phiếu đối soát đã được chốt và dữ liệu đã được khóa thành công.");
         }
     }
 }

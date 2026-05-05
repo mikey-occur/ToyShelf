@@ -22,6 +22,7 @@ namespace ToyShelf.Application.IServices
 
 		Task<bool> ConfirmReceiptAsync(Guid settlementId, ICurrentUser currentUser);
         Task<UnpaidWalletResponse> GetTotalPendingAmountAsync(Guid partnerId);
+		Task FinalizeSettlementAsync(Guid settlementId);
 
     }
 }

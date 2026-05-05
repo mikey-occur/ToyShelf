@@ -23,9 +23,9 @@ namespace ToyShelf.Application.Services
 		private readonly IInventoryService _inventoryService;
 	    private readonly IInventoryRepository _inventoryRepository;
 		private readonly IJobQueueService _jobQueueService;
-		private readonly ILogger _logger;
+		private readonly ILogger<OrderService> _logger;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService, ILogger logger )
+		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService, ILogger<OrderService> logger )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;

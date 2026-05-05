@@ -37,7 +37,16 @@ namespace ToyShelf.Infrastructure.Repositories
 			return await query.OrderByDescending(x => x.CreatedAt).ToListAsync();
 		}
 
-		public async Task<MonthlySettlement?> GetSettlementWithDetailsByIdAsync(Guid id)
+        public async Task<List<Order>> GetOrdersBySettlementIdAsync(Guid settlementId)
+        {
+            return await _context.CommissionHistories
+				.Where(ch => ch.MonthlySettlementId == settlementId)
+				.Select(ch => ch.OrderItem.Order) 
+				.Distinct() 
+				.ToListAsync();
+        }
+
+        public async Task<MonthlySettlement?> GetSettlementWithDetailsByIdAsync(Guid id)
 		{
 			return await _context.MonthlySettlements
 				.Include(ms => ms.Partner)
