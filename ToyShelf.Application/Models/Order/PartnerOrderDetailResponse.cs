@@ -21,6 +21,7 @@ namespace ToyShelf.Application.Models.Order
         public string PaymentMethod { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public bool IsLocked { get; set; } 
         public string? StoreName { get; set; }
 
         // THÔNG TIN MỚI DÀNH CHO PARTNER
