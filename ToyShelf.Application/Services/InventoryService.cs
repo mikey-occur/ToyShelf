@@ -98,24 +98,48 @@ namespace ToyShelf.Application.Services
 
 		public async Task UpdateStockAfterPaymentAsync(Order order)
 		{
-			foreach (var item in order.OrderItems)
-			{
-				var inventory = await _inventoryRepository
-					.GetInventoryAsync(order.StoreId, item.ProductColorId, InventoryStatus.Available);
+            foreach (var item in order.OrderItems)
+            {
+                // 1. Xử lý tồn kho Available (Trừ đi)
+                var availableInventory = await _inventoryRepository
+                    .GetInventoryAsync(order.StoreId, item.ProductColorId, InventoryStatus.Available);
 
-				if (inventory == null)
-					throw new AppException($"Product {item.ProductColorId} not found in store.", 404);
+                if (availableInventory == null)
+                    throw new AppException($"Product {item.ProductColorId} not found in store.", 404);
 
-				if (inventory.Quantity < item.Quantity)
-					throw new AppException($"Quantity not enough (available: {inventory.Quantity}, need: {item.Quantity}).", 404);
+                if (availableInventory.Quantity < item.Quantity)
+                    throw new AppException($"Quantity not enough (available: {availableInventory.Quantity}, need: {item.Quantity}).", 404);
 
-				inventory.Quantity -= item.Quantity;
+                availableInventory.Quantity -= item.Quantity;
+                _inventoryRepository.Update(availableInventory);
 
-				_inventoryRepository.Update(inventory);
-			}
+                // 2. Xử lý tồn kho Sold (Cộng vào)
+                var soldInventory = await _inventoryRepository
+                    .GetInventoryAsync(order.StoreId, item.ProductColorId, InventoryStatus.Sold);
 
-			await _unitOfWork.SaveChangesAsync();
-		}
+                if (soldInventory == null)
+                {
+                    // Nếu cửa hàng này chưa bán sản phẩm này bao giờ -> Tạo mới record Sold
+                    soldInventory = new Inventory
+                    {
+                        Id = Guid.NewGuid(),
+                        InventoryLocationId = availableInventory.InventoryLocationId, // Đảm bảo đúng kho
+                        ProductColorId = item.ProductColorId,
+                        Status = InventoryStatus.Sold,
+                        Quantity = item.Quantity
+                    };
+                    await _inventoryRepository.AddAsync(soldInventory);
+                }
+                else
+                {
+                    // Nếu đã từng bán -> Cộng dồn số lượng
+                    soldInventory.Quantity += item.Quantity;
+                    _inventoryRepository.Update(soldInventory);
+                }
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+        }
 
 		public async Task<WarehouseInventoryResponse> GetWarehouseInventoryAsync(
 			Guid warehouseId,
