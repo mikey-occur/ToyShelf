@@ -4,6 +4,7 @@ using ToyShelf.Application.IServices;
 using ToyShelf.Application.Models.PriceTable.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
 using ToyShelf.Application.Models.PriceTableApply.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.API.Controllers
 {
@@ -34,9 +35,9 @@ namespace ToyShelf.API.Controllers
 		/// Get CommissionTable  (Filter by isActive).
 		/// </summary>
 		[HttpGet]
-		public async Task<BaseResponse<IEnumerable<CommissionTableResponse>>> GetPriceTables([FromQuery] bool? isActive)
+		public async Task<BaseResponse<IEnumerable<CommissionTableResponse>>> GetPriceTables([FromQuery] bool? isActive, [FromQuery] CommissionTableType? type = null, [FromQuery] Guid? partnerTierId = null)
 		{
-			var result = await _priceTableService.GetCommissionTablesAsync(isActive);
+			var result = await _priceTableService.GetCommissionTablesAsync(isActive, type, partnerTierId);
 			return BaseResponse<IEnumerable<CommissionTableResponse>>.Ok(result, "Price Tables retrieved successfully");
 		}
 
