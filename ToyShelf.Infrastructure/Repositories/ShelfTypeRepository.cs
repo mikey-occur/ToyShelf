@@ -25,8 +25,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		public async Task<ShelfType?> GetByIdWithLevelsAsync(Guid id)
 		{
 			return await _context.ShelfTypes
-			.Include(x => x.ShelfTypeLevels) 
-			.FirstOrDefaultAsync(x => x.Id == id);
+            .Include(x => x.ShelfTypeLevels.OrderBy(l => l.Level))
+            .FirstOrDefaultAsync(x => x.Id == id);
 		}
 
 		public async Task<IEnumerable<ShelfType>> GetShelfTypesAsync(bool? isActive, string? searchName = null, string? categoryType = null)
