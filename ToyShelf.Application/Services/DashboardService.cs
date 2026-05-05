@@ -156,57 +156,37 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		private (DateTime startDate, DateTime endDate) BuildDateRange(StoreChartRequest request)
-		{
-			var now = DateTime.UtcNow.Date;
-			DateTime startDate;
-			DateTime endDate;
+        private (DateTime startDate, DateTime endDate) BuildDateRange(WarehouseChartRequest request)
+        {
+            var now = DateTime.UtcNow;
+            DateTime startDate;
+            DateTime endDate;
 
-			var viewType = (request?.ViewType ?? "month").ToLower();
+            var viewType = (request?.ViewType ?? "month").ToLower();
 
-			// tránh conflict logic cũ
-			if (viewType == "year" && request?.Month != null)
-				viewType = "month";
+            switch (viewType)
+            {
+                case "month":
+                    int m = request?.Month ?? now.Month;
+                    int y = request?.Year ?? now.Year;
 
-			switch (viewType)
-			{
-				case "day":
-					var date = request?.Date?.Date ?? now;
+                    // Đảm bảo tháng trong khoảng 1-12
+                    m = Math.Clamp(m, 1, 12);
 
-					startDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-					endDate = startDate.AddDays(1).AddTicks(-1);
-					break;
+                    startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
+                    endDate = startDate.AddMonths(1).AddTicks(-1);
+                    break;
 
-				case "week":
-					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+                case "year":
+                default:
+                    int year = request?.Year ?? now.Year;
+                    startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                    break;
+            }
 
-					startDate = now.AddDays(-1 * diff).Date;
-					startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
-
-					endDate = startDate.AddDays(7).AddTicks(-1);
-					endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
-					break;
-
-				case "month":
-					int m = request?.Month ?? now.Month;
-					int y = request?.Year ?? now.Year;
-
-					startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
-					endDate = startDate.AddMonths(1).AddTicks(-1);
-					break;
-
-				case "year":
-				default:
-					int year = request?.Year ?? now.Year;
-
-					startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-					endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
-					break;
-			}
-
-			return (startDate, endDate);
-		}
-
+            return (startDate, endDate);
+        }
 
         public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(Guid warehouseId, DateTime? startDate, DateTime? endDate)
         {
@@ -267,47 +247,43 @@ namespace ToyShelf.Application.Services
             };
         }
 
-        public async Task<WarehouseChartResponse> GetWarehouseChartAsync(
-			Guid warehouseId,
-			StoreChartRequest request)
-		{
-			var (startDate, endDate) = BuildDateRange(request);
+        public async Task<WarehouseChartResponse> GetWarehouseChartAsync(Guid warehouseId, WarehouseChartRequest request)
+        {
+            var (startDate, endDate) = BuildDateRange(request);
 
-			var shipmentQuery = _shipmentRepository.GetQueryable()
-				.Where(x => x.FromLocation.WarehouseId == warehouseId
-						 && x.CreatedAt >= startDate
-						 && x.CreatedAt <= endDate);
+            // Lấy dữ liệu thô
+            var data = await _shipmentRepository.GetQueryable()
+                .Where(x => x.FromLocation.WarehouseId == warehouseId
+                         && x.CreatedAt >= startDate
+                         && x.CreatedAt <= endDate)
+                .Select(x => new
+                {
+                    Date = x.CreatedAt.Date,
+                    x.IsReturn,
+                    HasProductItems = x.Items.Any(),
+                    HasShelfItems = x.ShelfShipmentItems.Any()
+                })
+                .ToListAsync();
 
-			var shipmentChart = await shipmentQuery
-				.GroupBy(x => x.Status)
-				.Select(g => new ChartItem
-				{
-					Label = g.Key.ToString(),
-					Value = g.Count()
-				})
-				.ToListAsync();
+            // Group theo ngày và map vào DailyChartData
+            var dailyStats = data
+                .GroupBy(x => x.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new WarehouseDailyChartData
+                {
+                    Date = g.Key,
+                    ShipmentProduct = g.Count(x => !x.IsReturn && x.HasProductItems),
+                    ShipmentShelf = g.Count(x => !x.IsReturn && x.HasShelfItems),
+                    ReturnProduct = g.Count(x => x.IsReturn && x.HasProductItems),
+                    ReturnShelf = g.Count(x => x.IsReturn && x.HasShelfItems)
+                })
+                .ToList();
 
-			var orderChart = await _storeOrderRepository.GetQueryable()
-				.Where(o => o.CreatedAt >= startDate && o.CreatedAt <= endDate)
-				.Where(o => o.AssignmentStoreOrders
-					.Any(aso => aso.ShipmentAssignment.WarehouseLocationId == warehouseId))
-				.GroupBy(o => o.Status)
-				.Select(g => new ChartItem
-				{
-					Label = g.Key.ToString(),
-					Value = g.Count()
-				})
-				.ToListAsync();
-
-			return new WarehouseChartResponse
-			{
-				ShipmentChart = shipmentChart,
-				OrderChart = orderChart
-			};
-		}
+            return new WarehouseChartResponse { DailyStats = dailyStats };
+        }
 
 
-		public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
 		{
 
 

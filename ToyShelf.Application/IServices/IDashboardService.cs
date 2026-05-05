@@ -32,7 +32,7 @@ namespace ToyShelf.Application.IServices
             DateTime? startDate, DateTime? endDate);
 		Task<WarehouseChartResponse> GetWarehouseChartAsync(
 			Guid warehouseId,
-			StoreChartRequest request);
+            WarehouseChartRequest request);
 
 		Task<object> GetSystemStartCardCountAsync();
 

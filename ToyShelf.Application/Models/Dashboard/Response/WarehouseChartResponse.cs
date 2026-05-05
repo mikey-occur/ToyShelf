@@ -9,7 +9,6 @@ namespace ToyShelf.Application.Models.Dashboard.Response
 {
 	public class WarehouseChartResponse
 	{
-		public List<ChartItem> ShipmentChart { get; set; } = new();
-		public List<ChartItem> OrderChart { get; set; } = new();
-	}
+        public List<WarehouseDailyChartData> DailyStats { get; set; } = new();
+    }
 }

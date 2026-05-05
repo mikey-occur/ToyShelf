@@ -249,7 +249,7 @@ namespace ToyShelf.API.Controllers
 		[HttpGet("warehouse/{warehouseId}/chart")]
 		public async Task<BaseResponse<WarehouseChartResponse>> GetWarehouseChart(
 			Guid warehouseId,
-			[FromQuery] StoreChartRequest request)
+			[FromQuery] WarehouseChartRequest request)
 		{
 			var result = await _dashboardService.GetWarehouseChartAsync(warehouseId, request);
 
