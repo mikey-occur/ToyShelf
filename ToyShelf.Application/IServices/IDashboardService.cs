@@ -29,7 +29,7 @@ namespace ToyShelf.Application.IServices
 		Task<ShipperStatCardResponse> GetShipperStatCardAsync(Guid shipperId);
 		Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(
 			Guid warehouseId,
-			StoreChartRequest request);
+            DateTime? startDate, DateTime? endDate);
 		Task<WarehouseChartResponse> GetWarehouseChartAsync(
 			Guid warehouseId,
 			StoreChartRequest request);

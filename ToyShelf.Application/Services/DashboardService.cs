@@ -208,55 +208,66 @@ namespace ToyShelf.Application.Services
 		}
 
 
-		public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(
-			Guid warehouseId,
-			StoreChartRequest request)
-		{
-			var (startDate, endDate) = BuildDateRange(request);
+        public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(Guid warehouseId, DateTime? startDate, DateTime? endDate)
+        {
+            var now = DateTime.UtcNow;
 
-			var totalShelves = await _shelfRepository.GetQueryable()
-				.CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
+            // Chuẩn hóa thời gian
+            var currentEndDate = endDate ?? now;
+            var currentStartDate = startDate ?? new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-			var totalInventory = await _inventoryRepository.GetQueryable()
-				.Where(x => x.InventoryLocation.WarehouseId == warehouseId)
-				.SumAsync(x => (int?)x.Quantity) ?? 0;
+            if (currentStartDate > currentEndDate)
+            {
+                (currentStartDate, currentEndDate) = (currentEndDate, currentStartDate);
+            }
 
-			var totalEmployees = await _userWarehouseRepository.GetQueryable()
-				.CountAsync(x => x.WarehouseId == warehouseId);
+            // Các truy vấn dữ liệu sử dụng currentStartDate và currentEndDate
+            var totalShelves = await _shelfRepository.GetQueryable()
+                .CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
 
-			var shipmentQuery = _shipmentRepository.GetQueryable()
-				.Where(x => x.FromLocation.WarehouseId == warehouseId
-						 && x.CreatedAt >= startDate
-						 && x.CreatedAt <= endDate);
+            var totalInventory = await _inventoryRepository.GetQueryable()
+                .Where(x => x.InventoryLocation.WarehouseId == warehouseId)
+                .SumAsync(x => (int?)x.Quantity) ?? 0;
 
-			var totalOrders = await shipmentQuery
-				.SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
-				.Select(aso => aso.StoreOrderId)
-				.Distinct()
-				.CountAsync();
+            var totalEmployees = await _userWarehouseRepository.GetQueryable()
+                .CountAsync(x => x.WarehouseId == warehouseId);
 
-			var totalInProgress = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Draft ||
-				x.Status == ShipmentStatus.Shipping ||
-				x.Status == ShipmentStatus.Delivered
-			);
+            var shipmentQuery = _shipmentRepository.GetQueryable()
+                .Where(x => x.FromLocation.WarehouseId == warehouseId
+                         && x.CreatedAt >= currentStartDate
+                         && x.CreatedAt <= currentEndDate);
 
-			var totalCompleted = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Completed
-			);
+            var totalOrders = await shipmentQuery
+                .SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
+                .Select(aso => aso.StoreOrderId)
+                .Distinct()
+                .CountAsync();
 
-			return new WarehouseStatCardResponse
-			{
-				TotalOrders = totalOrders,
-				TotalShelves = totalShelves,
-				TotalInventory = totalInventory,
-				TotalEmployees = totalEmployees,
-				TotalInProgressShipments = totalInProgress,
-				TotalCompletedShipments = totalCompleted
-			};
-		}
+            var totalInProgress = await shipmentQuery.CountAsync(x =>
+                x.Status == ShipmentStatus.Draft ||
+                x.Status == ShipmentStatus.Shipping ||
+                x.Status == ShipmentStatus.Delivered
+            );
 
-		public async Task<WarehouseChartResponse> GetWarehouseChartAsync(
+            var totalCompleted = await shipmentQuery.CountAsync(x =>
+                x.Status == ShipmentStatus.Completed
+            );
+
+            return new WarehouseStatCardResponse
+            {
+                WarehouseId = warehouseId,
+                StartDate = currentStartDate, 
+                EndDate = currentEndDate,     
+                TotalOrders = totalOrders,
+                TotalShelves = totalShelves,
+                TotalInventory = totalInventory,
+                TotalEmployees = totalEmployees,
+                TotalInProgressShipments = totalInProgress,
+                TotalCompletedShipments = totalCompleted
+            };
+        }
+
+        public async Task<WarehouseChartResponse> GetWarehouseChartAsync(
 			Guid warehouseId,
 			StoreChartRequest request)
 		{

@@ -235,10 +235,10 @@ namespace ToyShelf.API.Controllers
 		// ================= WAREHOUSE STAT CARD =================
 		[HttpGet("warehouse/{warehouseId}/stat-card")]
 		public async Task<BaseResponse<WarehouseStatCardResponse>> GetWarehouseStatCard(
-			Guid warehouseId,
-			[FromQuery] StoreChartRequest request)
+			Guid warehouseId, [FromQuery] DateTime? startDate, [FromQuery] DateTime? endDate
+            )
 		{
-			var result = await _dashboardService.GetWarehouseStatCardAsync(warehouseId, request);
+			var result = await _dashboardService.GetWarehouseStatCardAsync(warehouseId, startDate, endDate);
 
 			return BaseResponse<WarehouseStatCardResponse>
 				.Ok(result, "Warehouse stat card retrieved successfully");
