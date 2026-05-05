@@ -22,7 +22,8 @@ namespace ToyShelf.Application.Models.Order
 		public decimal TotalAmount { get; set; }
 		public string PaymentMethod { get; set; } = string.Empty;
 		public string Status { get; set; } = string.Empty;
-		public DateTime CreatedAt { get; set; }
+        public bool IsLocked { get; set; } = false;
+        public DateTime CreatedAt { get; set; }
 	
 		public List<OrderItemDetailResponse> Items { get; set; } = new List<OrderItemDetailResponse>();
 	}

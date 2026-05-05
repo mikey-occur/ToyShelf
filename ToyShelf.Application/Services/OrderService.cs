@@ -175,7 +175,8 @@ namespace ToyShelf.Application.Services
 				PaymentMethod = order.PaymentMethod,
 				Status = order.Status,
 				CreatedAt = order.CreatedAt,
-				StoreName = order.Store?.Name,
+				IsLocked = order.IsLocked,
+                StoreName = order.Store?.Name,
 				Items = order.OrderItems.Select(oi => new OrderItemDetailResponse
 				{
 					ProductColorId = oi.ProductColorId,
@@ -261,6 +262,7 @@ namespace ToyShelf.Application.Services
                 PaymentMethod = order.PaymentMethod,
                 Status = order.Status,
                 CreatedAt = order.CreatedAt,
+				IsLocked = order.IsLocked,
                 StoreName = order.Store?.Name,
                 Items = order.OrderItems.Select(oi =>
                 {
