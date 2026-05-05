@@ -13,7 +13,7 @@ namespace ToyShelf.Domain.IRepositories
 
 		Task<bool> IsPriceTableInUseAsync(Guid id);
 
-		Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive);
+		Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive, CommissionTableType? type = null, Guid? partnerTierId = null);
 
 		Task<CommissionTable?> GetActiveByTierTableAsync(Guid tierId);
 	}

@@ -389,8 +389,10 @@ namespace ToyShelf.Infrastructure.Repositories
         public async Task<IEnumerable<Order>> GetExpiredOrdersAsync(DateTime timeoutTime)
         {
             return await _context.Orders
-			.Where(o => o.Status == "CREATED" && o.CreatedAt <= timeoutTime)
-			.ToListAsync();
+			 .Where(o => o.Status == "CREATED"
+					  && o.CreatedAt <= timeoutTime
+					  && !o.IsLocked) 
+			 .ToListAsync();
         }
     }
 }

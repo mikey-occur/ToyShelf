@@ -12,5 +12,6 @@ namespace ToyShelf.Domain.IRepositories
 		Task<MonthlySettlement?> GetSettlementWithDetailsByIdAsync(Guid id);
 		Task<IEnumerable<MonthlySettlement>> GetFilteredSettlementsAsync(int? year, int? month, Guid? partnerId, string? status);
         Task<decimal> GetTotalPendingAmountAsync(Guid partnerId);
+        Task<List<Order>> GetOrdersBySettlementIdAsync(Guid settlementId);
     }
 }

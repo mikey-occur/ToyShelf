@@ -2267,9 +2267,16 @@ namespace ToyShelf.Infrastructure.Context
 					  .IsRequired()
 					  .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
-				// ===== Relationships =====
+                entity.Property(e => e.IsLocked)
+					  .IsRequired()
+					  .HasDefaultValue(false);
 
-				entity.HasOne(e => e.Store)
+                entity.Property(e => e.LockedAt)
+                      .IsRequired(false);
+
+                // ===== Relationships =====
+
+                entity.HasOne(e => e.Store)
 					  .WithMany(s => s.Orders)
 					  .HasForeignKey(e => e.StoreId)
 					  .OnDelete(DeleteBehavior.Restrict)

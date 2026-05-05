@@ -35,7 +35,7 @@ namespace ToyShelf.Infrastructure.Repositories
 			.FirstOrDefaultAsync(pt => pt.Id == id);
 		}
 
-		public async Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTable>> GetPriceTablesAsync(bool? isActive, CommissionTableType? type = null, Guid? partnerTierId = null)
 		{
 			var query = _context.CommissionTables
 			.Include(pt => pt.PartnerTier)
@@ -48,9 +48,19 @@ namespace ToyShelf.Infrastructure.Repositories
 			{
 				query = query.Where(pt => pt.IsActive == isActive.Value);
 			}
-			return await query
+            if (type.HasValue)
+            {
+                query = query.Where(pt => pt.Type == type.Value);
+            }
+            if (partnerTierId.HasValue)
+            {
+                query = query.Where(pt => pt.PartnerTierId == partnerTierId.Value);
+            }
+
+            return await query
 			.OrderBy(pt => pt.Type)
-			.ToListAsync();
+            .ThenByDescending(pt => pt.PartnerTierId)
+            .ToListAsync();
 		}
 
 		public async Task<bool> IsPriceTableInUseAsync(Guid id)

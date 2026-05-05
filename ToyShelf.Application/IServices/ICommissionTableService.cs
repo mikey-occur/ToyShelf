@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ToyShelf.Application.Models.PriceTable.Request;
 using ToyShelf.Application.Models.PriceTable.Response;
 using ToyShelf.Application.Models.ProductColor.Response;
+using ToyShelf.Domain.Entities;
 
 namespace ToyShelf.Application.IServices
 {
@@ -13,7 +14,7 @@ namespace ToyShelf.Application.IServices
 	{
 		Task<CommissionTableResponse> CreateAsync(CommissionTableRequest request);
 		Task<CommissionTableResponse> GetByIdAsync(Guid id);
-		Task<IEnumerable<CommissionTableResponse>> GetCommissionTablesAsync(bool? isActive);
+		Task<IEnumerable<CommissionTableResponse>> GetCommissionTablesAsync(bool? isActive, CommissionTableType? type = null, Guid? partnerTierId = null);
 		Task<IEnumerable<CommissionTableResponse>> GetAllAsync();
 		Task<bool> RestorePriceTableAsync(Guid id);
 		Task<bool> DisablePriceTableAsync(Guid id);

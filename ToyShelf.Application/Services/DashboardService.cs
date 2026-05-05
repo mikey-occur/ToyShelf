@@ -156,147 +156,134 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		private (DateTime startDate, DateTime endDate) BuildDateRange(StoreChartRequest request)
-		{
-			var now = DateTime.UtcNow.Date;
-			DateTime startDate;
-			DateTime endDate;
+        private (DateTime startDate, DateTime endDate) BuildDateRange(WarehouseChartRequest request)
+        {
+            var now = DateTime.UtcNow;
+            DateTime startDate;
+            DateTime endDate;
 
-			var viewType = (request?.ViewType ?? "month").ToLower();
+            var viewType = (request?.ViewType ?? "month").ToLower();
 
-			// tránh conflict logic cũ
-			if (viewType == "year" && request?.Month != null)
-				viewType = "month";
+            switch (viewType)
+            {
+                case "month":
+                    int m = request?.Month ?? now.Month;
+                    int y = request?.Year ?? now.Year;
 
-			switch (viewType)
-			{
-				case "day":
-					var date = request?.Date?.Date ?? now;
+                    // Đảm bảo tháng trong khoảng 1-12
+                    m = Math.Clamp(m, 1, 12);
 
-					startDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
-					endDate = startDate.AddDays(1).AddTicks(-1);
-					break;
+                    startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
+                    endDate = startDate.AddMonths(1).AddTicks(-1);
+                    break;
 
-				case "week":
-					int diff = (7 + (now.DayOfWeek - DayOfWeek.Monday)) % 7;
+                case "year":
+                default:
+                    int year = request?.Year ?? now.Year;
+                    startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                    endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+                    break;
+            }
 
-					startDate = now.AddDays(-1 * diff).Date;
-					startDate = DateTime.SpecifyKind(startDate, DateTimeKind.Utc);
+            return (startDate, endDate);
+        }
 
-					endDate = startDate.AddDays(7).AddTicks(-1);
-					endDate = DateTime.SpecifyKind(endDate, DateTimeKind.Utc);
-					break;
+        public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(Guid warehouseId, DateTime? startDate, DateTime? endDate)
+        {
+            var now = DateTime.UtcNow;
 
-				case "month":
-					int m = request?.Month ?? now.Month;
-					int y = request?.Year ?? now.Year;
+            // Chuẩn hóa thời gian
+            var currentEndDate = endDate ?? now;
+            var currentStartDate = startDate ?? new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
 
-					startDate = new DateTime(y, m, 1, 0, 0, 0, DateTimeKind.Utc);
-					endDate = startDate.AddMonths(1).AddTicks(-1);
-					break;
+            if (currentStartDate > currentEndDate)
+            {
+                (currentStartDate, currentEndDate) = (currentEndDate, currentStartDate);
+            }
 
-				case "year":
-				default:
-					int year = request?.Year ?? now.Year;
+            // Các truy vấn dữ liệu sử dụng currentStartDate và currentEndDate
+            var totalShelves = await _shelfRepository.GetQueryable()
+                .CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
 
-					startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-					endDate = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
-					break;
-			}
+            var totalInventory = await _inventoryRepository.GetQueryable()
+                .Where(x => x.InventoryLocation.WarehouseId == warehouseId)
+                .SumAsync(x => (int?)x.Quantity) ?? 0;
 
-			return (startDate, endDate);
-		}
+            var totalEmployees = await _userWarehouseRepository.GetQueryable()
+                .CountAsync(x => x.WarehouseId == warehouseId);
 
+            var shipmentQuery = _shipmentRepository.GetQueryable()
+                .Where(x => x.FromLocation.WarehouseId == warehouseId
+                         && x.CreatedAt >= currentStartDate
+                         && x.CreatedAt <= currentEndDate);
 
-		public async Task<WarehouseStatCardResponse> GetWarehouseStatCardAsync(
-			Guid warehouseId,
-			StoreChartRequest request)
-		{
-			var (startDate, endDate) = BuildDateRange(request);
+            var totalOrders = await shipmentQuery
+                .SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
+                .Select(aso => aso.StoreOrderId)
+                .Distinct()
+                .CountAsync();
 
-			var totalShelves = await _shelfRepository.GetQueryable()
-				.CountAsync(x => x.InventoryLocation.WarehouseId == warehouseId);
+            var totalInProgress = await shipmentQuery.CountAsync(x =>
+                x.Status == ShipmentStatus.Draft ||
+                x.Status == ShipmentStatus.Shipping ||
+                x.Status == ShipmentStatus.Delivered
+            );
 
-			var totalInventory = await _inventoryRepository.GetQueryable()
-				.Where(x => x.InventoryLocation.WarehouseId == warehouseId)
-				.SumAsync(x => (int?)x.Quantity) ?? 0;
+            var totalCompleted = await shipmentQuery.CountAsync(x =>
+                x.Status == ShipmentStatus.Completed
+            );
 
-			var totalEmployees = await _userWarehouseRepository.GetQueryable()
-				.CountAsync(x => x.WarehouseId == warehouseId);
+            return new WarehouseStatCardResponse
+            {
+                WarehouseId = warehouseId,
+                StartDate = currentStartDate, 
+                EndDate = currentEndDate,     
+                TotalOrders = totalOrders,
+                TotalShelves = totalShelves,
+                TotalInventory = totalInventory,
+                TotalEmployees = totalEmployees,
+                TotalInProgressShipments = totalInProgress,
+                TotalCompletedShipments = totalCompleted
+            };
+        }
 
-			var shipmentQuery = _shipmentRepository.GetQueryable()
-				.Where(x => x.FromLocation.WarehouseId == warehouseId
-						 && x.CreatedAt >= startDate
-						 && x.CreatedAt <= endDate);
+        public async Task<WarehouseChartResponse> GetWarehouseChartAsync(Guid warehouseId, WarehouseChartRequest request)
+        {
+            var (startDate, endDate) = BuildDateRange(request);
 
-			var totalOrders = await shipmentQuery
-				.SelectMany(s => s.ShipmentAssignment.AssignmentStoreOrders)
-				.Select(aso => aso.StoreOrderId)
-				.Distinct()
-				.CountAsync();
+            // Lấy dữ liệu thô
+            var data = await _shipmentRepository.GetQueryable()
+                .Where(x => x.FromLocation.WarehouseId == warehouseId
+                         && x.CreatedAt >= startDate
+                         && x.CreatedAt <= endDate)
+                .Select(x => new
+                {
+                    Date = x.CreatedAt.Date,
+                    x.IsReturn,
+                    HasProductItems = x.Items.Any(),
+                    HasShelfItems = x.ShelfShipmentItems.Any()
+                })
+                .ToListAsync();
 
-			var totalInProgress = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Draft ||
-				x.Status == ShipmentStatus.Shipping ||
-				x.Status == ShipmentStatus.Delivered
-			);
+            // Group theo ngày và map vào DailyChartData
+            var dailyStats = data
+                .GroupBy(x => x.Date)
+                .OrderBy(g => g.Key)
+                .Select(g => new WarehouseDailyChartData
+                {
+                    Date = g.Key,
+                    ShipmentProduct = g.Count(x => !x.IsReturn && x.HasProductItems),
+                    ShipmentShelf = g.Count(x => !x.IsReturn && x.HasShelfItems),
+                    ReturnProduct = g.Count(x => x.IsReturn && x.HasProductItems),
+                    ReturnShelf = g.Count(x => x.IsReturn && x.HasShelfItems)
+                })
+                .ToList();
 
-			var totalCompleted = await shipmentQuery.CountAsync(x =>
-				x.Status == ShipmentStatus.Completed
-			);
-
-			return new WarehouseStatCardResponse
-			{
-				TotalOrders = totalOrders,
-				TotalShelves = totalShelves,
-				TotalInventory = totalInventory,
-				TotalEmployees = totalEmployees,
-				TotalInProgressShipments = totalInProgress,
-				TotalCompletedShipments = totalCompleted
-			};
-		}
-
-		public async Task<WarehouseChartResponse> GetWarehouseChartAsync(
-			Guid warehouseId,
-			StoreChartRequest request)
-		{
-			var (startDate, endDate) = BuildDateRange(request);
-
-			var shipmentQuery = _shipmentRepository.GetQueryable()
-				.Where(x => x.FromLocation.WarehouseId == warehouseId
-						 && x.CreatedAt >= startDate
-						 && x.CreatedAt <= endDate);
-
-			var shipmentChart = await shipmentQuery
-				.GroupBy(x => x.Status)
-				.Select(g => new ChartItem
-				{
-					Label = g.Key.ToString(),
-					Value = g.Count()
-				})
-				.ToListAsync();
-
-			var orderChart = await _storeOrderRepository.GetQueryable()
-				.Where(o => o.CreatedAt >= startDate && o.CreatedAt <= endDate)
-				.Where(o => o.AssignmentStoreOrders
-					.Any(aso => aso.ShipmentAssignment.WarehouseLocationId == warehouseId))
-				.GroupBy(o => o.Status)
-				.Select(g => new ChartItem
-				{
-					Label = g.Key.ToString(),
-					Value = g.Count()
-				})
-				.ToListAsync();
-
-			return new WarehouseChartResponse
-			{
-				ShipmentChart = shipmentChart,
-				OrderChart = orderChart
-			};
-		}
+            return new WarehouseChartResponse { DailyStats = dailyStats };
+        }
 
 
-		public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
+        public async Task<StoreDashboardResponse> GetStoreRevenueAsync(Guid storeId, DateTime? fromDate = null, DateTime? toDate = null)
 		{
 
 

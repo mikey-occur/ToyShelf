@@ -377,5 +377,38 @@ namespace ToyShelf.Application.Services
                 PendingSettlementAmount = pendingAmount
             };
         }
+
+        public async Task FinalizeSettlementAsync(Guid settlementId)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(settlementId);
+                if (settlement == null || settlement.Status != "PENDING")
+                    throw new AppException("Chỉ có thể chốt phiếu đang ở trạng thái Nháp!", 400);
+
+           
+                settlement.Status = "FINALIZED";
+                _unitOfWork.Repository<MonthlySettlement>().Update(settlement);
+
+              
+                var ordersToLock = await _settlementRepository.GetOrdersBySettlementIdAsync(settlementId);
+
+                foreach (var order in ordersToLock)
+                {
+                    order.IsLocked = true;
+                    order.LockedAt = DateTime.UtcNow;
+                    _unitOfWork.Repository<Order>().Update(order);
+                }
+
+                await _unitOfWork.SaveChangesAsync();
+                await _unitOfWork.CommitTransactionAsync();
+            }
+            catch (Exception)
+            {
+                await _unitOfWork.RollbackTransactionAsync();
+                throw;
+            }
+        }
     }
 }

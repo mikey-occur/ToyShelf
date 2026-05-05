@@ -155,9 +155,9 @@ namespace ToyShelf.Application.Services
 			return tables.Select(MapToResponse);
 		}
 
-		public async Task<IEnumerable<CommissionTableResponse>> GetCommissionTablesAsync(bool? isActive)
+		public async Task<IEnumerable<CommissionTableResponse>> GetCommissionTablesAsync(bool? isActive, CommissionTableType? type = null, Guid? partnerTierId = null)
 		{
-			var priceTables = await _repo.GetPriceTablesAsync(isActive);
+			var priceTables = await _repo.GetPriceTablesAsync(isActive, type, partnerTierId);
 			return priceTables.Select(MapToResponse);
 		}
 
