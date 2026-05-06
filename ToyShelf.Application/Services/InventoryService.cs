@@ -136,6 +136,22 @@ namespace ToyShelf.Application.Services
                     soldInventory.Quantity += item.Quantity;
                     _inventoryRepository.Update(soldInventory);
                 }
+
+                var transaction = new InventoryTransaction
+                {
+                    Id = Guid.NewGuid(),
+                    ProductColorId = item.ProductColorId,
+                    FromLocationId = availableInventory.InventoryLocationId, 
+                    ToLocationId = availableInventory.InventoryLocationId,   
+                    FromStatus = InventoryStatus.Available,                  
+                    ToStatus = InventoryStatus.Sold,                         
+                    Quantity = item.Quantity,
+                    ReferenceType = InventoryReferenceType.Sale,             
+                    ReferenceId = order.Id,                                  
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _transactionRepository.AddAsync(transaction);
             }
 
             await _unitOfWork.SaveChangesAsync();
