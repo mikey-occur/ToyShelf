@@ -24,8 +24,9 @@ namespace ToyShelf.Application.Services
 	    private readonly IInventoryRepository _inventoryRepository;
 		private readonly IJobQueueService _jobQueueService;
 		private readonly ILogger<OrderService> _logger;
+		private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
 
-		public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService, ILogger<OrderService> logger )
+        public OrderService(IUnitOfWork unitOfWork, IOrderRepository orderRepository, IProductColorRepository productColorRepository, IPaymentService paymentService, IDateTimeProvider dateTime, ICommissionService commissionService, ICommissionHistoryRepsitory commissionHistoryRepsitory, IInventoryService inventoryService, IInventoryRepository inventoryRepository, IJobQueueService jobQueueService, ILogger<OrderService> logger, IInventoryTransactionRepository inventoryTransactionRepository )
 		{
 			_unitOfWork = unitOfWork;
 			_orderRepository = orderRepository;
@@ -38,6 +39,7 @@ namespace ToyShelf.Application.Services
 			_inventoryRepository = inventoryRepository;
 			_jobQueueService = jobQueueService;
 			_logger = logger;
+			_inventoryTransactionRepository = inventoryTransactionRepository;
         }
 
         public async Task CancelExpiredOrdersAsync(int timeoutInMinutes = 15)

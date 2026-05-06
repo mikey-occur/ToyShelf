@@ -189,7 +189,7 @@ namespace ToyShelf.API.Controllers
         /// Sau khi chốt, dữ liệu không thể chỉnh sửa và đơn hàng sẽ bị khóa.
         /// </summary>
         [HttpPost("{id}/finalize")]
-        [Authorize(Roles = "Admin")] // Chỉ Admin mới có quyền chốt sổ
+        [Authorize(Roles = "Admin")] 
         public async Task<BaseResponse<bool>> Finalize(Guid id)
         {
             // Gọi hàm Finalize mà chúng ta đã thiết kế ở bước trước
