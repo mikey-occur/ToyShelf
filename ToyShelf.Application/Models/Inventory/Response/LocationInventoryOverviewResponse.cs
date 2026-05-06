@@ -36,6 +36,12 @@ namespace ToyShelf.Application.Models.Inventory.Response
 		public string? OriginCountry { get; set; }
 		public string? AgeRange { get; set; }
 		public decimal BasePrice { get; set; }
+
+		public decimal? Width { get; set; }
+		public decimal? Length { get; set; }
+		public decimal? Height { get; set; }
+		public decimal? Weight { get; set; }
+
 		public List<ColorInventoryOverviewItem> Colors { get; set; } = new();
 	}
 
