@@ -249,6 +249,11 @@ namespace ToyShelf.Application.Services
 						AgeRange = product.AgeRange,
 						BasePrice = product.BasePrice,
 
+						Width = product.Width,
+						Length = product.Length,
+						Height = product.Height,
+						Weight = product.Weight,
+
 						Colors = productGroup
 							.GroupBy(i => i.ProductColorId)
 							.Select(colorGroup => new ColorInventoryItem
@@ -368,6 +373,12 @@ namespace ToyShelf.Application.Services
 						OriginCountry = product.OriginCountry,
 						AgeRange = product.AgeRange,
 						BasePrice = product.BasePrice,
+
+						Width = product.Width,
+						Length = product.Length,
+						Height = product.Height,
+						Weight = product.Weight,
+
 						Colors = productGroup
 							.Where(i => i.ProductColor.Color != null)
 							.GroupBy(i => i.ProductColorId)
