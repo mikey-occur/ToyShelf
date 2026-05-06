@@ -106,7 +106,8 @@ namespace ToyShelf.Infrastructure.Repositories
 		{
 			return await _context.Orders
 				.Include(o => o.Store)
-				.Include(o => o.Staff)
+                .ThenInclude(s => s.Partner)
+                .Include(o => o.Staff)
 				.Include(o => o.OrderItems)
 					.ThenInclude(oi => oi.ProductColor)
 						.ThenInclude(pc => pc.Product)

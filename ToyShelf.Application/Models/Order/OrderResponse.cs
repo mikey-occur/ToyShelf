@@ -18,5 +18,6 @@ namespace ToyShelf.Application.Models.Order
 		public string Status { get; set; } = string.Empty;
 		public DateTime CreatedAt { get; set; }
 		public string? StoreName { get; set; }
-	}
+        public bool IsLocked { get; set; } = false;
+    }
 }

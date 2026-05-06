@@ -210,6 +210,7 @@ namespace ToyShelf.Application.Services
 				PaymentMethod = o.PaymentMethod,
 				Status = o.Status,
 				CreatedAt = o.CreatedAt,
+				IsLocked = o.IsLocked,
 				StoreName = o.Store?.Name 
 			}).ToList();
 
