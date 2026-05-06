@@ -50,5 +50,24 @@ namespace ToyShelf.Infrastructure.Repositories
 
 			return await query.OrderByDescending(t => t.CreatedAt).ToListAsync();
 		}
+
+		public async Task<IEnumerable<InventoryTransaction>> GetByProductColorAndLocationAsync(
+			Guid productColorId,
+			Guid locationId)
+		{
+			return await _context.InventoryTransactions
+				.Include(t => t.ProductColor)
+					.ThenInclude(pc => pc.Product)
+				.Include(t => t.ProductColor)
+					.ThenInclude(pc => pc.Color)
+				.Include(t => t.FromLocation)
+				.Include(t => t.ToLocation)
+				.Where(t =>
+					t.ProductColorId == productColorId &&
+					(t.FromLocationId == locationId || t.ToLocationId == locationId)
+				)
+				.OrderBy(t => t.CreatedAt) 
+				.ToListAsync();
+		}
 	}
 }

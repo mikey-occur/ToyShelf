@@ -14,5 +14,8 @@ namespace ToyShelf.Domain.IRepositories
 		   Guid? productId = null,
 		   Guid? fromLocationId = null,
 		   Guid? toLocationId = null);
+		Task<IEnumerable<InventoryTransaction>> GetByProductColorAndLocationAsync(
+		   Guid productColorId,
+		   Guid locationId);
 	}
 }

@@ -29,6 +29,7 @@ namespace ToyShelf.Application.Services
 		private readonly IUserRepository _userRepository;
 		private readonly INotificationService _notificationService;
 		private readonly ILogger<DamageReportService> _logger;
+		private readonly IInventoryTransactionRepository _inventoryTransactionRepository;
 		private readonly IUnitOfWork _unitOfWork;
 		private readonly IDateTimeProvider _dateTime;
 
@@ -45,6 +46,7 @@ namespace ToyShelf.Application.Services
 			IUserRepository userRepository,
 			INotificationService notificationService,
 			ILogger<DamageReportService> logger,
+			IInventoryTransactionRepository inventoryTransactionRepository,
 			IUnitOfWork unitOfWork,
 			IDateTimeProvider dateTime)
 		{
@@ -58,6 +60,7 @@ namespace ToyShelf.Application.Services
 			_userRepository = userRepository;
 			_notificationService = notificationService;
 			_logger = logger;
+			_inventoryTransactionRepository = inventoryTransactionRepository;
 			_unitOfWork = unitOfWork;
 			_dateTime = dateTime;
 		}
@@ -196,6 +199,20 @@ namespace ToyShelf.Application.Services
 						await _inventoryRepository.AddAsync(invPending);
 					}
 					else { invPending.Quantity += item.Quantity ?? 0; }
+
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = itemReq.ProductColorId.Value,
+						FromLocationId = location.Id,
+						ToLocationId = location.Id,
+						FromStatus = InventoryStatus.Available,
+						ToStatus = InventoryStatus.PendingDamaged,
+						Quantity = item.Quantity ?? 0,
+						ReferenceType = InventoryReferenceType.DamageReport,
+						ReferenceId = report.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
 
 					AddMedia(item, itemReq.MediaUrls);
 					report.Items.Add(item);
@@ -395,6 +412,20 @@ namespace ToyShelf.Application.Services
 						damagedInv.Quantity += totalQty;
 						_inventoryRepository.Update(damagedInv);
 					}
+
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = productColorId,
+						FromLocationId = report.InventoryLocationId,
+						ToLocationId = report.InventoryLocationId,
+						FromStatus = InventoryStatus.PendingDamaged,
+						ToStatus = InventoryStatus.Damaged,
+						Quantity = totalQty,
+						ReferenceType = InventoryReferenceType.DamageReport,
+						ReferenceId = report.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
 				}
 
 				// --- BƯỚC 3: XỬ LÝ KỆ (Group theo ShelfTypeId để khớp Unique Index) ---
@@ -531,6 +562,20 @@ namespace ToyShelf.Application.Services
 						invAvail.Quantity += totalQty;
 						_inventoryRepository.Update(invAvail);
 					}
+
+					await _inventoryTransactionRepository.AddAsync(new InventoryTransaction
+					{
+						Id = Guid.NewGuid(),
+						ProductColorId = productColorId,
+						FromLocationId = report.InventoryLocationId,
+						ToLocationId = report.InventoryLocationId,
+						FromStatus = InventoryStatus.PendingDamaged,
+						ToStatus = InventoryStatus.Available,
+						Quantity = totalQty,
+						ReferenceType = InventoryReferenceType.DamageReport,
+						ReferenceId = report.Id,
+						CreatedAt = _dateTime.UtcNow
+					});
 				}
 
 				// --- BƯỚC 3: XỬ LÝ KỆ (Group theo ShelfTypeId để tránh Duplicate Key) ---
