@@ -44,5 +44,10 @@ namespace ToyShelf.Application.IServices
 			Guid? productId = null,
 			Guid? fromLocationId = null,
 			Guid? toLocationId = null);
+		Task<InventoryAuditResponse> GetInventoryAuditAsync(
+			Guid locationId,
+			Guid productColorId,
+			DateTime? fromDate,
+			DateTime? toDate);
 	}
 }

@@ -164,5 +164,23 @@ namespace ToyShelf.API.Controllers
 			);
 		}
 
+
+		[HttpGet("audit")]
+		public async Task<BaseResponse<InventoryAuditResponse>> GetAudit(
+			[FromQuery] Guid locationId,
+			[FromQuery] Guid productColorId,
+			[FromQuery] DateTime? fromDate,
+			[FromQuery] DateTime? toDate)
+		{
+			var result = await _inventoryService.GetInventoryAuditAsync(
+				locationId,
+				productColorId,
+				fromDate,
+				toDate
+			);
+
+			return BaseResponse<InventoryAuditResponse>
+				.Ok(result, "Inventory audit retrieved successfully");
+		}
 	}
 }
