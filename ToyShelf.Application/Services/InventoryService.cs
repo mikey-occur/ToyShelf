@@ -562,7 +562,6 @@ namespace ToyShelf.Application.Services
 			};
 		}
 
-		// Lấy tất cả sản phẩm đang có giao dịch, có filter theo productId, fromLocationId, toLocationId (tùy chọn)
 		public async Task<IEnumerable<InventoryTransactionResponse>> GetAllTransactionsAsync(
 			Guid? productId = null,
 			Guid? fromLocationId = null,
@@ -587,6 +586,99 @@ namespace ToyShelf.Application.Services
 				Quantity = t.Quantity,
 				CreatedAt = t.CreatedAt
 			}).ToList();
+		}
+
+		public async Task<InventoryAuditResponse> GetInventoryAuditAsync(
+			Guid locationId,
+			Guid productColorId,
+			DateTime? fromDate,
+			DateTime? toDate)
+		{
+			var transactions = await _transactionRepository
+				.GetByProductColorAndLocationAsync(productColorId, locationId);
+
+			var query = transactions.AsQueryable();
+
+			if (fromDate.HasValue)
+				query = query.Where(x => x.CreatedAt >= fromDate.Value);
+
+			if (toDate.HasValue)
+				query = query.Where(x => x.CreatedAt <= toDate.Value);
+
+			var ordered = query
+				.OrderBy(x => x.CreatedAt)
+				.ToList();
+
+			int openingStock = 0;
+
+			if (fromDate.HasValue)
+			{
+				var before = transactions
+					.Where(x => x.CreatedAt < fromDate.Value)
+					.ToList();
+
+				foreach (var t in before)
+				{
+					openingStock += MapQuantity(t, locationId);
+				}
+			}
+
+			int balance = openingStock;
+			var items = new List<InventoryAuditItem>();
+
+			foreach (var t in ordered)
+			{
+				int qty = MapQuantity(t, locationId);
+
+				if (qty == 0) continue;
+
+				balance += qty;
+
+				items.Add(new InventoryAuditItem
+				{
+					Date = t.CreatedAt,
+					Type = t.ReferenceType.ToString(),
+					Quantity = qty,
+					BalanceAfter = balance
+				});
+			}
+
+			int closingStock = balance;
+
+			var currentInventory = await _inventoryRepository
+				.GetByLocationAndProductAsync(locationId, productColorId, InventoryStatus.Available);
+
+			int currentQty = currentInventory?.Quantity ?? 0;
+
+			return new InventoryAuditResponse
+			{
+				LocationId = locationId,
+				ProductColorId = productColorId,
+				OpeningStock = openingStock,
+				Transactions = items,
+				ClosingStock = closingStock,
+				CurrentInventory = currentQty,
+				IsMatched = closingStock == currentQty
+			};
+		}
+
+		private int MapQuantity(InventoryTransaction t, Guid locationId)
+		{
+			// Nhập Available
+			if (t.ToLocationId == locationId &&
+				t.ToStatus == InventoryStatus.Available)
+			{
+				return t.Quantity;
+			}
+
+			// Xuất Available
+			if (t.FromLocationId == locationId &&
+				t.FromStatus == InventoryStatus.Available)
+			{
+				return -t.Quantity;
+			}
+
+			return 0;
 		}
 
 		private static InventoryResponse MapToResponse(Inventory inventory)
