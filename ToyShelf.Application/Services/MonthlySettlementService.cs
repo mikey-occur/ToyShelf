@@ -385,7 +385,7 @@ namespace ToyShelf.Application.Services
             {
                 var settlement = await _unitOfWork.Repository<MonthlySettlement>().GetByIdAsync(settlementId);
                 if (settlement == null || settlement.Status != "PENDING")
-                    throw new AppException("Chỉ có thể chốt phiếu đang ở trạng thái Nháp!", 400);
+                    throw new AppException("Chỉ có thể chốt phiếu đang ở trạng thái PENDING!", 400);
 
            
                 settlement.Status = "FINALIZED";
