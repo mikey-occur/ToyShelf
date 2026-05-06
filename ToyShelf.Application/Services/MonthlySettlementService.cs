@@ -133,6 +133,7 @@ namespace ToyShelf.Application.Services
 
                             Status = orderGroup.Key.Status,
                             CreatedAt = orderGroup.Key.CreatedAt,
+							IsLocked = orderGroup.Key.IsLocked,
                             OrderDate = orderGroup.Key.CreatedAt
                         })
                         .OrderByDescending(t => t.OrderDate) 

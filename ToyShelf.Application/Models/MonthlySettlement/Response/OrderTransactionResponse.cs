@@ -16,5 +16,6 @@ namespace ToyShelf.Application.Models.MonthlySettlement.Response
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime OrderDate { get; set; }
+        public bool IsLocked { get; set; }
     }
 }
